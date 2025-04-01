@@ -12,7 +12,8 @@ import {
   X,
   LogOut,
   Database,
-  Paperclip
+  Paperclip,
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -47,7 +48,11 @@ const navItems: NavItem[] = [
     href: "/projects",
     icon: Folders,
   },
-
+  {
+    title: "Geo-Karte",
+    href: "/geo-map",
+    icon: Map,
+  },
   {
     title: "Anhänge",
     href: "/attachments",
