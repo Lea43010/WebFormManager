@@ -6,7 +6,11 @@ import fs from "fs-extra";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { ZodError } from "zod";
-import { insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, insertMaterialSchema, insertComponentSchema, insertAttachmentSchema } from "@shared/schema";
+import { 
+  insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
+  insertMaterialSchema, insertComponentSchema, insertAttachmentSchema,
+  createInsertSchema, companies, customers, projects
+} from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./upload";
 
@@ -68,7 +72,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/companies/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertCompanySchema.partial().parse(req.body);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        postalCode: typeof req.body.postalCode === 'string' && req.body.postalCode ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
+        companyPhone: typeof req.body.companyPhone === 'string' && req.body.companyPhone ? parseInt(req.body.companyPhone, 10) : req.body.companyPhone,
+      };
+      
+      // Verwende das Schema ohne transform für partial
+      const baseSchema = createInsertSchema(companies);
+      const validatedData = baseSchema.partial().parse(formData);
+      
       const company = await storage.updateCompany(id, validatedData);
       if (!company) {
         return res.status(404).json({ message: "Unternehmen nicht gefunden" });
@@ -133,7 +148,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/customers/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
+        postalCode: typeof req.body.postalCode === 'string' && req.body.postalCode ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
+        customerPhone: typeof req.body.customerPhone === 'string' && req.body.customerPhone ? parseInt(req.body.customerPhone, 10) : req.body.customerPhone,
+      };
+      
+      // Verwende das Schema ohne transform für partial
+      const baseSchema = createInsertSchema(customers);
+      const validatedData = baseSchema.partial().parse(formData);
+      
       const customer = await storage.updateCustomer(id, validatedData);
       if (!customer) {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
@@ -213,7 +240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectHeight: typeof req.body.projectHeight === 'string' && req.body.projectHeight ? parseFloat(req.body.projectHeight) : req.body.projectHeight,
       };
       
-      const validatedData = insertProjectSchema.partial().parse(formData);
+      // Verwende das Schema ohne transform für partial
+      const baseSchema = createInsertSchema(projects);
+      const validatedData = baseSchema.partial().parse(formData);
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });

@@ -3,6 +3,9 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
+// Re-export createInsertSchema für Verwendung in routes.ts
+export { createInsertSchema };
+
 // Define enums if needed
 export const companyTypes = pgEnum('company_types', ['Dienstleistung', 'Produktion', 'Handel', 'Sonstige']);
 export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
@@ -178,10 +181,30 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
 });
 
-export const insertCompanySchema = createInsertSchema(companies);
-export const insertCustomerSchema = createInsertSchema(customers);
+export const insertCompanySchema = createInsertSchema(companies).transform((data) => {
+  return {
+    ...data,
+    postalCode: typeof data.postalCode === 'string' ? parseInt(data.postalCode, 10) : data.postalCode,
+    companyPhone: typeof data.companyPhone === 'string' && data.companyPhone ? parseInt(data.companyPhone, 10) : data.companyPhone,
+  };
+});
+export const insertCustomerSchema = createInsertSchema(customers).transform((data) => {
+  return {
+    ...data,
+    customerId: typeof data.customerId === 'string' ? parseInt(data.customerId, 10) : data.customerId,
+    postalCode: typeof data.postalCode === 'string' ? parseInt(data.postalCode, 10) : data.postalCode,
+    customerPhone: typeof data.customerPhone === 'string' && data.customerPhone ? parseInt(data.customerPhone, 10) : data.customerPhone,
+  };
+});
 export const insertPersonSchema = createInsertSchema(persons);
-export const insertProjectSchema = createInsertSchema(projects);
+export const insertProjectSchema = createInsertSchema(projects).transform((data) => {
+  return {
+    ...data,
+    projectWidth: typeof data.projectWidth === 'string' ? parseFloat(data.projectWidth) : data.projectWidth,
+    projectLength: typeof data.projectLength === 'string' ? parseFloat(data.projectLength) : data.projectLength,
+    projectHeight: typeof data.projectHeight === 'string' ? parseFloat(data.projectHeight) : data.projectHeight,
+  };
+});
 export const insertMaterialSchema = createInsertSchema(materials);
 export const insertComponentSchema = createInsertSchema(components);
 export const insertAttachmentSchema = createInsertSchema(attachments);
