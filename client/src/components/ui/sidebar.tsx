@@ -7,7 +7,6 @@ import {
   Building2, 
   Users, 
   Folders, 
-  PackageOpen,
   Settings, 
   Menu, 
   X,
@@ -48,11 +47,7 @@ const navItems: NavItem[] = [
     href: "/projects",
     icon: Folders,
   },
-  {
-    title: "Material",
-    href: "/materials",
-    icon: PackageOpen,
-  },
+
   {
     title: "Anhänge",
     href: "/attachments",

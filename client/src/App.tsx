@@ -9,7 +9,6 @@ import { ProtectedRoute } from "./lib/protected-route";
 import CompanyPage from "@/pages/company-page";
 import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
-import MaterialPage from "@/pages/material-page";
 import UserPage from "@/pages/user-page";
 import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
@@ -23,7 +22,7 @@ function Router() {
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
       <ProtectedRoute path="/projects" component={ProjectPage} />
-      <ProtectedRoute path="/materials" component={MaterialPage} />
+
       <ProtectedRoute path="/users" component={UserPage} />
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
