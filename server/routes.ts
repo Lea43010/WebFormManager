@@ -50,7 +50,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/companies", async (req, res, next) => {
     try {
-      const validatedData = insertCompanySchema.parse(req.body);
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
+        companyPhone: typeof req.body.companyPhone === 'string' && req.body.companyPhone ? parseInt(req.body.companyPhone, 10) : req.body.companyPhone,
+      };
+      
+      const validatedData = insertCompanySchema.parse(formData);
       const company = await storage.createCompany(validatedData);
       res.status(201).json(company);
     } catch (error) {
@@ -107,7 +114,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers", async (req, res, next) => {
     try {
-      const validatedData = insertCustomerSchema.parse(req.body);
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        customerId: typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId,
+        postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
+        customerPhone: typeof req.body.customerPhone === 'string' && req.body.customerPhone ? parseInt(req.body.customerPhone, 10) : req.body.customerPhone,
+      };
+      
+      const validatedData = insertCustomerSchema.parse(formData);
       const customer = await storage.createCustomer(validatedData);
       res.status(201).json(customer);
     } catch (error) {
@@ -164,7 +179,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", async (req, res, next) => {
     try {
-      const validatedData = insertProjectSchema.parse(req.body);
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
+        companyId: typeof req.body.companyId === 'string' && req.body.companyId ? parseInt(req.body.companyId, 10) : req.body.companyId,
+        personId: typeof req.body.personId === 'string' && req.body.personId ? parseInt(req.body.personId, 10) : req.body.personId,
+        projectWidth: typeof req.body.projectWidth === 'string' && req.body.projectWidth ? parseFloat(req.body.projectWidth) : req.body.projectWidth,
+        projectLength: typeof req.body.projectLength === 'string' && req.body.projectLength ? parseFloat(req.body.projectLength) : req.body.projectLength,
+        projectHeight: typeof req.body.projectHeight === 'string' && req.body.projectHeight ? parseFloat(req.body.projectHeight) : req.body.projectHeight,
+      };
+      
+      const validatedData = insertProjectSchema.parse(formData);
       const project = await storage.createProject(validatedData);
       res.status(201).json(project);
     } catch (error) {
@@ -175,7 +201,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/projects/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertProjectSchema.partial().parse(req.body);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
+        companyId: typeof req.body.companyId === 'string' && req.body.companyId ? parseInt(req.body.companyId, 10) : req.body.companyId,
+        personId: typeof req.body.personId === 'string' && req.body.personId ? parseInt(req.body.personId, 10) : req.body.personId,
+        projectWidth: typeof req.body.projectWidth === 'string' && req.body.projectWidth ? parseFloat(req.body.projectWidth) : req.body.projectWidth,
+        projectLength: typeof req.body.projectLength === 'string' && req.body.projectLength ? parseFloat(req.body.projectLength) : req.body.projectLength,
+        projectHeight: typeof req.body.projectHeight === 'string' && req.body.projectHeight ? parseFloat(req.body.projectHeight) : req.body.projectHeight,
+      };
+      
+      const validatedData = insertProjectSchema.partial().parse(formData);
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });

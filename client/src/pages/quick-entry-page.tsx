@@ -135,11 +135,26 @@ export default function QuickEntryPage() {
   });
 
   const onCustomerSubmit = (values: z.infer<typeof customerFormSchema>) => {
-    createCustomerMutation.mutate(values);
+    // Konvertieren der String-Werte zu Zahlen für Felder, die als Zahlen erwartet werden
+    const transformedValues = {
+      ...values,
+      customerId: parseInt(values.customerId, 10),
+      postalCode: parseInt(values.postalCode, 10),
+      customerPhone: values.customerPhone ? parseInt(values.customerPhone, 10) : null,
+    };
+    
+    createCustomerMutation.mutate(transformedValues as any);
   };
 
   const onCompanySubmit = (values: z.infer<typeof companyFormSchema>) => {
-    createCompanyMutation.mutate(values);
+    // Konvertieren der String-Werte zu Zahlen für Felder, die als Zahlen erwartet werden
+    const transformedValues = {
+      ...values,
+      postalCode: parseInt(values.postalCode, 10),
+      companyPhone: values.companyPhone ? parseInt(values.companyPhone, 10) : null,
+    };
+    
+    createCompanyMutation.mutate(transformedValues as any);
   };
 
   const goBackToProjects = () => {
