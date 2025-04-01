@@ -13,6 +13,10 @@ export default function CustomerPage() {
     staleTime: 1000 * 60, // 1 minute
   });
   
+  const handleAddCustomer = () => {
+    setActiveTab("Neuer Eintrag");
+  };
+  
   // Table columns
   const columns = [
     {
@@ -63,7 +67,7 @@ export default function CustomerPage() {
           data={customers}
           columns={columns}
           isLoading={isLoading}
-          onAdd={() => {}}
+          onAdd={handleAddCustomer}
           title="Kundenliste"
         />
       )}
