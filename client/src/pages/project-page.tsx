@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProjectForm from "@/components/project/project-form";
+import AttachmentUpload from "@/components/project/attachment-upload";
 import {
   Dialog,
   DialogContent,
@@ -17,12 +18,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Paperclip } from "lucide-react";
 
 export default function ProjectPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("Liste");
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -115,6 +117,13 @@ export default function ProjectPage() {
     saveProjectMutation.mutate(data);
   };
   
+  // Handler für Anhänge anzeigen
+  const handleShowAttachments = (project: Project) => {
+    if (project.id) {
+      setSelectedProjectId(project.id);
+    }
+  };
+  
   // Table columns
   const columns = [
     {
@@ -152,6 +161,25 @@ export default function ProjectPage() {
           <Badge variant="destructive">Gestoppt</Badge>
         ) : (
           <Badge variant="default" className="bg-green-600">Aktiv</Badge>
+        );
+      },
+    },
+    {
+      id: "attachments",
+      header: "Anhänge",
+      cell: (info: any) => {
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShowAttachments(info.row.original);
+            }}
+          >
+            <Paperclip className="h-4 w-4 mr-1" />
+            Anhänge
+          </Button>
         );
       },
     },
@@ -260,6 +288,22 @@ export default function ProjectPage() {
               {deleteProjectMutation.isPending ? "Wird gelöscht..." : "Löschen"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Attachments Dialog */}
+      <Dialog open={!!selectedProjectId} onOpenChange={(open) => !open && setSelectedProjectId(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Projektanhänge</DialogTitle>
+            <DialogDescription>
+              Verwalten Sie die Anhänge für dieses Projekt.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedProjectId && (
+            <AttachmentUpload projectId={selectedProjectId} />
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>

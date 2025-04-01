@@ -1,10 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
+import fs from "fs-extra";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { ZodError } from "zod";
-import { insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, insertMaterialSchema, insertComponentSchema } from "@shared/schema";
+import { insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, insertMaterialSchema, insertComponentSchema, insertAttachmentSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -362,6 +366,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Attachment routes
+  app.get("/api/projects/:projectId/attachments", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const attachments = await storage.getProjectAttachments(projectId);
+      res.json(attachments);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post(
+    "/api/projects/:projectId/attachments",
+    upload.single("file"),
+    handleUploadErrors,
+    cleanupOnError,
+    async (req, res, next) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "Keine Datei hochgeladen." });
+        }
+        
+        const projectId = parseInt(req.params.projectId);
+        const project = await storage.getProject(projectId);
+        
+        if (!project) {
+          // Lösche die Datei, da das Projekt nicht existiert
+          await fs.remove(req.file.path);
+          return res.status(404).json({ message: "Projekt nicht gefunden" });
+        }
+        
+        const attachmentData = {
+          projectId,
+          fileName: req.file.originalname,
+          originalName: req.file.originalname,
+          fileType: getFileType(req.file.mimetype),
+          filePath: req.file.path,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          description: req.body.description || null
+        };
+        
+        const attachment = await storage.createAttachment(attachmentData);
+        res.status(201).json(attachment);
+      } catch (error) {
+        console.error("Error uploading attachment:", error);
+        
+        // Bei einem Fehler die Datei löschen, falls sie existiert
+        if (req.file) {
+          await fs.remove(req.file.path).catch(() => {});
+        }
+        
+        next(error);
+      }
+    }
+  );
+  
+  app.get("/api/attachments/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      res.json(attachment);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.get("/api/attachments/:id/download", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      // Prüfen, ob die Datei existiert
+      if (!await fs.pathExists(attachment.filePath)) {
+        return res.status(404).json({ message: "Datei nicht gefunden" });
+      }
+      
+      const fileName = encodeURIComponent(attachment.fileName);
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.sendFile(path.resolve(attachment.filePath));
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/attachments/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      // Lösche die Datei vom Dateisystem
+      await fs.remove(attachment.filePath).catch(err => {
+        console.error("Error deleting file:", err);
+      });
+      
+      // Lösche den Eintrag aus der Datenbank
+      await storage.deleteAttachment(id);
+      
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Serve static files from the uploads directory
+  app.use("/uploads", (req, res, next) => {
+    // Authentifizierungsprüfung
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht autorisiert" });
+    }
+    next();
+  }, express.static(path.join(process.cwd(), "uploads")));
 
   const httpServer = createServer(app);
   return httpServer;

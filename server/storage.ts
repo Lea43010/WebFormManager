@@ -9,7 +9,8 @@ import {
   persons, type Person, type InsertPerson,
   projects, type Project, type InsertProject,
   materials, type Material, type InsertMaterial,
-  components, type Component, type InsertComponent
+  components, type Component, type InsertComponent,
+  attachments, type Attachment, type InsertAttachment
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -61,6 +62,12 @@ export interface IStorage {
   createPerson(person: InsertPerson): Promise<Person>;
   updatePerson(id: number, person: Partial<InsertPerson>): Promise<Person | undefined>;
   deletePerson(id: number): Promise<void>;
+  
+  // Attachment operations
+  getProjectAttachments(projectId: number): Promise<Attachment[]>;
+  getAttachment(id: number): Promise<Attachment | undefined>;
+  createAttachment(attachment: InsertAttachment): Promise<Attachment>;
+  deleteAttachment(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -260,6 +267,25 @@ export class DatabaseStorage implements IStorage {
   
   async deletePerson(id: number): Promise<void> {
     await db.delete(persons).where(eq(persons.id, id));
+  }
+  
+  // Attachment operations
+  async getProjectAttachments(projectId: number): Promise<Attachment[]> {
+    return await db.select().from(attachments).where(eq(attachments.projectId, projectId));
+  }
+  
+  async getAttachment(id: number): Promise<Attachment | undefined> {
+    const [attachment] = await db.select().from(attachments).where(eq(attachments.id, id));
+    return attachment;
+  }
+  
+  async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
+    const [createdAttachment] = await db.insert(attachments).values(attachment).returning();
+    return createdAttachment;
+  }
+  
+  async deleteAttachment(id: number): Promise<void> {
+    await db.delete(attachments).where(eq(attachments.id, id));
   }
 }
 

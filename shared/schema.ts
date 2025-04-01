@@ -5,6 +5,7 @@ import { relations } from "drizzle-orm";
 
 // Define enums if needed
 export const companyTypes = pgEnum('company_types', ['Dienstleistung', 'Produktion', 'Handel', 'Sonstige']);
+export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -103,6 +104,20 @@ export const components = pgTable("tblcomponent", {
   componentName: varchar("component_name", { length: 1000 }),
 });
 
+// Attachments table
+export const attachments = pgTable("tblattachment", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  fileType: fileTypes("file_type").notNull(),
+  filePath: varchar("file_path", { length: 1000 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 255 }).notNull(),
+  uploadDate: timestamp("upload_date").defaultNow(),
+  description: varchar("description", { length: 1000 }),
+});
+
 // Define relations
 export const companiesRelations = relations(companies, ({ many, one }) => ({
   projects: many(projects),
@@ -138,11 +153,19 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [persons.id],
   }),
   components: many(components),
+  attachments: many(attachments),
 }));
 
 export const componentsRelations = relations(components, ({ one }) => ({
   project: one(projects, {
     fields: [components.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const attachmentsRelations = relations(attachments, ({ one }) => ({
+  project: one(projects, {
+    fields: [attachments.projectId],
     references: [projects.id],
   }),
 }));
@@ -161,6 +184,7 @@ export const insertPersonSchema = createInsertSchema(persons);
 export const insertProjectSchema = createInsertSchema(projects);
 export const insertMaterialSchema = createInsertSchema(materials);
 export const insertComponentSchema = createInsertSchema(components);
+export const insertAttachmentSchema = createInsertSchema(attachments);
 
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -183,3 +207,6 @@ export type Material = typeof materials.$inferSelect;
 
 export type InsertComponent = z.infer<typeof insertComponentSchema>;
 export type Component = typeof components.$inferSelect;
+
+export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
+export type Attachment = typeof attachments.$inferSelect;
