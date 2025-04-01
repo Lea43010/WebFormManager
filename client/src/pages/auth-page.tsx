@@ -87,9 +87,9 @@ export default function AuthPage() {
           </div>
 
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Anmelden</TabsTrigger>
-              <TabsTrigger value="register">Registrieren</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1">
+              <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:text-primary">Anmelden</TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-white data-[state=active]:text-primary">Registrieren</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -145,7 +145,7 @@ export default function AuthPage() {
                       <div className="text-sm">
                         <a
                           href="#"
-                          className="font-medium text-primary hover:text-primary-dark"
+                          className="font-medium text-[#6a961f] hover:text-[#5a8418]"
                         >
                           Passwort vergessen?
                         </a>
@@ -154,7 +154,7 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending && (
@@ -260,7 +260,7 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending && (
@@ -276,7 +276,7 @@ export default function AuthPage() {
         </div>
       </div>
       <div className="relative flex-1 hidden md:block">
-        <div className="absolute inset-0 bg-primary">
+        <div className="absolute inset-0 bg-[#6a961f]">
           <div className="flex flex-col justify-center h-full px-10 text-white">
             <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
             <p className="text-xl mb-8">
