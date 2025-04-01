@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         customerId: typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        customerPhone: typeof req.body.customerPhone === 'string' && req.body.customerPhone ? parseInt(req.body.customerPhone, 10) : req.body.customerPhone,
+        customerPhone: req.body.customerPhone?.toString() || null,
       };
       
       const validatedData = insertCustomerSchema.parse(formData);
@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
         postalCode: typeof req.body.postalCode === 'string' && req.body.postalCode ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        customerPhone: typeof req.body.customerPhone === 'string' && req.body.customerPhone ? parseInt(req.body.customerPhone, 10) : req.body.customerPhone,
+        customerPhone: req.body.customerPhone?.toString() || null,
       };
       
       // Verwende das Schema ohne transform für partial

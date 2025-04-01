@@ -165,16 +165,16 @@ export default function ProjectPage() {
       },
     },
     {
-      id: "attachments",
+      accessorKey: "id", // Wir benutzen die ID als Schlüssel
       header: "Anhänge",
-      cell: (info: any) => {
+      cell: (value: any, row: Project) => {
         return (
           <Button
             variant="ghost"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              handleShowAttachments(info.row.original);
+              handleShowAttachments(row);
             }}
           >
             <Paperclip className="h-4 w-4 mr-1" />
