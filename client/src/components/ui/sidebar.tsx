@@ -93,7 +93,7 @@ export function Sidebar() {
                   href={item.href}
                   onClick={() => isMobile && setIsMobileOpen(false)}
                 >
-                  <a
+                  <div
                     className={cn(
                       "group flex items-center px-2 py-2 text-base font-medium rounded-md",
                       isActive
@@ -103,7 +103,7 @@ export function Sidebar() {
                   >
                     <item.icon className="mr-3 h-6 w-6" />
                     {item.title}
-                  </a>
+                  </div>
                 </Link>
               );
             })}
