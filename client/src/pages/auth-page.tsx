@@ -82,10 +82,10 @@ export default function AuthPage() {
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="mb-8">
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              DB Manager
+              Baustellen App
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Datenbankverwaltungssystem
+              Verwaltung von Baustellen und Projekten
             </p>
           </div>
 
@@ -281,9 +281,9 @@ export default function AuthPage() {
       <div className="relative flex-1 hidden md:block">
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-dark">
           <div className="flex flex-col justify-center h-full px-10 text-white">
-            <h1 className="text-4xl font-bold mb-6">Datenbankverwaltungssystem</h1>
+            <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
             <p className="text-xl mb-8">
-              Verwalten Sie Ihre Daten effizient und sicher mit unserem intuitiven Datenbankmanager.
+              Verwalten Sie Ihre Baustellen und Projekte effizient und übersichtlich.
             </p>
             <ul className="space-y-4">
               <li className="flex items-center">
