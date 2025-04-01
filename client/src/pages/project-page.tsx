@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { PlusCircle, Paperclip } from "lucide-react";
+import { PlusCircle, Paperclip, ArrowLeft } from "lucide-react";
 
 export default function ProjectPage() {
   const [, navigate] = useLocation();
@@ -189,7 +189,19 @@ export default function ProjectPage() {
     <DashboardLayout 
       title={
         <div className="flex items-center justify-between w-full">
-          <span>Projekte</span>
+          <div className="flex items-center">
+            <a href="/auth">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mr-4"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück zur Anmeldung
+              </Button>
+            </a>
+            <span>Projekte</span>
+          </div>
           <Button 
             onClick={() => navigate("/quick-entry")}
             className="ml-4"

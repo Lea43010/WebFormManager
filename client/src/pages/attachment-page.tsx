@@ -89,14 +89,14 @@ export default function AttachmentPage() {
     <DashboardLayout
       title={
         <div className="flex items-center space-x-4">
-          <a href="/companies">
+          <a href="/auth">
             <Button 
               variant="outline" 
               size="sm" 
               className="mr-2"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück
+              Zurück zur Anmeldung
             </Button>
           </a>
           <span>Anhänge Übersicht</span>
