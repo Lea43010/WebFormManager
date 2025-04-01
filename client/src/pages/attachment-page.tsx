@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +14,7 @@ import { Attachment } from "@shared/schema";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
 
@@ -85,7 +87,20 @@ export default function AttachmentPage() {
 
   return (
     <DashboardLayout
-      title="Anhänge Übersicht"
+      title={
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/")}
+            className="mr-2"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zurück
+          </Button>
+          <span>Anhänge Übersicht</span>
+        </div>
+      }
       tabs={["Alle Anhänge", "Nach Projekt"]}
       activeTab="Alle Anhänge"
     >
