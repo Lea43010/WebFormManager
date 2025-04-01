@@ -29,7 +29,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    title: "Dashboard",
+    title: "Projektübersicht",
     href: "/",
     icon: LayoutDashboard,
   },
