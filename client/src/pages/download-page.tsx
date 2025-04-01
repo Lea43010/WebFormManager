@@ -8,17 +8,19 @@ export default function DownloadPage() {
   const { toast } = useToast();
 
   const downloadFile = (filename: string) => {
-    const url = `/downloads/${filename}`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Create the full URL with the protocol and host
+    // Dies ist wichtig, da relative URLs möglicherweise nicht funktionieren
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}/downloads/${filename}`;
+    
+    console.log("Downloading file from URL:", url);
+    
+    // Direkter Download über ein neues Fenster (bessere Browser-Kompatibilität)
+    window.open(url, '_blank');
     
     toast({
       title: "Download gestartet",
-      description: `Die Datei ${filename} wird heruntergeladen.`,
+      description: `Die Datei ${filename} wird in einem neuen Tab geöffnet. Speichern Sie sie mit Rechtsklick > Speichern unter...`,
     });
   };
 
