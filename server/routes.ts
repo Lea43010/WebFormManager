@@ -206,21 +206,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", async (req, res, next) => {
     try {
-      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
+      // Da Zod die Konversion erwartet, schicken wir die Daten als Strings
       const formData = {
         ...req.body,
-        customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
-        companyId: typeof req.body.companyId === 'string' && req.body.companyId ? parseInt(req.body.companyId, 10) : req.body.companyId,
-        personId: typeof req.body.personId === 'string' && req.body.personId ? parseInt(req.body.personId, 10) : req.body.personId,
-        projectWidth: typeof req.body.projectWidth === 'string' && req.body.projectWidth ? parseFloat(req.body.projectWidth) : req.body.projectWidth,
-        projectLength: typeof req.body.projectLength === 'string' && req.body.projectLength ? parseFloat(req.body.projectLength) : req.body.projectLength,
-        projectHeight: typeof req.body.projectHeight === 'string' && req.body.projectHeight ? parseFloat(req.body.projectHeight) : req.body.projectHeight,
+        projectWidth: req.body.projectWidth?.toString() || null,
+        projectLength: req.body.projectLength?.toString() || null,
+        projectHeight: req.body.projectHeight?.toString() || null,
       };
       
+      // Schema übernimmt die Konversion zu Zahlen
       const validatedData = insertProjectSchema.parse(formData);
       const project = await storage.createProject(validatedData);
       res.status(201).json(project);
     } catch (error) {
+      console.error("Project creation error:", error);
       next(error);
     }
   });
@@ -229,26 +229,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       
-      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
       const formData = {
         ...req.body,
-        customerId: typeof req.body.customerId === 'string' && req.body.customerId ? parseInt(req.body.customerId, 10) : req.body.customerId,
-        companyId: typeof req.body.companyId === 'string' && req.body.companyId ? parseInt(req.body.companyId, 10) : req.body.companyId,
-        personId: typeof req.body.personId === 'string' && req.body.personId ? parseInt(req.body.personId, 10) : req.body.personId,
-        projectWidth: typeof req.body.projectWidth === 'string' && req.body.projectWidth ? parseFloat(req.body.projectWidth) : req.body.projectWidth,
-        projectLength: typeof req.body.projectLength === 'string' && req.body.projectLength ? parseFloat(req.body.projectLength) : req.body.projectLength,
-        projectHeight: typeof req.body.projectHeight === 'string' && req.body.projectHeight ? parseFloat(req.body.projectHeight) : req.body.projectHeight,
+        projectWidth: req.body.projectWidth?.toString() || null,
+        projectLength: req.body.projectLength?.toString() || null,
+        projectHeight: req.body.projectHeight?.toString() || null
       };
       
-      // Verwende das Schema ohne transform für partial
-      const baseSchema = createInsertSchema(projects);
-      const validatedData = baseSchema.partial().parse(formData);
+      // Verwende das unveränderte Schema für die partielle Validierung
+      const validatedData = insertProjectSchema.partial().parse(formData);
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });
       }
       res.json(project);
     } catch (error) {
+      console.error("Project update error:", error);
       next(error);
     }
   });
