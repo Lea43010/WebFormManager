@@ -1,18 +1,116 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { DataTable } from "@/components/ui/data-table";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Project } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import ProjectForm from "@/components/project/project-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function ProjectPage() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("Liste");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Fetch projects
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     staleTime: 1000 * 60, // 1 minute
   });
+  
+  // Create or update project mutation
+  const saveProjectMutation = useMutation({
+    mutationFn: async (project: Partial<Project>) => {
+      if (project.id) {
+        // Update existing project
+        const res = await apiRequest("PUT", `/api/projects/${project.id}`, project);
+        return await res.json();
+      } else {
+        // Create new project
+        const res = await apiRequest("POST", "/api/projects", project);
+        return await res.json();
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      setIsDialogOpen(false);
+      toast({
+        title: currentProject ? "Projekt aktualisiert" : "Projekt erstellt",
+        description: `Das Projekt wurde erfolgreich ${currentProject ? "aktualisiert" : "erstellt"}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim ${currentProject ? "Aktualisieren" : "Erstellen"} des Projekts: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/projects/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      setIsDeleteDialogOpen(false);
+      toast({
+        title: "Projekt gelöscht",
+        description: "Das Projekt wurde erfolgreich gelöscht",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim Löschen des Projekts: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handle add button click
+  const handleAddProject = () => {
+    setCurrentProject(null);
+    setIsDialogOpen(true);
+  };
+  
+  // Handle edit button click
+  const handleEditProject = (project: Project) => {
+    setCurrentProject(project);
+    setIsDialogOpen(true);
+  };
+  
+  // Handle delete button click
+  const handleDeleteProject = (project: Project) => {
+    setCurrentProject(project);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Confirm delete
+  const confirmDelete = () => {
+    if (currentProject?.id) {
+      deleteProjectMutation.mutate(currentProject.id);
+    }
+  };
+  
+  // Submit form
+  const handleFormSubmit = (data: Partial<Project>) => {
+    saveProjectMutation.mutate(data);
+  };
   
   // Table columns
   const columns = [
@@ -68,16 +166,18 @@ export default function ProjectPage() {
           data={projects}
           columns={columns}
           isLoading={isLoading}
-          onAdd={() => {}}
+          onAdd={handleAddProject}
+          onEdit={handleEditProject}
+          onDelete={handleDeleteProject}
           title="Projektliste"
         />
       )}
       
       {activeTab === "Neuer Eintrag" && (
-        <div className="p-4 bg-white rounded-md shadow">
-          <h2 className="text-lg font-medium mb-4">Neues Projekt</h2>
-          <p className="text-gray-500 mb-4">Dieses Formular wird noch entwickelt.</p>
-        </div>
+        <ProjectForm 
+          onSubmit={handleFormSubmit} 
+          isLoading={saveProjectMutation.isPending} 
+        />
       )}
       
       {activeTab === "Import/Export" && (
@@ -86,6 +186,48 @@ export default function ProjectPage() {
           <p className="text-gray-500 mb-4">Diese Funktion ist noch in Entwicklung.</p>
         </div>
       )}
+      
+      {/* Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{currentProject ? "Projekt bearbeiten" : "Neues Projekt"}</DialogTitle>
+            <DialogDescription>
+              Geben Sie die Details des Projekts ein.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ProjectForm 
+            project={currentProject} 
+            onSubmit={handleFormSubmit} 
+            isLoading={saveProjectMutation.isPending} 
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Projekt löschen</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie das Projekt "{currentProject?.projectName}" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={deleteProjectMutation.isPending}
+            >
+              {deleteProjectMutation.isPending ? "Wird gelöscht..." : "Löschen"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
