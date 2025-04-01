@@ -116,9 +116,10 @@ export const attachments = pgTable("tblattachment", {
   fileType: fileTypes("file_type").notNull(),
   filePath: varchar("file_path", { length: 1000 }).notNull(),
   fileSize: integer("file_size").notNull(),
-  mimeType: varchar("mime_type", { length: 255 }).notNull(),
-  uploadDate: timestamp("upload_date").defaultNow(),
-  description: varchar("description", { length: 1000 }),
+  // mimeType Spalte existiert nicht in der aktuellen Datenbank
+  // mimeType: varchar("mime_type", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  description: text("description"),
 });
 
 // Define relations

@@ -6,7 +6,7 @@ import fs from "fs-extra";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupDownloadRoutes } from "./download";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema,
@@ -243,8 +243,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectHeight: req.body.projectHeight?.toString() || null
       };
       
-      // Verwende das unveränderte Schema für die partielle Validierung
-      const validatedData = insertProjectSchema.partial().parse(formData);
+      // Verwende angepasstes Schema für partielle Validierung
+      const validatedData = z.object({
+        ...Object.fromEntries(
+          Object.entries(insertProjectSchema.shape).map(([key, schema]) => [key, schema.optional()])
+        )
+      }).parse(formData);
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });
@@ -475,7 +479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileType: getFileType(req.file.mimetype),
           filePath: req.file.path,
           fileSize: req.file.size,
-          mimeType: req.file.mimetype,
+          // mimeType wurde aus der Tabelle entfernt
           description: req.body.description || null
         };
         
