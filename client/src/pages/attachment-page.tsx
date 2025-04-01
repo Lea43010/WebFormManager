@@ -11,10 +11,12 @@ import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { logoutMutation } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
 
@@ -93,10 +95,12 @@ export default function AttachmentPage() {
             variant="outline" 
             size="sm" 
             className="mr-2"
-            onClick={() => navigate("/auth")}
+            onClick={() => {
+              logoutMutation.mutate();
+            }}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Zurück zur Anmeldung
+            Abmelden
           </Button>
           <span>Anhänge Übersicht</span>
         </div>
