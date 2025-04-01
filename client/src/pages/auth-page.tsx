@@ -88,8 +88,8 @@ export default function AuthPage() {
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:text-primary">Anmelden</TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-white data-[state=active]:text-primary">Registrieren</TabsTrigger>
+              <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Anmelden</TabsTrigger>
+              <TabsTrigger value="register" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Registrieren</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
