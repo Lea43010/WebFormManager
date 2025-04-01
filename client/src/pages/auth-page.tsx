@@ -84,9 +84,6 @@ export default function AuthPage() {
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
               Anmeldung
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Verwaltung von Baustellen und Projekten
-            </p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
