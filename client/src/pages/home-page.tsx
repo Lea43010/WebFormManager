@@ -1,8 +1,13 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   BarChart,
   Bar,
@@ -17,11 +22,12 @@ import {
   Legend
 } from "recharts";
 import { useAuth } from "@/hooks/use-auth";
-import { Building2, Users, Folders, PackageOpen } from "lucide-react";
+import { Building2, Users, Folders, PackageOpen, Plus, Search } from "lucide-react";
 
 export default function HomePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("Übersicht");
+  const [, navigate] = useLocation();
   
   const { data: companies, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ["/api/companies"],
@@ -185,6 +191,61 @@ export default function HomePage() {
         <CardContent>
           <p>Dies ist Ihr persönliches Dashboard für die Datenbankverwaltung. Hier können Sie einen Überblick über alle Ihre Daten erhalten.</p>
         </CardContent>
+      </Card>
+
+      {/* Eingabeformular mit Buttons */}
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Schnellzugriff</CardTitle>
+          <CardDescription>Erstellen Sie neue Einträge oder suchen Sie nach bestehenden Daten</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="search">Suche</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="search" 
+                  type="search" 
+                  placeholder="Suchen Sie nach Projekten, Kunden, etc." 
+                  className="pl-8"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="entity">Entität auswählen</Label>
+              <Select defaultValue="projekt">
+                <SelectTrigger>
+                  <SelectValue placeholder="Wählen Sie eine Entität" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="projekt">Projekt</SelectItem>
+                  <SelectItem value="kunde">Kunde</SelectItem>
+                  <SelectItem value="unternehmen">Unternehmen</SelectItem>
+                  <SelectItem value="material">Material</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={() => navigate("/projects")}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Neues Projekt
+          </Button>
+          <Button 
+            onClick={() => navigate("/customers")}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Neuer Kunde
+          </Button>
+        </CardFooter>
       </Card>
     </DashboardLayout>
   );
