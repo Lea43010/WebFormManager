@@ -315,7 +315,11 @@ export default function AuthPage() {
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
                     loginForm.setValue("password", "Landau43010#");
-                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" }, {
+                      onSuccess: () => {
+                        navigate("/companies");
+                      }
+                    });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -328,7 +332,11 @@ export default function AuthPage() {
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
                     loginForm.setValue("password", "Landau43010#");
-                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" }, {
+                      onSuccess: () => {
+                        navigate("/customers");
+                      }
+                    });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -341,7 +349,11 @@ export default function AuthPage() {
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
                     loginForm.setValue("password", "Landau43010#");
-                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" }, {
+                      onSuccess: () => {
+                        navigate("/projects");
+                      }
+                    });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -354,7 +366,11 @@ export default function AuthPage() {
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
                     loginForm.setValue("password", "Landau43010#");
-                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" }, {
+                      onSuccess: () => {
+                        navigate("/attachments");
+                      }
+                    });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
