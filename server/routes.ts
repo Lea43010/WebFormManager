@@ -1,0 +1,368 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth } from "./auth";
+import { ZodError } from "zod";
+import { insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, insertMaterialSchema, insertComponentSchema } from "@shared/schema";
+import { fromZodError } from "zod-validation-error";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes
+  setupAuth(app);
+
+  // Error handling middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (err instanceof ZodError) {
+      return res.status(400).json({
+        message: "Validierungsfehler",
+        errors: fromZodError(err).toString(),
+      });
+    }
+    next(err);
+  });
+
+  // Company routes
+  app.get("/api/companies", async (req, res, next) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/companies/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const company = await storage.getCompany(id);
+      if (!company) {
+        return res.status(404).json({ message: "Unternehmen nicht gefunden" });
+      }
+      res.json(company);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/companies", async (req, res, next) => {
+    try {
+      const validatedData = insertCompanySchema.parse(req.body);
+      const company = await storage.createCompany(validatedData);
+      res.status(201).json(company);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/companies/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertCompanySchema.partial().parse(req.body);
+      const company = await storage.updateCompany(id, validatedData);
+      if (!company) {
+        return res.status(404).json({ message: "Unternehmen nicht gefunden" });
+      }
+      res.json(company);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/companies/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCompany(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Customer routes
+  app.get("/api/customers", async (req, res, next) => {
+    try {
+      const customers = await storage.getCustomers();
+      res.json(customers);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/customers/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/customers", async (req, res, next) => {
+    try {
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.createCustomer(validatedData);
+      res.status(201).json(customer);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/customers/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertCustomerSchema.partial().parse(req.body);
+      const customer = await storage.updateCustomer(id, validatedData);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/customers/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCustomer(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Project routes
+  app.get("/api/projects", async (req, res, next) => {
+    try {
+      const projects = await storage.getProjects();
+      res.json(projects);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const project = await storage.getProject(id);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects", async (req, res, next) => {
+    try {
+      const validatedData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(validatedData);
+      res.status(201).json(project);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/projects/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertProjectSchema.partial().parse(req.body);
+      const project = await storage.updateProject(id, validatedData);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      res.json(project);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/projects/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProject(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Person routes
+  app.get("/api/persons", async (req, res, next) => {
+    try {
+      const persons = await storage.getPersons();
+      res.json(persons);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const person = await storage.getPerson(id);
+      if (!person) {
+        return res.status(404).json({ message: "Person nicht gefunden" });
+      }
+      res.json(person);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/persons", async (req, res, next) => {
+    try {
+      const validatedData = insertPersonSchema.parse(req.body);
+      const person = await storage.createPerson(validatedData);
+      res.status(201).json(person);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertPersonSchema.partial().parse(req.body);
+      const person = await storage.updatePerson(id, validatedData);
+      if (!person) {
+        return res.status(404).json({ message: "Person nicht gefunden" });
+      }
+      res.json(person);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePerson(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Material routes
+  app.get("/api/materials", async (req, res, next) => {
+    try {
+      const materials = await storage.getMaterials();
+      res.json(materials);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/materials/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const material = await storage.getMaterial(id);
+      if (!material) {
+        return res.status(404).json({ message: "Material nicht gefunden" });
+      }
+      res.json(material);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/materials", async (req, res, next) => {
+    try {
+      const validatedData = insertMaterialSchema.parse(req.body);
+      const material = await storage.createMaterial(validatedData);
+      res.status(201).json(material);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/materials/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertMaterialSchema.partial().parse(req.body);
+      const material = await storage.updateMaterial(id, validatedData);
+      if (!material) {
+        return res.status(404).json({ message: "Material nicht gefunden" });
+      }
+      res.json(material);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/materials/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMaterial(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Component routes
+  app.get("/api/components", async (req, res, next) => {
+    try {
+      const components = await storage.getComponents();
+      res.json(components);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/components/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const component = await storage.getComponent(id);
+      if (!component) {
+        return res.status(404).json({ message: "Komponente nicht gefunden" });
+      }
+      res.json(component);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/components", async (req, res, next) => {
+    try {
+      const validatedData = insertComponentSchema.parse(req.body);
+      const component = await storage.createComponent(validatedData);
+      res.status(201).json(component);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/components/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertComponentSchema.partial().parse(req.body);
+      const component = await storage.updateComponent(id, validatedData);
+      if (!component) {
+        return res.status(404).json({ message: "Komponente nicht gefunden" });
+      }
+      res.json(component);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/components/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteComponent(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
