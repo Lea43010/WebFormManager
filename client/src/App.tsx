@@ -14,11 +14,12 @@ import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
 import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
+import LandingPage from "@/pages/landing-page";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={AuthPage} />
+      <Route path="/" component={LandingPage} />
       <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
