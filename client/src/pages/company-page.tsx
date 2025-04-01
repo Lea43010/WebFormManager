@@ -161,32 +161,37 @@ export default function CompanyPage() {
       title="Unternehmensdaten" 
       tabs={[]}
     >
-      <DataTable
-        data={companies}
-        columns={columns}
-        isLoading={isLoading}
-        onAdd={handleAddCompany}
-        onEdit={handleEditCompany}
-        onDelete={handleDeleteCompany}
-      />
-      
-      {/* Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{currentCompany ? "Unternehmen bearbeiten" : "Neues Unternehmen"}</DialogTitle>
-            <DialogDescription>
-              Geben Sie die Details des Unternehmens ein.
-            </DialogDescription>
-          </DialogHeader>
+      {!isDialogOpen ? (
+        <DataTable
+          data={companies}
+          columns={columns}
+          isLoading={isLoading}
+          onAdd={handleAddCompany}
+          onEdit={handleEditCompany}
+          onDelete={handleDeleteCompany}
+        />
+      ) : (
+        <div className="bg-white shadow-sm rounded-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">
+              {currentCompany ? "Unternehmen bearbeiten" : "Neues Unternehmen"}
+            </h2>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+              className="ml-auto"
+            >
+              Zurück zur Liste
+            </Button>
+          </div>
           
           <CompanyForm 
             company={currentCompany} 
             onSubmit={handleFormSubmit} 
             isLoading={saveCompanyMutation.isPending} 
           />
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
       
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
