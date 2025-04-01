@@ -33,7 +33,7 @@ export const companies = pgTable("tblcompany", {
   cityPart: varchar("city_part", { length: 100 }),
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
-  companyPhone: integer("company_phone", { mode: "number" }),
+  companyPhone: varchar("company_phone", { length: 20 }),
   companyEmail: varchar("company_email", { length: 255 }),
 });
 
@@ -185,7 +185,7 @@ export const insertCompanySchema = createInsertSchema(companies).transform((data
   return {
     ...data,
     postalCode: typeof data.postalCode === 'string' ? parseInt(data.postalCode, 10) : data.postalCode,
-    companyPhone: typeof data.companyPhone === 'string' && data.companyPhone ? parseInt(data.companyPhone, 10) : data.companyPhone,
+    // Telefonnummer wird jetzt als String gespeichert, keine Umwandlung nötig
   };
 });
 export const insertCustomerSchema = createInsertSchema(customers).transform((data) => {

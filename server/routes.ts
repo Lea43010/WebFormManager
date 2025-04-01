@@ -58,13 +58,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const formData = {
         ...req.body,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        companyPhone: typeof req.body.companyPhone === 'string' && req.body.companyPhone ? parseInt(req.body.companyPhone, 10) : req.body.companyPhone,
+        // Telefonnummer bleibt als String
       };
       
       const validatedData = insertCompanySchema.parse(formData);
       const company = await storage.createCompany(validatedData);
       res.status(201).json(company);
     } catch (error) {
+      console.error("Company creation error:", error);
       next(error);
     }
   });
@@ -77,12 +78,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const formData = {
         ...req.body,
         postalCode: typeof req.body.postalCode === 'string' && req.body.postalCode ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        companyPhone: typeof req.body.companyPhone === 'string' && req.body.companyPhone ? parseInt(req.body.companyPhone, 10) : req.body.companyPhone,
+        // Telefonnummer bleibt als String
       };
       
-      // Verwende das Schema ohne transform für partial
-      const baseSchema = createInsertSchema(companies);
-      const validatedData = baseSchema.partial().parse(formData);
+      // Verwende das Schema für die partielle Validierung
+      const validatedData = insertCompanySchema.partial().parse(formData);
       
       const company = await storage.updateCompany(id, validatedData);
       if (!company) {
@@ -90,6 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(company);
     } catch (error) {
+      console.error("Company update error:", error);
       next(error);
     }
   });
