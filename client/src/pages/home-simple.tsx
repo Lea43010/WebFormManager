@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { 
   Card, 
@@ -6,18 +6,47 @@ import {
   CardHeader, 
   CardTitle, 
   CardDescription, 
+  CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function HomeSimple() {
   const [, navigate] = useLocation();
   const [selectedEntity, setSelectedEntity] = useState("projekt");
+  const [userStatus, setUserStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
+
+  // Überprüfen des Authentifizierungsstatus
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          setUserStatus('authenticated');
+        } else {
+          setUserStatus('unauthenticated');
+        }
+      } catch (error) {
+        setUserStatus('unauthenticated');
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   const handleEntityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedEntity(e.target.value);
+  };
+
+  const handleButtonClick = (path: string) => {
+    if (userStatus === 'authenticated') {
+      navigate(path);
+    } else {
+      navigate('/auth');
+    }
   };
 
   return (
@@ -37,6 +66,16 @@ export default function HomeSimple() {
         <CardContent className="p-8">
           <div className="bg-white p-8 rounded-lg border-2 border-primary/20 shadow-md">
             <h3 className="text-2xl font-bold mb-8 text-primary">Schnellzugriff</h3>
+            
+            {userStatus === 'unauthenticated' && (
+              <Alert className="mb-6 bg-blue-50 border-blue-200">
+                <Info className="h-5 w-5 text-blue-500" />
+                <AlertDescription>
+                  Sie werden zur Anmeldeseite weitergeleitet, wenn Sie auf einen der Buttons klicken.
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="grid gap-10 sm:grid-cols-2">
               <div className="space-y-4">
                 <Label htmlFor="search" className="text-xl font-medium">Suche</Label>
@@ -68,7 +107,7 @@ export default function HomeSimple() {
             
             <div className="flex flex-col sm:flex-row gap-6 mt-10 justify-center">
               <Button 
-                onClick={() => navigate("/projects")}
+                onClick={() => handleButtonClick("/projects")}
                 className="w-full sm:w-auto h-16 text-lg bg-primary hover:bg-primary/90 rounded-lg shadow-md"
                 size="lg"
               >
@@ -76,7 +115,7 @@ export default function HomeSimple() {
                 Neues Projekt
               </Button>
               <Button 
-                onClick={() => navigate("/customers")}
+                onClick={() => handleButtonClick("/customers")}
                 variant="outline"
                 className="w-full sm:w-auto h-16 text-lg border-2 rounded-lg shadow-md"
                 size="lg"
@@ -87,6 +126,15 @@ export default function HomeSimple() {
             </div>
           </div>
         </CardContent>
+        <CardFooter className="justify-center border-t p-6 bg-muted/20">
+          <Button 
+            variant="link" 
+            onClick={() => navigate("/auth")} 
+            className="text-base"
+          >
+            Jetzt anmelden oder registrieren
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
