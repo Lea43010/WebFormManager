@@ -20,7 +20,8 @@ import { useAuth } from "@/hooks/use-auth";
 export default function CompanyPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("Liste");
+  // Fixed active tab (keine Tabs mehr)
+  const activeTab = "Liste";
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -158,31 +159,16 @@ export default function CompanyPage() {
   return (
     <DashboardLayout 
       title="Unternehmensdaten" 
-      tabs={["Liste", "Neuer Eintrag", "Import/Export"]}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
+      tabs={[]}
     >
-      {activeTab === "Liste" && (
-        <DataTable
-          data={companies}
-          columns={columns}
-          isLoading={isLoading}
-          onAdd={handleAddCompany}
-          onEdit={handleEditCompany}
-          onDelete={handleDeleteCompany}
-        />
-      )}
-      
-      {activeTab === "Neuer Eintrag" && (
-        <CompanyForm onSubmit={handleFormSubmit} isLoading={saveCompanyMutation.isPending} />
-      )}
-      
-      {activeTab === "Import/Export" && (
-        <div className="p-4 bg-white rounded-md shadow">
-          <h2 className="text-lg font-medium mb-4">Import/Export</h2>
-          <p className="text-gray-500 mb-4">Diese Funktion ist noch in Entwicklung.</p>
-        </div>
-      )}
+      <DataTable
+        data={companies}
+        columns={columns}
+        isLoading={isLoading}
+        onAdd={handleAddCompany}
+        onEdit={handleEditCompany}
+        onDelete={handleDeleteCompany}
+      />
       
       {/* Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
