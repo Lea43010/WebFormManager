@@ -45,7 +45,7 @@ export default function HomeSimple() {
     if (userStatus === 'authenticated') {
       navigate(path);
     } else {
-      navigate('/auth');
+      navigate('/login');
     }
   };
 
@@ -129,7 +129,7 @@ export default function HomeSimple() {
         <CardFooter className="justify-center border-t p-6 bg-muted/20">
           <Button 
             variant="link" 
-            onClick={() => navigate("/auth")} 
+            onClick={() => navigate("/login")} 
             className="text-base"
           >
             Jetzt anmelden oder registrieren
