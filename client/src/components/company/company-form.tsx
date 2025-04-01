@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const COMPANY_TYPES = ["Dienstleistung", "Produktion", "Handel", "Sonstige"];
+const COMPANY_TYPES = ["Subunternehmen", "Generalunternehmen"];
 const COUNTRIES = ["Deutschland", "Österreich", "Schweiz", "Andere"];
 
 interface CompanyFormProps {

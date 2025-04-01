@@ -7,7 +7,7 @@ import { relations } from "drizzle-orm";
 export { createInsertSchema };
 
 // Define enums if needed
-export const companyTypes = pgEnum('company_types', ['Dienstleistung', 'Produktion', 'Handel', 'Sonstige']);
+export const companyTypes = pgEnum('company_types', ['Subunternehmen', 'Generalunternehmen']);
 export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
 
 // Users table
