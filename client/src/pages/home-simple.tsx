@@ -65,7 +65,8 @@ export default function HomeSimple() {
         </CardHeader>
         <CardContent className="p-8">
           <div className="bg-white p-8 rounded-lg border-2 border-primary/20 shadow-md">
-            <h3 className="text-2xl font-bold mb-8 text-primary">Schnellzugriff</h3>
+            <h3 className="text-2xl font-bold mb-4 text-primary">Dateneingabe & Verwaltung</h3>
+            <p className="mb-8 text-gray-600">Hier können Sie schnell auf die wichtigsten Funktionen zugreifen und neue Einträge erstellen.</p>
             
             {userStatus === 'unauthenticated' && (
               <Alert className="mb-6 bg-blue-50 border-blue-200">
