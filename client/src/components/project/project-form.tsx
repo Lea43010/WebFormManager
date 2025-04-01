@@ -238,7 +238,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Keiner</SelectItem>
+                    <SelectItem value="0">Keiner</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id.toString()}>
                         {customer.id} - {customer.customerId}
@@ -267,7 +267,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Keine</SelectItem>
+                    <SelectItem value="0">Keine</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id.toString()}>
                         {company.companyName}
@@ -296,7 +296,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Keiner</SelectItem>
+                    <SelectItem value="0">Keiner</SelectItem>
                     {persons.map((person) => (
                       <SelectItem key={person.id} value={person.id.toString()}>
                         {person.firstname} {person.lastname}

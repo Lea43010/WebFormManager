@@ -1,6 +1,5 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -17,33 +16,35 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
-import { insertUserSchema } from "@shared/schema";
 
-const loginSchema = insertUserSchema.pick({
-  username: true,
-  password: true,
+// Einfaches Login-Schema
+const loginSchema = z.object({
+  username: z.string().min(1, "Benutzername ist erforderlich"),
+  password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
-const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string(),
+// Einfaches Registrierungs-Schema
+const registerSchema = z.object({
+  username: z.string().min(1, "Benutzername ist erforderlich"),
+  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen lang sein"),
+  confirmPassword: z.string().min(1, "Passwortbestätigung ist erforderlich"),
+  name: z.string().optional(),
+  email: z.string().email("Ungültige E-Mail-Adresse").optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein",
   path: ["confirmPassword"],
 });
 
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 export default function UnprotectedAuthPage() {
   const [, navigate] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
-
-  // If user is already logged in, redirect to home page
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Login form
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
+  const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
@@ -52,7 +53,7 @@ export default function UnprotectedAuthPage() {
   });
 
   // Register form
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
+  const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
@@ -63,14 +64,80 @@ export default function UnprotectedAuthPage() {
     },
   });
 
-  const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate(values);
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      
+      if (response.ok) {
+        // Erfolgreiche Anmeldung
+        const user = await response.json();
+        navigate('/dashboard');
+      } else {
+        // Fehler bei der Anmeldung
+        setAuthError('Ungültiger Benutzername oder Passwort');
+      }
+    } catch (error) {
+      setAuthError('Anmeldefehler. Bitte versuchen Sie es später erneut.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
+  const onRegisterSubmit = async (values: RegisterFormValues) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
     const { confirmPassword, ...userData } = values;
-    registerMutation.mutate(userData);
+    
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (response.ok) {
+        // Erfolgreiche Registrierung
+        const user = await response.json();
+        navigate('/dashboard');
+      } else {
+        // Fehler bei der Registrierung
+        setAuthError('Registrierungsfehler. Dieser Benutzername existiert möglicherweise bereits.');
+      }
+    } catch (error) {
+      setAuthError('Registrierungsfehler. Bitte versuchen Sie es später erneut.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          // User is already authenticated
+          navigate('/dashboard');
+        }
+      } catch (error) {
+        // Ignore error, user is not authenticated
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
@@ -84,6 +151,12 @@ export default function UnprotectedAuthPage() {
               Datenbankverwaltungssystem
             </p>
           </div>
+
+          {authError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md">
+              {authError}
+            </div>
+          )}
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -154,9 +227,9 @@ export default function UnprotectedAuthPage() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={loginMutation.isPending}
+                      disabled={isLoading}
                     >
-                      {loginMutation.isPending && (
+                      {isLoading && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
                       Anmelden
@@ -260,9 +333,9 @@ export default function UnprotectedAuthPage() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={registerMutation.isPending}
+                      disabled={isLoading}
                     >
-                      {registerMutation.isPending && (
+                      {isLoading && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
                       Registrieren
@@ -285,7 +358,7 @@ export default function UnprotectedAuthPage() {
         </div>
       </div>
       <div className="relative flex-1 hidden md:block">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-dark">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-700">
           <div className="flex flex-col justify-center h-full px-10 text-white">
             <h1 className="text-4xl font-bold mb-6">Datenbankverwaltungssystem</h1>
             <p className="text-xl mb-8">
