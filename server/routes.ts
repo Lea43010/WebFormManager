@@ -55,10 +55,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/companies", async (req, res, next) => {
     try {
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      // Telefonnummer muss explizit als String formatiert werden
       const formData = {
         ...req.body,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        // Telefonnummer bleibt als String
+        companyPhone: req.body.companyPhone?.toString() || null
       };
       
       const validatedData = insertCompanySchema.parse(formData);
@@ -75,14 +76,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      // Telefonnummer muss explizit als String formatiert werden
       const formData = {
         ...req.body,
         postalCode: typeof req.body.postalCode === 'string' && req.body.postalCode ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        // Telefonnummer bleibt als String
+        companyPhone: req.body.companyPhone?.toString() || null
       };
       
       // Verwende das Schema für die partielle Validierung
-      const validatedData = insertCompanySchema.partial().parse(formData);
+      // Zuerst das ursprüngliche Schema (ohne Transformationen) holen
+      const baseSchema = createInsertSchema(companies);
+      const validatedData = baseSchema.partial().parse(formData);
       
       const company = await storage.updateCompany(id, validatedData);
       if (!company) {
