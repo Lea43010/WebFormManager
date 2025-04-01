@@ -23,7 +23,8 @@ import { PlusCircle, Paperclip, ArrowLeft } from "lucide-react";
 export default function ProjectPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("Liste");
+  // Fixed active tab (keine Tabs mehr)
+  const activeTab = "Liste";
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -202,61 +203,27 @@ export default function ProjectPage() {
           </Button>
         </div>
       }
-      tabs={["Liste", "Neuer Eintrag", "Import/Export"]}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
+      tabs={["Liste"]}
+      activeTab={"Liste"}
     >
-      {activeTab === "Liste" && (
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={handleAddProject}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Neues Projekt
-            </Button>
-          </div>
-          <DataTable
-            data={projects}
-            columns={columns}
-            isLoading={isLoading}
-            onEdit={handleEditProject}
-            onDelete={handleDeleteProject}
-            title="Projektliste"
-          />
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <Button onClick={handleAddProject}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Neues Projekt
+          </Button>
         </div>
-      )}
+        <DataTable
+          data={projects}
+          columns={columns}
+          isLoading={isLoading}
+          onEdit={handleEditProject}
+          onDelete={handleDeleteProject}
+          title="Projektliste"
+        />
+      </div>
       
-      {activeTab === "Neuer Eintrag" && (
-        <div>
-          <div className="bg-muted/30 p-4 rounded-md mb-6 flex flex-wrap items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Schnelle Dateneingabe</h3>
-              <p className="text-sm text-muted-foreground">
-                Benötigen Sie neue Kunden- oder Firmendaten für Ihr Projekt?
-              </p>
-            </div>
-            <Button 
-              onClick={() => navigate("/quick-entry")}
-              className="mt-2 md:mt-0"
-              variant="outline"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Kunden/Firma hinzufügen
-            </Button>
-          </div>
-          
-          <ProjectForm 
-            onSubmit={handleFormSubmit} 
-            isLoading={saveProjectMutation.isPending} 
-          />
-        </div>
-      )}
-      
-      {activeTab === "Import/Export" && (
-        <div className="p-4 bg-white rounded-md shadow">
-          <h2 className="text-lg font-medium mb-4">Import/Export</h2>
-          <p className="text-gray-500 mb-4">Diese Funktion ist noch in Entwicklung.</p>
-        </div>
-      )}
+
       
       {/* Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
