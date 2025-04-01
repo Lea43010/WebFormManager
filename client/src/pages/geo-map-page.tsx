@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map, FileText, ExternalLink, Info } from "lucide-react";
+import { Save, Map, FileText, ExternalLink, Info, ArrowLeft } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useLocation } from "wouter";
 
 // Belastungsklassen nach RStO 12
 type BelastungsklasseInfo = {
@@ -119,6 +120,7 @@ export default function GeoMapPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
   const [mapSource, setMapSource] = useState<string>("bgr");
+  const [, navigate] = useLocation();
 
   const handleSave = () => {
     setIsSaving(true);
@@ -135,6 +137,17 @@ export default function GeoMapPage() {
 
   return (
     <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-4">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => navigate("/projects")}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück zum Projektformular
+        </Button>
+      </div>
+    
       <h1 className="text-3xl font-bold mb-2">Straßen-Belastungsklassen & Geoportal</h1>
       <p className="text-gray-500 mb-6">
         Erfassen Sie Belastungsklassen für Projekte nach RStO 12 und nutzen Sie externe Kartendienste.
