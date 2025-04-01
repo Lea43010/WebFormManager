@@ -23,6 +23,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SpeechToText } from "@/components/ui/speech-to-text";
 
 const PROJECT_TYPES = ["Hochbau", "Tiefbau"];
 
@@ -58,6 +59,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
     projectLength: z.string().optional(),
     projectHeight: z.string().optional(),
     projectText: z.string().optional(),
+    speechNotes: z.string().optional(),
     projectStartdate: z.date().nullable().optional(),
     projectEnddate: z.date().nullable().optional(),
     projectStop: z.boolean().default(false),
@@ -119,6 +121,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
       projectLength: project ? (project.projectLength !== null ? String(project.projectLength) : '') : '',
       projectHeight: project ? (project.projectHeight !== null ? String(project.projectHeight) : '') : '',
       projectText: project ? (project.projectText !== null ? String(project.projectText) : '') : '',
+      speechNotes: "",
       projectStartdate: project?.projectStartdate ? new Date(project.projectStartdate) : null,
       projectEnddate: project?.projectEnddate ? new Date(project.projectEnddate) : null,
       projectStop: project?.projectStop || false,
@@ -130,14 +133,28 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
   const projectStopValue = form.watch("projectStop");
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    // Wenn Sprachnotizen vorhanden sind, in projectText übernehmen oder anhängen
+    let finalProjectText = data.projectText || '';
+    if (data.speechNotes && data.speechNotes.trim() !== '') {
+      // Wenn bereits Text vorhanden ist, füge die Sprachnotizen mit Trenner hinzu
+      if (finalProjectText.trim() !== '') {
+        finalProjectText += '\n\n--- Sprachnotizen ---\n' + data.speechNotes.trim();
+      } else {
+        finalProjectText = data.speechNotes.trim();
+      }
+    }
+    
     // Convert string values to numbers for numeric fields before submitting
     const transformedData = {
       ...data,
       projectWidth: data.projectWidth && data.projectWidth.trim() !== '' ? parseFloat(data.projectWidth) : null,
       projectLength: data.projectLength && data.projectLength.trim() !== '' ? parseFloat(data.projectLength) : null,
       projectHeight: data.projectHeight && data.projectHeight.trim() !== '' ? parseFloat(data.projectHeight) : null,
-      projectText: data.projectText && data.projectText.trim() !== '' ? parseFloat(data.projectText) : null,
+      projectText: finalProjectText, // Text als String speichern, nicht als Zahl
     };
+    
+    // Sprachnotizen nicht mit an Backend senden, da kein Datenbankfeld existiert
+    delete (transformedData as any).speechNotes;
     
     onSubmit(transformedData as any); // Als temporäre Lösung zur Typumgehung
   };
@@ -595,6 +612,28 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                 )}
               />
             </div>
+          </div>
+          
+          {/* Sprachnotizen */}
+          <h3 className="text-lg font-medium mb-4">Sprachnotizen</h3>
+          <div className="mb-8">
+            <FormField
+              control={form.control}
+              name="speechNotes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notizen per Spracherkennung eingeben</FormLabel>
+                  <FormControl>
+                    <SpeechToText
+                      onTextChange={field.onChange}
+                      initialText={field.value || ""}
+                      language="de-DE"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
           
           {/* Genehmigungen */}

@@ -87,6 +87,7 @@ export const projects = pgTable("tblproject", {
   projectStop: boolean("project_stop").default(false),
   projectStopstartdate: date("project_stopstartdate"),
   projectStopenddate: date("project_stopenddate"),
+  projectNotes: text("project_notes"),
 });
 
 // Materials table
