@@ -28,6 +28,18 @@ export default function DashboardLayout({
       
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <header className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+          {title === "Datenbank Migration" && (
+            <div className="absolute top-2 left-0 right-0 flex justify-center">
+              <div className="bg-blue-100 p-2 rounded-md shadow-sm">
+                <span className="text-blue-800 text-sm font-medium">
+                  DB Migration Seite ist nur über '/db-migration' direkt erreichbar. 
+                  <a href="/db-migration" className="text-blue-600 hover:underline ml-2 font-bold">
+                    Zu DB Migration
+                  </a>
+                </span>
+              </div>
+            </div>
+          )}
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex">
               <div className="w-full flex md:ml-0">
