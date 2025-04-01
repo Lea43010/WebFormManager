@@ -12,7 +12,8 @@ import {
   Menu, 
   X,
   LogOut,
-  Database
+  Database,
+  Paperclip
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -51,6 +52,11 @@ const navItems: NavItem[] = [
     title: "Material",
     href: "/materials",
     icon: PackageOpen,
+  },
+  {
+    title: "Anhänge",
+    href: "/attachments",
+    icon: Paperclip,
   },
   {
     title: "Benutzer",

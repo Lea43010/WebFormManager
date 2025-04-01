@@ -205,15 +205,30 @@ export default function ProjectPage() {
       onTabChange={setActiveTab}
     >
       {activeTab === "Liste" && (
-        <DataTable
-          data={projects}
-          columns={columns}
-          isLoading={isLoading}
-          onAdd={handleAddProject}
-          onEdit={handleEditProject}
-          onDelete={handleDeleteProject}
-          title="Projektliste"
-        />
+        <div className="space-y-4">
+          <div className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/attachments")}
+            >
+              <Paperclip className="mr-2 h-4 w-4" />
+              Alle Anhänge anzeigen
+            </Button>
+            <Button onClick={handleAddProject}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Neues Projekt
+            </Button>
+          </div>
+          <DataTable
+            data={projects}
+            columns={columns}
+            isLoading={isLoading}
+            onAdd={handleAddProject}
+            onEdit={handleEditProject}
+            onDelete={handleDeleteProject}
+            title="Projektliste"
+          />
+        </div>
       )}
       
       {activeTab === "Neuer Eintrag" && (

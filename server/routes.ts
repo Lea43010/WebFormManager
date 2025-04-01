@@ -452,6 +452,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Neue Route für alle Anhänge
+  app.get("/api/attachments", async (req, res, next) => {
+    try {
+      const attachments = await storage.getAllAttachments();
+      res.json(attachments);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   app.post(
     "/api/projects/:projectId/attachments",
     upload.single("file"),
