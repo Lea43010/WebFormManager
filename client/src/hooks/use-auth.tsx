@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Erfolgreich angemeldet",
         description: "Willkommen zurück!",
       });
-      window.location.href = "/projects";
+      // Verwenden Sie keine direkte Window-Location-Änderung
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
       toast({
@@ -64,7 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registrierung erfolgreich",
         description: "Ihr Konto wurde erstellt.",
       });
-      window.location.href = "/projects";
+      // Verwenden Sie keine direkte Window-Location-Änderung
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
       toast({

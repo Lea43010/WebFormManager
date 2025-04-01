@@ -16,8 +16,8 @@ import QuickEntryPage from "@/pages/quick-entry-page";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={HomeSimple} />
-      <Route path="/dashboard" component={HomePage} />
+      <ProtectedRoute path="/" component={HomeSimple} />
+      <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
       <ProtectedRoute path="/projects" component={ProjectPage} />
