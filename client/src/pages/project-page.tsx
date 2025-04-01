@@ -159,7 +159,19 @@ export default function ProjectPage() {
   
   return (
     <DashboardLayout 
-      title="Projekte" 
+      title={
+        <div className="flex items-center justify-between w-full">
+          <span>Projekte</span>
+          <Button 
+            onClick={() => navigate("/quick-entry")}
+            className="ml-4"
+            variant="outline"
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Kunden/Firma hinzufügen
+          </Button>
+        </div>
+      }
       tabs={["Liste", "Neuer Eintrag", "Import/Export"]}
       activeTab={activeTab}
       onTabChange={setActiveTab}
