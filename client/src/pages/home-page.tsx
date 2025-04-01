@@ -184,33 +184,34 @@ export default function HomePage() {
         </Card>
       </div>
       
-      {/* Willkommenskarte */}
-      <Card className="mt-4 border-2 border-primary">
-        <CardHeader className="bg-muted/50">
-          <CardTitle className="text-2xl">Willkommen, {user?.name || user?.username}!</CardTitle>
+      {/* Neugestaltete Eingabeformular-Karte - Eindeutige ID hinzugefügt */}
+      <Card id="eingabeformular" className="mt-4 border-4 border-primary shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5">
+          <CardTitle className="text-3xl font-bold">Willkommen, {user?.name || user?.username}!</CardTitle>
+          <CardDescription className="text-lg">
+            Ihr persönliches Dashboard zur Datenbankverwaltung
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6">
-          <p className="mb-6">Dies ist Ihr persönliches Dashboard für die Datenbankverwaltung. Hier können Sie einen Überblick über alle Ihre Daten erhalten.</p>
-          
-          <div className="bg-primary/5 p-6 rounded-lg">
-            <h3 className="text-xl font-bold mb-4">Schnellzugriff</h3>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="search" className="text-lg">Suche</Label>
+        <CardContent className="p-8">
+          <div className="bg-white p-6 rounded-lg border-2 border-primary/20 shadow-md">
+            <h3 className="text-2xl font-bold mb-6 text-primary">Schnellzugriff</h3>
+            <div className="grid gap-8 sm:grid-cols-2">
+              <div className="space-y-4">
+                <Label htmlFor="search" className="text-xl font-medium">Suche</Label>
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Search className="absolute left-3 top-3.5 h-6 w-6 text-primary" />
                   <Input 
                     id="search" 
                     type="search" 
                     placeholder="Suchen Sie nach Projekten, Kunden, etc." 
-                    className="pl-9 h-12 text-base"
+                    className="pl-12 h-14 text-lg rounded-lg shadow-sm"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="entity" className="text-lg">Entität auswählen</Label>
+              <div className="space-y-4">
+                <Label htmlFor="entity" className="text-xl font-medium">Entität auswählen</Label>
                 <Select defaultValue="projekt">
-                  <SelectTrigger className="h-12">
+                  <SelectTrigger className="h-14 text-lg rounded-lg shadow-sm">
                     <SelectValue placeholder="Wählen Sie eine Entität" />
                   </SelectTrigger>
                   <SelectContent>
@@ -223,22 +224,22 @@ export default function HomePage() {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <Button 
                 onClick={() => navigate("/projects")}
-                className="w-full sm:w-auto h-12 text-base bg-primary hover:bg-primary/90"
+                className="w-full sm:w-auto h-14 text-lg bg-primary hover:bg-primary/90 rounded-lg shadow-md"
                 size="lg"
               >
-                <Plus className="mr-2 h-5 w-5" />
+                <Plus className="mr-2 h-6 w-6" />
                 Neues Projekt
               </Button>
               <Button 
                 onClick={() => navigate("/customers")}
                 variant="outline"
-                className="w-full sm:w-auto h-12 text-base border-2"
+                className="w-full sm:w-auto h-14 text-lg border-2 rounded-lg shadow-md"
                 size="lg"
               >
-                <Plus className="mr-2 h-5 w-5" />
+                <Plus className="mr-2 h-6 w-6" />
                 Neuer Kunde
               </Button>
             </div>
