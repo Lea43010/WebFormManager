@@ -80,7 +80,7 @@ export default function UnprotectedAuthPage() {
       if (response.ok) {
         // Erfolgreiche Anmeldung
         const user = await response.json();
-        navigate('/dashboard');
+        navigate('/projects');
       } else {
         // Fehler bei der Anmeldung
         setAuthError('Ungültiger Benutzername oder Passwort');
@@ -110,7 +110,7 @@ export default function UnprotectedAuthPage() {
       if (response.ok) {
         // Erfolgreiche Registrierung
         const user = await response.json();
-        navigate('/dashboard');
+        navigate('/projects');
       } else {
         // Fehler bei der Registrierung
         setAuthError('Registrierungsfehler. Dieser Benutzername existiert möglicherweise bereits.');
@@ -129,7 +129,7 @@ export default function UnprotectedAuthPage() {
         const response = await fetch('/api/user');
         if (response.ok) {
           // User is already authenticated
-          navigate('/dashboard');
+          navigate('/projects');
         }
       } catch (error) {
         // Ignore error, user is not authenticated
