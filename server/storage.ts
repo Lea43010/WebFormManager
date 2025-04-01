@@ -183,6 +183,10 @@ export class DatabaseStorage implements IStorage {
   }
   
   async deleteProject(id: number): Promise<void> {
+    // Zuerst alle Anhänge für dieses Projekt löschen
+    await db.delete(attachments).where(eq(attachments.projectId, id));
+    
+    // Dann das Projekt selbst löschen
     await db.delete(projects).where(eq(projects.id, id));
   }
   
