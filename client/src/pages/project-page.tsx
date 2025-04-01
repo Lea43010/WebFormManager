@@ -218,7 +218,6 @@ export default function ProjectPage() {
             data={projects}
             columns={columns}
             isLoading={isLoading}
-            onAdd={handleAddProject}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
             title="Projektliste"
