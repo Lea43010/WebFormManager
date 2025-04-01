@@ -18,7 +18,7 @@ import AttachmentPage from "@/pages/attachment-page";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={HomeSimple} />
+      <Route path="/" component={AuthPage} />
       <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />

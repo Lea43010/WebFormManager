@@ -93,10 +93,10 @@ export default function AttachmentPage() {
             variant="outline" 
             size="sm" 
             className="mr-2"
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Zurück zur Anmeldung
+            Zurück zur Hauptseite
           </Button>
           <span>Anhänge Übersicht</span>
         </div>

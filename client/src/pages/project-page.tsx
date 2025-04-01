@@ -194,10 +194,13 @@ export default function ProjectPage() {
               variant="outline" 
               size="sm" 
               className="mr-4"
-              onClick={() => navigate("/auth")}
+              onClick={() => {
+                // Ausloggen und zur Startseite navigieren
+                navigate("/");
+              }}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück zur Anmeldung
+              Zurück zur Hauptseite
             </Button>
             <span>Projekte</span>
           </div>
