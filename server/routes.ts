@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs-extra";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { setupDownloadRoutes } from "./download";
 import { ZodError } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
@@ -561,6 +562,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     next();
   }, express.static(path.join(process.cwd(), "uploads")));
+  
+  // Einrichten der Download-Routen für Datenbankmigrationen
+  setupDownloadRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

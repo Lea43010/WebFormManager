@@ -11,7 +11,8 @@ import {
   Settings, 
   Menu, 
   X,
-  LogOut
+  LogOut,
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -55,6 +56,11 @@ const navItems: NavItem[] = [
     title: "Benutzer",
     href: "/users",
     icon: Settings,
+  },
+  {
+    title: "DB Migration",
+    href: "/db-migration",
+    icon: Database,
   },
 ];
 
