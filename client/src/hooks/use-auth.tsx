@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Erfolgreich angemeldet",
         description: "Willkommen zurück!",
       });
+      window.location.href = "/projects";
     },
     onError: (error: Error) => {
       toast({
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Registrierung erfolgreich",
         description: "Ihr Konto wurde erstellt.",
       });
+      window.location.href = "/projects";
     },
     onError: (error: Error) => {
       toast({

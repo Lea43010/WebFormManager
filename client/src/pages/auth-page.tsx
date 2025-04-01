@@ -35,10 +35,10 @@ export default function AuthPage() {
   const [, navigate] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
 
-  // If user is already logged in, redirect to home page
+  // If user is already logged in, redirect to projects page
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate("/projects");
     }
   }, [user, navigate]);
 
