@@ -82,7 +82,7 @@ export default function AuthPage() {
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="mb-8">
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Baustellen App
+              Anmeldung
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               Verwaltung von Baustellen und Projekten
