@@ -163,8 +163,7 @@ export default function QuickEntryPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-primary">Schnelle Dateneingabe</h1>
+      <div className="flex items-center justify-end mb-6">
         <Button variant="outline" onClick={goBackToProjects}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Zurück zu Projekten
