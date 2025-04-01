@@ -64,7 +64,11 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate(values);
+    loginMutation.mutate(values, {
+      onSuccess: () => {
+        navigate("/projects");
+      }
+    });
   };
 
   const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {

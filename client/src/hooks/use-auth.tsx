@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Willkommen zurück!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      navigate("/projects");
+      // Wir lassen die Umleitung aus, damit die individuellen Weiterleitungen in den Schnellnavigationsbuttons funktionieren
+      // Die Standardweiterleitung erfolgt nun in onLoginSubmit in auth-page.tsx
     },
     onError: (error: Error) => {
       toast({
