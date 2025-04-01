@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,372 +144,214 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-          <FormField
-            control={form.control}
-            name="projectId"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-1">
-                <FormLabel>Projektnummer</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                    value={field.value || ''} 
-                    disabled={!!project}
-                    placeholder="Auto"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectName"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-3">
-                <FormLabel>Projektname</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectArt"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Projektart</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Projektart auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {PROJECT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectCluster"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-3">
-                <FormLabel>Projektcluster</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="customerId"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-3">
-                <FormLabel>Kunde</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value ? Number(value) : null)}
-                  defaultValue={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Kunde auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">Keiner</SelectItem>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id.toString()}>
-                        {customer.id} - {customer.customerId}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="companyId"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-3">
-                <FormLabel>Firma</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value ? Number(value) : null)}
-                  defaultValue={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Firma auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">Keine</SelectItem>
-                    {companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id.toString()}>
-                        {company.companyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="personId"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-3">
-                <FormLabel>Ansprechpartner</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value ? Number(value) : null)}
-                  defaultValue={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Person auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="0">Keiner</SelectItem>
-                    {persons.map((person) => (
-                      <SelectItem key={person.id} value={person.id.toString()}>
-                        {person.firstname} {person.lastname}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectStartdate"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2 flex flex-col">
-                <FormLabel>Startdatum</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "P", { locale: de })
-                        ) : (
-                          <span>Datum auswählen</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value || undefined}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectEnddate"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2 flex flex-col">
-                <FormLabel>Enddatum</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "P", { locale: de })
-                        ) : (
-                          <span>Datum auswählen</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value || undefined}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectWidth"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Breite</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    onChange={(e) => field.onChange(e.target.value)}
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectLength"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Länge</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    onChange={(e) => field.onChange(e.target.value)}
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectHeight"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Höhe</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    onChange={(e) => field.onChange(e.target.value)}
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="permission"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2 flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Genehmigung notwendig</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="permissionName"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-4">
-                <FormLabel>Name der Genehmigung</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectStop"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2 flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Projekt unterbrochen</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          {projectStopValue && (
-            <>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="bg-white p-6 rounded-md">
+          <h2 className="text-xl font-medium mb-6">{project ? "Projekt bearbeiten" : "Neues Projekt"}</h2>
+          <p className="text-sm text-gray-500 mb-6">Geben Sie die Details des Projekts ein.</p>
+          
+          {/* Grundinformationen */}
+          <h3 className="text-lg font-medium mb-4">Grundinformationen</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
               <FormField
                 control={form.control}
-                name="projectStopstartdate"
+                name="projectId"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2 flex flex-col">
-                    <FormLabel>Beginn der Unterbrechung</FormLabel>
+                  <FormItem>
+                    <FormLabel>Projektnummer</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''} 
+                        disabled={!!project}
+                        placeholder="Auto"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="projectArt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Projektart</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Projektart auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PROJECT_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="projectCluster"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Projektcluster</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="md:col-span-3">
+              <FormField
+                control={form.control}
+                name="projectName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Projektname</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Beteiligte */}
+          <h3 className="text-lg font-medium mb-4">Beteiligte</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kunde</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kunde auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">Keiner</SelectItem>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id.toString()}>
+                            {customer.id} - {customer.customerId}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Firma</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Firma auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">Keine</SelectItem>
+                        {companies.map((company) => (
+                          <SelectItem key={company.id} value={company.id.toString()}>
+                            {company.companyName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="personId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ansprechpartner</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Person auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">Keiner</SelectItem>
+                        {persons.map((person) => (
+                          <SelectItem key={person.id} value={person.id.toString()}>
+                            {person.firstname} {person.lastname}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Zeitlicher Rahmen */}
+          <h3 className="text-lg font-medium mb-4">Zeitlicher Rahmen</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <FormField
+                control={form.control}
+                name="projectStartdate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Startdatum</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "pl-3 text-left font-normal",
+                              "pl-3 text-left font-normal w-full",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -535,20 +377,22 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                   </FormItem>
                 )}
               />
+            </div>
 
+            <div>
               <FormField
                 control={form.control}
-                name="projectStopenddate"
+                name="projectEnddate"
                 render={({ field }) => (
-                  <FormItem className="sm:col-span-2 flex flex-col">
-                    <FormLabel>Ende der Unterbrechung</FormLabel>
+                  <FormItem>
+                    <FormLabel>Enddatum</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "pl-3 text-left font-normal",
+                              "pl-3 text-left font-normal w-full",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -574,14 +418,257 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                   </FormItem>
                 )}
               />
-            </>
-          )}
+            </div>
+          </div>
+
+          {/* Projektunterbrechung */}
+          <div className="mb-8">
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="projectStop"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-medium text-base">
+                      Projekt unterbrochen
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {projectStopValue && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pl-6 border-l-2 border-primary/20">
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="projectStopstartdate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unterbrechung seit</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal w-full",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "P", { locale: de })
+                                ) : (
+                                  <span>Datum auswählen</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="projectStopenddate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unterbrechung bis</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal w-full",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "P", { locale: de })
+                                ) : (
+                                  <span>Datum auswählen</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Projektmaße */}
+          <h3 className="text-lg font-medium mb-4">Projektmaße</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <FormField
+                control={form.control}
+                name="projectWidth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Breite</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="projectLength"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Länge</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
+                name="projectHeight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Höhe</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Genehmigungen */}
+          <div className="mb-8">
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="permission"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-medium text-base">
+                      Genehmigung notwendig
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {form.watch("permission") && (
+              <div className="mt-4 pl-6 border-l-2 border-primary/20">
+                <FormField
+                  control={form.control}
+                  name="permissionName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name der Genehmigung</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Bemerkungen */}
+          <h3 className="text-lg font-medium mb-4">Bemerkungen</h3>
+          <div className="mb-4">
+            <FormField
+              control={form.control}
+              name="projectText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea className="min-h-[120px]" {...field} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        <div className="flex justify-end space-x-3">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {project ? "Aktualisieren" : "Speichern"}
+        <div className="flex justify-center mt-8">
+          <Button 
+            type="submit" 
+            disabled={isLoading} 
+            className="w-full md:w-64 py-6 text-lg"
+            size="lg"
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-5 w-5" />
+            )}
+            {project ? "Projekt aktualisieren" : "Projekt speichern"}
           </Button>
         </div>
       </form>

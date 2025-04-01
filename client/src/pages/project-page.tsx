@@ -23,10 +23,8 @@ import { PlusCircle, Paperclip, ArrowLeft } from "lucide-react";
 export default function ProjectPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  // Fixed active tab (keine Tabs mehr)
-  const activeTab = "Liste";
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -51,7 +49,7 @@ export default function ProjectPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      setIsDialogOpen(false);
+      setIsEditing(false);
       toast({
         title: currentProject ? "Projekt aktualisiert" : "Projekt erstellt",
         description: `Das Projekt wurde erfolgreich ${currentProject ? "aktualisiert" : "erstellt"}`,
@@ -91,13 +89,13 @@ export default function ProjectPage() {
   // Handle add button click
   const handleAddProject = () => {
     setCurrentProject(null);
-    setIsDialogOpen(true);
+    setIsEditing(true);
   };
   
   // Handle edit button click
   const handleEditProject = (project: Project) => {
     setCurrentProject(project);
-    setIsDialogOpen(true);
+    setIsEditing(true);
   };
   
   // Handle delete button click
@@ -205,42 +203,49 @@ export default function ProjectPage() {
       }
       tabs={[]}
     >
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <Button onClick={handleAddProject}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Neues Projekt
-          </Button>
+      {!isEditing ? (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={handleAddProject}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Neues Projekt
+            </Button>
+          </div>
+          <DataTable
+            data={projects}
+            columns={columns}
+            isLoading={isLoading}
+            onEdit={handleEditProject}
+            onDelete={handleDeleteProject}
+            title="Projektliste"
+          />
         </div>
-        <DataTable
-          data={projects}
-          columns={columns}
-          isLoading={isLoading}
-          onEdit={handleEditProject}
-          onDelete={handleDeleteProject}
-          title="Projektliste"
-        />
-      </div>
+      ) : null}
       
 
       
-      {/* Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{currentProject ? "Projekt bearbeiten" : "Neues Projekt"}</DialogTitle>
-            <DialogDescription>
-              Geben Sie die Details des Projekts ein.
-            </DialogDescription>
-          </DialogHeader>
+      {isEditing && (
+        <div className="mt-8">
+          {currentProject ? (
+            <div className="flex items-center mb-6">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück zur Liste
+              </Button>
+            </div>
+          ) : null}
           
           <ProjectForm 
             project={currentProject} 
             onSubmit={handleFormSubmit} 
             isLoading={saveProjectMutation.isPending} 
           />
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
       
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

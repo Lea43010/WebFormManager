@@ -52,12 +52,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
     street: z.string().optional(),
     houseNumber: z.string().optional(),
     addressLine2: z.string().optional(),
-    postalCode: z.number().optional(),
+    postalCode: z.string().optional(),
     city: z.string().optional(),
     cityPart: z.string().optional(),
     state: z.string().optional(),
     country: z.string().optional(),
-    companyPhone: z.number().optional(),
+    companyPhone: z.string().optional(),
     companyEmail: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal('')),
   });
 
@@ -72,18 +72,23 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
       street: company?.street || "",
       houseNumber: company?.houseNumber || "",
       addressLine2: company?.addressLine2 || "",
-      postalCode: company?.postalCode || undefined,
+      postalCode: company?.postalCode !== null ? company.postalCode : '',
       city: company?.city || "",
       cityPart: company?.cityPart || "",
       state: company?.state || "",
       country: company?.country || "Deutschland",
-      companyPhone: company?.companyPhone || undefined,
+      companyPhone: company?.companyPhone !== null ? company.companyPhone : '',
       companyEmail: company?.companyEmail || "",
     },
   });
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit(data);
+    // Konvertiere die Daten, um den Typen der Schema zu entsprechen
+    const transformedData = {
+      ...data,
+      postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
+    };
+    onSubmit(transformedData as any);
   };
 
   return (
@@ -225,9 +230,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                     <FormLabel>Postleitzahl (PLZ)</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
                         value={field.value || ''}
                       />
                     </FormControl>
@@ -342,9 +345,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                     <FormLabel>Telefonnummer der Firma</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
                         {...field} 
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
                         value={field.value || ''}
                       />
                     </FormControl>
