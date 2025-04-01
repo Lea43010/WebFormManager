@@ -203,8 +203,7 @@ export default function ProjectPage() {
           </Button>
         </div>
       }
-      tabs={["Liste"]}
-      activeTab={"Liste"}
+      tabs={[]}
     >
       <div className="space-y-4">
         <div className="flex justify-end">
