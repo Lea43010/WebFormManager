@@ -70,244 +70,277 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-y-6 gap-x-4 md:grid-cols-12">
-          {/* Erste Zeile */}
-          <FormField
-            control={form.control}
-            name="id"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>Firmennummer</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                    value={field.value || ''} 
-                    disabled={!!company}
-                    placeholder="Wird automatisch vergeben"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="companyArt"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>Unternehmensart</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unternehmensart auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {COMPANY_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Zweite Zeile */}
-          <FormField
-            control={form.control}
-            name="companyName"
-            render={({ field }) => (
-              <FormItem className="md:col-span-12">
-                <FormLabel>Firmenname</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Dritte Zeile */}
-          <FormField
-            control={form.control}
-            name="street"
-            render={({ field }) => (
-              <FormItem className="md:col-span-9">
-                <FormLabel>Straße</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="houseNumber"
-            render={({ field }) => (
-              <FormItem className="md:col-span-3">
-                <FormLabel>Hausnummer</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Vierte Zeile */}
-          <FormField
-            control={form.control}
-            name="addressLine2"
-            render={({ field }) => (
-              <FormItem className="md:col-span-12">
-                <FormLabel>Zusatz</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Fünfte Zeile */}
-          <FormField
-            control={form.control}
-            name="postalCode"
-            render={({ field }) => (
-              <FormItem className="md:col-span-4">
-                <FormLabel>Postleitzahl (PLZ)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem className="md:col-span-4">
-                <FormLabel>Ort / Stadt</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="cityPart"
-            render={({ field }) => (
-              <FormItem className="md:col-span-4">
-                <FormLabel>Stadtteil</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Sechste Zeile */}
-          <FormField
-            control={form.control}
-            name="state"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>Bundesland</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>Land</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Land auswählen" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {COUNTRIES.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Siebte Zeile */}
-          <FormField
-            control={form.control}
-            name="companyPhone"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>Telefonnummer der Firma</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                    value={field.value || ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="companyEmail"
-            render={({ field }) => (
-              <FormItem className="md:col-span-6">
-                <FormLabel>E-Mail-Adresse der Firma</FormLabel>
-                <FormControl>
-                  <Input type="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="bg-white p-6 rounded-md">
+          <h2 className="text-xl font-medium mb-6">{company ? "Unternehmen bearbeiten" : "Neues Unternehmen"}</h2>
+          <p className="text-sm text-gray-500 mb-6">Geben Sie die Details des Unternehmens ein.</p>
+          
+          {/* Unternehmensinformation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Firmennummer</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''} 
+                        disabled={!!company}
+                        placeholder="Wird automatisch vergeben"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="companyArt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unternehmensart</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unternehmensart auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COMPANY_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="md:col-span-2">
+              <FormField
+                control={form.control}
+                name="companyName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Firmenname</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Adresse */}
+          <h3 className="text-lg font-medium mb-4">Adresse</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="md:col-span-2">
+              <FormField
+                control={form.control}
+                name="street"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Straße</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="houseNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hausnummer</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="md:col-span-3">
+              <FormField
+                control={form.control}
+                name="addressLine2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zusatz</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="postalCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Postleitzahl (PLZ)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ort / Stadt</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="cityPart"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stadtteil</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bundesland</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Land</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Land auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Kontaktinformationen */}
+          <h3 className="text-lg font-medium mb-4">Kontaktinformationen</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <FormField
+                control={form.control}
+                name="companyPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefonnummer der Firma</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="companyEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-Mail-Adresse der Firma</FormLabel>
+                    <FormControl>
+                      <Input type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-center space-x-3 mt-8">
+        <div className="flex justify-center mt-8">
           <Button 
             type="submit" 
             disabled={isLoading} 
