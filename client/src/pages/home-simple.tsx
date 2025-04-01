@@ -171,6 +171,18 @@ export default function HomeSimple() {
               >
                 Schnelle Dateneingabe
               </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  fetch('/api/logout', { method: 'POST' })
+                    .then(() => {
+                      window.location.href = '/login';
+                    });
+                }}
+                className="text-base text-red-600 border-red-200 hover:bg-red-50"
+              >
+                Abmelden
+              </Button>
             </div>
           ) : (
             <Button 
