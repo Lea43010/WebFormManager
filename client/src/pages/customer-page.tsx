@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { Customer } from "@shared/schema";
+import { useLocation } from "wouter";
 
 export default function CustomerPage() {
   const [activeTab, setActiveTab] = useState("Liste");
@@ -13,8 +14,12 @@ export default function CustomerPage() {
     staleTime: 1000 * 60, // 1 minute
   });
   
+  // Hook für Navigation
+  const [, navigate] = useLocation();
+  
   const handleAddCustomer = () => {
-    setActiveTab("Neuer Eintrag");
+    // Zur Quick-Entry-Seite navigieren anstatt den Tab zu wechseln
+    navigate("/quick-entry");
   };
   
   // Table columns
