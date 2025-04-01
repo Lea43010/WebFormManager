@@ -24,7 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PROJECT_TYPES = ["Neubau", "Sanierung", "Umbau", "Erweiterung", "Abriss", "Sonstige"];
+const PROJECT_TYPES = ["Hochbau", "Tiefbau"];
 
 interface ProjectFormProps {
   project?: Project | null;
