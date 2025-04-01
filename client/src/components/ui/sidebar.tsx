@@ -85,11 +85,11 @@ export function Sidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-primary-dark text-white">
+    <div className="flex flex-col h-full bg-primary-dark text-black">
       <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
-        <span className="text-xl font-medium">DB Manager</span>
+        <span className="text-xl font-medium text-black">Baustellen App</span>
         {isMobile && (
-          <Button variant="ghost" className="ml-auto text-white" onClick={toggleMobileMenu}>
+          <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
             <X className="h-6 w-6" />
           </Button>
         )}
@@ -109,8 +109,8 @@ export function Sidebar() {
                     className={cn(
                       "group flex items-center px-2 py-2 text-base font-medium rounded-md",
                       isActive
-                        ? "bg-primary-light text-white"
-                        : "text-gray-100 hover:bg-primary-light"
+                        ? "bg-primary-light text-black"
+                        : "text-black hover:bg-primary-light"
                     )}
                   >
                     <item.icon className="mr-3 h-6 w-6" />
@@ -130,7 +130,7 @@ export function Sidebar() {
                 <AvatarFallback className="bg-primary">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{user.username}</p>
+                <p className="text-sm font-medium text-black">{user.username}</p>
               </div>
             </div>
             <TooltipProvider>
@@ -139,7 +139,7 @@ export function Sidebar() {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="text-white" 
+                    className="text-black" 
                     onClick={handleLogout}
                     disabled={logoutMutation.isPending}
                   >
