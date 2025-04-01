@@ -11,36 +11,39 @@ export default function HomePageSimple() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">DB Manager Dashboard</h1>
+    <div className="container mx-auto py-8 px-4 max-w-5xl">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold mb-4 text-primary">DB Manager Dashboard</h1>
+        <p className="text-lg text-gray-600">Das umfassende System zur Verwaltung Ihrer Datenbank</p>
+      </div>
       
-      <Card id="eingabeformular" className="border-4 border-primary shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5">
+      <Card id="eingabeformular" className="border-4 border-primary shadow-xl">
+        <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 py-8">
           <CardTitle className="text-3xl font-bold">Willkommen zum Datenbankmanager!</CardTitle>
-          <CardDescription className="text-lg">
-            Ihr persönliches Dashboard zur Datenbankverwaltung
+          <CardDescription className="text-lg mt-2">
+            Ihr persönliches Dashboard zur effizienten Datenverwaltung
           </CardDescription>
         </CardHeader>
         <CardContent className="p-8">
-          <div className="bg-white p-6 rounded-lg border-2 border-primary/20 shadow-md">
-            <h3 className="text-2xl font-bold mb-6 text-primary">Schnellzugriff</h3>
-            <div className="grid gap-8 sm:grid-cols-2">
+          <div className="bg-white p-8 rounded-lg border-2 border-primary/20 shadow-md">
+            <h3 className="text-2xl font-bold mb-8 text-primary">Schnellzugriff</h3>
+            <div className="grid gap-10 sm:grid-cols-2">
               <div className="space-y-4">
                 <Label htmlFor="search" className="text-xl font-medium">Suche</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-3.5 h-6 w-6 text-primary" />
+                  <Search className="absolute left-4 top-4 h-6 w-6 text-primary" />
                   <Input 
                     id="search" 
                     type="search" 
                     placeholder="Suchen Sie nach Projekten, Kunden, etc." 
-                    className="pl-12 h-14 text-lg rounded-lg shadow-sm"
+                    className="pl-14 h-16 text-lg rounded-lg shadow-sm"
                   />
                 </div>
               </div>
               <div className="space-y-4">
                 <Label htmlFor="entity" className="text-xl font-medium">Entität auswählen</Label>
                 <Select defaultValue="projekt">
-                  <SelectTrigger className="h-14 text-lg rounded-lg shadow-sm">
+                  <SelectTrigger className="h-16 text-lg rounded-lg shadow-sm">
                     <SelectValue placeholder="Wählen Sie eine Entität" />
                   </SelectTrigger>
                   <SelectContent>
@@ -53,22 +56,22 @@ export default function HomePageSimple() {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="flex flex-col sm:flex-row gap-6 mt-10 justify-center">
               <Button 
                 onClick={() => navigate("/projects")}
-                className="w-full sm:w-auto h-14 text-lg bg-primary hover:bg-primary/90 rounded-lg shadow-md"
+                className="w-full sm:w-auto h-16 text-lg bg-primary hover:bg-primary/90 rounded-lg shadow-md"
                 size="lg"
               >
-                <Plus className="mr-2 h-6 w-6" />
+                <Plus className="mr-3 h-6 w-6" />
                 Neues Projekt
               </Button>
               <Button 
                 onClick={() => navigate("/customers")}
                 variant="outline"
-                className="w-full sm:w-auto h-14 text-lg border-2 rounded-lg shadow-md"
+                className="w-full sm:w-auto h-16 text-lg border-2 rounded-lg shadow-md"
                 size="lg"
               >
-                <Plus className="mr-2 h-6 w-6" />
+                <Plus className="mr-3 h-6 w-6" />
                 Neuer Kunde
               </Button>
             </div>
