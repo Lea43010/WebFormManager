@@ -208,14 +208,7 @@ export default function ProjectPage() {
     >
       {activeTab === "Liste" && (
         <div className="space-y-4">
-          <div className="flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/attachments")}
-            >
-              <Paperclip className="mr-2 h-4 w-4" />
-              Alle Anhänge anzeigen
-            </Button>
+          <div className="flex justify-end">
             <Button onClick={handleAddProject}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Neues Projekt
