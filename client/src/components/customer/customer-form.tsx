@@ -46,10 +46,10 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
   const formSchema = z.object({
     id: z.number().optional(),
     projectId: z.number().optional(),
-    customerId: z.string().min(1, "Kundennummer ist erforderlich"),
+    customerId: z.string().or(z.number()).transform(val => String(val)).min(1, "Kundennummer ist erforderlich"),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
-    postalCode: z.string().optional(),
+    postalCode: z.string().or(z.number()).transform(val => val ? String(val) : '').optional(),
     city: z.string().optional(),
     cityPart: z.string().optional(),
     state: z.string().optional(),
