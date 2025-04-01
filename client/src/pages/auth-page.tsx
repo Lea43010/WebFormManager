@@ -346,6 +346,50 @@ export default function AuthPage() {
                     </div>
                   </button>
                 </form>
+                
+                <form 
+                  action="/api/login" 
+                  method="post" 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    
+                    fetch('/api/login', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        username: formData.get('username') || "leazimmer",
+                        password: formData.get('password') || "Landau43010#"
+                      }),
+                      credentials: 'include'
+                    })
+                    .then(response => {
+                      if (response.ok) {
+                        window.location.href = '/attachments';
+                      } else {
+                        console.error('Login fehlgeschlagen');
+                      }
+                    });
+                  }}
+                >
+                  <input type="hidden" name="username" value="leazimmer" />
+                  <input type="hidden" name="password" value="Landau43010#" />
+                  
+                  <button
+                    type="submit"
+                    className="w-full bg-white/40 p-4 rounded-lg text-center hover:bg-white/50 transition cursor-pointer flex items-center justify-center mt-4"
+                  >
+                    <svg className="h-8 w-8 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    <div className="text-left">
+                      <span className="text-lg font-semibold block">Anhänge anzeigen</span>
+                      <span className="text-sm opacity-80">Alle Projektanhänge anzeigen und verwalten</span>
+                    </div>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
