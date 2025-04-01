@@ -145,7 +145,7 @@ export default function AuthPage() {
                       <div className="text-sm">
                         <a
                           href="#"
-                          className="font-medium text-[#6a961f] hover:text-[#5a8418]"
+                          className="font-medium text-gray-900 hover:text-gray-700"
                         >
                           Passwort vergessen?
                         </a>
