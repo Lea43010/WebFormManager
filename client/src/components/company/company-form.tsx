@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const COMPANY_TYPES = ["Subunternehmen", "Generalunternehmen"];
@@ -71,12 +71,13 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div className="grid grid-cols-1 gap-y-6 gap-x-4 md:grid-cols-12">
+          {/* Erste Zeile */}
           <FormField
             control={form.control}
             name="id"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>Firmennummer</FormLabel>
                 <FormControl>
                   <Input 
@@ -97,7 +98,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="companyArt"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>Unternehmensart</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -121,11 +122,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Zweite Zeile */}
           <FormField
             control={form.control}
             name="companyName"
             render={({ field }) => (
-              <FormItem className="sm:col-span-6">
+              <FormItem className="md:col-span-12">
                 <FormLabel>Firmenname</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -135,11 +137,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Dritte Zeile */}
           <FormField
             control={form.control}
             name="street"
             render={({ field }) => (
-              <FormItem className="sm:col-span-4">
+              <FormItem className="md:col-span-9">
                 <FormLabel>Straße</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -153,7 +156,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="houseNumber"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="md:col-span-3">
                 <FormLabel>Hausnummer</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -163,11 +166,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Vierte Zeile */}
           <FormField
             control={form.control}
             name="addressLine2"
             render={({ field }) => (
-              <FormItem className="sm:col-span-6">
+              <FormItem className="md:col-span-12">
                 <FormLabel>Zusatz</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -177,11 +181,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Fünfte Zeile */}
           <FormField
             control={form.control}
             name="postalCode"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="md:col-span-4">
                 <FormLabel>Postleitzahl (PLZ)</FormLabel>
                 <FormControl>
                   <Input 
@@ -200,7 +205,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="city"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="md:col-span-4">
                 <FormLabel>Ort / Stadt</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -214,7 +219,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="cityPart"
             render={({ field }) => (
-              <FormItem className="sm:col-span-2">
+              <FormItem className="md:col-span-4">
                 <FormLabel>Stadtteil</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -224,11 +229,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Sechste Zeile */}
           <FormField
             control={form.control}
             name="state"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>Bundesland</FormLabel>
                 <FormControl>
                   <Input {...field} />
@@ -242,7 +248,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="country"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>Land</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -266,11 +272,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             )}
           />
 
+          {/* Siebte Zeile */}
           <FormField
             control={form.control}
             name="companyPhone"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>Telefonnummer der Firma</FormLabel>
                 <FormControl>
                   <Input 
@@ -289,7 +296,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             control={form.control}
             name="companyEmail"
             render={({ field }) => (
-              <FormItem className="sm:col-span-3">
+              <FormItem className="md:col-span-6">
                 <FormLabel>E-Mail-Adresse der Firma</FormLabel>
                 <FormControl>
                   <Input type="email" {...field} />
@@ -300,10 +307,19 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
           />
         </div>
 
-        <div className="flex justify-end space-x-3">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {company ? "Aktualisieren" : "Speichern"}
+        <div className="flex justify-center space-x-3 mt-8">
+          <Button 
+            type="submit" 
+            disabled={isLoading} 
+            className="w-full md:w-64 py-6 text-lg"
+            size="lg"
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-5 w-5" />
+            )}
+            {company ? "Unternehmen aktualisieren" : "Unternehmen speichern"}
           </Button>
         </div>
       </form>
