@@ -78,9 +78,9 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
-      <div className="flex-1 flex flex-col pt-12 px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm lg:w-96">
-          <div className="mb-8 pt-24">
+      <div className="flex-1 flex flex-col px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
+        <div className="mx-auto w-full max-w-sm lg:w-96 pt-16">
+          <div className="mb-8">
             <h2 className="text-4xl font-bold text-gray-900 text-center">
               Anmeldung
             </h2>
