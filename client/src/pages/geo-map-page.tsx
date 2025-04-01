@@ -40,13 +40,39 @@ export default function GeoMapPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="relative aspect-video w-full overflow-hidden border">
-                <iframe 
-                  src="https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer" 
-                  className="absolute top-0 left-0 w-full h-full"
-                  allow="geolocation"
-                  title="BGR Geoportal"
-                />
+              <div className="relative aspect-video w-full overflow-hidden border bg-gray-100 flex flex-col items-center justify-center p-6 text-center">
+                <div className="mb-4">
+                  <Map className="h-16 w-16 mx-auto text-primary" />
+                  <h3 className="text-lg font-semibold mt-2">Karteninhalt kann nicht eingebunden werden</h3>
+                  <p className="text-gray-500 mt-1 mb-4">
+                    Das BGR Geoportal erlaubt keine direkte Einbettung über iframe aufgrund von Sicherheitseinstellungen.
+                  </p>
+                </div>
+                <Button 
+                  variant="default" 
+                  size="lg"
+                  onClick={() => window.open("https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer", "_blank")}
+                  className="font-medium"
+                >
+                  Geoportal in neuem Tab öffnen
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-4 w-4 ml-2" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                    />
+                  </svg>
+                </Button>
+                <div className="mt-4 text-sm text-gray-500">
+                  <p>Sie können weiterhin Notizen mit Spracherkennung erfassen</p>
+                </div>
               </div>
             </CardContent>
           </Card>
