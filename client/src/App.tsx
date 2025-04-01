@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import HomePage from "@/pages/home-page";
-import HomePageSimple from "@/pages/home-page-simple";
+import HomeSimple from "@/pages/home-simple";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
@@ -14,7 +14,7 @@ import UserPage from "@/pages/user-page";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={HomePageSimple} />
+      <Route path="/" component={HomeSimple} />
       <Route path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
