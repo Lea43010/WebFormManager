@@ -19,12 +19,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Paperclip, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function ProjectPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { logoutMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("Liste");
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -196,12 +194,10 @@ export default function ProjectPage() {
               variant="outline" 
               size="sm" 
               className="mr-4"
-              onClick={() => {
-                logoutMutation.mutate();
-              }}
+              onClick={() => navigate("/auth")}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Abmelden
+              Zurück zur Anmeldung
             </Button>
             <span>Projekte</span>
           </div>
