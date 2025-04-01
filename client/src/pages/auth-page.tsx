@@ -314,8 +314,8 @@ export default function AuthPage() {
                 <button 
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
-                    loginForm.setValue("password", "password");
-                    loginMutation.mutate({ username: "leazimmer", password: "password" });
+                    loginForm.setValue("password", "Landau43010#");
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -327,8 +327,8 @@ export default function AuthPage() {
                 <button 
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
-                    loginForm.setValue("password", "password");
-                    loginMutation.mutate({ username: "leazimmer", password: "password" });
+                    loginForm.setValue("password", "Landau43010#");
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -340,8 +340,8 @@ export default function AuthPage() {
                 <button 
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
-                    loginForm.setValue("password", "password");
-                    loginMutation.mutate({ username: "leazimmer", password: "password" });
+                    loginForm.setValue("password", "Landau43010#");
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
@@ -353,8 +353,8 @@ export default function AuthPage() {
                 <button 
                   onClick={() => { 
                     loginForm.setValue("username", "leazimmer");
-                    loginForm.setValue("password", "password");
-                    loginMutation.mutate({ username: "leazimmer", password: "password" });
+                    loginForm.setValue("password", "Landau43010#");
+                    loginMutation.mutate({ username: "leazimmer", password: "Landau43010#" });
                   }}
                   className="bg-white/30 p-4 rounded-lg text-center hover:bg-white/40 transition cursor-pointer"
                 >
