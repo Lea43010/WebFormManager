@@ -11,6 +11,7 @@ import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
 import MaterialPage from "@/pages/material-page";
 import UserPage from "@/pages/user-page";
+import QuickEntryPage from "@/pages/quick-entry-page";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <ProtectedRoute path="/projects" component={ProjectPage} />
       <ProtectedRoute path="/materials" component={MaterialPage} />
       <ProtectedRoute path="/users" component={UserPage} />
+      <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/login" component={UnprotectedAuthPage} />
       <Route component={NotFound} />

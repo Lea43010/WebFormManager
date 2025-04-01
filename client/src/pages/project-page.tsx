@@ -16,8 +16,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { PlusCircle } from "lucide-react";
 
 export default function ProjectPage() {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("Liste");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -174,10 +177,29 @@ export default function ProjectPage() {
       )}
       
       {activeTab === "Neuer Eintrag" && (
-        <ProjectForm 
-          onSubmit={handleFormSubmit} 
-          isLoading={saveProjectMutation.isPending} 
-        />
+        <div>
+          <div className="bg-muted/30 p-4 rounded-md mb-6 flex flex-wrap items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Schnelle Dateneingabe</h3>
+              <p className="text-sm text-muted-foreground">
+                Benötigen Sie neue Kunden- oder Firmendaten für Ihr Projekt?
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate("/quick-entry")}
+              className="mt-2 md:mt-0"
+              variant="outline"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Kunden/Firma hinzufügen
+            </Button>
+          </div>
+          
+          <ProjectForm 
+            onSubmit={handleFormSubmit} 
+            isLoading={saveProjectMutation.isPending} 
+          />
+        </div>
       )}
       
       {activeTab === "Import/Export" && (
