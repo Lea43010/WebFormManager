@@ -48,6 +48,11 @@ export default function DashboardLayout({
             </div>
             
             <div className="ml-4 flex items-center md:ml-6">
+              <div className="hidden md:flex items-center mr-4">
+                <span className="text-sm font-medium text-gray-700">
+                  Willkommen, {user?.username}
+                </span>
+              </div>
               <div className="flex items-center">
                 <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
                   {user?.username.charAt(0).toUpperCase()}

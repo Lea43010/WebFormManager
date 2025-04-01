@@ -11,31 +11,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Info } from "lucide-react";
+import { Plus, Search, Info, User } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function HomeSimple() {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [selectedEntity, setSelectedEntity] = useState("projekt");
   const [userStatus, setUserStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
   // Überprüfen des Authentifizierungsstatus
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/user');
-        if (response.ok) {
-          setUserStatus('authenticated');
-        } else {
+    if (user) {
+      setUserStatus('authenticated');
+    } else {
+      const checkAuth = async () => {
+        try {
+          const response = await fetch('/api/user');
+          if (response.ok) {
+            setUserStatus('authenticated');
+          } else {
+            setUserStatus('unauthenticated');
+          }
+        } catch (error) {
           setUserStatus('unauthenticated');
         }
-      } catch (error) {
-        setUserStatus('unauthenticated');
-      }
-    };
-    
-    checkAuth();
-  }, []);
+      };
+      
+      checkAuth();
+    }
+  }, [user]);
 
   const handleEntityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedEntity(e.target.value);
@@ -58,7 +64,19 @@ export default function HomeSimple() {
       
       <Card id="eingabeformular" className="border-4 border-primary shadow-xl">
         <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 py-8">
-          <CardTitle className="text-3xl font-bold">Willkommen zum Datenbankmanager!</CardTitle>
+          <CardTitle className="text-3xl font-bold">
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full inline-flex items-center">
+                  <User className="h-5 w-5 mr-1" />
+                  {user.username}
+                </span>
+                <span>, willkommen zurück!</span>
+              </div>
+            ) : (
+              "Willkommen zum Datenbankmanager!"
+            )}
+          </CardTitle>
           <CardDescription className="text-lg mt-2">
             Ihr persönliches Dashboard zur effizienten Datenverwaltung
           </CardDescription>
@@ -68,11 +86,20 @@ export default function HomeSimple() {
             <h3 className="text-2xl font-bold mb-4 text-primary">Dateneingabe & Verwaltung</h3>
             <p className="mb-8 text-gray-600">Hier können Sie schnell auf die wichtigsten Funktionen zugreifen und neue Einträge erstellen.</p>
             
-            {userStatus === 'unauthenticated' && (
+            {userStatus === 'unauthenticated' ? (
               <Alert className="mb-6 bg-blue-50 border-blue-200">
                 <Info className="h-5 w-5 text-blue-500" />
                 <AlertDescription>
                   Sie werden zur Anmeldeseite weitergeleitet, wenn Sie auf einen der Buttons klicken.
+                </AlertDescription>
+              </Alert>
+            ) : userStatus === 'authenticated' && user && (
+              <Alert className="mb-6 bg-green-50 border-green-200">
+                <User className="h-5 w-5 text-green-500" />
+                <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <span className="font-medium">Angemeldet als {user.username}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span>Sie haben vollen Zugriff auf alle Funktionen.</span>
                 </AlertDescription>
               </Alert>
             )}
@@ -128,13 +155,32 @@ export default function HomeSimple() {
           </div>
         </CardContent>
         <CardFooter className="justify-center border-t p-6 bg-muted/20">
-          <Button 
-            variant="link" 
-            onClick={() => navigate("/login")} 
-            className="text-base"
-          >
-            Jetzt anmelden oder registrieren
-          </Button>
+          {user ? (
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button 
+                variant="link" 
+                onClick={() => navigate("/projects")} 
+                className="text-base"
+              >
+                Zu meinen Projekten
+              </Button>
+              <Button 
+                variant="link" 
+                onClick={() => navigate("/quick-entry")} 
+                className="text-base"
+              >
+                Schnelle Dateneingabe
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              variant="link" 
+              onClick={() => navigate("/login")} 
+              className="text-base"
+            >
+              Jetzt anmelden oder registrieren
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

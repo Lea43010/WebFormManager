@@ -144,12 +144,20 @@ export default function UnprotectedAuthPage() {
       <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="mb-8">
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              DB Manager
-            </h2>
+            <div className="flex items-center">
+              <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white font-bold mr-3">
+                DB
+              </div>
+              <h2 className="mt-1 text-3xl font-extrabold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                DB Manager
+              </h2>
+            </div>
             <p className="mt-2 text-sm text-gray-600">
-              Datenbankverwaltungssystem
+              Ihr persönliches Datenbankverwaltungssystem
             </p>
+            <div className="mt-4 text-sm text-primary">
+              Melden Sie sich an, um Ihre personalisierten Funktionen zu nutzen
+            </div>
           </div>
 
           {authError && (
