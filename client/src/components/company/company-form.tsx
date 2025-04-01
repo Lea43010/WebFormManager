@@ -17,6 +17,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const COMPANY_TYPES = ["Subunternehmen", "Generalunternehmen"];
 const COUNTRIES = ["Deutschland", "Österreich", "Schweiz", "Andere"];
+const BUNDESLAENDER = [
+  "Baden-Württemberg",
+  "Bayern",
+  "Berlin",
+  "Brandenburg",
+  "Bremen",
+  "Hamburg",
+  "Hessen",
+  "Mecklenburg-Vorpommern",
+  "Niedersachsen",
+  "Nordrhein-Westfalen",
+  "Rheinland-Pfalz",
+  "Saarland",
+  "Sachsen",
+  "Sachsen-Anhalt",
+  "Schleswig-Holstein",
+  "Thüringen"
+];
 
 interface CompanyFormProps {
   company?: Company | null;
@@ -258,9 +276,23 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Bundesland</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Bundesland auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BUNDESLAENDER.map((bundesland) => (
+                          <SelectItem key={bundesland} value={bundesland}>
+                            {bundesland}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
