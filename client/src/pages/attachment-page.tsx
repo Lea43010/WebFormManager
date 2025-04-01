@@ -89,15 +89,6 @@ export default function AttachmentPage() {
     <DashboardLayout
       title={
         <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mr-2"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Zurück zur Hauptseite
-          </Button>
           <span>Anhänge Übersicht</span>
         </div>
       }

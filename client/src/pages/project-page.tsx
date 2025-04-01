@@ -190,18 +190,6 @@ export default function ProjectPage() {
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mr-4"
-              onClick={() => {
-                // Ausloggen und zur Startseite navigieren
-                navigate("/");
-              }}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück zur Hauptseite
-            </Button>
             <span>Projekte</span>
           </div>
           <Button 
