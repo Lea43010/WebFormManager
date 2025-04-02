@@ -118,14 +118,15 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
         onClick={handleAnalyzeClick}
         disabled={analysisMutation.isPending}
         variant="outline"
-        className="flex items-center"
+        size="sm"
+        className="px-2 py-1 h-8 text-xs"
       >
         {analysisMutation.isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
         ) : (
-          <BarChart4 className="mr-2 h-4 w-4" />
+          <BarChart4 className="mr-1 h-3 w-3" />
         )}
-        Asphalt analysieren
+        Analyse
       </Button>
       
       <Dialog open={showResult} onOpenChange={setShowResult}>
@@ -288,8 +289,12 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
                         />
                       </div>
                     ) : (
-                      <div className="flex justify-center items-center h-64 border rounded-md bg-gray-50">
-                        <p className="text-gray-500">Keine Visualisierung verfügbar</p>
+                      <div className="flex flex-col justify-center items-center h-64 border rounded-md bg-gray-50 p-4">
+                        <p className="text-gray-600 font-medium mb-2">Keine Visualisierung verfügbar</p>
+                        <p className="text-gray-500 text-sm text-center">
+                          Die Visualisierung konnte aufgrund von API-Kontingentlimits nicht erstellt werden. 
+                          Die Analysedetails zur Belastungsklasse und zum Asphalttyp sind aber weiterhin gültig.
+                        </p>
                       </div>
                     )}
                   </CardContent>
