@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SpeechToText } from "@/components/ui/speech-to-text";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map, FileText, ExternalLink, Info, ArrowLeft } from "lucide-react";
+import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Marker-Icons-Problem in react-leaflet beheben
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // Belastungsklassen nach RStO 12
 type BelastungsklasseInfo = {
@@ -113,6 +125,32 @@ const belastungsklassen: BelastungsklasseInfo[] = [
   }
 ];
 
+// Hilfskomponente zum Klicken auf die Karte für Markererstellung
+interface MapClickerProps {
+  onMarkerAdd: (lat: number, lng: number) => void;
+}
+
+function MapClicker({ onMarkerAdd }: MapClickerProps) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!map) return;
+    
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      onMarkerAdd(lat, lng);
+    };
+    
+    map.on('click', handleMapClick);
+    
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [map, onMarkerAdd]);
+  
+  return null;
+}
+
 export default function GeoMapPage() {
   const [notes, setNotes] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -120,6 +158,7 @@ export default function GeoMapPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
   const [mapSource, setMapSource] = useState<string>("bgr");
+  const [markers, setMarkers] = useState<[number, number][]>([]);
   const [, navigate] = useLocation();
 
   const handleSave = () => {
@@ -133,6 +172,10 @@ export default function GeoMapPage() {
   
   const getKlasseInfo = (klasseId: string): BelastungsklasseInfo | undefined => {
     return belastungsklassen.find(k => k.klasse === klasseId);
+  };
+  
+  const addMarker = (lat: number, lng: number) => {
+    setMarkers(prev => [...prev, [lat, lng]]);
   };
 
   return (
@@ -425,7 +468,7 @@ export default function GeoMapPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="aspect-video bg-gray-100 flex flex-col items-center justify-center p-6 text-center rounded-md border">
-                    <Map className="h-12 w-12 text-primary mb-2" />
+                    <MapIcon className="h-12 w-12 text-primary mb-2" />
                     <p className="text-sm text-gray-500 mb-4">
                       Geologische Karten und Bodenkarten für Deutschland
                     </p>
@@ -449,7 +492,7 @@ export default function GeoMapPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="aspect-video bg-gray-100 flex flex-col items-center justify-center p-6 text-center rounded-md border">
-                    <Map className="h-12 w-12 text-primary mb-2" />
+                    <MapIcon className="h-12 w-12 text-primary mb-2" />
                     <p className="text-sm text-gray-500 mb-4">
                       Straßeninformationen, Bauprojekte und Verkehrsdaten
                     </p>
@@ -467,45 +510,115 @@ export default function GeoMapPage() {
             
             <Card>
               <CardHeader>
-                <CardTitle>Lokale Kartenansicht (vorschau)</CardTitle>
+                <CardTitle>Interaktive Kartenansicht</CardTitle>
                 <CardDescription>
-                  Beispielansicht für zukünftige Integration einer lokalen Karte
+                  Karte zur Visualisierung von Projektstandorten
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="relative aspect-video w-full overflow-hidden border bg-gray-100 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="mb-4">
-                    <Map className="h-16 w-16 mx-auto text-primary" />
-                    <h3 className="text-lg font-semibold mt-2">Kartenintegration in Arbeit</h3>
-                    <p className="text-gray-500 mt-1 mb-4">
-                      Eine direkte Kartenintegration ist in Entwicklung.
-                    </p>
+                <div className="relative w-full h-[400px] overflow-hidden border">
+                  <MapContainer 
+                    center={[51.1657, 10.4515]} 
+                    zoom={6} 
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    
+                    {/* Ursprünglicher Marker für Deutschland */}
+                    <Marker position={[51.1657, 10.4515]}>
+                      <Popup>
+                        <div className="p-2">
+                          <h3 className="font-medium">Deutschland</h3>
+                          <p className="text-sm text-gray-600">Klicken Sie auf die Karte, um Standorte zu markieren</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                    
+                    {/* Dynamisch hinzugefügte Marker */}
+                    {markers.map((position, index) => (
+                      <Marker key={`marker-${index}`} position={position}>
+                        <Popup>
+                          <div className="p-2">
+                            <h3 className="font-medium">Standort #{index + 1}</h3>
+                            <p className="text-sm text-gray-600">
+                              Position: {position[0].toFixed(5)}, {position[1].toFixed(5)}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Klicken Sie, um Details zu bearbeiten
+                            </p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    ))}
+                    
+                    {/* Komponente zum Erfassen von Klicks auf der Karte */}
+                    <MapClicker onMarkerAdd={addMarker} />
+                  </MapContainer>
+                </div>
+                <div className="p-4 border-t">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-sm font-medium">
+                      {markers.length} Standort(e) markiert
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setMarkers([])}
+                      disabled={markers.length === 0}
+                      className="text-destructive hover:text-destructive/90"
+                    >
+                      Alle Marker zurücksetzen
+                    </Button>
                   </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.open("https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer", "_blank")}
-                    >
-                      BGR Geoportal
-                      <ExternalLink className="ml-2 h-3 w-3" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.open("https://www.openstreetmap.org/", "_blank")}
-                    >
-                      OpenStreetMap
-                      <ExternalLink className="ml-2 h-3 w-3" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.open("https://www.google.de/maps", "_blank")}
-                    >
-                      Google Maps
-                      <ExternalLink className="ml-2 h-3 w-3" />
-                    </Button>
+                  
+                  {markers.length > 0 && (
+                    <div className="mb-3 rounded-md border overflow-hidden">
+                      <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium">
+                        Markierte Standorte
+                      </div>
+                      <div className="divide-y max-h-24 overflow-y-auto">
+                        {markers.map((pos, idx) => (
+                          <div key={idx} className="px-3 py-1.5 text-sm flex justify-between items-center">
+                            <div>Standort #{idx + 1}: {pos[0].toFixed(5)}, {pos[1].toFixed(5)}</div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 text-destructive/70"
+                              onClick={() => setMarkers(prev => prev.filter((_, i) => i !== idx))}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs text-gray-500">
+                      Karte basierend auf OpenStreetMap-Daten
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open("https://www.openstreetmap.org/", "_blank")}
+                      >
+                        OpenStreetMap
+                        <ExternalLink className="ml-2 h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open("https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer", "_blank")}
+                      >
+                        BGR Geoportal
+                        <ExternalLink className="ml-2 h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -628,7 +741,7 @@ export default function GeoMapPage() {
                     <div>
                       <Button className="w-full" disabled>
                         Mit Projekt verknüpfen
-                        <Map className="ml-2 h-4 w-4" />
+                        <MapIcon className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
                   </TooltipTrigger>
