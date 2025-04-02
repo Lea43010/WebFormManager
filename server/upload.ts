@@ -51,7 +51,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // Max 10MB
+    fileSize: 25 * 1024 * 1024, // Max 25MB
   },
 });
 
@@ -81,7 +81,7 @@ export const handleUploadErrors = (err: Error, req: Request, res: Response, next
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
-        message: "Die Datei ist zu groß. Maximale Dateigröße ist 10MB.",
+        message: "Die Datei ist zu groß. Maximale Dateigröße ist 25MB.",
       });
     }
     return res.status(400).json({ message: `Upload-Fehler: ${err.message}` });
@@ -95,7 +95,6 @@ export const handleUploadErrors = (err: Error, req: Request, res: Response, next
  * Middleware zur Bereinigung hochgeladener Dateien bei Fehler im weiteren Verlauf
  */
 export const cleanupOnError = async (req: Request, res: Response, next: NextFunction) => {
-  const originalEnd = res.end;
   const files: Express.Multer.File[] = (req as any).files || [];
   const file: Express.Multer.File = (req as any).file;
 
@@ -103,8 +102,8 @@ export const cleanupOnError = async (req: Request, res: Response, next: NextFunc
     files.push(file);
   }
 
-  // Überschreiben der res.end-Methode, um bei Fehler Dateien zu löschen
-  res.end = function(...args) {
+  // Verwenden von res.on('finish') anstelle der Überschreibung von res.end
+  res.on('finish', () => {
     const statusCode = res.statusCode;
     if (statusCode >= 400 && files.length > 0) {
       // Bei Fehler die hochgeladenen Dateien löschen
@@ -116,8 +115,7 @@ export const cleanupOnError = async (req: Request, res: Response, next: NextFunc
         }
       });
     }
-    return originalEnd.apply(res, args);
-  };
+  });
 
   next();
 };
