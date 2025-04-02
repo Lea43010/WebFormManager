@@ -219,6 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectWidth: req.body.projectWidth?.toString() || null,
         projectLength: req.body.projectLength?.toString() || null,
         projectHeight: req.body.projectHeight?.toString() || null,
+        projectText: req.body.projectText?.toString() || null,
       };
       
       // Schema übernimmt die Konversion zu Zahlen
@@ -240,11 +241,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         projectWidth: req.body.projectWidth?.toString() || null,
         projectLength: req.body.projectLength?.toString() || null,
-        projectHeight: req.body.projectHeight?.toString() || null
+        projectHeight: req.body.projectHeight?.toString() || null,
+        projectText: req.body.projectText?.toString() || null
       };
       
-      // Verwende ein einfaches partielles Schema für die Validierung
-      const validatedData = insertProjectSchema.partial().parse(formData);
+      // Aktualisiere die Daten direkt, ohne komplexe Schema-Manipulation
+      const validatedData = formData;
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });

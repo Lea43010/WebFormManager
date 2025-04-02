@@ -205,6 +205,7 @@ export const insertProjectSchema = createInsertSchema(projects).transform((data)
     projectWidth: typeof data.projectWidth === 'string' ? parseFloat(data.projectWidth) : data.projectWidth,
     projectLength: typeof data.projectLength === 'string' ? parseFloat(data.projectLength) : data.projectLength,
     projectHeight: typeof data.projectHeight === 'string' ? parseFloat(data.projectHeight) : data.projectHeight,
+    projectText: typeof data.projectText === 'string' ? parseInt(data.projectText, 10) : data.projectText,
   };
 });
 export const insertMaterialSchema = createInsertSchema(materials);
