@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <title>RStO 12 Belastungsklasse Bk10</title>
+  <!-- Hintergrund -->
+  <rect x="0" y="0" width="800" height="600" fill="#f8f8f8"/>
+  
+  <!-- Titel -->
+  <text x="400" y="50" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold">Belastungsklasse Bk10</text>
+  <text x="400" y="80" font-family="Arial" font-size="18" text-anchor="middle">Schwerverkehr > 3.000.000 bis 10.000.000 Äquivalente 10-t-Achsübergänge</text>
+  
+  <!-- Straßenaufbau-Legende -->
+  <text x="100" y="130" font-family="Arial" font-size="18" font-weight="bold">Typischer Straßenaufbau:</text>
+  
+  <!-- Schichten für RStO 12 Bk10 -->
+  <!-- Deckschicht - Dunkelgrau -->
+  <rect x="150" y="170" width="500" height="40" fill="#555555"/>
+  <text x="670" y="195" font-family="Arial" font-size="16" fill="black">4 cm</text>
+  <text x="400" y="195" font-family="Arial" font-size="16" fill="white" text-anchor="middle">AC 11 D S (Asphaltbeton)</text>
+  
+  <!-- Binderschicht - Mittelgrau -->
+  <rect x="150" y="210" width="500" height="40" fill="#777777"/>
+  <text x="670" y="235" font-family="Arial" font-size="16" fill="black">6 cm</text>
+  <text x="400" y="235" font-family="Arial" font-size="16" fill="white" text-anchor="middle">AC 16 B S (Asphaltbinder)</text>
+  
+  <!-- Tragschicht - Hellgrau -->
+  <rect x="150" y="250" width="500" height="70" fill="#999999"/>
+  <text x="670" y="285" font-family="Arial" font-size="16" fill="black">14 cm</text>
+  <text x="400" y="285" font-family="Arial" font-size="16" fill="black" text-anchor="middle">AC 32 T S (Asphalttragschicht)</text>
+  
+  <!-- Frostschutzschicht - Braun -->
+  <rect x="150" y="320" width="500" height="110" fill="#d3b17d"/>
+  <text x="670" y="375" font-family="Arial" font-size="16" fill="black">35 cm</text>
+  <text x="400" y="375" font-family="Arial" font-size="16" fill="black" text-anchor="middle">Frostschutzschicht</text>
+  
+  <!-- Untergrund - Erde -->
+  <rect x="150" y="430" width="500" height="50" fill="#8b4513"/>
+  <text x="400" y="460" font-family="Arial" font-size="16" fill="white" text-anchor="middle">Untergrund / Unterbau</text>
+  
+  <!-- Gesamtdicke -->
+  <line x1="100" y1="170" x2="100" y2="430" stroke="black" stroke-width="2"/>
+  <line x1="95" y1="170" x2="105" y2="170" stroke="black" stroke-width="2"/>
+  <line x1="95" y1="430" x2="105" y2="430" stroke="black" stroke-width="2"/>
+  <text x="80" y="300" font-family="Arial" font-size="16" fill="black" text-anchor="end">59 cm</text>
+  
+  <!-- Maßstabsleiste -->
+  <line x1="150" y1="540" x2="650" y2="540" stroke="black" stroke-width="2"/>
+  <line x1="150" y1="535" x2="150" y2="545" stroke="black" stroke-width="2"/>
+  <line x1="650" y1="535" x2="650" y2="545" stroke="black" stroke-width="2"/>
+  <text x="400" y="560" font-family="Arial" font-size="14" fill="black" text-anchor="middle">500 cm</text>
+  
+  <!-- Weitere Informationen -->
+  <text x="400" y="580" font-family="Arial" font-size="12" fill="#555" text-anchor="middle">RStO 12 - Richtlinien für die Standardisierung des Oberbaus von Verkehrsflächen</text>
+</svg>

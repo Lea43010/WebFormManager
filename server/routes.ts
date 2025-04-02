@@ -576,6 +576,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   }, express.static(path.join(process.cwd(), "uploads")));
   
+  // Serve static RStO visualizations
+  app.use("/static/rsto_visualizations", express.static(path.join(process.cwd(), "public/static/rsto_visualizations")));
+  
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
   app.post(
     "/api/attachments/upload",

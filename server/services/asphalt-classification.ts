@@ -173,37 +173,89 @@ export async function generateRstoVisualization(
   outputPath: string
 ): Promise<string> {
   try {
-    // DeepAI API nutzen, um ein Bild zu generieren
+    // Zuerst versuchen, mit DeepAI API ein Bild zu generieren
     const prompt = `Ein technisches, schematisches Diagramm eines Straßenquerschnitts für die RStO-Belastungsklasse ${belastungsklasse}. 
     Es zeigt deutlich die verschiedenen Schichten (Deckschicht, Binderschicht, Tragschicht, Frostschutzschicht) mit korrekten Dicken und Bezeichnungen. 
     Der Straßenaufbau soll für eine ${belastungsklassen[belastungsklasse].description} ausgelegt sein.
     Verwende eine klare, technische Darstellung mit Beschriftungen und Maßen. Keine Personen oder Fahrzeuge.`;
     
-    // DeepAI Text2Image API aufrufen
-    const response = await deepai.callStandardApi("text2img", {
-      text: prompt,
-    });
-    
-    // URL des generierten Bildes
-    const imageUrl = response.output?.url;
-    if (!imageUrl) {
-      throw new Error("Kein Bild generiert");
+    try {
+      // DeepAI Text2Image API aufrufen
+      const response = await deepai.callStandardApi("text2img", {
+        text: prompt,
+      });
+      
+      // URL des generierten Bildes
+      const imageUrl = response.output?.url;
+      if (!imageUrl) {
+        throw new Error("Kein Bild generiert");
+      }
+      
+      // Bilddaten herunterladen und speichern
+      const imageResponse = await fetch(imageUrl);
+      const buffer = Buffer.from(await imageResponse.arrayBuffer());
+      
+      // Ordner erstellen, falls er nicht existiert
+      const dir = path.dirname(outputPath);
+      await fs.mkdir(dir, { recursive: true });
+      
+      // Bild speichern
+      await fs.writeFile(outputPath, buffer);
+      
+      return outputPath;
+    } catch (apiError) {
+      console.error("DeepAI API-Fehler:", apiError);
+      // Wenn die API-Generierung fehlschlägt, verwenden wir statische Bilder als Fallback
+      return useStaticVisualization(belastungsklasse, outputPath);
     }
-    
-    // Bilddaten herunterladen und speichern
-    const imageResponse = await fetch(imageUrl);
-    const buffer = Buffer.from(await imageResponse.arrayBuffer());
-    
-    // Ordner erstellen, falls er nicht existiert
-    const dir = path.dirname(outputPath);
-    await fs.mkdir(dir, { recursive: true });
-    
-    // Bild speichern
-    await fs.writeFile(outputPath, buffer);
-    
-    return outputPath;
   } catch (error) {
-    console.error("Fehler bei der Generierung des RStO-Visualisierungsbildes mit DeepAI:", error);
+    console.error("Fehler bei der Generierung des RStO-Visualisierungsbildes:", error);
+    throw error;
+  }
+}
+
+// Fallback-Funktion für statische Visualisierungen, wenn die API-Generierung fehlschlägt
+async function useStaticVisualization(
+  belastungsklasse: keyof typeof belastungsklassen,
+  outputPath: string
+): Promise<string> {
+  try {
+    // Normalisierte Belastungsklasse für den Dateinamen
+    let normalizedBk = belastungsklasse;
+    
+    // Pfad zum statischen SVG basierend auf der Belastungsklasse
+    const staticSvgPath = path.join(
+      process.cwd(),
+      'public',
+      'static',
+      'rsto_visualizations',
+      `${normalizedBk}.svg`
+    );
+    
+    // Prüfen, ob die statische Datei existiert
+    if (await fs.pathExists(staticSvgPath)) {
+      // SVG-Datei kopieren
+      await fs.copyFile(staticSvgPath, outputPath);
+      return outputPath;
+    } else {
+      // Wenn keine spezifische SVG-Datei gefunden wurde, nehmen wir Bk3 als Standard
+      const defaultSvgPath = path.join(
+        process.cwd(),
+        'public',
+        'static',
+        'rsto_visualizations',
+        'Bk3.svg'
+      );
+      
+      if (await fs.pathExists(defaultSvgPath)) {
+        await fs.copyFile(defaultSvgPath, outputPath);
+        return outputPath;
+      } else {
+        throw new Error("Keine statische Visualisierung verfügbar");
+      }
+    }
+  } catch (error) {
+    console.error("Fehler beim Verwenden der statischen Visualisierung:", error);
     throw error;
   }
 }
