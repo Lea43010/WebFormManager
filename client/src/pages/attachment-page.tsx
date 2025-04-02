@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera, BarChart4 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment } from "@shared/schema";
 import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
+import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
@@ -182,14 +183,20 @@ export default function AttachmentPage() {
                         <Trash2 className="w-4 h-4 mr-2" />
                         Löschen
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownload(attachment)}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(attachment)}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                        
+                        {attachment.fileType === 'image' && (
+                          <AsphaltAnalysis attachment={attachment} />
+                        )}
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}
@@ -243,14 +250,20 @@ export default function AttachmentPage() {
                               <Trash2 className="w-4 h-4 mr-1" />
                               Löschen
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownload(attachment)}
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              Download
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownload(attachment)}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              
+                              {attachment.fileType === 'image' && (
+                                <AsphaltAnalysis attachment={attachment} />
+                              )}
+                            </div>
                           </CardFooter>
                         </Card>
                       ))}
