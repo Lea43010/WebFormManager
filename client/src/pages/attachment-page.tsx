@@ -175,21 +175,24 @@ export default function AttachmentPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="p-4 bg-gray-50 flex justify-between">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openDeleteDialog(attachment)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Löschen
-                      </Button>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="px-2 py-1 h-8 text-xs"
+                          onClick={() => openDeleteDialog(attachment)}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Löschen
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 h-8 text-xs"
                           onClick={() => handleDownload(attachment)}
                         >
-                          <Download className="w-4 h-4 mr-2" />
+                          <Download className="w-3 h-3 mr-1" />
                           Download
                         </Button>
                         
@@ -241,22 +244,25 @@ export default function AttachmentPage() {
                               </p>
                             </div>
                           </CardContent>
-                          <CardFooter className="p-3 bg-gray-50 flex justify-between">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openDeleteDialog(attachment)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Löschen
-                            </Button>
-                            <div className="flex space-x-2">
+                          <CardFooter className="p-3 bg-gray-50">
+                            <div className="flex flex-wrap gap-2 w-full">
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="px-2 py-1 h-8 text-xs"
+                                onClick={() => openDeleteDialog(attachment)}
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Löschen
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="px-2 py-1 h-8 text-xs"
                                 onClick={() => handleDownload(attachment)}
                               >
-                                <Download className="w-4 h-4 mr-1" />
+                                <Download className="w-3 h-3 mr-1" />
                                 Download
                               </Button>
                               
