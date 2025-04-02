@@ -47,13 +47,20 @@ export function setupImageAnalysisRoutes(app: express.Express) {
       // RStO-Visualisierung generieren
       let visualizationUrl = '';
       try {
-        const savedPath = await generateRstoVisualization(
+        // Diese Funktion gibt nun entweder einen lokalen Pfad zurück (wenn die API funktioniert)
+        // oder direkt eine URL zu einer statischen SVG-Datei (als Fallback)
+        const result = await generateRstoVisualization(
           analysisResult.belastungsklasse,
           visualizationPath
         );
         
-        // Relativen Pfad für den Zugriff über URL erstellen
-        visualizationUrl = '/uploads/visualizations/' + path.basename(savedPath);
+        // Prüfen, ob das Ergebnis bereits eine URL ist (statische SVG)
+        if (result.startsWith('/static/')) {
+          visualizationUrl = result;
+        } else {
+          // Sonst normalen Pfad verwenden (API-generiertes Bild)
+          visualizationUrl = '/uploads/visualizations/' + path.basename(result);
+        }
       } catch (error) {
         console.error('Fehler bei der Visualisierungsgenerierung:', error);
         // Fehler bei der Visualisierung sollte nicht die gesamte Analyse fehlschlagen lassen

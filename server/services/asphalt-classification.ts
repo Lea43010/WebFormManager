@@ -168,6 +168,7 @@ function validateAsphalttyp(input: string): keyof typeof asphaltTypen {
 }
 
 // Funktion zum Generieren einer visuellen Darstellung der Belastungsklasse
+// Gibt entweder den Pfad zum generierten Bild zurück oder einen direkten URL-Pfad zu einer statischen SVG-Datei
 export async function generateRstoVisualization(
   belastungsklasse: keyof typeof belastungsklassen,
   outputPath: string
@@ -205,12 +206,18 @@ export async function generateRstoVisualization(
       return outputPath;
     } catch (apiError) {
       console.error("DeepAI API-Fehler:", apiError);
-      // Wenn die API-Generierung fehlschlägt, verwenden wir statische Bilder als Fallback
+      // Wenn die API-Generierung fehlschlägt, verwenden wir statische SVGs als Fallback
+      // Diese Funktion gibt direkt die URL des statischen SVGs zurück
       return useStaticVisualization(belastungsklasse, outputPath);
     }
   } catch (error) {
     console.error("Fehler bei der Generierung des RStO-Visualisierungsbildes:", error);
-    throw error;
+    // Auch bei einem Fehler versuchen wir, ein statisches Bild zu liefern
+    try {
+      return useStaticVisualization(belastungsklasse, outputPath);
+    } catch {
+      throw error;
+    }
   }
 }
 
@@ -223,6 +230,9 @@ async function useStaticVisualization(
     // Normalisierte Belastungsklasse für den Dateinamen
     let normalizedBk = belastungsklasse;
     
+    // Statt die Datei zu kopieren, geben wir einfach den direkten Pfad zum statischen SVG zurück
+    const staticSvgUrl = `/static/rsto_visualizations/${normalizedBk}.svg`;
+    
     // Pfad zum statischen SVG basierend auf der Belastungsklasse
     const staticSvgPath = path.join(
       process.cwd(),
@@ -234,9 +244,7 @@ async function useStaticVisualization(
     
     // Prüfen, ob die statische Datei existiert
     if (await fs.pathExists(staticSvgPath)) {
-      // SVG-Datei kopieren
-      await fs.copyFile(staticSvgPath, outputPath);
-      return outputPath;
+      return staticSvgUrl;
     } else {
       // Wenn keine spezifische SVG-Datei gefunden wurde, nehmen wir Bk3 als Standard
       const defaultSvgPath = path.join(
@@ -248,8 +256,7 @@ async function useStaticVisualization(
       );
       
       if (await fs.pathExists(defaultSvgPath)) {
-        await fs.copyFile(defaultSvgPath, outputPath);
-        return outputPath;
+        return '/static/rsto_visualizations/Bk3.svg';
       } else {
         throw new Error("Keine statische Visualisierung verfügbar");
       }
