@@ -125,12 +125,61 @@ const belastungsklassen: BelastungsklasseInfo[] = [
   }
 ];
 
+// Farbkodierung für Belastungsklassen
+const belastungsklassenColors: Record<string, string> = {
+  "Bk100": "#ff0000", // Rot für höchste Belastung
+  "Bk32": "#ff6600",  // Orange
+  "Bk10": "#ffcc00",  // Gelb
+  "Bk3,2": "#99cc00", // Gelbgrün
+  "Bk1,8": "#33cc33", // Grün
+  "Bk1,0": "#0099ff", // Hellblau
+  "Bk0,3": "#3366ff", // Blau (Standard)
+  "default": "#3366ff" // Standardfarbe für Marker ohne Klasse
+};
+
+// Marker-Interface für erweiterte Informationen
+interface MarkerInfo {
+  position: [number, number]; // Position als [latitude, longitude]
+  belastungsklasse?: string;  // Z.B. "Bk100", "Bk32", etc.
+  name?: string;              // Optionaler Name für den Marker
+  notes?: string;             // Optionale Notizen zum Standort
+}
+
+// Benutzerdefinierten Icon-Ersteller basierend auf Belastungsklasse
+function createCustomIcon(belastungsklasse?: string): L.Icon {
+  // Konvertiere die Farbe zu einem einfachen Namen für die Marker-Icons
+  let colorName = "blue"; // Standard-Farbe als Fallback
+  
+  if (belastungsklasse) {
+    const hex = belastungsklassenColors[belastungsklasse] || belastungsklassenColors.default;
+    
+    // Konvertiere Hex-Farben zu den Standard-Farbnamen, die von der Marker-Bibliothek unterstützt werden
+    // https://github.com/pointhi/leaflet-color-markers
+    if (hex === "#ff0000") colorName = "red";
+    else if (hex === "#ff6600") colorName = "orange";
+    else if (hex === "#ffcc00") colorName = "yellow";
+    else if (hex === "#99cc00" || hex === "#33cc33") colorName = "green";
+    else if (hex === "#0099ff") colorName = "blue";
+    else if (hex === "#3366ff") colorName = "blue";
+  }
+  
+  return new L.Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${colorName}.png`,
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+}
+
 // Hilfskomponente zum Klicken auf die Karte für Markererstellung
 interface MapClickerProps {
   onMarkerAdd: (lat: number, lng: number) => void;
+  selectedBelastungsklasse: string;
 }
 
-function MapClicker({ onMarkerAdd }: MapClickerProps) {
+function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) {
   const map = useMap();
   
   useEffect(() => {
@@ -158,7 +207,8 @@ export default function GeoMapPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
   const [mapSource, setMapSource] = useState<string>("bgr");
-  const [markers, setMarkers] = useState<[number, number][]>([]);
+  const [markers, setMarkers] = useState<MarkerInfo[]>([]);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
   const [, navigate] = useLocation();
 
   const handleSave = () => {
@@ -174,8 +224,36 @@ export default function GeoMapPage() {
     return belastungsklassen.find(k => k.klasse === klasseId);
   };
   
+  // Neuer Marker mit aktuell ausgewählter Belastungsklasse
   const addMarker = (lat: number, lng: number) => {
-    setMarkers(prev => [...prev, [lat, lng]]);
+    const newMarker: MarkerInfo = {
+      position: [lat, lng],
+      belastungsklasse: selectedBelastungsklasse || undefined,
+      name: selectedLocation || `Standort #${markers.length + 1}`,
+      notes: notes || undefined
+    };
+    
+    setMarkers(prev => [...prev, newMarker]);
+    
+    // Setze den neuen Marker als ausgewählt
+    setSelectedMarkerIndex(markers.length);
+  };
+  
+  // Marker-Daten aktualisieren
+  const updateMarker = (index: number, data: Partial<MarkerInfo>) => {
+    setMarkers(prev => prev.map((marker, i) => 
+      i === index ? { ...marker, ...data } : marker
+    ));
+  };
+  
+  // Marker löschen
+  const deleteMarker = (index: number) => {
+    setMarkers(prev => prev.filter((_, i) => i !== index));
+    if (selectedMarkerIndex === index) {
+      setSelectedMarkerIndex(null);
+    } else if (selectedMarkerIndex !== null && selectedMarkerIndex > index) {
+      setSelectedMarkerIndex(selectedMarkerIndex - 1);
+    }
   };
 
   return (
@@ -533,29 +611,61 @@ export default function GeoMapPage() {
                         <div className="p-2">
                           <h3 className="font-medium">Deutschland</h3>
                           <p className="text-sm text-gray-600">Klicken Sie auf die Karte, um Standorte zu markieren</p>
+                          <p className="text-xs text-primary mt-2">
+                            Wählen Sie eine Belastungsklasse vor dem Markieren, um farbige Marker zu setzen
+                          </p>
                         </div>
                       </Popup>
                     </Marker>
                     
-                    {/* Dynamisch hinzugefügte Marker */}
-                    {markers.map((position, index) => (
-                      <Marker key={`marker-${index}`} position={position}>
+                    {/* Dynamisch hinzugefügte Marker mit Belastungsklassen-Farbcodierung */}
+                    {markers.map((marker, index) => (
+                      <Marker 
+                        key={`marker-${index}`} 
+                        position={marker.position}
+                        icon={createCustomIcon(marker.belastungsklasse)}
+                      >
                         <Popup>
                           <div className="p-2">
-                            <h3 className="font-medium">Standort #{index + 1}</h3>
-                            <p className="text-sm text-gray-600">
-                              Position: {position[0].toFixed(5)}, {position[1].toFixed(5)}
+                            <h3 className="font-medium">{marker.name || `Standort #${index + 1}`}</h3>
+                            {marker.belastungsklasse && (
+                              <div className="mt-1 text-sm text-primary font-medium">
+                                Belastungsklasse: {marker.belastungsklasse}
+                              </div>
+                            )}
+                            <p className="text-sm text-gray-600 mt-1">
+                              Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                              Klicken Sie, um Details zu bearbeiten
-                            </p>
+                            {marker.notes && (
+                              <div className="mt-2 text-sm">
+                                <div className="font-medium">Notizen:</div>
+                                <p className="text-gray-600">{marker.notes}</p>
+                              </div>
+                            )}
+                            <div className="mt-3 flex justify-between">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedMarkerIndex(index)}
+                              >
+                                Bearbeiten
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-destructive"
+                                onClick={() => deleteMarker(index)}
+                              >
+                                Entfernen
+                              </Button>
+                            </div>
                           </div>
                         </Popup>
                       </Marker>
                     ))}
                     
                     {/* Komponente zum Erfassen von Klicks auf der Karte */}
-                    <MapClicker onMarkerAdd={addMarker} />
+                    <MapClicker onMarkerAdd={addMarker} selectedBelastungsklasse={selectedBelastungsklasse} />
                   </MapContainer>
                 </div>
                 <div className="p-4 border-t">
@@ -580,14 +690,29 @@ export default function GeoMapPage() {
                         Markierte Standorte
                       </div>
                       <div className="divide-y max-h-24 overflow-y-auto">
-                        {markers.map((pos, idx) => (
+                        {markers.map((marker, idx) => (
                           <div key={idx} className="px-3 py-1.5 text-sm flex justify-between items-center">
-                            <div>Standort #{idx + 1}: {pos[0].toFixed(5)}, {pos[1].toFixed(5)}</div>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ 
+                                  backgroundColor: marker.belastungsklasse ? 
+                                    belastungsklassenColors[marker.belastungsklasse] || belastungsklassenColors.default
+                                    : belastungsklassenColors.default 
+                                }}
+                              />
+                              <div>
+                                {marker.name || `Standort #${idx + 1}`}: {parseFloat(marker.position[0].toString()).toFixed(5)}, {parseFloat(marker.position[1].toString()).toFixed(5)}
+                                {marker.belastungsklasse && (
+                                  <span className="text-xs ml-1 text-primary">({marker.belastungsklasse})</span>
+                                )}
+                              </div>
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="icon" 
                               className="h-6 w-6 text-destructive/70"
-                              onClick={() => setMarkers(prev => prev.filter((_, i) => i !== idx))}
+                              onClick={() => deleteMarker(idx)}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                             </Button>
