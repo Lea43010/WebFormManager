@@ -243,39 +243,43 @@ export default function AttachmentUploadForm({
           </TabsContent>
           
           <TabsContent value="camera">
-            <FormField
-              control={form.control}
-              name="projectId"
-              render={({ field }) => (
-                <FormItem className="mb-6">
-                  <FormLabel>Projekt</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isLoadingProjects}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Projekt auswählen" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {projects?.map((project) => (
-                        <SelectItem key={project.id} value={project.id.toString()}>
-                          {project.projectName || `Projekt ${project.id}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <CameraUpload 
-              projectId={form.watch("projectId") ? parseInt(form.watch("projectId")) : null} 
-              onUploadSuccess={handleCameraUploadSuccess}
-            />
+            <Form {...form}>
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem className="mb-6">
+                      <FormLabel>Projekt</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isLoadingProjects}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Projekt auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projects?.map((project) => (
+                            <SelectItem key={project.id} value={project.id.toString()}>
+                              {project.projectName || `Projekt ${project.id}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <CameraUpload 
+                  projectId={form.watch("projectId") ? parseInt(form.watch("projectId")) : null} 
+                  onUploadSuccess={handleCameraUploadSuccess}
+                />
+              </div>
+            </Form>
           </TabsContent>
         </Tabs>
       </CardContent>

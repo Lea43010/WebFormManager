@@ -243,12 +243,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectHeight: req.body.projectHeight?.toString() || null
       };
       
-      // Verwende angepasstes Schema für partielle Validierung
-      const validatedData = z.object({
-        ...Object.fromEntries(
-          Object.entries(insertProjectSchema.shape).map(([key, schema]) => [key, schema.optional()])
-        )
-      }).parse(formData);
+      // Verwende ein einfaches partielles Schema für die Validierung
+      const validatedData = insertProjectSchema.partial().parse(formData);
       const project = await storage.updateProject(id, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });
@@ -467,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     upload.single("file"),
     handleUploadErrors,
     cleanupOnError,
-    async (req, res, next) => {
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
         if (!req.file) {
           return res.status(400).json({ message: "Keine Datei hochgeladen." });
@@ -583,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     upload.single("file"),
     handleUploadErrors,
     cleanupOnError,
-    async (req, res, next) => {
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
         if (!req.file) {
           return res.status(400).json({ message: "Keine Datei hochgeladen." });
