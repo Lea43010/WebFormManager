@@ -1,6 +1,12 @@
-import { OpenAI } from 'openai';
-import * as fs from 'fs/promises';
 import * as path from 'path';
+import deepai from 'deepai';
+import * as fs from 'fs-extra';
+import { createReadStream } from 'fs';
+
+// DeepAI API Key setzen
+if (process.env.DEEPAI_API_KEY) {
+  deepai.setApiKey(process.env.DEEPAI_API_KEY);
+}
 
 // RStO-Belastungsklassen definieren
 export const belastungsklassen = {
@@ -52,12 +58,7 @@ export const asphaltTypen = {
   'Asphalttragschicht (AC base)': 'Tragschicht für die Lastübertragung'
 };
 
-// OpenAI-Client erstellen
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-// Funktion zur KI-gestützten Analyse von Asphaltbildern
+// Funktion zur KI-gestützten Analyse von Asphaltbildern mit DeepAI
 export async function analyzeAsphaltImage(imagePath: string): Promise<{
   belastungsklasse: keyof typeof belastungsklassen,
   asphalttyp: keyof typeof asphaltTypen,
@@ -65,69 +66,73 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
   analyseDetails: string
 }> {
   try {
-    // Bild als Base64 einlesen
-    const imageBuffer = await fs.readFile(imagePath);
-    const base64Image = imageBuffer.toString('base64');
-    
-    // OpenAI Vision API abfragen
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
-      messages: [
-        {
-          role: "system",
-          content: `Du bist ein Experte für Straßenbau und Asphaltklassifizierung nach den deutschen RStO-Richtlinien. 
-          Analysiere das Bild eines Asphalts und bestimme:
-          1. Die wahrscheinliche Belastungsklasse gemäß RStO (Bk100, Bk32, Bk10, Bk3, Bk1, Bk0.3)
-          2. Den wahrscheinlichen Asphalttyp
-          3. Die Konfidenz deiner Einschätzung (0-100%)
-          4. Begründe deine Entscheidung in 2-3 Sätzen`
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`
-              }
-            },
-            {
-              type: "text",
-              text: "Analysiere dieses Asphaltbild und klassifiziere es nach RStO-Belastungsklassen. Antworte im JSON-Format mit den Feldern: belastungsklasse, asphalttyp, confidence (als Zahl zwischen 0-100), und analyseDetails."
-            }
-          ]
-        }
-      ],
-      max_tokens: 800,
-      response_format: { type: "json_object" }
+    // DeepAI Bilderkennungsmodell verwenden
+    // Wir nutzen das general-image-recognition Modell für grundlegende Bildanalyse
+    const resp = await deepai.callStandardApi("general-image-recognition", {
+      image: createReadStream(imagePath),
     });
     
-    const responseContent = response.choices[0].message.content;
-    if (!responseContent) {
-      throw new Error("Keine Antwort vom KI-Modell erhalten");
+    // Ermittle die wahrscheinlichsten Materialien und Strukturen aus den erkannten Objekten
+    const output = resp.output;
+    console.log("DeepAI Ergebnis:", output);
+    
+    // Standardwerte basierend auf erkannten Eigenschaften setzen
+    let belastungsklasse: keyof typeof belastungsklassen = "Bk3"; // Mittlere Belastung als Standard
+    let asphalttyp: keyof typeof asphaltTypen = "Asphaltbeton (AC)"; // Standardtyp
+    let confidence = 70; // Standardkonfidenz
+    
+    // Bestimmte Schlüsselwörter suchen, um Belastungsklasse abzuschätzen
+    const keywords = output.toLowerCase();
+    
+    // Belastungsklasse anhand der erkannten Merkmale bestimmen
+    if (keywords.includes("highway") || keywords.includes("autobahn") || keywords.includes("industrial")) {
+      belastungsklasse = "Bk100";
+      confidence = 80;
+    } else if (keywords.includes("road") || keywords.includes("street") || keywords.includes("asphalt")) {
+      if (keywords.includes("main") || keywords.includes("heavy")) {
+        belastungsklasse = "Bk32";
+        confidence = 75;
+      } else if (keywords.includes("urban") || keywords.includes("city")) {
+        belastungsklasse = "Bk10";
+        confidence = 70;
+      } else {
+        belastungsklasse = "Bk3";
+        confidence = 65;
+      }
+    } else if (keywords.includes("residential") || keywords.includes("neighborhood")) {
+      belastungsklasse = "Bk1";
+      confidence = 70;
+    } else if (keywords.includes("path") || keywords.includes("walkway") || keywords.includes("small")) {
+      belastungsklasse = "Bk0_3";
+      confidence = 75;
     }
     
-    const result = JSON.parse(responseContent);
+    // Asphalttyp bestimmen
+    if (keywords.includes("porous") || keywords.includes("drainage")) {
+      asphalttyp = "Offenporiger Asphalt (PA)";
+    } else if (keywords.includes("mix") || keywords.includes("stone") || keywords.includes("aggregate")) {
+      asphalttyp = "Splittmastixasphalt (SMA)";
+    } else if (keywords.includes("smooth") || keywords.includes("sealed")) {
+      asphalttyp = "Gussasphalt (MA)";
+    }
     
-    // Ergebnisse validieren und standardisieren
-    const belastungsklasse = validateBelastungsklasse(result.belastungsklasse);
-    const asphalttyp = validateAsphalttyp(result.asphalttyp);
-    const confidence = Math.min(Math.max(0, result.confidence), 100);
+    // Detaillierten Analysebericht erstellen
+    const analyseDetails = `Basierend auf den erkannten Merkmalen (${output}) wurde die Belastungsklasse ${belastungsklasse} mit einer Konfidenz von ${confidence}% bestimmt. Der wahrscheinlichste Asphalttyp ist ${asphalttyp}.`;
     
     return {
       belastungsklasse,
       asphalttyp,
       confidence,
-      analyseDetails: result.analyseDetails || "Keine Details verfügbar"
+      analyseDetails
     };
   } catch (error) {
-    console.error("Fehler bei der Asphaltanalyse:", error);
+    console.error("Fehler bei der Asphaltanalyse mit DeepAI:", error);
     // Fallback-Ergebnisse, wenn die Analyse fehlschlägt
     return {
       belastungsklasse: "Bk3",
       asphalttyp: "Asphaltbeton (AC)",
       confidence: 30,
-      analyseDetails: "Fehler bei der Analyse des Bildes. Standardwerte werden angezeigt."
+      analyseDetails: "Fehler bei der Analyse des Bildes mit DeepAI. Standardwerte werden angezeigt."
     };
   }
 }
@@ -168,20 +173,19 @@ export async function generateRstoVisualization(
   outputPath: string
 ): Promise<string> {
   try {
-    // OpenAI API nutzen, um ein Bild zu generieren
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: `Ein technisches, schematisches Diagramm eines Straßenquerschnitts für die RStO-Belastungsklasse ${belastungsklasse}. 
-      Es zeigt deutlich die verschiedenen Schichten (Deckschicht, Binderschicht, Tragschicht, Frostschutzschicht) mit korrekten Dicken und Bezeichnungen. 
-      Der Straßenaufbau soll für eine ${belastungsklassen[belastungsklasse].description} ausgelegt sein.
-      Verwende eine klare, technische Darstellung mit Beschriftungen und Maßen. Keine Personen oder Fahrzeuge.`,
-      size: "1024x1024",
-      quality: "standard",
-      n: 1,
+    // DeepAI API nutzen, um ein Bild zu generieren
+    const prompt = `Ein technisches, schematisches Diagramm eines Straßenquerschnitts für die RStO-Belastungsklasse ${belastungsklasse}. 
+    Es zeigt deutlich die verschiedenen Schichten (Deckschicht, Binderschicht, Tragschicht, Frostschutzschicht) mit korrekten Dicken und Bezeichnungen. 
+    Der Straßenaufbau soll für eine ${belastungsklassen[belastungsklasse].description} ausgelegt sein.
+    Verwende eine klare, technische Darstellung mit Beschriftungen und Maßen. Keine Personen oder Fahrzeuge.`;
+    
+    // DeepAI Text2Image API aufrufen
+    const response = await deepai.callStandardApi("text2img", {
+      text: prompt,
     });
     
     // URL des generierten Bildes
-    const imageUrl = response.data[0]?.url;
+    const imageUrl = response.output?.url;
     if (!imageUrl) {
       throw new Error("Kein Bild generiert");
     }
@@ -199,7 +203,7 @@ export async function generateRstoVisualization(
     
     return outputPath;
   } catch (error) {
-    console.error("Fehler bei der Generierung des RStO-Visualisierungsbildes:", error);
+    console.error("Fehler bei der Generierung des RStO-Visualisierungsbildes mit DeepAI:", error);
     throw error;
   }
 }
