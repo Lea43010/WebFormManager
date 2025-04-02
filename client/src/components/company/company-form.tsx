@@ -72,12 +72,12 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
       street: company?.street || "",
       houseNumber: company?.houseNumber || "",
       addressLine2: company?.addressLine2 || "",
-      postalCode: company?.postalCode !== null ? company.postalCode : '',
+      postalCode: company?.postalCode ? String(company.postalCode) : '',
       city: company?.city || "",
       cityPart: company?.cityPart || "",
       state: company?.state || "",
       country: company?.country || "Deutschland",
-      companyPhone: company?.companyPhone !== null ? company.companyPhone : '',
+      companyPhone: company?.companyPhone ? String(company.companyPhone) : '',
       companyEmail: company?.companyEmail || "",
     },
   });
@@ -87,6 +87,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
     const transformedData = {
       ...data,
       postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
+      companyPhone: data.companyPhone && data.companyPhone.toString().trim() !== '' ? data.companyPhone : null,
     };
     onSubmit(transformedData as any);
   };
