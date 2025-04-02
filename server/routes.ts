@@ -577,6 +577,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   }, express.static(path.join(process.cwd(), "uploads")));
   
+  // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
+  app.post(
+    "/api/attachments/upload",
+    upload.single("file"),
+    handleUploadErrors,
+    cleanupOnError,
+    async (req, res, next) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "Keine Datei hochgeladen." });
+        }
+        
+        if (!req.body.projectId) {
+          // Lösche die Datei, da kein Projekt angegeben wurde
+          await fs.remove(req.file.path);
+          return res.status(400).json({ message: "Projekt-ID ist erforderlich" });
+        }
+        
+        const projectId = parseInt(req.body.projectId);
+        const project = await storage.getProject(projectId);
+        
+        if (!project) {
+          // Lösche die Datei, da das Projekt nicht existiert
+          await fs.remove(req.file.path);
+          return res.status(404).json({ message: "Projekt nicht gefunden" });
+        }
+        
+        const attachmentData = {
+          projectId,
+          fileName: req.file.originalname,
+          originalName: req.file.originalname,
+          fileType: getFileType(req.file.mimetype),
+          filePath: req.file.path,
+          fileSize: req.file.size,
+          description: req.body.description || null
+        };
+        
+        const attachment = await storage.createAttachment(attachmentData);
+        res.status(201).json(attachment);
+      } catch (error) {
+        console.error("Error uploading attachment:", error);
+        
+        // Bei einem Fehler die Datei löschen, falls sie existiert
+        if (req.file) {
+          await fs.remove(req.file.path).catch(() => {});
+        }
+        
+        next(error);
+      }
+    }
+  );
+  
   // Einrichten der Download-Routen für Datenbankmigrationen
   setupDownloadRoutes(app);
 

@@ -5,21 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment } from "@shared/schema";
+import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadMode, setUploadMode] = useState<"regular" | "camera">("regular");
 
   // Anhänge laden
-  const { data: attachments, isLoading, error } = useQuery<Attachment[]>({
+  const { data: attachments, isLoading, error, refetch } = useQuery<Attachment[]>({
     queryKey: ["/api/attachments"],
     staleTime: 10 * 1000, // 10 Sekunden
   });
@@ -85,6 +88,15 @@ export default function AttachmentPage() {
     return acc;
   }, {} as Record<number, Attachment[]>) || {};
 
+  const handleUploadSuccess = () => {
+    setUploadDialogOpen(false);
+    refetch();
+    toast({
+      title: "Erfolg",
+      description: "Anhang erfolgreich hochgeladen.",
+    });
+  };
+
   return (
     <DashboardLayout
       title={
@@ -96,6 +108,32 @@ export default function AttachmentPage() {
       activeTab="Alle Anhänge"
     >
       <div className="container p-4">
+        <div className="flex flex-wrap justify-between items-center mb-6">
+          <div className="flex space-x-4 mb-4 md:mb-0">
+            <Button 
+              onClick={() => {
+                setUploadMode("regular");
+                setUploadDialogOpen(true);
+              }}
+              className="bg-[#6a961f] hover:bg-[#5a8418] text-white"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Datei hochladen
+            </Button>
+            
+            <Button 
+              onClick={() => {
+                setUploadMode("camera");
+                setUploadDialogOpen(true);
+              }}
+              variant="outline"
+            >
+              <Camera className="mr-2 h-4 w-4" />
+              Kamera
+            </Button>
+          </div>
+        </div>
+
         <Tabs defaultValue="all">
           <TabsList className="mb-6">
             <TabsTrigger value="all">Alle Anhänge</TabsTrigger>
@@ -224,6 +262,7 @@ export default function AttachmentPage() {
           </TabsContent>
         </Tabs>
 
+        {/* Delete Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -253,6 +292,29 @@ export default function AttachmentPage() {
                 Löschen
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Upload Dialog */}
+        <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>
+                {uploadMode === "camera" ? "Kamerafoto hochladen" : "Anhang hochladen"}
+              </DialogTitle>
+              <DialogDescription>
+                {uploadMode === "camera" 
+                  ? "Nehmen Sie ein Foto mit Ihrer Kamera auf oder wählen Sie ein bestehendes Foto aus."
+                  : "Wählen Sie ein Projekt und laden Sie eine Datei hoch."
+                }
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <AttachmentUploadForm 
+                onUploadSuccess={handleUploadSuccess}
+                mode={uploadMode}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
