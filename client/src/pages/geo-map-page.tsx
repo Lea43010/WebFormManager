@@ -1827,7 +1827,7 @@ export default function GeoMapPage() {
                       </div>
                     </div>
                     
-                    {selectedBelastungsklasse && (
+                    {selectedBelastungsklasse && showCostEstimation && (
                       <div className="p-3 border rounded-md bg-muted/30">
                         {(() => {
                           const routeDistance = calculateRouteDistances(markers).total;
