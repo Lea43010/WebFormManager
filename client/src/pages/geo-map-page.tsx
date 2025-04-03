@@ -1234,9 +1234,25 @@ export default function GeoMapPage() {
                           <div className="font-medium">Teilstrecken:</div>
                           <div className="grid grid-cols-1 gap-1">
                             {calculateRouteDistances(markers).segments.map((distance, idx) => (
-                              <div key={idx} className="flex justify-between items-center">
-                                <span>Von {markers[idx].name || `Standort #${idx + 1}`} nach {markers[idx+1].name || `Standort #${idx + 2}`}:</span>
-                                <span className="font-medium">{distance.toFixed(2)} km</span>
+                              <div key={idx} className="space-y-1 mb-2">
+                                <div className="flex justify-between items-center">
+                                  <span>Von {markers[idx].name || `Standort #${idx + 1}`} nach {markers[idx+1].name || `Standort #${idx + 2}`}:</span>
+                                  <span className="font-medium">{distance.toFixed(2)} km</span>
+                                </div>
+                                {(markers[idx].strasse || markers[idx+1].strasse) && (
+                                  <div className="text-[10px] text-muted-foreground">
+                                    {markers[idx].strasse && (
+                                      <div>
+                                        <span className="font-medium">Standort {idx + 1}:</span> {markers[idx].strasse} {markers[idx].hausnummer || ""}
+                                      </div>
+                                    )}
+                                    {markers[idx+1].strasse && (
+                                      <div>
+                                        <span className="font-medium">Standort {idx + 2}:</span> {markers[idx+1].strasse} {markers[idx+1].hausnummer || ""}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
