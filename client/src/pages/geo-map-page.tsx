@@ -6,12 +6,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin } from "lucide-react";
+import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { 
+  MapContainer, 
+  TileLayer, 
+  Marker, 
+  Popup, 
+  useMap, 
+  Polyline, 
+  Tooltip as LeafletTooltip 
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -143,6 +151,94 @@ interface MarkerInfo {
   belastungsklasse?: string;  // Z.B. "Bk100", "Bk32", etc.
   name?: string;              // Optionaler Name für den Marker
   notes?: string;             // Optionale Notizen zum Standort
+}
+
+// Berechnet die Entfernung zwischen zwei geografischen Punkten in Kilometern (Haversine-Formel)
+function calculateDistance(
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number {
+  const R = 6371; // Erdradius in Kilometern
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Entfernung in Kilometern
+  
+  return Math.round(distance * 100) / 100; // Auf 2 Nachkommastellen gerundet
+}
+
+// Berechnet Entfernungen zwischen mehreren Markern
+function calculateRouteDistances(markers: MarkerInfo[]): {total: number, segments: number[]} {
+  if (markers.length < 2) {
+    return { total: 0, segments: [] };
+  }
+  
+  let totalDistance = 0;
+  const segmentDistances: number[] = [];
+  
+  for (let i = 0; i < markers.length - 1; i++) {
+    const current = markers[i];
+    const next = markers[i + 1];
+    const distance = calculateDistance(
+      current.position[0], 
+      current.position[1], 
+      next.position[0], 
+      next.position[1]
+    );
+    
+    segmentDistances.push(distance);
+    totalDistance += distance;
+  }
+  
+  return {
+    total: Math.round(totalDistance * 100) / 100,
+    segments: segmentDistances
+  };
+}
+
+// Berechnet die optimale Route zwischen allen Markern (kürzeste Gesamtstrecke)
+// Nutzt einen einfachen Greedy-Algorithmus
+function optimizeRouteOrder(markers: MarkerInfo[]): MarkerInfo[] {
+  if (markers.length <= 2) {
+    return [...markers]; // Ein oder zwei Marker brauchen keine Optimierung
+  }
+  
+  const optimizedMarkers: MarkerInfo[] = [markers[0]]; // Start mit dem ersten Marker
+  const remainingMarkers = [...markers.slice(1)]; // Alle außer dem ersten Marker
+  
+  while (remainingMarkers.length > 0) {
+    const lastMarker = optimizedMarkers[optimizedMarkers.length - 1];
+    let nearestIndex = 0;
+    let shortestDistance = Infinity;
+    
+    // Finde den nächsten Marker
+    for (let i = 0; i < remainingMarkers.length; i++) {
+      const currentMarker = remainingMarkers[i];
+      const distance = calculateDistance(
+        lastMarker.position[0],
+        lastMarker.position[1],
+        currentMarker.position[0],
+        currentMarker.position[1]
+      );
+      
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+    
+    // Füge nächsten Marker zur optimierten Route hinzu
+    optimizedMarkers.push(remainingMarkers[nearestIndex]);
+    remainingMarkers.splice(nearestIndex, 1);
+  }
+  
+  return optimizedMarkers;
 }
 
 // Benutzerdefinierten Icon-Ersteller basierend auf Belastungsklasse
@@ -642,6 +738,22 @@ export default function GeoMapPage() {
                                 <p className="text-gray-600">{marker.notes}</p>
                               </div>
                             )}
+                            {index > 0 && (
+                              <div className="mt-2 text-xs">
+                                <div className="font-medium flex items-center gap-1">
+                                  <Ruler className="h-3 w-3" /> 
+                                  Entfernung vom vorherigen Punkt:
+                                </div>
+                                <p className="text-primary">
+                                  {calculateDistance(
+                                    markers[index-1].position[0],
+                                    markers[index-1].position[1],
+                                    marker.position[0],
+                                    marker.position[1]
+                                  ).toFixed(2)} km
+                                </p>
+                              </div>
+                            )}
                             <div className="mt-3 flex justify-between">
                               <Button 
                                 variant="outline" 
@@ -664,6 +776,23 @@ export default function GeoMapPage() {
                       </Marker>
                     ))}
                     
+                    {/* Polyline für die Strecke zwischen den Markern */}
+                    {markers.length > 1 && (
+                      <Polyline
+                        positions={markers.map(marker => marker.position)}
+                        color="#3366ff"
+                        weight={3}
+                        opacity={0.7}
+                        dashArray="5, 10"
+                      >
+                        <LeafletTooltip sticky>
+                          <div className="p-1 text-xs">
+                            <strong>Gesamtdistanz:</strong> {calculateRouteDistances(markers).total} km
+                          </div>
+                        </LeafletTooltip>
+                      </Polyline>
+                    )}
+                    
                     {/* Komponente zum Erfassen von Klicks auf der Karte */}
                     <MapClicker onMarkerAdd={addMarker} selectedBelastungsklasse={selectedBelastungsklasse} />
                   </MapContainer>
@@ -673,15 +802,27 @@ export default function GeoMapPage() {
                     <div className="text-sm font-medium">
                       {markers.length} Standort(e) markiert
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setMarkers([])}
-                      disabled={markers.length === 0}
-                      className="text-destructive hover:text-destructive/90"
-                    >
-                      Alle Marker zurücksetzen
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => markers.length >= 3 && setMarkers(optimizeRouteOrder(markers))}
+                        disabled={markers.length < 3}
+                        className="flex items-center"
+                      >
+                        <Ruler className="h-3 w-3 mr-1" />
+                        Route optimieren
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setMarkers([])}
+                        disabled={markers.length === 0}
+                        className="text-destructive hover:text-destructive/90"
+                      >
+                        Alle Marker zurücksetzen
+                      </Button>
+                    </div>
                   </div>
                   
                   {markers.length > 0 && (
@@ -718,6 +859,34 @@ export default function GeoMapPage() {
                             </Button>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Entfernungsmessung */}
+                  {markers.length >= 2 && (
+                    <div className="mb-4 rounded-md border overflow-hidden">
+                      <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium flex items-center">
+                        <Ruler className="h-3 w-3 mr-1" /> Entfernungsmessung
+                      </div>
+                      <div className="p-3">
+                        <div className="mb-2">
+                          <div className="text-sm font-semibold flex items-center">
+                            <span>Gesamtstrecke: </span>
+                            <span className="ml-2 text-primary">{calculateRouteDistances(markers).total.toFixed(2)} km</span>
+                          </div>
+                        </div>
+                        <div className="text-xs space-y-1">
+                          <div className="font-medium">Teilstrecken:</div>
+                          <div className="grid grid-cols-1 gap-1">
+                            {calculateRouteDistances(markers).segments.map((distance, idx) => (
+                              <div key={idx} className="flex justify-between items-center">
+                                <span>Von {markers[idx].name || `Standort #${idx + 1}`} nach {markers[idx+1].name || `Standort #${idx + 2}`}:</span>
+                                <span className="font-medium">{distance.toFixed(2)} km</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -863,11 +1032,22 @@ export default function GeoMapPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div>
-                      <Button className="w-full" disabled>
+                    <div className="space-y-2">
+                      <Button className="w-full">
                         Mit Projekt verknüpfen
                         <MapIcon className="ml-2 h-4 w-4" />
                       </Button>
+                      
+                      {markers.length >= 2 && (
+                        <div className="p-3 bg-muted/30 rounded-md border text-xs">
+                          <div className="font-medium flex items-center mb-1">
+                            <Ruler className="h-3 w-3 mr-1" /> Streckendaten speichern
+                          </div>
+                          <div className="text-gray-600">
+                            Gesamtlänge: {calculateRouteDistances(markers).total.toFixed(2)} km über {markers.length} Punkte
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
