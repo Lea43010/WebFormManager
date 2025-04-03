@@ -1056,24 +1056,43 @@ export default function GeoMapPage() {
                           <Search className="ml-2 h-3 w-3" />
                         </Button>
                       </div>
-                      <div className="ml-2">
-                        <Select
-                          value={selectedMapProvider}
-                          onValueChange={setSelectedMapProvider}
-                        >
-                          <SelectTrigger className="h-8 w-[180px]">
-                            <div className="flex items-center">
-                              <Layers className="h-4 w-4 mr-1" />
-                              <SelectValue placeholder="Kartenebene" />
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="osm">OpenStreetMap</SelectItem>
-                            <SelectItem value="satellit">Satellit (ESRI)</SelectItem>
-                            <SelectItem value="topo">Topographisch</SelectItem>
-                            <SelectItem value="cyclemap">CycleMap</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div className="ml-2 flex">
+                        <div className="border rounded-md p-1 flex items-center text-xs">
+                          <div className="flex items-center mr-2">
+                            <Layers className="h-4 w-4 mr-1" />
+                            <span>Kartenebene:</span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant={selectedMapProvider === "osm" ? "default" : "outline"}
+                              className="h-7 px-2 py-1 text-xs"
+                              onClick={() => setSelectedMapProvider("osm")}
+                            >
+                              OSM
+                            </Button>
+                            <Button 
+                              variant={selectedMapProvider === "satellit" ? "default" : "outline"}
+                              className="h-7 px-2 py-1 text-xs"
+                              onClick={() => setSelectedMapProvider("satellit")}
+                            >
+                              Satellit
+                            </Button>
+                            <Button 
+                              variant={selectedMapProvider === "topo" ? "default" : "outline"}
+                              className="h-7 px-2 py-1 text-xs"
+                              onClick={() => setSelectedMapProvider("topo")}
+                            >
+                              Topo
+                            </Button>
+                            <Button 
+                              variant={selectedMapProvider === "cyclemap" ? "default" : "outline"}
+                              className="h-7 px-2 py-1 text-xs"
+                              onClick={() => setSelectedMapProvider("cyclemap")}
+                            >
+                              Cycle
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   
