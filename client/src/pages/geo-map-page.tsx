@@ -891,6 +891,38 @@ export default function GeoMapPage() {
                     </div>
                   )}
                   
+                  {/* Marker-Farblegende */}
+                  <div className="mb-4 rounded-md border overflow-hidden">
+                    <div className="bg-muted/50 px-3 py-1.5 text-xs font-medium">
+                      Legende - Belastungsklassen Farbkodierung
+                    </div>
+                    <div className="p-3 space-y-2 text-xs">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {Object.entries(belastungsklassenColors).filter(([key]) => key !== "default").map(([klasse, farbe]) => {
+                          const klasseInfo = getKlasseInfo(klasse);
+                          return (
+                            <div key={klasse} className="flex items-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded-full flex-shrink-0" 
+                                style={{ backgroundColor: farbe }}
+                              />
+                              <div>
+                                <span className="font-medium">{klasse}</span>
+                                {klasseInfo && (
+                                  <div className="text-gray-500 text-[10px]">{klasseInfo.beispiel}</div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground pt-1 border-t">
+                        Die Farbcodierung entspricht der RStO 12 Klassifizierung von Straßen nach der Belastbarkeit.
+                        Rot (Bk100) steht für höchste, Blau (Bk0,3) für niedrigste Belastung.
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="flex justify-between items-center">
                     <div className="text-xs text-gray-500">
                       Karte basierend auf OpenStreetMap-Daten
