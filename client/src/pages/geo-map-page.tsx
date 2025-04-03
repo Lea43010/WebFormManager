@@ -241,6 +241,138 @@ function optimizeRouteOrder(markers: MarkerInfo[]): MarkerInfo[] {
   return optimizedMarkers;
 }
 
+// Materialkosten-Modell für verschiedene Belastungsklassen (pro m²)
+interface MaterialCosts {
+  asphaltdecke: number;     // Kosten pro m² für Asphaltdecke
+  asphalttragschicht: number;  // Kosten pro m² für Asphalttragschicht
+  frostschutzschicht: number;  // Kosten pro m² für Frostschutzschicht
+  schottertragschicht?: number; // Kosten pro m² für Schottertragschicht (optional)
+}
+
+// Kostenschätzungen pro m² für verschiedene Materialien in EUR
+const baseMaterialCosts: MaterialCosts = {
+  asphaltdecke: 35,          // Hohe Qualität
+  asphalttragschicht: 25,    // Mittlere Qualität
+  frostschutzschicht: 15,    // Basisschicht
+  schottertragschicht: 18    // Schottertragschicht
+};
+
+// Koeffizient für Kostenmultiplikatoren basierend auf Belastungsklasse
+const belastungsklassenCostFactors: Record<string, number> = {
+  "Bk100": 1.5,   // Höchste Beanspruchung = teurere Materialien
+  "Bk32": 1.3,
+  "Bk10": 1.2,
+  "Bk3,2": 1.1,
+  "Bk1,8": 1.0,
+  "Bk1,0": 0.9,
+  "Bk0,3": 0.8,   // Niedrigste Beanspruchung = günstigere Materialien
+  "default": 1.0  // Standardfaktor
+};
+
+// Straßenbreite-Presets in Metern
+const roadWidthPresets: Record<string, number> = {
+  "Autobahn": 12.5,       // Mehrspurige Autobahn
+  "Bundesstraße": 7.5,    // Breite Hauptstraße
+  "Landstraße": 6.5,      // Standard Landstraße  
+  "Kreisstraße": 5.5,     // Typische Kreisstraße
+  "Gemeindestraße": 5.0,  // Kleinere Ortsstraße
+  "Wirtschaftsweg": 3.5,  // Einfacher Wirtschaftsweg
+  "Fußweg": 2.0           // Fuß-/Radweg
+};
+
+// Hilfsfunktion zum Abrufen von Belastungsklasse-Informationen
+function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
+  return belastungsklassen.find(k => k.klasse === klasseId);
+}
+
+// Berechnet Materialkosten für eine Straße basierend auf:
+// - Belastungsklasse (bestimmt Materialstärke und Qualität)
+// - Streckenlänge in km
+// - Straßenbreite in Metern
+function calculateMaterialCosts(
+  belastungsklasse: string,
+  distanceKm: number,
+  roadWidthMeters: number
+): {
+  totalCost: number;
+  costBreakdown: {
+    asphaltdecke: number;
+    asphalttragschicht: number;
+    frostschutzschicht: number;
+    schottertragschicht?: number;
+  };
+  areaSquareMeters: number;
+} {
+  const klasseInfo = getKlasseInfo(belastungsklasse);
+  if (!klasseInfo) {
+    return {
+      totalCost: 0,
+      costBreakdown: {
+        asphaltdecke: 0,
+        asphalttragschicht: 0,
+        frostschutzschicht: 0
+      },
+      areaSquareMeters: 0
+    };
+  }
+
+  // Umrechnung cm zu m und String zu Zahl
+  const asphaltdeckeDicke = parseFloat(klasseInfo.dickeAsphaltdecke) / 100;
+  const asphalttragschichtDicke = parseFloat(klasseInfo.dickeAsphaltTragschicht) / 100;
+  
+  // Bei Frostschutzschicht nehmen wir den Mittelwert der Spanne
+  const frostschutzRangeText = klasseInfo.dickeFrostschutzschicht1;
+  const frostschutzRange = frostschutzRangeText.split('-').map((x: string) => parseFloat(x));
+  const frostschutzDicke = (frostschutzRange[0] + frostschutzRange[1]) / 2 / 100; // Durchschnitt in Meter
+  
+  // Optional: Schottertragschicht, falls vorhanden
+  let schottertragschichtDicke = 0;
+  if (klasseInfo.dickeSchotterTragschicht) {
+    schottertragschichtDicke = parseFloat(klasseInfo.dickeSchotterTragschicht) / 100;
+  }
+  
+  // Kostenfaktor basierend auf der Belastungsklasse
+  const costFactor = belastungsklassenCostFactors[belastungsklasse] || belastungsklassenCostFactors.default;
+  
+  // Fläche in Quadratmetern
+  const areaSquareMeters = distanceKm * 1000 * roadWidthMeters;
+  
+  // Materialkosten pro Schicht
+  const asphaltdeckeKosten = areaSquareMeters * asphaltdeckeDicke * baseMaterialCosts.asphaltdecke * costFactor;
+  const asphalttragschichtKosten = areaSquareMeters * asphalttragschichtDicke * baseMaterialCosts.asphalttragschicht * costFactor;
+  const frostschutzschichtKosten = areaSquareMeters * frostschutzDicke * baseMaterialCosts.frostschutzschicht * costFactor;
+  
+  let schottertragschichtKosten = 0;
+  if (schottertragschichtDicke > 0 && baseMaterialCosts.schottertragschicht) {
+    schottertragschichtKosten = areaSquareMeters * schottertragschichtDicke * baseMaterialCosts.schottertragschicht * costFactor;
+  }
+  
+  // Gesamtkosten
+  const totalCost = asphaltdeckeKosten + asphalttragschichtKosten + frostschutzschichtKosten + schottertragschichtKosten;
+  
+  // Kostenzusammenfassung
+  const costBreakdown: {
+    asphaltdecke: number;
+    asphalttragschicht: number;
+    frostschutzschicht: number;
+    schottertragschicht?: number;
+  } = {
+    asphaltdecke: Math.round(asphaltdeckeKosten),
+    asphalttragschicht: Math.round(asphalttragschichtKosten),
+    frostschutzschicht: Math.round(frostschutzschichtKosten)
+  };
+  
+  if (schottertragschichtDicke > 0) {
+    costBreakdown.schottertragschicht = Math.round(schottertragschichtKosten);
+  }
+  
+  return {
+    totalCost: Math.round(totalCost),
+    costBreakdown,
+    areaSquareMeters: Math.round(areaSquareMeters)
+  };
+}
+
 // Benutzerdefinierten Icon-Ersteller basierend auf Belastungsklasse
 function createCustomIcon(belastungsklasse?: string): L.Icon {
   // Konvertiere die Farbe zu einem einfachen Namen für die Marker-Icons
@@ -305,6 +437,9 @@ export default function GeoMapPage() {
   const [mapSource, setMapSource] = useState<string>("bgr");
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [roadWidth, setRoadWidth] = useState<number>(6.5); // Standard Landstraße als Standard
+  const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Landstraße");
+  const [showCostEstimation, setShowCostEstimation] = useState<boolean>(false);
   const [, navigate] = useLocation();
 
   const handleSave = () => {
@@ -314,10 +449,6 @@ export default function GeoMapPage() {
       setIsSaving(false);
       alert("Notizen gespeichert!");
     }, 1000);
-  };
-  
-  const getKlasseInfo = (klasseId: string): BelastungsklasseInfo | undefined => {
-    return belastungsklassen.find(k => k.klasse === klasseId);
   };
   
   // Neuer Marker mit aktuell ausgewählter Belastungsklasse
@@ -1026,9 +1157,9 @@ export default function GeoMapPage() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Projektverknüpfung</CardTitle>
+              <CardTitle>Projektverknüpfung & Kostenabschätzung</CardTitle>
               <CardDescription>
-                Verknüpfen Sie diese Standortinformationen mit einem bestehenden Projekt
+                Verknüpfen Sie die Standortinformationen mit einem Projekt und berechnen Sie Materialkosten
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1061,6 +1192,139 @@ export default function GeoMapPage() {
                 </div>
               )}
               
+              {markers.length >= 2 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-medium">Materialkostenberechnung</Label>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowCostEstimation(!showCostEstimation)}
+                      className="text-xs h-7 px-2"
+                    >
+                      {showCostEstimation ? "Ausblenden" : "Berechnen"}
+                    </Button>
+                  </div>
+                  
+                  <div className={`${showCostEstimation ? "block" : "hidden"} space-y-3`}>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="road-type" className="text-xs">Straßentyp</Label>
+                        <Select 
+                          value={selectedRoadPreset} 
+                          onValueChange={(value) => {
+                            setSelectedRoadPreset(value);
+                            setRoadWidth(roadWidthPresets[value]);
+                          }}
+                        >
+                          <SelectTrigger id="road-type" className="h-8 text-xs">
+                            <SelectValue placeholder="Straßentyp wählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.keys(roadWidthPresets).map((preset) => (
+                              <SelectItem key={preset} value={preset} className="text-xs">
+                                {preset} ({roadWidthPresets[preset]} m)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="road-width" className="text-xs">Straßenbreite (m)</Label>
+                        <Input
+                          id="road-width"
+                          type="number"
+                          min="1"
+                          max="25"
+                          step="0.5"
+                          className="h-8 text-xs"
+                          value={roadWidth}
+                          onChange={(e) => setRoadWidth(parseFloat(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    
+                    {selectedBelastungsklasse && (
+                      <div className="p-3 border rounded-md bg-muted/30">
+                        {(() => {
+                          const routeDistance = calculateRouteDistances(markers).total;
+                          const costEstimation = calculateMaterialCosts(
+                            selectedBelastungsklasse,
+                            routeDistance,
+                            roadWidth
+                          );
+                          
+                          return (
+                            <div className="text-xs space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="font-semibold">Materialkosten-Schätzung:</span>
+                                <span className="font-bold text-primary text-sm">
+                                  {new Intl.NumberFormat('de-DE', { 
+                                    style: 'currency', 
+                                    currency: 'EUR',
+                                    maximumFractionDigits: 0 
+                                  }).format(costEstimation.totalCost)}
+                                </span>
+                              </div>
+                              
+                              <div className="py-1 border-t border-b text-[10px] text-muted-foreground">
+                                Strecke: {routeDistance.toFixed(2)} km × {roadWidth.toFixed(1)} m = {costEstimation.areaSquareMeters} m²
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <div className="font-medium">Kostenaufschlüsselung:</div>
+                                <div className="grid grid-cols-2 gap-1">
+                                  <div className="flex justify-between">
+                                    <span>Asphaltdecke:</span>
+                                    <span>{new Intl.NumberFormat('de-DE', { 
+                                      style: 'currency', 
+                                      currency: 'EUR',
+                                      maximumFractionDigits: 0 
+                                    }).format(costEstimation.costBreakdown.asphaltdecke)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Asphalttragschicht:</span>
+                                    <span>{new Intl.NumberFormat('de-DE', { 
+                                      style: 'currency', 
+                                      currency: 'EUR',
+                                      maximumFractionDigits: 0 
+                                    }).format(costEstimation.costBreakdown.asphalttragschicht)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Frostschutzschicht:</span>
+                                    <span>{new Intl.NumberFormat('de-DE', { 
+                                      style: 'currency', 
+                                      currency: 'EUR',
+                                      maximumFractionDigits: 0 
+                                    }).format(costEstimation.costBreakdown.frostschutzschicht)}</span>
+                                  </div>
+                                  {costEstimation.costBreakdown.schottertragschicht && (
+                                    <div className="flex justify-between">
+                                      <span>Schottertragschicht:</span>
+                                      <span>{new Intl.NumberFormat('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR',
+                                        maximumFractionDigits: 0 
+                                      }).format(costEstimation.costBreakdown.schottertragschicht)}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="text-[10px] text-muted-foreground pt-1 border-t">
+                                Diese Schätzung basiert auf durchschnittlichen Materialpreisen und berücksichtigt
+                                die RStO 12 Bauklasse {getKlasseInfo(selectedBelastungsklasse)?.bauklasse} mit 
+                                entsprechenden Schichtdicken.
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1077,6 +1341,19 @@ export default function GeoMapPage() {
                           </div>
                           <div className="text-gray-600">
                             Gesamtlänge: {calculateRouteDistances(markers).total.toFixed(2)} km über {markers.length} Punkte
+                            {showCostEstimation && selectedBelastungsklasse && (
+                              <div className="mt-1 font-medium text-primary">
+                                Geschätzte Materialkosten: {new Intl.NumberFormat('de-DE', { 
+                                  style: 'currency', 
+                                  currency: 'EUR',
+                                  maximumFractionDigits: 0 
+                                }).format(calculateMaterialCosts(
+                                  selectedBelastungsklasse,
+                                  calculateRouteDistances(markers).total,
+                                  roadWidth
+                                ).totalCost)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
