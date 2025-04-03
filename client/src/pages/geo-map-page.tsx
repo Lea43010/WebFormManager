@@ -468,13 +468,35 @@ export default function GeoMapPage() {
     }, 1000);
   };
   
+  // Adresse anhand der Koordinaten ermitteln (Reverse Geocoding mit OpenStreetMap)
+  const getAddressFromCoordinates = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await response.json();
+      
+      if (data && data.address) {
+        // Straßennamen und Hausnummer aus den OSM-Daten extrahieren
+        const street = data.address.road || data.address.pedestrian || data.address.street || data.address.path || "";
+        const houseNumber = data.address.house_number || "";
+        
+        setStrasse(street);
+        setHausnummer(houseNumber);
+        return { street, houseNumber };
+      }
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Adressdaten:", error);
+    }
+    return { street: "", houseNumber: "" };
+  };
+
   // Beim Klick auf die Karte wird diese Funktion aufgerufen
-  const addMarker = (lat: number, lng: number) => {
+  const addMarker = async (lat: number, lng: number) => {
     // Speichere die Position und zeige den Dialog an
     setNewMarkerPosition([lat, lng]);
-    setStrasse("");
-    setHausnummer("");
     setShowNewMarkerDialog(true);
+    
+    // Versuche, die Adresse automatisch zu ermitteln
+    await getAddressFromCoordinates(lat, lng);
   };
   
   // Bestätigung zum Hinzufügen eines Markers
@@ -982,20 +1004,39 @@ export default function GeoMapPage() {
                               </div>
                             ) : (
                               <div className="mt-3 flex justify-between">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedMarkerIndex(index);
-                                    setSelectedLocation(marker.name || "");
-                                    setStrasse(marker.strasse || "");
-                                    setHausnummer(marker.hausnummer || "");
-                                    setNotes(marker.notes || "");
-                                    setSelectedBelastungsklasse(marker.belastungsklasse || "");
-                                  }}
-                                >
-                                  Bearbeiten
-                                </Button>
+                                <div className="flex gap-1">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedMarkerIndex(index);
+                                      setSelectedLocation(marker.name || "");
+                                      setStrasse(marker.strasse || "");
+                                      setHausnummer(marker.hausnummer || "");
+                                      setNotes(marker.notes || "");
+                                      setSelectedBelastungsklasse(marker.belastungsklasse || "");
+                                    }}
+                                  >
+                                    Bearbeiten
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    title="Adresse automatisch ermitteln"
+                                    onClick={async () => {
+                                      const { street, houseNumber } = await getAddressFromCoordinates(
+                                        marker.position[0],
+                                        marker.position[1]
+                                      );
+                                      updateMarker(index, {
+                                        strasse: street,
+                                        hausnummer: houseNumber
+                                      });
+                                    }}
+                                  >
+                                    <MapPin className="h-4 w-4" />
+                                  </Button>
+                                </div>
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
@@ -1039,7 +1080,24 @@ export default function GeoMapPage() {
                             <h3 className="font-medium">Neuer Standort</h3>
                             <div className="mt-3 space-y-3">
                               <div className="border p-2 rounded-md bg-muted/30">
-                                <div className="text-xs font-medium mb-2">Adressinformationen eingeben</div>
+                                <div className="flex justify-between items-center">
+                                  <div className="text-xs font-medium">Adressinformationen eingeben</div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    title="Adresse automatisch ermitteln"
+                                    onClick={async () => {
+                                      if (!newMarkerPosition) return;
+                                      await getAddressFromCoordinates(
+                                        newMarkerPosition[0],
+                                        newMarkerPosition[1]
+                                      );
+                                    }}
+                                  >
+                                    <MapPin className="h-3 w-3" />
+                                  </Button>
+                                </div>
                                 <div className="space-y-2">
                                   <div>
                                     <Label htmlFor="popup-new-strasse" className="text-xs">Straße</Label>
