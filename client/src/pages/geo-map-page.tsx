@@ -1036,6 +1036,117 @@ export default function GeoMapPage() {
           </TabsContent>
           
           <TabsContent value="kartenportale">
+            {/* Standortinformationen Bereich */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Standortinformationen</CardTitle>
+                <CardDescription>
+                  Notizen und Informationen zum gewählten Standort erfassen
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="location-name">Standortname</Label>
+                    <Input 
+                      id="location-name" 
+                      placeholder="z.B. Kreuzung K123/L456" 
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="strasse">Straße</Label>
+                      <Input 
+                        id="strasse" 
+                        placeholder="z.B. Hauptstraße" 
+                        value={strasse}
+                        onChange={(e) => setStrasse(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hausnummer">Hausnummer</Label>
+                      <Input 
+                        id="hausnummer" 
+                        placeholder="z.B. 123" 
+                        value={hausnummer}
+                        onChange={(e) => setHausnummer(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="plz">Postleitzahl</Label>
+                      <Input 
+                        id="plz" 
+                        placeholder="z.B. 12345" 
+                        value={plz}
+                        onChange={(e) => setPlz(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ort">Ort</Label>
+                      <Input 
+                        id="ort" 
+                        placeholder="z.B. Berlin" 
+                        value={ort}
+                        onChange={(e) => setOrt(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="belastungsklasse-select">Belastungsklasse</Label>
+                    <Select
+                      value={selectedBelastungsklasse}
+                      onValueChange={setSelectedBelastungsklasse}
+                    >
+                      <SelectTrigger id="belastungsklasse-select">
+                        <SelectValue placeholder="Belastungsklasse wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {belastungsklassen.map((klasse) => (
+                          <SelectItem key={klasse.klasse} value={klasse.klasse}>
+                            {klasse.klasse} - {klasse.beispiel}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="notes-input">Standort-Notizen</Label>
+                  <div className="grid grid-cols-1 gap-3">
+                    <SpeechToText
+                      onTextChange={setNotes}
+                      placeholder="Sprechen Sie Ihre Notizen zu diesem Standort..."
+                      initialText={notes}
+                    />
+                    
+                    <Textarea
+                      id="notes-input"
+                      placeholder="Oder schreiben Sie Ihre Notizen hier..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="min-h-[120px]"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline">Zurücksetzen</Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? "Wird gespeichert..." : "Speichern"}
+                  <Save className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Kartenportale Bereich */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="flex p-4 border rounded-md bg-card">
                 <div>
@@ -1815,118 +1926,7 @@ export default function GeoMapPage() {
         </Tabs>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Standortinformationen</CardTitle>
-              <CardDescription>
-                Notizen und Informationen zum gewählten Standort erfassen
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="location-name">Standortname</Label>
-                  <Input 
-                    id="location-name" 
-                    placeholder="z.B. Kreuzung K123/L456" 
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="strasse">Straße</Label>
-                    <Input 
-                      id="strasse" 
-                      placeholder="z.B. Hauptstraße" 
-                      value={strasse}
-                      onChange={(e) => setStrasse(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="hausnummer">Hausnummer</Label>
-                    <Input 
-                      id="hausnummer" 
-                      placeholder="z.B. 123" 
-                      value={hausnummer}
-                      onChange={(e) => setHausnummer(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="plz">Postleitzahl</Label>
-                    <Input 
-                      id="plz" 
-                      placeholder="z.B. 12345" 
-                      value={plz}
-                      onChange={(e) => setPlz(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ort">Ort</Label>
-                    <Input 
-                      id="ort" 
-                      placeholder="z.B. Berlin" 
-                      value={ort}
-                      onChange={(e) => setOrt(e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="belastungsklasse-select">Belastungsklasse</Label>
-                  <Select
-                    value={selectedBelastungsklasse}
-                    onValueChange={setSelectedBelastungsklasse}
-                  >
-                    <SelectTrigger id="belastungsklasse-select">
-                      <SelectValue placeholder="Belastungsklasse wählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {belastungsklassen.map((klasse) => (
-                        <SelectItem key={klasse.klasse} value={klasse.klasse}>
-                          {klasse.klasse} - {klasse.beispiel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="notes-input">Standort-Notizen</Label>
-                <div className="grid grid-cols-1 gap-3">
-                  <SpeechToText
-                    onTextChange={setNotes}
-                    placeholder="Sprechen Sie Ihre Notizen zu diesem Standort..."
-                    initialText={notes}
-                  />
-                  
-                  <Textarea
-                    id="notes-input"
-                    placeholder="Oder schreiben Sie Ihre Notizen hier..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="min-h-[120px]"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline">Zurücksetzen</Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? "Wird gespeichert..." : "Speichern"}
-                <Save className="ml-2 h-4 w-4" />
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
+      <div className="grid grid-cols-1 gap-6">
         <div>
           <Card>
             <CardHeader>
