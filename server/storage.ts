@@ -10,7 +10,8 @@ import {
   projects, type Project, type InsertProject,
   materials, type Material, type InsertMaterial,
   components, type Component, type InsertComponent,
-  attachments, type Attachment, type InsertAttachment
+  attachments, type Attachment, type InsertAttachment,
+  surfaceAnalyses, type SurfaceAnalysis, type InsertSurfaceAnalysis
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -69,6 +70,13 @@ export interface IStorage {
   getAttachment(id: number): Promise<Attachment | undefined>;
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
   deleteAttachment(id: number): Promise<void>;
+  
+  // Surface Analysis operations
+  getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]>;
+  getSurfaceAnalysisByLocation(latitude: number, longitude: number): Promise<SurfaceAnalysis | undefined>;
+  getSurfaceAnalysis(id: number): Promise<SurfaceAnalysis | undefined>;
+  createSurfaceAnalysis(analysis: InsertSurfaceAnalysis): Promise<SurfaceAnalysis>;
+  deleteSurfaceAnalysis(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -295,6 +303,37 @@ export class DatabaseStorage implements IStorage {
   
   async deleteAttachment(id: number): Promise<void> {
     await db.delete(attachments).where(eq(attachments.id, id));
+  }
+  
+  // Surface Analysis operations
+  async getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
+    return await db.select().from(surfaceAnalyses).where(eq(surfaceAnalyses.projectId, projectId));
+  }
+  
+  async getSurfaceAnalysisByLocation(latitude: number, longitude: number): Promise<SurfaceAnalysis | undefined> {
+    // Exakte Übereinstimmung ist unwahrscheinlich bei Fließkommazahlen, daher verwenden wir eine Näherung
+    const results = await db.select().from(surfaceAnalyses);
+    // Wir suchen nach Punkten im Umkreis von ca. 10 Metern (ungefähr 0.0001 Grad)
+    const nearbyPoints = results.filter(point => 
+      Math.abs(point.latitude - latitude) < 0.0001 && 
+      Math.abs(point.longitude - longitude) < 0.0001
+    );
+    
+    return nearbyPoints[0]; // Return den ersten Treffer oder undefined
+  }
+  
+  async getSurfaceAnalysis(id: number): Promise<SurfaceAnalysis | undefined> {
+    const [analysis] = await db.select().from(surfaceAnalyses).where(eq(surfaceAnalyses.id, id));
+    return analysis;
+  }
+  
+  async createSurfaceAnalysis(analysis: InsertSurfaceAnalysis): Promise<SurfaceAnalysis> {
+    const [createdAnalysis] = await db.insert(surfaceAnalyses).values(analysis).returning();
+    return createdAnalysis;
+  }
+  
+  async deleteSurfaceAnalysis(id: number): Promise<void> {
+    await db.delete(surfaceAnalyses).where(eq(surfaceAnalyses.id, id));
   }
 }
 

@@ -9,6 +9,7 @@ export { createInsertSchema };
 // Define enums if needed
 export const companyTypes = pgEnum('company_types', ['Subunternehmen', 'Generalunternehmen']);
 export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
+export const belastungsklassenEnum = pgEnum('belastungsklassen', ['Bk100', 'Bk32', 'Bk10', 'Bk3.2', 'Bk1.8', 'Bk1.0', 'Bk0.3', 'unbekannt']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -123,6 +124,27 @@ export const attachments = pgTable("tblattachment", {
   description: text("description"),
 });
 
+// Oberflächenanalyse table
+export const surfaceAnalyses = pgTable("tblsurface_analysis", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  latitude: doublePrecision("latitude").notNull(),
+  longitude: doublePrecision("longitude").notNull(),
+  locationName: varchar("location_name", { length: 255 }),
+  street: varchar("street", { length: 255 }),
+  houseNumber: varchar("house_number", { length: 10 }),
+  postalCode: varchar("postal_code", { length: 10 }),
+  city: varchar("city", { length: 100 }),
+  notes: text("notes"),
+  imageFilePath: varchar("image_file_path", { length: 1000 }).notNull(),
+  visualizationFilePath: varchar("visualization_file_path", { length: 1000 }),
+  belastungsklasse: belastungsklassenEnum("belastungsklasse").notNull(),
+  asphalttyp: varchar("asphalttyp", { length: 100 }),
+  confidence: doublePrecision("confidence"),
+  analyseDetails: text("analyse_details"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Define relations
 export const companiesRelations = relations(companies, ({ many, one }) => ({
   projects: many(projects),
@@ -159,6 +181,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   }),
   components: many(components),
   attachments: many(attachments),
+  surfaceAnalyses: many(surfaceAnalyses),
 }));
 
 export const componentsRelations = relations(components, ({ one }) => ({
@@ -171,6 +194,13 @@ export const componentsRelations = relations(components, ({ one }) => ({
 export const attachmentsRelations = relations(attachments, ({ one }) => ({
   project: one(projects, {
     fields: [attachments.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const surfaceAnalysesRelations = relations(surfaceAnalyses, ({ one }) => ({
+  project: one(projects, {
+    fields: [surfaceAnalyses.projectId],
     references: [projects.id],
   }),
 }));
@@ -211,6 +241,14 @@ export const insertProjectSchema = createInsertSchema(projects).transform((data)
 export const insertMaterialSchema = createInsertSchema(materials);
 export const insertComponentSchema = createInsertSchema(components);
 export const insertAttachmentSchema = createInsertSchema(attachments);
+export const insertSurfaceAnalysisSchema = createInsertSchema(surfaceAnalyses).transform((data) => {
+  return {
+    ...data,
+    latitude: typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
+    longitude: typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
+    confidence: typeof data.confidence === 'string' ? parseFloat(data.confidence) : data.confidence,
+  };
+});
 
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -236,3 +274,6 @@ export type Component = typeof components.$inferSelect;
 
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Attachment = typeof attachments.$inferSelect;
+
+export type InsertSurfaceAnalysis = z.infer<typeof insertSurfaceAnalysisSchema>;
+export type SurfaceAnalysis = typeof surfaceAnalyses.$inferSelect;

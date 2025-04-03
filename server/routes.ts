@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupDownloadRoutes } from "./download";
 import { setupImageAnalysisRoutes } from "./services/image-analysis-routes";
+import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
@@ -636,6 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Image Analyse und RStO-Routen einrichten
   setupImageAnalysisRoutes(app);
+  setupSurfaceAnalysisRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -28,23 +28,35 @@ export const belastungsklassen = {
     aufbaudicke: '69cm',
     details: 'Bundesstraßen, Landstraßen'
   },
-  Bk3: {
-    name: 'Bk3',
-    description: 'Mittlere Belastung, 0,8 bis 3 Mio. äquivalente 10-t-Achsübergänge',
+  'Bk3.2': {
+    name: 'Bk3.2',
+    description: 'Mittlere Belastung, 0,8 bis 3,2 Mio. äquivalente 10-t-Achsübergänge',
     aufbaudicke: '63cm',
     details: 'Kreisstraßen, Sammelstraßen'
   },
-  Bk1: {
-    name: 'Bk1',
-    description: 'Geringe Belastung, 0,3 bis 0,8 Mio. äquivalente 10-t-Achsübergänge',
+  'Bk1.8': {
+    name: 'Bk1.8',
+    description: 'Mittlere bis geringe Belastung, 0,3 bis 1,8 Mio. äquivalente 10-t-Achsübergänge',
+    aufbaudicke: '61cm',
+    details: 'Sammelstraßen, wichtige Erschließungsstraßen'
+  },
+  'Bk1.0': {
+    name: 'Bk1.0',
+    description: 'Geringe Belastung, 0,3 bis 1,0 Mio. äquivalente 10-t-Achsübergänge',
     aufbaudicke: '59cm',
     details: 'Nebenstraßen, Erschließungsstraßen'
   },
-  Bk0_3: {
+  'Bk0.3': {
     name: 'Bk0.3',
     description: 'Sehr geringe Belastung, unter 0,3 Mio. äquivalente 10-t-Achsübergänge',
     aufbaudicke: '55cm',
     details: 'Anliegerstraßen, Wohnstraßen'
+  },
+  'unbekannt': {
+    name: 'unbekannt',
+    description: 'Unbekannte Belastungsklasse, konnte nicht bestimmt werden',
+    aufbaudicke: 'unbekannt',
+    details: 'Keine ausreichenden Daten für eine Bestimmung verfügbar'
   }
 };
 
@@ -77,7 +89,7 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
     console.log("DeepAI Ergebnis:", output);
     
     // Standardwerte basierend auf erkannten Eigenschaften setzen
-    let belastungsklasse: keyof typeof belastungsklassen = "Bk3"; // Mittlere Belastung als Standard
+    let belastungsklasse: keyof typeof belastungsklassen = "Bk3.2"; // Mittlere Belastung als Standard
     let asphalttyp: keyof typeof asphaltTypen = "Asphaltbeton (AC)"; // Standardtyp
     let confidence = 70; // Standardkonfidenz
     
@@ -96,14 +108,14 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
         belastungsklasse = "Bk10";
         confidence = 70;
       } else {
-        belastungsklasse = "Bk3";
+        belastungsklasse = "Bk3.2";
         confidence = 65;
       }
     } else if (keywords.includes("residential") || keywords.includes("neighborhood")) {
-      belastungsklasse = "Bk1";
+      belastungsklasse = "Bk1.0";
       confidence = 70;
     } else if (keywords.includes("path") || keywords.includes("walkway") || keywords.includes("small")) {
-      belastungsklasse = "Bk0_3";
+      belastungsklasse = "Bk0.3";
       confidence = 75;
     }
     
@@ -129,7 +141,7 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
     console.error("Fehler bei der Asphaltanalyse mit DeepAI:", error);
     // Fallback-Ergebnisse, wenn die Analyse fehlschlägt
     return {
-      belastungsklasse: "Bk3",
+      belastungsklasse: "Bk3.2",
       asphalttyp: "Asphaltbeton (AC)",
       confidence: 30,
       analyseDetails: "Fehler bei der Analyse des Bildes mit DeepAI. Standardwerte werden angezeigt."
@@ -139,20 +151,25 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
 
 // Hilfsfunktion zur Validierung der Belastungsklasse
 function validateBelastungsklasse(input: string): keyof typeof belastungsklassen {
+  // Wenn die Eingabe bereits ein gültiger Schlüssel ist, verwenden wir sie direkt
+  if (input in belastungsklassen) {
+    return input as keyof typeof belastungsklassen;
+  }
+  
+  // Entfernen von Punkten, Leerzeichen etc. und Konvertierung zu Großbuchstaben
   const normalized = input.replace(/[\s.-]/g, '').toUpperCase();
   
   // Mapping für verschiedene Schreibweisen
-  const mapping: Record<string, keyof typeof belastungsklassen> = {
-    'BK100': 'Bk100',
-    'BK32': 'Bk32',
-    'BK10': 'Bk10',
-    'BK3': 'Bk3',
-    'BK1': 'Bk1',
-    'BK03': 'Bk0_3',
-    'BK0.3': 'Bk0_3'
-  };
+  if (normalized === 'BK100') return 'Bk100';
+  if (normalized === 'BK32') return 'Bk32';
+  if (normalized === 'BK10') return 'Bk10';
+  if (normalized === 'BK32' || normalized === 'BK3') return 'Bk3.2';
+  if (normalized === 'BK18' || normalized === 'BK1.8') return 'Bk1.8';
+  if (normalized === 'BK1') return 'Bk1.0';
+  if (normalized === 'BK03' || normalized === 'BK0.3') return 'Bk0.3';
   
-  return mapping[normalized] || 'Bk3'; // Default zu mittlerer Belastung
+  // Standardwert, wenn keine Übereinstimmung gefunden wurde
+  return 'Bk3.2'; // Default zu mittlerer Belastung
 }
 
 // Hilfsfunktion zur Validierung des Asphalttyps
@@ -246,17 +263,17 @@ async function useStaticVisualization(
     if (await fs.pathExists(staticSvgPath)) {
       return staticSvgUrl;
     } else {
-      // Wenn keine spezifische SVG-Datei gefunden wurde, nehmen wir Bk3 als Standard
+      // Wenn keine spezifische SVG-Datei gefunden wurde, nehmen wir Bk3.2 als Standard
       const defaultSvgPath = path.join(
         process.cwd(),
         'public',
         'static',
         'rsto_visualizations',
-        'Bk3.svg'
+        'Bk3.2.svg'
       );
       
       if (await fs.pathExists(defaultSvgPath)) {
-        return '/static/rsto_visualizations/Bk3.svg';
+        return '/static/rsto_visualizations/Bk3.2.svg';
       } else {
         throw new Error("Keine statische Visualisierung verfügbar");
       }
