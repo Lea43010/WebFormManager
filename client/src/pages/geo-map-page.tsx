@@ -872,20 +872,24 @@ export default function GeoMapPage() {
                         <Popup>
                           <div className="p-2">
                             <h3 className="font-medium">{marker.name || `Standort #${index + 1}`}</h3>
+                            
+                            {/* Adresse prominent anzeigen */}
+                            {(marker.strasse || marker.hausnummer) && (
+                              <div className="mt-1 text-sm text-primary">
+                                <span className="font-medium">Adresse: </span>
+                                {marker.strasse}{marker.strasse && marker.hausnummer ? " " : ""}{marker.hausnummer}
+                              </div>
+                            )}
+                            
                             {marker.belastungsklasse && (
                               <div className="mt-1 text-sm text-primary font-medium">
                                 Belastungsklasse: {marker.belastungsklasse}
                               </div>
                             )}
+                            
                             <p className="text-sm text-gray-600 mt-1">
                               Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
                             </p>
-                            {(marker.strasse || marker.hausnummer) && (
-                              <div className="mt-1 text-sm text-gray-600">
-                                <span className="font-medium">Adresse: </span>
-                                {marker.strasse}{marker.strasse && marker.hausnummer ? " " : ""}{marker.hausnummer}
-                              </div>
-                            )}
                             {marker.notes && (
                               <div className="mt-2 text-sm">
                                 <div className="font-medium">Notizen:</div>
