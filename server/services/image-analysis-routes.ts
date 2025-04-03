@@ -1,8 +1,10 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs-extra';
+import multer from 'multer';
 import { analyzeAsphaltImage, generateRstoVisualization, belastungsklassen, asphaltTypen } from './asphalt-classification';
 import { storage } from '../storage';
+import { upload } from '../upload';
 
 export function setupImageAnalysisRoutes(app: express.Express) {
   // Route zur Analyse eines hochgeladenen Asphaltbildes
@@ -88,5 +90,64 @@ export function setupImageAnalysisRoutes(app: express.Express) {
   // Route zum Abrufen aller Asphalttypen
   app.get('/api/asphalt-types', (req, res) => {
     res.json(asphaltTypen);
+  });
+  
+  // Route zur direkten Oberflächenanalyse von Marker-Fotos
+  app.post('/api/map-surface-analysis', upload.single('image'), async (req, res, next) => {
+    try {
+      // Prüfen, ob Benutzer authentifiziert ist
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Nicht autorisiert' });
+      }
+      
+      // Prüfen, ob eine Datei hochgeladen wurde
+      if (!req.file) {
+        return res.status(400).json({ message: 'Keine Bilddatei hochgeladen' });
+      }
+      
+      const uploadedFile = req.file;
+      
+      // Analyse des hochgeladenen Bildes durchführen
+      const analysisResult = await analyzeAsphaltImage(uploadedFile.path);
+      
+      // Visualisierungsdatei generieren
+      const visualizationDir = path.join(process.cwd(), 'uploads', 'visualizations');
+      await fs.ensureDir(visualizationDir);
+      
+      const fileName = `map_surface_${Date.now()}`;
+      const visualizationPath = path.join(visualizationDir, `${fileName}.png`);
+      
+      // RStO-Visualisierung generieren
+      let visualizationUrl = '';
+      try {
+        const result = await generateRstoVisualization(
+          analysisResult.belastungsklasse,
+          visualizationPath
+        );
+        
+        if (result.startsWith('/static/')) {
+          visualizationUrl = result;
+        } else {
+          visualizationUrl = '/uploads/visualizations/' + path.basename(result);
+        }
+      } catch (error) {
+        console.error('Fehler bei der Visualisierungsgenerierung:', error);
+        // Fallback zur statischen Visualisierung
+        visualizationUrl = `/static/rsto_visualizations/${analysisResult.belastungsklasse}.svg`;
+      }
+      
+      // Antwort mit allen Analysedaten
+      res.json({
+        ...analysisResult,
+        belastungsklasseDetails: belastungsklassen[analysisResult.belastungsklasse],
+        asphaltTypDetails: asphaltTypen[analysisResult.asphalttyp],
+        visualizationUrl,
+        imageUrl: `/uploads/${path.basename(uploadedFile.path)}`
+      });
+      
+    } catch (error) {
+      console.error('Fehler bei der Marker-Oberflächenanalyse:', error);
+      next(error);
+    }
   });
 }

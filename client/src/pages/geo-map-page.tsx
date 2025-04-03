@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { SpeechToText } from "@/components/ui/speech-to-text";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,10 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, Layers, Search, ChevronDown } from "lucide-react";
+import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
+         Layers, Search, ChevronDown, Camera, Upload, Image } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { useLocation } from "wouter";
 import { 
   MapContainer, 
@@ -156,6 +159,17 @@ interface MarkerInfo {
   plz?: string;               // Postleitzahl
   ort?: string;               // Ort
   notes?: string;             // Optionale Notizen zum Standort
+  
+  // Oberflächenanalyse-Daten
+  surfaceAnalysis?: {
+    imageUrl?: string;         // URL des aufgenommenen/hochgeladenen Bildes
+    belastungsklasse?: string; // Analysierte Belastungsklasse
+    asphalttyp?: string;       // Analysierter Asphalttyp
+    confidence?: number;       // Konfidenz der Analyse (0-100)
+    analyseDetails?: string;   // Detaillierte Analyseergebnisse
+    visualizationUrl?: string; // URL der generierten RStO-Visualisierung
+    timestamp?: number;        // Zeitstempel der Analyse
+  };
 }
 
 // Berechnet die Entfernung zwischen zwei geografischen Punkten in Kilometern (Haversine-Formel)
@@ -454,6 +468,9 @@ export default function GeoMapPage() {
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMapProvider, setSelectedMapProvider] = useState("osm");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<Array<{
     display_name: string;
     lat: string;
@@ -529,6 +546,80 @@ export default function GeoMapPage() {
       city: "" 
     };
   };
+  
+  // Oberflächenanalyse für einen Marker durchführen
+  const analyzeSurface = useCallback(async (index: number, file: File) => {
+    if (!file) return;
+    
+    setIsAnalyzing(true);
+    setUploadProgress(0);
+    setAnalyzeError(null);
+    
+    try {
+      // Formular für den Upload vorbereiten
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Fortschritts-Tracking für den Upload
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/map-surface-analysis', true);
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(progress);
+        }
+      };
+      
+      // Promise für XHR-Request erstellen
+      const result = await new Promise<any>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Fehler beim Parsen der Antwort'));
+            }
+          } else {
+            reject(new Error(`Server-Fehler: ${xhr.status}`));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Netzwerkfehler bei der Übertragung'));
+        xhr.send(formData);
+      });
+      
+      // Aktuelle Zeit für Zeitstempel
+      const now = Date.now();
+      
+      // Marker mit den Analyseergebnissen aktualisieren
+      updateMarker(index, {
+        surfaceAnalysis: {
+          imageUrl: result.imageUrl,
+          belastungsklasse: result.belastungsklasse,
+          asphalttyp: result.asphalttyp,
+          confidence: result.confidence,
+          analyseDetails: `${result.belastungsklasseDetails?.beanspruchung}, ${result.asphaltTypDetails?.beschreibung || ''}`,
+          visualizationUrl: result.visualizationUrl,
+          timestamp: now
+        }
+      });
+      
+      // Basierend auf der Analyse auch die Belastungsklasse des Markers aktualisieren
+      if (result.belastungsklasse) {
+        updateMarker(index, { belastungsklasse: result.belastungsklasse });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Fehler bei der Oberflächenanalyse:', error);
+      setAnalyzeError(error instanceof Error ? error.message : 'Unbekannter Fehler bei der Analyse');
+      return null;
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
   
   // Straßensuche mit Autovervollständigung
   const getSuggestions = async (query: string) => {
@@ -1271,52 +1362,156 @@ export default function GeoMapPage() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="mt-3 flex justify-between">
-                                <div className="flex gap-1">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedMarkerIndex(index);
-                                      setSelectedLocation(marker.name || "");
-                                      setStrasse(marker.strasse || "");
-                                      setHausnummer(marker.hausnummer || "");
-                                      setPlz(marker.plz || "");
-                                      setOrt(marker.ort || "");
-                                      setNotes(marker.notes || "");
-                                      setSelectedBelastungsklasse(marker.belastungsklasse || "");
-                                    }}
-                                  >
-                                    Bearbeiten
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    title="Adresse automatisch ermitteln"
-                                    onClick={async () => {
-                                      const { street, houseNumber, postalCode, city } = await getAddressFromCoordinates(
-                                        marker.position[0],
-                                        marker.position[1]
-                                      );
-                                      updateMarker(index, {
-                                        strasse: street,
-                                        hausnummer: houseNumber,
-                                        plz: postalCode,
-                                        ort: city
-                                      });
-                                    }}
-                                  >
-                                    <MapPin className="h-4 w-4" />
-                                  </Button>
+                              <div>
+                                {marker.surfaceAnalysis && (
+                                  <div className="mt-3 mb-1">
+                                    <Separator className="my-2" />
+                                    <div className="text-xs font-medium mb-1">Oberflächenanalyse</div>
+                                    
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <div className="text-xs text-muted-foreground mb-1">Aufnahme</div>
+                                        <a href={marker.surfaceAnalysis.imageUrl} target="_blank" rel="noopener noreferrer">
+                                          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                                            <img 
+                                              src={marker.surfaceAnalysis.imageUrl} 
+                                              alt="Oberflächenaufnahme"
+                                              className="w-full h-full object-cover" 
+                                            />
+                                          </div>
+                                        </a>
+                                        <div className="text-[10px] text-muted-foreground mt-1">
+                                          {new Date(marker.surfaceAnalysis.timestamp || Date.now()).toLocaleString('de-DE')}
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <div className="text-xs text-muted-foreground mb-1">RStO-Visualisierung</div>
+                                        <a href={marker.surfaceAnalysis.visualizationUrl} target="_blank" rel="noopener noreferrer">
+                                          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                                            <img 
+                                              src={marker.surfaceAnalysis.visualizationUrl} 
+                                              alt="RStO Visualisierung"
+                                              className="w-full h-full object-cover" 
+                                            />
+                                          </div>
+                                        </a>
+                                        <div className="text-xs font-medium text-primary mt-1">
+                                          {marker.surfaceAnalysis.belastungsklasse} ({marker.surfaceAnalysis.confidence?.toFixed(0)}%)
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="text-xs mt-1">
+                                      <span className="font-medium">Asphalttyp:</span> {marker.surfaceAnalysis.asphalttyp}
+                                    </div>
+                                    {marker.surfaceAnalysis.analyseDetails && (
+                                      <div className="text-xs mt-0.5">
+                                        <span className="font-medium">Details:</span> {marker.surfaceAnalysis.analyseDetails}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                <div className="mt-3 space-y-2">
+                                  <div className="flex justify-between">
+                                    <div className="flex gap-1">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedMarkerIndex(index);
+                                          setSelectedLocation(marker.name || "");
+                                          setStrasse(marker.strasse || "");
+                                          setHausnummer(marker.hausnummer || "");
+                                          setPlz(marker.plz || "");
+                                          setOrt(marker.ort || "");
+                                          setNotes(marker.notes || "");
+                                          setSelectedBelastungsklasse(marker.belastungsklasse || "");
+                                        }}
+                                      >
+                                        Bearbeiten
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        title="Adresse automatisch ermitteln"
+                                        onClick={async () => {
+                                          const { street, houseNumber, postalCode, city } = await getAddressFromCoordinates(
+                                            marker.position[0],
+                                            marker.position[1]
+                                          );
+                                          updateMarker(index, {
+                                            strasse: street,
+                                            hausnummer: houseNumber,
+                                            plz: postalCode,
+                                            ort: city
+                                          });
+                                        }}
+                                      >
+                                        <MapPin className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      className="text-destructive"
+                                      onClick={() => deleteMarker(index)}
+                                    >
+                                      Entfernen
+                                    </Button>
+                                  </div>
+                                
+                                  {/* Bildupload für Oberflächenanalyse */}
+                                  <div className="pt-1">
+                                    {isAnalyzing ? (
+                                      <div className="space-y-2">
+                                        <div className="text-xs text-center">Oberfläche wird analysiert...</div>
+                                        <Progress value={uploadProgress} className="h-2" />
+                                      </div>
+                                    ) : (
+                                      <div className="flex gap-1">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="w-full flex gap-1"
+                                          onClick={() => {
+                                            // Erstelle ein unsichtbares Datei-Input-Element
+                                            const input = document.createElement('input');
+                                            input.type = 'file';
+                                            input.accept = 'image/*';
+                                            input.style.display = 'none';
+                                            
+                                            // Füge das Element zum DOM hinzu
+                                            document.body.appendChild(input);
+                                            
+                                            // Überwache Dateiauswahl
+                                            input.onchange = async (e) => {
+                                              const file = (e.target as HTMLInputElement).files?.[0];
+                                              if (file) {
+                                                await analyzeSurface(index, file);
+                                              }
+                                              // Entferne das Element wieder
+                                              input.remove();
+                                            };
+                                            
+                                            // Klicke auf das Input-Element, um den Datei-Dialog zu öffnen
+                                            input.click();
+                                          }}
+                                        >
+                                          <Image className="h-4 w-4" />
+                                          <span>Oberfläche analysieren</span>
+                                        </Button>
+                                      </div>
+                                    )}
+                                    
+                                    {analyzeError && (
+                                      <div className="text-xs text-destructive mt-1">
+                                        Fehler: {analyzeError}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  className="text-destructive"
-                                  onClick={() => deleteMarker(index)}
-                                >
-                                  Entfernen
-                                </Button>
                               </div>
                             )}
                           </div>
