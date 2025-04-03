@@ -1855,42 +1855,62 @@ export default function GeoMapPage() {
                               </div>
                               
                               <div className="space-y-1">
-                                <div className="font-medium">Kostenaufschlüsselung:</div>
-                                <div className="grid grid-cols-2 gap-1">
-                                  <div className="flex justify-between">
-                                    <span>Asphaltdecke:</span>
-                                    <span>{new Intl.NumberFormat('de-DE', { 
-                                      style: 'currency', 
-                                      currency: 'EUR',
-                                      maximumFractionDigits: 0 
-                                    }).format(costEstimation.costBreakdown.asphaltdecke)}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Asphalttragschicht:</span>
-                                    <span>{new Intl.NumberFormat('de-DE', { 
-                                      style: 'currency', 
-                                      currency: 'EUR',
-                                      maximumFractionDigits: 0 
-                                    }).format(costEstimation.costBreakdown.asphalttragschicht)}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Frostschutzschicht:</span>
-                                    <span>{new Intl.NumberFormat('de-DE', { 
-                                      style: 'currency', 
-                                      currency: 'EUR',
-                                      maximumFractionDigits: 0 
-                                    }).format(costEstimation.costBreakdown.frostschutzschicht)}</span>
-                                  </div>
-                                  {costEstimation.costBreakdown.schottertragschicht && (
-                                    <div className="flex justify-between">
-                                      <span>Schottertragschicht:</span>
-                                      <span>{new Intl.NumberFormat('de-DE', { 
-                                        style: 'currency', 
-                                        currency: 'EUR',
-                                        maximumFractionDigits: 0 
-                                      }).format(costEstimation.costBreakdown.schottertragschicht)}</span>
-                                    </div>
-                                  )}
+                                <div className="font-medium mb-2 text-primary border-b pb-1">Kostenaufschlüsselung:</div>
+                                <div className="border rounded-md p-3 bg-muted/30">
+                                  <table className="w-full border-collapse">
+                                    <thead>
+                                      <tr className="border-b">
+                                        <th className="py-1 text-left font-medium">Schicht</th>
+                                        <th className="py-1 text-right font-medium">Kosten</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr>
+                                        <td className="py-1">Asphaltdecke</td>
+                                        <td className="py-1 text-right">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(costEstimation.costBreakdown.asphaltdecke)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-1">Asphalttragschicht</td>
+                                        <td className="py-1 text-right">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(costEstimation.costBreakdown.asphalttragschicht)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td className="py-1">Frostschutzschicht</td>
+                                        <td className="py-1 text-right">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(costEstimation.costBreakdown.frostschutzschicht)}</td>
+                                      </tr>
+                                      {costEstimation.costBreakdown.schottertragschicht && (
+                                        <tr>
+                                          <td className="py-1">Schottertragschicht</td>
+                                          <td className="py-1 text-right">{new Intl.NumberFormat('de-DE', { 
+                                            style: 'currency', 
+                                            currency: 'EUR',
+                                            maximumFractionDigits: 0 
+                                          }).format(costEstimation.costBreakdown.schottertragschicht)}</td>
+                                        </tr>
+                                      )}
+                                    </tbody>
+                                    <tfoot>
+                                      <tr className="border-t">
+                                        <td className="py-2 font-semibold">Gesamt</td>
+                                        <td className="py-2 text-right font-semibold text-primary">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(costEstimation.totalCost)}</td>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
                                 </div>
                               </div>
                               
