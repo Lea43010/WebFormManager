@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { SpeechToText } from "@/components/ui/speech-to-text";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler } from "lucide-react";
+import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, Layers, Search, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   MapContainer, 
   TileLayer, 
@@ -18,7 +26,8 @@ import {
   Popup, 
   useMap, 
   Polyline, 
-  Tooltip as LeafletTooltip 
+  Tooltip as LeafletTooltip,
+  LayersControl
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -446,6 +455,10 @@ export default function GeoMapPage() {
   const [showCostEstimation, setShowCostEstimation] = useState<boolean>(false);
   const [showNewMarkerDialog, setShowNewMarkerDialog] = useState(false);
   const [newMarkerPosition, setNewMarkerPosition] = useState<[number, number] | null>(null);
+  const [searchAddress, setSearchAddress] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedMapProvider, setSelectedMapProvider] = useState("osm");
+  const mapRef = useRef<any>(null);
   const [, navigate] = useLocation();
 
   const handleSave = () => {
@@ -487,6 +500,37 @@ export default function GeoMapPage() {
       console.error("Fehler beim Abrufen der Adressdaten:", error);
     }
     return { street: "", houseNumber: "" };
+  };
+  
+  // Adresse suchen und auf der Karte anzeigen
+  const searchForAddress = async () => {
+    if (!searchAddress || searchAddress.trim() === "" || !mapRef.current) return;
+    
+    setIsSearching(true);
+    
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        
+        // Karte auf die gefundene Adresse zentrieren
+        mapRef.current.setView([lat, lng], 16);
+        
+        // Optional: Ein temporärer Marker setzen
+        addMarker(lat, lng);
+      } else {
+        alert("Keine Ergebnisse für diese Adresssuche gefunden.");
+      }
+    } catch (error) {
+      console.error("Fehler bei der Adresssuche:", error);
+      alert("Fehler bei der Adresssuche. Bitte versuchen Sie es erneut.");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   // Beim Klick auf die Karte wird diese Funktion aufgerufen
@@ -875,16 +919,100 @@ export default function GeoMapPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="relative w-full h-[400px] overflow-hidden border">
+                <div className="w-full overflow-hidden border rounded-md">
+                    <div className="px-3 py-2 bg-muted/50 border-b flex items-center">
+                      <div className="flex-1 flex gap-2 items-center">
+                        <Input 
+                          placeholder="Adresse suchen..." 
+                          className="h-8 text-xs"
+                          value={searchAddress}
+                          onChange={(e) => setSearchAddress(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && searchForAddress()}
+                        />
+                        <Button 
+                          size="sm" 
+                          className="h-8"
+                          disabled={isSearching || !searchAddress}
+                          onClick={searchForAddress}
+                        >
+                          {isSearching ? "Suche..." : "Suchen"}
+                          <Search className="ml-2 h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="ml-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                              <Layers className="h-4 w-4 mr-1" />
+                              Kartenebene
+                              <ChevronDown className="h-3 w-3 ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Kartenquelle wählen</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => setSelectedMapProvider("osm")}
+                              className={selectedMapProvider === "osm" ? "bg-primary/10" : ""}
+                            >
+                              OpenStreetMap
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setSelectedMapProvider("satellit")}
+                              className={selectedMapProvider === "satellit" ? "bg-primary/10" : ""}
+                            >
+                              Satellit (ESRI)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setSelectedMapProvider("topo")}
+                              className={selectedMapProvider === "topo" ? "bg-primary/10" : ""}
+                            >
+                              Topographisch (OpenTopoMap)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setSelectedMapProvider("cyclemap")}
+                              className={selectedMapProvider === "cyclemap" ? "bg-primary/10" : ""}
+                            >
+                              CycleMap
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  
                   <MapContainer 
                     center={[51.1657, 10.4515]} 
                     zoom={6} 
-                    style={{ height: '100%', width: '100%' }}
+                    style={{ height: '500px', width: '100%' }}
+                    ref={mapRef}
                   >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    {/* Karten-Tiles basierend auf ausgewähltem Provider */}
+                    {selectedMapProvider === "osm" && (
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                    )}
+                    {selectedMapProvider === "satellit" && (
+                      <TileLayer
+                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        attribution='&copy; <a href="https://www.esri.com">Esri</a>'
+                      />
+                    )}
+                    {selectedMapProvider === "topo" && (
+                      <TileLayer
+                        url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors'
+                        maxZoom={17}
+                      />
+                    )}
+                    {selectedMapProvider === "cyclemap" && (
+                      <TileLayer
+                        url="https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        maxZoom={19}
+                      />
+                    )}
                     
                     {/* Ursprünglicher Marker für Deutschland */}
                     <Marker position={[51.1657, 10.4515]}>
