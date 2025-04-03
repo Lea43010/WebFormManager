@@ -444,6 +444,8 @@ export default function GeoMapPage() {
   const [roadWidth, setRoadWidth] = useState<number>(6.5); // Standard Landstraße als Standard
   const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Landstraße");
   const [showCostEstimation, setShowCostEstimation] = useState<boolean>(false);
+  const [showNewMarkerDialog, setShowNewMarkerDialog] = useState(false);
+  const [newMarkerPosition, setNewMarkerPosition] = useState<[number, number] | null>(null);
   const [, navigate] = useLocation();
 
   const handleSave = () => {
@@ -466,10 +468,21 @@ export default function GeoMapPage() {
     }, 1000);
   };
   
-  // Neuer Marker mit aktuell ausgewählter Belastungsklasse
+  // Beim Klick auf die Karte wird diese Funktion aufgerufen
   const addMarker = (lat: number, lng: number) => {
+    // Speichere die Position und zeige den Dialog an
+    setNewMarkerPosition([lat, lng]);
+    setStrasse("");
+    setHausnummer("");
+    setShowNewMarkerDialog(true);
+  };
+  
+  // Bestätigung zum Hinzufügen eines Markers
+  const confirmAddMarker = () => {
+    if (!newMarkerPosition) return;
+    
     const newMarker: MarkerInfo = {
-      position: [lat, lng],
+      position: newMarkerPosition,
       belastungsklasse: selectedBelastungsklasse || undefined,
       name: selectedLocation || `Standort #${markers.length + 1}`,
       strasse: strasse || undefined,
@@ -478,6 +491,8 @@ export default function GeoMapPage() {
     };
     
     setMarkers(prev => [...prev, newMarker]);
+    setShowNewMarkerDialog(false);
+    setNewMarkerPosition(null);
     
     // Setze den neuen Marker als ausgewählt
     setSelectedMarkerIndex(markers.length);
@@ -912,30 +927,85 @@ export default function GeoMapPage() {
                                 </p>
                               </div>
                             )}
-                            <div className="mt-3 flex justify-between">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedMarkerIndex(index);
-                                  setSelectedLocation(marker.name || "");
-                                  setStrasse(marker.strasse || "");
-                                  setHausnummer(marker.hausnummer || "");
-                                  setNotes(marker.notes || "");
-                                  setSelectedBelastungsklasse(marker.belastungsklasse || "");
-                                }}
-                              >
-                                Bearbeiten
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="text-destructive"
-                                onClick={() => deleteMarker(index)}
-                              >
-                                Entfernen
-                              </Button>
-                            </div>
+                            {selectedMarkerIndex === index ? (
+                              <div className="mt-3 space-y-3">
+                                <div className="border p-2 rounded-md bg-muted/30">
+                                  <div className="text-xs font-medium mb-2">Standort bearbeiten</div>
+                                  <div className="space-y-2">
+                                    <div>
+                                      <Label htmlFor={`popup-strasse-${index}`} className="text-xs">Straße</Label>
+                                      <Input 
+                                        id={`popup-strasse-${index}`}
+                                        placeholder="Straße eingeben" 
+                                        className="h-7 text-xs"
+                                        value={strasse}
+                                        onChange={(e) => setStrasse(e.target.value)}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`popup-hausnummer-${index}`} className="text-xs">Hausnummer</Label>
+                                      <Input 
+                                        id={`popup-hausnummer-${index}`}
+                                        placeholder="Hausnummer eingeben" 
+                                        className="h-7 text-xs"
+                                        value={hausnummer}
+                                        onChange={(e) => setHausnummer(e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="flex justify-between pt-1">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() => {
+                                          setSelectedMarkerIndex(null);
+                                        }}
+                                      >
+                                        Abbrechen
+                                      </Button>
+                                      <Button 
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={() => {
+                                          updateMarker(index, {
+                                            strasse: strasse,
+                                            hausnummer: hausnummer
+                                          });
+                                          setSelectedMarkerIndex(null);
+                                        }}
+                                      >
+                                        Speichern
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-3 flex justify-between">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedMarkerIndex(index);
+                                    setSelectedLocation(marker.name || "");
+                                    setStrasse(marker.strasse || "");
+                                    setHausnummer(marker.hausnummer || "");
+                                    setNotes(marker.notes || "");
+                                    setSelectedBelastungsklasse(marker.belastungsklasse || "");
+                                  }}
+                                >
+                                  Bearbeiten
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-destructive"
+                                  onClick={() => deleteMarker(index)}
+                                >
+                                  Entfernen
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </Popup>
                       </Marker>
@@ -956,6 +1026,67 @@ export default function GeoMapPage() {
                           </div>
                         </LeafletTooltip>
                       </Polyline>
+                    )}
+                    
+                    {/* Temporärer Marker für die Adresseingabe */}
+                    {showNewMarkerDialog && newMarkerPosition && (
+                      <Marker
+                        position={newMarkerPosition}
+                        icon={createCustomIcon(selectedBelastungsklasse)}
+                      >
+                        <Popup closeButton={false} autoClose={false} autoPan closeOnClick={false}>
+                          <div className="p-2">
+                            <h3 className="font-medium">Neuer Standort</h3>
+                            <div className="mt-3 space-y-3">
+                              <div className="border p-2 rounded-md bg-muted/30">
+                                <div className="text-xs font-medium mb-2">Adressinformationen eingeben</div>
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label htmlFor="popup-new-strasse" className="text-xs">Straße</Label>
+                                    <Input 
+                                      id="popup-new-strasse"
+                                      placeholder="Straße eingeben" 
+                                      className="h-7 text-xs"
+                                      value={strasse}
+                                      onChange={(e) => setStrasse(e.target.value)}
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="popup-new-hausnummer" className="text-xs">Hausnummer</Label>
+                                    <Input 
+                                      id="popup-new-hausnummer"
+                                      placeholder="Hausnummer eingeben" 
+                                      className="h-7 text-xs"
+                                      value={hausnummer}
+                                      onChange={(e) => setHausnummer(e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="flex justify-between pt-1">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={() => {
+                                        setShowNewMarkerDialog(false);
+                                        setNewMarkerPosition(null);
+                                      }}
+                                    >
+                                      Abbrechen
+                                    </Button>
+                                    <Button 
+                                      size="sm"
+                                      className="h-7 text-xs"
+                                      onClick={confirmAddMarker}
+                                    >
+                                      Marker hinzufügen
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
                     )}
                     
                     {/* Komponente zum Erfassen von Klicks auf der Karte */}
