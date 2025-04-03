@@ -161,6 +161,8 @@ interface MarkerInfo {
   name?: string;              // Optionaler Name für den Marker
   strasse?: string;           // Straßenname
   hausnummer?: string;        // Hausnummer
+  plz?: string;               // Postleitzahl
+  ort?: string;               // Ort
   notes?: string;             // Optionale Notizen zum Standort
 }
 
@@ -444,6 +446,8 @@ export default function GeoMapPage() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [strasse, setStrasse] = useState("");
   const [hausnummer, setHausnummer] = useState("");
+  const [plz, setPlz] = useState("");
+  const [ort, setOrt] = useState("");
   const [projectName, setProjectName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
@@ -485,6 +489,8 @@ export default function GeoMapPage() {
         name: selectedLocation,
         strasse: strasse,
         hausnummer: hausnummer,
+        plz: plz,
+        ort: ort,
         notes: notes,
         belastungsklasse: selectedBelastungsklasse
       });
@@ -506,15 +512,30 @@ export default function GeoMapPage() {
         // Straßennamen und Hausnummer aus den OSM-Daten extrahieren
         const street = data.address.road || data.address.pedestrian || data.address.street || data.address.path || "";
         const houseNumber = data.address.house_number || "";
+        const postalCode = data.address.postcode || "";
+        const city = data.address.city || data.address.town || data.address.village || data.address.municipality || "";
         
         setStrasse(street);
         setHausnummer(houseNumber);
-        return { street, houseNumber };
+        setPlz(postalCode);
+        setOrt(city);
+        
+        return { 
+          street, 
+          houseNumber,
+          postalCode,
+          city
+        };
       }
     } catch (error) {
       console.error("Fehler beim Abrufen der Adressdaten:", error);
     }
-    return { street: "", houseNumber: "" };
+    return { 
+      street: "", 
+      houseNumber: "",
+      postalCode: "",
+      city: "" 
+    };
   };
   
   // Straßensuche mit Autovervollständigung
@@ -622,6 +643,8 @@ export default function GeoMapPage() {
       name: selectedLocation || `Standort #${markers.length + 1}`,
       strasse: strasse || undefined,
       hausnummer: hausnummer || undefined,
+      plz: plz || undefined,
+      ort: ort || undefined,
       notes: notes || undefined
     };
     
@@ -1149,10 +1172,12 @@ export default function GeoMapPage() {
                             <h3 className="font-medium">{marker.name || `Standort #${index + 1}`}</h3>
                             
                             {/* Adresse prominent anzeigen */}
-                            {(marker.strasse || marker.hausnummer) && (
+                            {(marker.strasse || marker.hausnummer || marker.plz || marker.ort) && (
                               <div className="mt-1 text-sm text-primary">
                                 <span className="font-medium">Adresse: </span>
                                 {marker.strasse}{marker.strasse && marker.hausnummer ? " " : ""}{marker.hausnummer}
+                                {(marker.strasse || marker.hausnummer) && (marker.plz || marker.ort) ? ", " : ""}
+                                {marker.plz}{marker.plz && marker.ort ? " " : ""}{marker.ort}
                               </div>
                             )}
                             
@@ -1212,6 +1237,26 @@ export default function GeoMapPage() {
                                         onChange={(e) => setHausnummer(e.target.value)}
                                       />
                                     </div>
+                                    <div>
+                                      <Label htmlFor={`popup-plz-${index}`} className="text-xs">PLZ</Label>
+                                      <Input 
+                                        id={`popup-plz-${index}`}
+                                        placeholder="Postleitzahl eingeben" 
+                                        className="h-7 text-xs"
+                                        value={plz}
+                                        onChange={(e) => setPlz(e.target.value)}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor={`popup-ort-${index}`} className="text-xs">Ort</Label>
+                                      <Input 
+                                        id={`popup-ort-${index}`}
+                                        placeholder="Ort eingeben" 
+                                        className="h-7 text-xs"
+                                        value={ort}
+                                        onChange={(e) => setOrt(e.target.value)}
+                                      />
+                                    </div>
                                     <div className="flex justify-between pt-1">
                                       <Button 
                                         variant="outline" 
@@ -1229,7 +1274,9 @@ export default function GeoMapPage() {
                                         onClick={() => {
                                           updateMarker(index, {
                                             strasse: strasse,
-                                            hausnummer: hausnummer
+                                            hausnummer: hausnummer,
+                                            plz: plz,
+                                            ort: ort
                                           });
                                           setSelectedMarkerIndex(null);
                                         }}
@@ -1251,6 +1298,8 @@ export default function GeoMapPage() {
                                       setSelectedLocation(marker.name || "");
                                       setStrasse(marker.strasse || "");
                                       setHausnummer(marker.hausnummer || "");
+                                      setPlz(marker.plz || "");
+                                      setOrt(marker.ort || "");
                                       setNotes(marker.notes || "");
                                       setSelectedBelastungsklasse(marker.belastungsklasse || "");
                                     }}
@@ -1262,13 +1311,15 @@ export default function GeoMapPage() {
                                     size="sm"
                                     title="Adresse automatisch ermitteln"
                                     onClick={async () => {
-                                      const { street, houseNumber } = await getAddressFromCoordinates(
+                                      const { street, houseNumber, postalCode, city } = await getAddressFromCoordinates(
                                         marker.position[0],
                                         marker.position[1]
                                       );
                                       updateMarker(index, {
                                         strasse: street,
-                                        hausnummer: houseNumber
+                                        hausnummer: houseNumber,
+                                        plz: postalCode,
+                                        ort: city
                                       });
                                     }}
                                   >
@@ -1327,10 +1378,14 @@ export default function GeoMapPage() {
                                     title="Adresse automatisch ermitteln"
                                     onClick={async () => {
                                       if (!newMarkerPosition) return;
-                                      await getAddressFromCoordinates(
+                                      const { street, houseNumber, postalCode, city } = await getAddressFromCoordinates(
                                         newMarkerPosition[0],
                                         newMarkerPosition[1]
                                       );
+                                      setStrasse(street);
+                                      setHausnummer(houseNumber);
+                                      setPlz(postalCode);
+                                      setOrt(city);
                                     }}
                                   >
                                     <MapPin className="h-3 w-3" />
@@ -1355,6 +1410,26 @@ export default function GeoMapPage() {
                                       className="h-7 text-xs"
                                       value={hausnummer}
                                       onChange={(e) => setHausnummer(e.target.value)}
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="popup-new-plz" className="text-xs">PLZ</Label>
+                                    <Input 
+                                      id="popup-new-plz"
+                                      placeholder="Postleitzahl eingeben" 
+                                      className="h-7 text-xs"
+                                      value={plz}
+                                      onChange={(e) => setPlz(e.target.value)}
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="popup-new-ort" className="text-xs">Ort</Label>
+                                    <Input 
+                                      id="popup-new-ort"
+                                      placeholder="Ort eingeben" 
+                                      className="h-7 text-xs"
+                                      value={ort}
+                                      onChange={(e) => setOrt(e.target.value)}
                                     />
                                   </div>
                                   <div className="flex justify-between pt-1">
@@ -1477,16 +1552,22 @@ export default function GeoMapPage() {
                                   <span>Von {markers[idx].name || `Standort #${idx + 1}`} nach {markers[idx+1].name || `Standort #${idx + 2}`}:</span>
                                   <span className="font-medium">{distance.toFixed(2)} km</span>
                                 </div>
-                                {(markers[idx].strasse || markers[idx+1].strasse) && (
+                                {(markers[idx].strasse || markers[idx+1].strasse || markers[idx].plz || markers[idx+1].plz || markers[idx].ort || markers[idx+1].ort) && (
                                   <div className="text-[10px] text-muted-foreground">
-                                    {markers[idx].strasse && (
+                                    {(markers[idx].strasse || markers[idx].hausnummer || markers[idx].plz || markers[idx].ort) && (
                                       <div>
-                                        <span className="font-medium">Standort {idx + 1}:</span> {markers[idx].strasse} {markers[idx].hausnummer || ""}
+                                        <span className="font-medium">Standort {idx + 1}:</span> 
+                                        {markers[idx].strasse}{markers[idx].strasse && markers[idx].hausnummer ? " " : ""}{markers[idx].hausnummer || ""}
+                                        {(markers[idx].strasse || markers[idx].hausnummer) && (markers[idx].plz || markers[idx].ort) ? ", " : ""}
+                                        {markers[idx].plz}{markers[idx].plz && markers[idx].ort ? " " : ""}{markers[idx].ort || ""}
                                       </div>
                                     )}
-                                    {markers[idx+1].strasse && (
+                                    {(markers[idx+1].strasse || markers[idx+1].hausnummer || markers[idx+1].plz || markers[idx+1].ort) && (
                                       <div>
-                                        <span className="font-medium">Standort {idx + 2}:</span> {markers[idx+1].strasse} {markers[idx+1].hausnummer || ""}
+                                        <span className="font-medium">Standort {idx + 2}:</span> 
+                                        {markers[idx+1].strasse}{markers[idx+1].strasse && markers[idx+1].hausnummer ? " " : ""}{markers[idx+1].hausnummer || ""}
+                                        {(markers[idx+1].strasse || markers[idx+1].hausnummer) && (markers[idx+1].plz || markers[idx+1].ort) ? ", " : ""}
+                                        {markers[idx+1].plz}{markers[idx+1].plz && markers[idx+1].ort ? " " : ""}{markers[idx+1].ort || ""}
                                       </div>
                                     )}
                                   </div>
@@ -1599,6 +1680,27 @@ export default function GeoMapPage() {
                       placeholder="z.B. 123" 
                       value={hausnummer}
                       onChange={(e) => setHausnummer(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="plz">Postleitzahl</Label>
+                    <Input 
+                      id="plz" 
+                      placeholder="z.B. 12345" 
+                      value={plz}
+                      onChange={(e) => setPlz(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ort">Ort</Label>
+                    <Input 
+                      id="ort" 
+                      placeholder="z.B. Berlin" 
+                      value={ort}
+                      onChange={(e) => setOrt(e.target.value)}
                     />
                   </div>
                 </div>
