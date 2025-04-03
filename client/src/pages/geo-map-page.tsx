@@ -954,53 +954,45 @@ export default function GeoMapPage() {
           
           <TabsContent value="kartenportale">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>BGR Geoportal</CardTitle>
-                  <CardDescription>
-                    Geoportal der Bundesanstalt für Geowissenschaften und Rohstoffe
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="aspect-video bg-gray-100 flex flex-col items-center justify-center p-6 text-center rounded-md border">
-                    <MapIcon className="h-12 w-12 text-primary mb-2" />
-                    <p className="text-sm text-gray-500 mb-4">
-                      Geologische Karten und Bodenkarten für Deutschland
-                    </p>
-                    <Button 
-                      variant="default" 
-                      onClick={() => window.open("https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer", "_blank")}
-                    >
-                      BGR Geoportal öffnen 
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
+              <div className="flex p-4 border rounded-md bg-card">
+                <div>
+                  <h3 className="text-base font-semibold mb-1">BGR Geoportal</h3>
+                  <p className="text-xs text-muted-foreground mb-2">Geoportal der Bundesanstalt für Geowissenschaften und Rohstoffe</p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <MapIcon className="h-4 w-4 text-primary" />
+                    <span>Geologische Karten und Bodenkarten für Deutschland</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => window.open("https://geoportal.bgr.de/mapapps/resources/apps/geoportal/index.html?lang=de#/geoviewer", "_blank")}
+                  >
+                    BGR Geoportal öffnen 
+                    <ExternalLink className="ml-2 h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>BASt GIS-Viewer</CardTitle>
-                  <CardDescription>
-                    GIS-System der Bundesanstalt für Straßenwesen
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="aspect-video bg-gray-100 flex flex-col items-center justify-center p-6 text-center rounded-md border">
-                    <MapIcon className="h-12 w-12 text-primary mb-2" />
-                    <p className="text-sm text-gray-500 mb-4">
-                      Straßeninformationen, Bauprojekte und Verkehrsdaten
-                    </p>
-                    <Button 
-                      variant="default" 
-                      onClick={() => window.open("https://www.bast.de", "_blank")}
-                    >
-                      BASt Website öffnen
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
+              <div className="flex p-4 border rounded-md bg-card">
+                <div>
+                  <h3 className="text-base font-semibold mb-1">BASt GIS-Viewer</h3>
+                  <p className="text-xs text-muted-foreground mb-2">GIS-System der Bundesanstalt für Straßenwesen</p>
+                  <div className="flex items-center gap-2 text-xs">
+                    <MapIcon className="h-4 w-4 text-primary" />
+                    <span>Straßeninformationen, Bauprojekte und Verkehrsdaten</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => window.open("https://www.bast.de", "_blank")}
+                  >
+                    BASt Website öffnen
+                    <ExternalLink className="ml-2 h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
             
             <Card>
