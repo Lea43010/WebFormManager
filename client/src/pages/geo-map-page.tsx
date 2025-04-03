@@ -1470,38 +1470,44 @@ export default function GeoMapPage() {
                                         <Progress value={uploadProgress} className="h-2" />
                                       </div>
                                     ) : (
-                                      <div className="flex gap-1">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="w-full flex gap-1"
-                                          onClick={() => {
-                                            // Erstelle ein unsichtbares Datei-Input-Element
-                                            const input = document.createElement('input');
-                                            input.type = 'file';
-                                            input.accept = 'image/*';
-                                            input.style.display = 'none';
-                                            
-                                            // Füge das Element zum DOM hinzu
-                                            document.body.appendChild(input);
-                                            
-                                            // Überwache Dateiauswahl
-                                            input.onchange = async (e) => {
-                                              const file = (e.target as HTMLInputElement).files?.[0];
-                                              if (file) {
-                                                await analyzeSurface(index, file);
-                                              }
-                                              // Entferne das Element wieder
-                                              input.remove();
-                                            };
-                                            
-                                            // Klicke auf das Input-Element, um den Datei-Dialog zu öffnen
-                                            input.click();
-                                          }}
-                                        >
-                                          <Image className="h-4 w-4" />
-                                          <span>Oberfläche analysieren</span>
-                                        </Button>
+                                      <div className="space-y-2">
+                                        <div className="bg-muted/50 p-2 rounded-md text-xs">
+                                          <div className="font-medium mb-1 text-primary">Straßenoberfläche analysieren</div>
+                                          <p>Laden Sie ein Foto der Straßenoberfläche hoch, um die Belastungsklasse (RStO) automatisch zu bestimmen.</p>
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="w-full flex gap-1"
+                                            onClick={() => {
+                                              // Erstelle ein unsichtbares Datei-Input-Element
+                                              const input = document.createElement('input');
+                                              input.type = 'file';
+                                              input.accept = 'image/*';
+                                              input.style.display = 'none';
+                                              
+                                              // Füge das Element zum DOM hinzu
+                                              document.body.appendChild(input);
+                                              
+                                              // Überwache Dateiauswahl
+                                              input.onchange = async (e) => {
+                                                const file = (e.target as HTMLInputElement).files?.[0];
+                                                if (file) {
+                                                  await analyzeSurface(index, file);
+                                                }
+                                                // Entferne das Element wieder
+                                                input.remove();
+                                              };
+                                              
+                                              // Klicke auf das Input-Element, um den Datei-Dialog zu öffnen
+                                              input.click();
+                                            }}
+                                          >
+                                            <Camera className="h-4 w-4" />
+                                            <span>Foto hochladen & analysieren</span>
+                                          </Button>
+                                        </div>
                                       </div>
                                     )}
                                     
