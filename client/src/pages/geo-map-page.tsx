@@ -458,6 +458,21 @@ export default function GeoMapPage() {
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedMapProvider, setSelectedMapProvider] = useState("osm");
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{
+    display_name: string;
+    lat: string;
+    lon: string;
+    address?: {
+      road?: string;
+      pedestrian?: string;
+      street?: string;
+      city?: string;
+      town?: string;
+      village?: string;
+      municipality?: string;
+    };
+  }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const mapRef = useRef<any>(null);
   const [, navigate] = useLocation();
 
@@ -502,28 +517,82 @@ export default function GeoMapPage() {
     return { street: "", houseNumber: "" };
   };
   
-  // Adresse suchen und auf der Karte anzeigen
-  const searchForAddress = async () => {
-    if (!searchAddress || searchAddress.trim() === "" || !mapRef.current) return;
-    
-    setIsSearching(true);
+  // Straßensuche mit Autovervollständigung
+  const getSuggestions = async (query: string) => {
+    if (!query || query.trim().length < 3) {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
     
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`);
+      // Die Nominatim API unterstützt keine "autocomplete" Suche direkt, aber wir können nach Straßen filtern
+      // und mehrere Ergebnisse zeigen (countrycodes=de für Deutschland, limit=5 für maximal 5 Vorschläge)
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=de&limit=5&addressdetails=1`);
       const data = await response.json();
       
-      if (data && data.length > 0) {
-        const result = data[0];
-        const lat = parseFloat(result.lat);
-        const lng = parseFloat(result.lon);
+      // Ergebnisse filtern, die Straßen enthalten
+      const filteredData = data.filter((item: any) => 
+        item.address && (item.address.road || item.address.pedestrian || item.address.street)
+      );
+      
+      setAddressSuggestions(filteredData);
+      setShowSuggestions(filteredData.length > 0);
+    } catch (error) {
+      console.error("Fehler beim Laden der Adressvorschläge:", error);
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Verzögerte Suche implementieren, um die API nicht bei jedem Tastendruck aufzurufen
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      getSuggestions(searchAddress);
+    }, 300); // 300ms Verzögerung
+
+    return () => clearTimeout(timer);
+  }, [searchAddress]);
+
+  // Adresse suchen und auf der Karte anzeigen
+  const searchForAddress = async (selectedAddress?: string, selectedLat?: string, selectedLon?: string) => {
+    // Wenn explizit ein Wert übergeben wurde, diesen verwenden, ansonsten die Sucheingabe
+    const searchTerm = selectedAddress || searchAddress;
+    
+    if (!searchTerm || searchTerm.trim() === "" || !mapRef.current) return;
+    
+    setIsSearching(true);
+    setShowSuggestions(false);
+    
+    try {
+      // Wenn Koordinaten übergeben wurden, diese direkt verwenden
+      if (selectedLat && selectedLon) {
+        const lat = parseFloat(selectedLat);
+        const lng = parseFloat(selectedLon);
         
         // Karte auf die gefundene Adresse zentrieren
         mapRef.current.setView([lat, lng], 16);
         
-        // Optional: Ein temporärer Marker setzen
+        // Marker setzen
         addMarker(lat, lng);
       } else {
-        alert("Keine Ergebnisse für diese Adresssuche gefunden.");
+        // Sonst über die API suchen
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=1`);
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+          const result = data[0];
+          const lat = parseFloat(result.lat);
+          const lng = parseFloat(result.lon);
+          
+          // Karte auf die gefundene Adresse zentrieren
+          mapRef.current.setView([lat, lng], 16);
+          
+          // Marker setzen
+          addMarker(lat, lng);
+        } else {
+          alert("Keine Ergebnisse für diese Adresssuche gefunden.");
+        }
       }
     } catch (error) {
       console.error("Fehler bei der Adresssuche:", error);
@@ -922,18 +991,59 @@ export default function GeoMapPage() {
                 <div className="w-full overflow-hidden border rounded-md">
                     <div className="px-3 py-2 bg-muted/50 border-b flex items-center">
                       <div className="flex-1 flex gap-2 items-center">
-                        <Input 
-                          placeholder="Adresse suchen..." 
-                          className="h-8 text-xs"
-                          value={searchAddress}
-                          onChange={(e) => setSearchAddress(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && searchForAddress()}
-                        />
+                        <div className="relative flex-1">
+                          <Input 
+                            placeholder="Adresse suchen..." 
+                            className="h-8 text-xs pr-8"
+                            value={searchAddress}
+                            onChange={(e) => setSearchAddress(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && searchForAddress()}
+                            onBlur={() => {
+                              // Verzögerung beim Ausblenden, damit man noch klicken kann
+                              setTimeout(() => setShowSuggestions(false), 150);
+                            }}
+                            onFocus={() => {
+                              if (addressSuggestions.length > 0) {
+                                setShowSuggestions(true);
+                              }
+                            }}
+                          />
+                          
+                          {/* Dropdown für Vorschläge */}
+                          {showSuggestions && addressSuggestions.length > 0 && (
+                            <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+                              <ul className="py-1 max-h-60 overflow-auto">
+                                {addressSuggestions.map((suggestion, index) => {
+                                  // Extrahiere die Stadt und Straße für eine besser lesbare Anzeige
+                                  const address = suggestion.address || {};
+                                  const street = address.road || address.pedestrian || address.street || '';
+                                  const city = address.city || address.town || address.village || address.municipality || '';
+                                  const displayStr = street ? `${street}, ${city}` : suggestion.display_name;
+                                  
+                                  return (
+                                    <li 
+                                      key={index} 
+                                      className="px-3 py-2 text-xs cursor-pointer hover:bg-gray-100"
+                                      onClick={() => {
+                                        setSearchAddress(displayStr);
+                                        setShowSuggestions(false);
+                                        searchForAddress(displayStr, suggestion.lat, suggestion.lon);
+                                      }}
+                                    >
+                                      {displayStr}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                         <Button 
                           size="sm" 
                           className="h-8"
                           disabled={isSearching || !searchAddress}
-                          onClick={searchForAddress}
+                          onClick={() => searchForAddress()} 
+                          type="button"
                         >
                           {isSearching ? "Suche..." : "Suchen"}
                           <Search className="ml-2 h-3 w-3" />
