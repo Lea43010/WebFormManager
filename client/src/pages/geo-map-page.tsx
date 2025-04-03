@@ -11,14 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocation } from "wouter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { 
   MapContainer, 
   TileLayer, 
@@ -1065,43 +1057,23 @@ export default function GeoMapPage() {
                         </Button>
                       </div>
                       <div className="ml-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8">
+                        <Select
+                          value={selectedMapProvider}
+                          onValueChange={setSelectedMapProvider}
+                        >
+                          <SelectTrigger className="h-8 w-[180px]">
+                            <div className="flex items-center">
                               <Layers className="h-4 w-4 mr-1" />
-                              Kartenebene
-                              <ChevronDown className="h-3 w-3 ml-1" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Kartenquelle wählen</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => setSelectedMapProvider("osm")}
-                              className={selectedMapProvider === "osm" ? "bg-primary/10" : ""}
-                            >
-                              OpenStreetMap
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setSelectedMapProvider("satellit")}
-                              className={selectedMapProvider === "satellit" ? "bg-primary/10" : ""}
-                            >
-                              Satellit (ESRI)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setSelectedMapProvider("topo")}
-                              className={selectedMapProvider === "topo" ? "bg-primary/10" : ""}
-                            >
-                              Topographisch (OpenTopoMap)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setSelectedMapProvider("cyclemap")}
-                              className={selectedMapProvider === "cyclemap" ? "bg-primary/10" : ""}
-                            >
-                              CycleMap
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <SelectValue placeholder="Kartenebene" />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="osm">OpenStreetMap</SelectItem>
+                            <SelectItem value="satellit">Satellit (ESRI)</SelectItem>
+                            <SelectItem value="topo">Topographisch</SelectItem>
+                            <SelectItem value="cyclemap">CycleMap</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   
