@@ -150,6 +150,8 @@ interface MarkerInfo {
   position: [number, number]; // Position als [latitude, longitude]
   belastungsklasse?: string;  // Z.B. "Bk100", "Bk32", etc.
   name?: string;              // Optionaler Name für den Marker
+  strasse?: string;           // Straßenname
+  hausnummer?: string;        // Hausnummer
   notes?: string;             // Optionale Notizen zum Standort
 }
 
@@ -431,6 +433,8 @@ function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) 
 export default function GeoMapPage() {
   const [notes, setNotes] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [strasse, setStrasse] = useState("");
+  const [hausnummer, setHausnummer] = useState("");
   const [projectName, setProjectName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
@@ -444,10 +448,21 @@ export default function GeoMapPage() {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Hier würde normalerweise die Speicherlogik implementiert werden
+    
+    // Marker aktualisieren, wenn einer ausgewählt ist
+    if (selectedMarkerIndex !== null) {
+      updateMarker(selectedMarkerIndex, {
+        name: selectedLocation,
+        strasse: strasse,
+        hausnummer: hausnummer,
+        notes: notes,
+        belastungsklasse: selectedBelastungsklasse
+      });
+    }
+    
     setTimeout(() => {
       setIsSaving(false);
-      alert("Notizen gespeichert!");
+      alert("Standortinformationen gespeichert!");
     }, 1000);
   };
   
@@ -457,6 +472,8 @@ export default function GeoMapPage() {
       position: [lat, lng],
       belastungsklasse: selectedBelastungsklasse || undefined,
       name: selectedLocation || `Standort #${markers.length + 1}`,
+      strasse: strasse || undefined,
+      hausnummer: hausnummer || undefined,
       notes: notes || undefined
     };
     
@@ -863,6 +880,12 @@ export default function GeoMapPage() {
                             <p className="text-sm text-gray-600 mt-1">
                               Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
                             </p>
+                            {(marker.strasse || marker.hausnummer) && (
+                              <div className="mt-1 text-sm text-gray-600">
+                                <span className="font-medium">Adresse: </span>
+                                {marker.strasse}{marker.strasse && marker.hausnummer ? " " : ""}{marker.hausnummer}
+                              </div>
+                            )}
                             {marker.notes && (
                               <div className="mt-2 text-sm">
                                 <div className="font-medium">Notizen:</div>
@@ -889,7 +912,14 @@ export default function GeoMapPage() {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => setSelectedMarkerIndex(index)}
+                                onClick={() => {
+                                  setSelectedMarkerIndex(index);
+                                  setSelectedLocation(marker.name || "");
+                                  setStrasse(marker.strasse || "");
+                                  setHausnummer(marker.hausnummer || "");
+                                  setNotes(marker.notes || "");
+                                  setSelectedBelastungsklasse(marker.belastungsklasse || "");
+                                }}
                               >
                                 Bearbeiten
                               </Button>
@@ -1103,6 +1133,27 @@ export default function GeoMapPage() {
                     value={selectedLocation}
                     onChange={(e) => setSelectedLocation(e.target.value)}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="strasse">Straße</Label>
+                    <Input 
+                      id="strasse" 
+                      placeholder="z.B. Hauptstraße" 
+                      value={strasse}
+                      onChange={(e) => setStrasse(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="hausnummer">Hausnummer</Label>
+                    <Input 
+                      id="hausnummer" 
+                      placeholder="z.B. 123" 
+                      value={hausnummer}
+                      onChange={(e) => setHausnummer(e.target.value)}
+                    />
+                  </div>
                 </div>
                 
                 <div>
