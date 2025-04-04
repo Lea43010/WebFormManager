@@ -46,10 +46,10 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
   const formSchema = z.object({
     id: z.number().optional(),
     projectId: z.number().optional(),
-    customerId: z.coerce.string().min(1, "Kundennummer ist erforderlich"),
+    customerId: z.string().min(1, "Kundennummer ist erforderlich"),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
-    postalCode: z.coerce.string().optional(),
+    postalCode: z.string().optional(),
     city: z.string().optional(),
     cityPart: z.string().optional(),
     state: z.string().optional(),
@@ -58,21 +58,33 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     customerEmail: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal('')),
   });
 
+  // Vorverarbeitung für customerId aus number in string
+  let customerIdStr = "";
+  if (customer?.customerId !== undefined && customer?.customerId !== null) {
+    customerIdStr = typeof customer.customerId === 'number' 
+      ? customer.customerId.toString() 
+      : customer.customerId;
+  }
+
   // Initialize form with default values from customer or empty values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: customer?.id,
       projectId: customer?.projectId || undefined,
-      customerId: customer?.customerId || "",
+      customerId: customerIdStr,
       street: customer?.street || "",
       houseNumber: customer?.houseNumber || "",
-      postalCode: customer?.postalCode !== undefined && customer?.postalCode !== null ? customer.postalCode : '',
+      postalCode: customer?.postalCode !== undefined && customer?.postalCode !== null 
+        ? (typeof customer.postalCode === 'number' ? customer.postalCode.toString() : customer.postalCode) 
+        : '',
       city: customer?.city || "",
       cityPart: customer?.cityPart || "",
       state: customer?.state || "",
       country: customer?.country || "Deutschland",
-      customerPhone: customer?.customerPhone !== undefined && customer?.customerPhone !== null ? customer.customerPhone : '',
+      customerPhone: customer?.customerPhone !== undefined && customer?.customerPhone !== null 
+        ? (typeof customer.customerPhone === 'number' ? customer.customerPhone.toString() : customer.customerPhone) 
+        : '',
       customerEmail: customer?.customerEmail || "",
     },
   });
@@ -96,7 +108,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           {/* Kundeninformation */}
           <h3 className="text-lg font-medium mb-4">Grundinformationen</h3>
           <div className="grid grid-cols-1 gap-6 mb-8">
-            <div>
+            <div className="max-w-xs">
               <FormField
                 control={form.control}
                 name="id"
