@@ -48,6 +48,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     projectId: z.number().optional(),
     customerId: z.string().min(1, "Kundennummer ist erforderlich"),
     customerType: z.enum(["Privatkunde", "Gewerbe"]).default("Privatkunde"),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
     postalCode: z.string().optional(),
@@ -75,6 +77,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
       projectId: customer?.projectId || undefined,
       customerId: customerIdStr,
       customerType: customer?.customerType as "Privatkunde" | "Gewerbe" || "Privatkunde",
+      firstName: customer?.firstName || "",
+      lastName: customer?.lastName || "",
       street: customer?.street || "",
       houseNumber: customer?.houseNumber || "",
       postalCode: customer?.postalCode !== undefined && customer?.postalCode !== null 
@@ -154,6 +158,42 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                         <SelectItem value="Gewerbe">Gewerbe</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Persönliche Daten */}
+          <h3 className="text-lg font-medium mb-4">Persönliche Daten</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vorname</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div>
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nachname</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
