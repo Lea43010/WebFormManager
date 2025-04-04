@@ -95,7 +95,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Kundeninformation */}
           <h3 className="text-lg font-medium mb-4">Grundinformationen</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 gap-6 mb-8">
             <div>
               <FormField
                 control={form.control}
@@ -112,22 +112,6 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                         disabled={!!customer}
                         placeholder="Wird automatisch vergeben"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div>
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kundennummer</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
