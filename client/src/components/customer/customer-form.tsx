@@ -47,6 +47,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     id: z.number().optional(),
     projectId: z.number().optional(),
     customerId: z.string().min(1, "Kundennummer ist erforderlich"),
+    customerType: z.enum(["Privatkunde", "Gewerbe"]).default("Privatkunde"),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
     postalCode: z.string().optional(),
@@ -73,6 +74,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
       id: customer?.id,
       projectId: customer?.projectId || undefined,
       customerId: customerIdStr,
+      customerType: customer?.customerType as "Privatkunde" | "Gewerbe" || "Privatkunde",
       street: customer?.street || "",
       houseNumber: customer?.houseNumber || "",
       postalCode: customer?.postalCode !== undefined && customer?.postalCode !== null 
@@ -107,7 +109,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Kundeninformation */}
           <h3 className="text-lg font-medium mb-4">Grundinformationen</h3>
-          <div className="grid grid-cols-1 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="max-w-xs">
               <FormField
                 control={form.control}
@@ -125,6 +127,33 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                         placeholder="Wird automatisch vergeben"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="max-w-xs">
+              <FormField
+                control={form.control}
+                name="customerType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kundenart</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kundenart wählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Privatkunde">Privatkunde</SelectItem>
+                        <SelectItem value="Gewerbe">Gewerbe</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
