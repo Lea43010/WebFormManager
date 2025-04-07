@@ -580,7 +580,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Nicht autorisiert" });
     }
     next();
-  }, express.static(path.join(process.cwd(), "uploads")));
+  }, express.static(path.join(process.cwd(), "uploads"), {
+    // Deaktiviere Cache für Uploads - damit immer die aktuellste Version geladen wird
+    etag: false,
+    lastModified: false,
+    setHeaders: (res) => {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    }
+  }));
   
   // Serve static RStO visualizations
   app.use("/static/rsto_visualizations", express.static(path.join(process.cwd(), "public/static/rsto_visualizations")));

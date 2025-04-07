@@ -18,19 +18,10 @@ export async function getImageAsBase64(imagePath: string): Promise<string | null
     const imageData = await fs.promises.readFile(fullPath);
     const base64Image = imageData.toString('base64');
     
-    // Ermittle den MIME-Typ basierend auf der Dateiendung
-    const ext = path.extname(imagePath).toLowerCase();
-    let mimeType = 'image/jpeg'; // Standard
+    // Debug-Log für Fehleranalyse
+    console.log(`Bild gelesen: ${fullPath}, Größe: ${imageData.length} Bytes`);
     
-    if (ext === '.png') {
-      mimeType = 'image/png';
-    } else if (ext === '.gif') {
-      mimeType = 'image/gif';
-    } else if (ext === '.webp') {
-      mimeType = 'image/webp';
-    }
-    
-    return `data:${mimeType};base64,${base64Image}`;
+    return base64Image;
   } catch (error) {
     console.error('Fehler beim Lesen des Bildes:', error);
     return null;
