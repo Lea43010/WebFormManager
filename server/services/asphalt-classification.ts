@@ -4,6 +4,39 @@ import * as fs from 'fs-extra';
 import { createReadStream } from 'fs';
 import { bodenklassenEnum, bodentragfaehigkeitsklassenEnum, belastungsklassenEnum } from '@shared/schema';
 
+/**
+ * Liest eine Bilddatei ein und gibt sie als Base64-String zurück
+ */
+export async function getImageAsBase64(imagePath: string): Promise<string | null> {
+  try {
+    const fullPath = path.isAbsolute(imagePath) ? imagePath : path.join(process.cwd(), imagePath);
+    if (!fs.existsSync(fullPath)) {
+      console.error(`Datei nicht gefunden: ${fullPath}`);
+      return null;
+    }
+
+    const imageData = await fs.promises.readFile(fullPath);
+    const base64Image = imageData.toString('base64');
+    
+    // Ermittle den MIME-Typ basierend auf der Dateiendung
+    const ext = path.extname(imagePath).toLowerCase();
+    let mimeType = 'image/jpeg'; // Standard
+    
+    if (ext === '.png') {
+      mimeType = 'image/png';
+    } else if (ext === '.gif') {
+      mimeType = 'image/gif';
+    } else if (ext === '.webp') {
+      mimeType = 'image/webp';
+    }
+    
+    return `data:${mimeType};base64,${base64Image}`;
+  } catch (error) {
+    console.error('Fehler beim Lesen des Bildes:', error);
+    return null;
+  }
+}
+
 // DeepAI API Key setzen
 if (process.env.DEEPAI_API_KEY) {
   deepai.setApiKey(process.env.DEEPAI_API_KEY);

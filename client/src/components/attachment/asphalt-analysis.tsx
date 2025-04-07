@@ -63,6 +63,7 @@ type AnalysisResult = {
   belastungsklasseDetails: BelastungsklasseDetails;
   asphaltTypDetails: string;
   visualizationUrl: string;
+  imageBase64?: string; // Neu: Base64-kodiertes Bild
 };
 
 interface AsphaltAnalysisProps {
@@ -160,9 +161,14 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
                       </CardHeader>
                       <CardContent>
                         <img 
-                          src={`/uploads/${attachment.fileName}`} 
+                          src={analysisResult.imageBase64 || `/uploads/${attachment.fileName}`} 
                           alt="Asphaltprobe" 
                           className="w-full h-auto rounded-md object-contain max-h-64"
+                          onError={(e) => {
+                            console.error("Bildfehler:", e);
+                            // Verwende einen Fallback, wenn das Bild nicht geladen werden kann
+                            (e.target as HTMLImageElement).src = "/static/image-placeholder.png";
+                          }}
                         />
                       </CardContent>
                     </Card>

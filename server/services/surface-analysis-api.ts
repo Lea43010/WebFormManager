@@ -6,6 +6,7 @@ import {
   analyzeGroundImage,
   generateRstoVisualization, 
   useStaticVisualization,
+  getImageAsBase64,
   belastungsklassen, 
   asphaltTypen,
   bodenklassen,
@@ -144,11 +145,16 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
         // Fehler beim Speichern sollte nicht die gesamte Analyse fehlschlagen lassen
       }
       
+      // Bild als Base64 einlesen
+      const imageBase64 = await getImageAsBase64(attachment.filePath);
+      
       // Antwort mit allen Analysedaten vorbereiten
       const responseData: Record<string, any> = {
         ...analysisResult,
         belastungsklasseDetails: belastungsklassen[analysisResult.belastungsklasse],
-        visualizationUrl
+        visualizationUrl,
+        // Bild als Base64 direkt in der Antwort mitschicken
+        imageBase64: imageBase64
       };
       
       // Typ-spezifische Daten hinzufügen

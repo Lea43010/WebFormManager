@@ -67,6 +67,7 @@ type AnalysisResult = {
   bodenklasseDetails?: string;
   bodentragfaehigkeitsklasseDetails?: string;
   visualizationUrl: string;
+  imageBase64?: string; // Neu: Base64-kodiertes Bild
 };
 
 interface SurfaceAnalysisProps {
@@ -192,13 +193,13 @@ export default function SurfaceAnalysis({ attachment }: SurfaceAnalysisProps) {
                       </CardHeader>
                       <CardContent>
                         <img 
-                          src={`/uploads/file-1744037732381-329912740.jpg`} 
+                          src={analysisResult.imageBase64 || `/uploads/${attachment.fileName}`} 
                           alt={analysisType === "asphalt" ? "Asphaltprobe" : "Bodenprobe"} 
                           className="w-full h-auto rounded-md object-contain max-h-64"
                           onError={(e) => {
                             console.error("Bildfehler:", e);
-                            // Versuche andere Dateien im Uploads-Ordner
-                            (e.target as HTMLImageElement).src = "/uploads/image-1744031028497-696564420.jpg";
+                            // Verwende einen Fallback, wenn das Bild nicht geladen werden kann
+                            (e.target as HTMLImageElement).src = "/static/image-placeholder.png";
                           }}
                         />
                       </CardContent>

@@ -585,6 +585,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static RStO visualizations
   app.use("/static/rsto_visualizations", express.static(path.join(process.cwd(), "public/static/rsto_visualizations")));
   
+  // Placeholder-Bild für Fehleranzeige
+  app.get("/static/image-placeholder.png", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public/static/image-placeholder.png"));
+  });
+  
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
   app.post(
     "/api/attachments/upload",
