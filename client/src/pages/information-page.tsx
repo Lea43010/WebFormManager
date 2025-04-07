@@ -1,6 +1,96 @@
-import { ExternalLink, FileText, ArrowLeft } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Belastungsklassen und Bauweisen-Daten für die Tabellen
+const belastungsklassen = [
+  {
+    klasse: "Bk100",
+    beanspruchung: "> 32",
+    beispiel: "Autobahnen, Schnellstraßen",
+    bauklasse: "SV",
+    dickeAsphaltbauweise: "59 69 79 89",
+    dickeAsphaltdecke: "12",
+    dickeAsphaltTragschicht: "22",
+    dickeFrostschutzschicht1: "31-51",
+    dickeSchotterTragschicht: "18",
+    dickeFrostschutzschicht2: "30-40"
+  },
+  {
+    klasse: "Bk32",
+    beanspruchung: "> 10 und ≤ 32",
+    beispiel: "Industriestraßen",
+    bauklasse: "I",
+    dickeAsphaltbauweise: "55 65 75 85",
+    dickeAsphaltdecke: "12",
+    dickeAsphaltTragschicht: "18",
+    dickeFrostschutzschicht1: "25-55",
+    dickeSchotterTragschicht: "15", 
+    dickeFrostschutzschicht2: "34-44"
+  },
+  {
+    klasse: "Bk10",
+    beanspruchung: "> 3,2 und ≤ 10",
+    beispiel: "Hauptgeschäftsstraßen",
+    bauklasse: "II",
+    dickeAsphaltbauweise: "55 65 75 85",
+    dickeAsphaltdecke: "12",
+    dickeAsphaltTragschicht: "14",
+    dickeFrostschutzschicht1: "29-59",
+    dickeSchotterTragschicht: "15",
+    dickeFrostschutzschicht2: "30-40"
+  },
+  {
+    klasse: "Bk3.2",
+    beanspruchung: "> 1,0 und ≤ 3,2",
+    beispiel: "Erschließungsstraßen",
+    bauklasse: "III",
+    dickeAsphaltbauweise: "45 55 65 75",
+    dickeAsphaltdecke: "8",
+    dickeAsphaltTragschicht: "14",
+    dickeFrostschutzschicht1: "23-53",
+    dickeSchotterTragschicht: "15",
+    dickeFrostschutzschicht2: "24-34"
+  },
+  {
+    klasse: "Bk1.8",
+    beanspruchung: "> 0,3 und ≤ 1,0",
+    beispiel: "Wohnstraßen",
+    bauklasse: "IV",
+    dickeAsphaltbauweise: "37 47 57 67",
+    dickeAsphaltdecke: "8",
+    dickeAsphaltTragschicht: "10",
+    dickeFrostschutzschicht1: "19-49",
+    dickeSchotterTragschicht: "15",
+    dickeFrostschutzschicht2: "16-26"
+  },
+  {
+    klasse: "Bk1.0",
+    beanspruchung: "> 0,1 und ≤ 0,3",
+    beispiel: "Gering belastete Straßen",
+    bauklasse: "V",
+    dickeAsphaltbauweise: "29 39 49 59",
+    dickeAsphaltdecke: "8",
+    dickeAsphaltTragschicht: "6",
+    dickeFrostschutzschicht1: "15-45",
+    dickeSchotterTragschicht: "15",
+    dickeFrostschutzschicht2: "8-18"
+  },
+  {
+    klasse: "Bk0.3",
+    beanspruchung: "≤ 0,1",
+    beispiel: "Sehr gering belastete Straßen",
+    bauklasse: "VI",
+    dickeAsphaltbauweise: "21 31 41 51",
+    dickeAsphaltdecke: "6",
+    dickeAsphaltTragschicht: "0",
+    dickeFrostschutzschicht1: "15-45",
+    dickeSchotterTragschicht: "15",
+    dickeFrostschutzschicht2: "2-12"
+  }
+];
 
 export default function InformationPage() {
   return (
@@ -137,6 +227,94 @@ export default function InformationPage() {
               </Link>
             </Button>
           </div>
+        </div>
+      </div>
+      
+      {/* Bauweisen nach RStO 12 */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mt-8">
+        <h2 className="text-xl font-semibold mb-4 border-b pb-2">Bauweisen nach RStO 12</h2>
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Bewährte Bauweisen nach RStO 12</AlertTitle>
+          <AlertDescription>
+            Aufbaudicken nach Tafel 1, Zeilen 1 und 3 der RStO 12. Alle Dickenangaben in cm.
+          </AlertDescription>
+        </Alert>
+        
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Asphaltbauweise (Tafel 1, Zeile 1)</CardTitle>
+              <CardDescription>
+                Asphalttragschicht auf Frostschutzschicht
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-primary/10 border-b">
+                    <th className="text-left p-2 font-medium">Belastungsklasse</th>
+                    <th className="text-left p-2 font-medium">Beanspruchung</th>
+                    <th className="text-left p-2 font-medium">Dicke des Aufbaus</th>
+                    <th className="text-left p-2 font-medium">Asphaltdecke</th>
+                    <th className="text-left p-2 font-medium">Asphalttragschicht</th>
+                    <th className="text-left p-2 font-medium">Frostschutzschicht</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {belastungsklassen.map((klasse) => (
+                    <tr key={klasse.klasse + "-asphalt"} className="border-b hover:bg-gray-50">
+                      <td className="p-2 font-medium">{klasse.klasse}</td>
+                      <td className="p-2">{klasse.beanspruchung}</td>
+                      <td className="p-2">{klasse.dickeAsphaltbauweise}</td>
+                      <td className="p-2">{klasse.dickeAsphaltdecke}</td>
+                      <td className="p-2">{klasse.dickeAsphaltTragschicht}</td>
+                      <td className="p-2">{klasse.dickeFrostschutzschicht1}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Asphalttragschicht und Schottertragschicht (Tafel 1, Zeile 3)</CardTitle>
+              <CardDescription>
+                Asphalttragschicht und Schottertragschicht auf Frostschutzschicht
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-primary/10 border-b">
+                    <th className="text-left p-2 font-medium">Belastungsklasse</th>
+                    <th className="text-left p-2 font-medium">Beanspruchung</th>
+                    <th className="text-left p-2 font-medium">Asphaltdecke</th>
+                    <th className="text-left p-2 font-medium">Asphalttragschicht</th>
+                    <th className="text-left p-2 font-medium">Schottertragschicht</th>
+                    <th className="text-left p-2 font-medium">Frostschutzschicht</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {belastungsklassen.map((klasse) => (
+                    <tr key={klasse.klasse + "-schotter"} className="border-b hover:bg-gray-50">
+                      <td className="p-2 font-medium">{klasse.klasse}</td>
+                      <td className="p-2">{klasse.beanspruchung}</td>
+                      <td className="p-2">{klasse.dickeAsphaltdecke}</td>
+                      <td className="p-2">{klasse.dickeAsphaltTragschicht}</td>
+                      <td className="p-2">{klasse.dickeSchotterTragschicht || "-"}</td>
+                      <td className="p-2">{klasse.dickeFrostschutzschicht2 || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="text-sm text-gray-500 italic mb-4">
+          Quelle: RStO 12 Richtlinien für die Standardisierung des Oberbaus von Verkehrsflächen, Tafel 1
         </div>
       </div>
       
