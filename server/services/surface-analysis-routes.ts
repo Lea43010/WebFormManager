@@ -6,7 +6,15 @@ import path from "path";
 import fs from "fs";
 import { upload, handleUploadErrors, cleanupOnError } from "../upload";
 import { storage } from "../storage";
-import { analyzeAsphaltImage, generateRstoVisualization } from "./asphalt-classification";
+import { 
+  analyzeAsphaltImage, 
+  analyzeGroundImage, 
+  generateRstoVisualization,
+  belastungsklassen,
+  asphaltTypen,
+  bodenklassen,
+  bodentragfaehigkeitsklassen 
+} from "./asphalt-classification";
 import { insertSurfaceAnalysisSchema } from "@shared/schema";
 
 // Schemata für die API-Validierung
@@ -85,13 +93,24 @@ async function generatePdf(analysisId: number): Promise<Buffer> {
             <th>Belastungsklasse</th>
             <td>${analysis.belastungsklasse}</td>
           </tr>
+          ${analysis.asphalttyp ? `
           <tr>
             <th>Asphalttyp</th>
-            <td>${analysis.asphalttyp || 'Nicht spezifiziert'}</td>
-          </tr>
+            <td>${analysis.asphalttyp}</td>
+          </tr>` : ''}
+          ${analysis.bodenklasse ? `
+          <tr>
+            <th>Bodenklasse</th>
+            <td>${analysis.bodenklasse}</td>
+          </tr>` : ''}
+          ${analysis.bodentragfaehigkeitsklasse ? `
+          <tr>
+            <th>Bodentragfähigkeitsklasse</th>
+            <td>${analysis.bodentragfaehigkeitsklasse}</td>
+          </tr>` : ''}
           <tr>
             <th>Zuverlässigkeit</th>
-            <td>${analysis.confidence ? (analysis.confidence * 100).toFixed(0) + '%' : 'Nicht verfügbar'}</td>
+            <td>${analysis.confidence ? (analysis.confidence).toFixed(0) + '%' : 'Nicht verfügbar'}</td>
           </tr>
           ${analysis.analyseDetails ? `<tr><th>Details</th><td>${analysis.analyseDetails}</td></tr>` : ''}
         </table>
@@ -185,9 +204,33 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
           notes 
         } = validationResult.data;
 
-        // Führe die Asphaltanalyse durch
         const imagePath = path.join(process.cwd(), req.file.path);
-        const { belastungsklasse, asphalttyp, confidence, analyseDetails } = await analyzeAsphaltImage(imagePath);
+        
+        // Prüfe den Analysetyp (Asphalt oder Boden)
+        const analysisType = req.body.analysisType || 'asphalt';
+        
+        let belastungsklasse, asphalttyp, confidence, analyseDetails;
+        let bodenklasse, bodentragfaehigkeitsklasse;
+        
+        if (analysisType === 'ground') {
+          // Führe die Bodenanalyse durch
+          const groundAnalysis = await analyzeGroundImage(imagePath);
+          belastungsklasse = groundAnalysis.belastungsklasse;
+          bodenklasse = groundAnalysis.bodenklasse;
+          bodentragfaehigkeitsklasse = groundAnalysis.bodentragfaehigkeitsklasse;
+          confidence = groundAnalysis.confidence;
+          analyseDetails = groundAnalysis.analyseDetails;
+          asphalttyp = null; // Bei Bodenanalyse gibt es keinen Asphalttyp
+        } else {
+          // Führe die Asphaltanalyse durch
+          const asphaltAnalysis = await analyzeAsphaltImage(imagePath);
+          belastungsklasse = asphaltAnalysis.belastungsklasse;
+          asphalttyp = asphaltAnalysis.asphalttyp;
+          confidence = asphaltAnalysis.confidence;
+          analyseDetails = asphaltAnalysis.analyseDetails;
+          bodenklasse = null;
+          bodentragfaehigkeitsklasse = null;
+        }
 
         // Erstelle eine RStO-Visualisierung
         const visualizationPath = await generateRstoVisualization(belastungsklasse, path.join('public', 'generated', `viz_${Date.now()}.png`));
@@ -208,7 +251,10 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
           belastungsklasse,
           asphalttyp: asphalttyp || null,
           confidence: confidence || null,
-          analyseDetails: analyseDetails || null
+          analyseDetails: analyseDetails || null,
+          bodenklasse: bodenklasse || null,
+          bodentragfaehigkeitsklasse: bodentragfaehigkeitsklasse || null,
+          analysisType: analysisType as 'asphalt' | 'ground'
         });
 
         res.status(201).json(analysis);

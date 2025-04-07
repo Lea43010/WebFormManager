@@ -11,7 +11,8 @@ import {
   materials, type Material, type InsertMaterial,
   components, type Component, type InsertComponent,
   attachments, type Attachment, type InsertAttachment,
-  surfaceAnalyses, type SurfaceAnalysis, type InsertSurfaceAnalysis
+  surfaceAnalyses, type SurfaceAnalysis, type InsertSurfaceAnalysis,
+  soilReferenceData, type SoilReferenceData, type InsertSoilReferenceData
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -77,6 +78,17 @@ export interface IStorage {
   getSurfaceAnalysis(id: number): Promise<SurfaceAnalysis | undefined>;
   createSurfaceAnalysis(analysis: InsertSurfaceAnalysis): Promise<SurfaceAnalysis>;
   deleteSurfaceAnalysis(id: number): Promise<void>;
+  
+  // Soil Reference Data operations
+  getSoilReferenceData(): Promise<SoilReferenceData[]>;
+  getSoilReferenceDataByBodenklasse(bodenklasse: string): Promise<SoilReferenceData | undefined>;
+  getSoilReferenceDataById(id: number): Promise<SoilReferenceData | undefined>;
+  createSoilReferenceData(data: InsertSoilReferenceData): Promise<SoilReferenceData>;
+  updateSoilReferenceData(id: number, data: Partial<InsertSoilReferenceData>): Promise<SoilReferenceData | undefined>;
+  deleteSoilReferenceData(id: number): Promise<void>;
+  
+  // Projekt Analysis Overview
+  getProjectAnalyses(projectId: number): Promise<SurfaceAnalysis[]>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -334,6 +346,44 @@ export class DatabaseStorage implements IStorage {
   
   async deleteSurfaceAnalysis(id: number): Promise<void> {
     await db.delete(surfaceAnalyses).where(eq(surfaceAnalyses.id, id));
+  }
+  
+  // Soil Reference Data operations
+  async getSoilReferenceData(): Promise<SoilReferenceData[]> {
+    return await db.select().from(soilReferenceData);
+  }
+  
+  async getSoilReferenceDataByBodenklasse(bodenklasse: string): Promise<SoilReferenceData | undefined> {
+    const [data] = await db.select().from(soilReferenceData).where(eq(soilReferenceData.bodenklasse, bodenklasse as any));
+    return data;
+  }
+  
+  async getSoilReferenceDataById(id: number): Promise<SoilReferenceData | undefined> {
+    const [data] = await db.select().from(soilReferenceData).where(eq(soilReferenceData.id, id));
+    return data;
+  }
+  
+  async createSoilReferenceData(data: InsertSoilReferenceData): Promise<SoilReferenceData> {
+    const [createdData] = await db.insert(soilReferenceData).values(data).returning();
+    return createdData;
+  }
+  
+  async updateSoilReferenceData(id: number, data: Partial<InsertSoilReferenceData>): Promise<SoilReferenceData | undefined> {
+    const [updatedData] = await db
+      .update(soilReferenceData)
+      .set(data)
+      .where(eq(soilReferenceData.id, id))
+      .returning();
+    return updatedData;
+  }
+  
+  async deleteSoilReferenceData(id: number): Promise<void> {
+    await db.delete(soilReferenceData).where(eq(soilReferenceData.id, id));
+  }
+  
+  // Projektanalysenübersicht
+  async getProjectAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
+    return await db.select().from(surfaceAnalyses).where(eq(surfaceAnalyses.projectId, projectId));
   }
 }
 

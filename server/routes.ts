@@ -11,8 +11,9 @@ import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
-  insertMaterialSchema, insertComponentSchema, insertAttachmentSchema,
-  createInsertSchema, companies, customers, projects
+  insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
+  createInsertSchema, companies, customers, projects, 
+  bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./upload";
@@ -632,6 +633,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
   
+  // Boden-Referenzdaten-Routen
+  app.get("/api/soil-reference-data", async (req, res, next) => {
+    try {
+      const data = await storage.getSoilReferenceData();
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/soil-reference-data/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const data = await storage.getSoilReferenceDataById(id);
+      if (!data) {
+        return res.status(404).json({ message: "Bodenreferenzdaten nicht gefunden" });
+      }
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/soil-reference-data/bodenklasse/:bodenklasse", async (req, res, next) => {
+    try {
+      const bodenklasse = req.params.bodenklasse;
+      const data = await storage.getSoilReferenceDataByBodenklasse(bodenklasse);
+      if (!data) {
+        return res.status(404).json({ message: "Bodenreferenzdaten für diese Bodenklasse nicht gefunden" });
+      }
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/soil-reference-data", async (req, res, next) => {
+    try {
+      const validatedData = insertSoilReferenceDataSchema.parse(req.body);
+      const data = await storage.createSoilReferenceData(validatedData);
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/soil-reference-data/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertSoilReferenceDataSchema.partial().parse(req.body);
+      const data = await storage.updateSoilReferenceData(id, validatedData);
+      if (!data) {
+        return res.status(404).json({ message: "Bodenreferenzdaten nicht gefunden" });
+      }
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/soil-reference-data/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSoilReferenceData(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Einrichten der Download-Routen für Datenbankmigrationen
   setupDownloadRoutes(app);
   

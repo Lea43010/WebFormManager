@@ -10,6 +10,9 @@ export { createInsertSchema };
 export const companyTypes = pgEnum('company_types', ['Subunternehmen', 'Generalunternehmen']);
 export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
 export const belastungsklassenEnum = pgEnum('belastungsklassen', ['Bk100', 'Bk32', 'Bk10', 'Bk3.2', 'Bk1.8', 'Bk1.0', 'Bk0.3', 'unbekannt']);
+export const bodenklassenEnum = pgEnum('bodenklassen', ['Kies', 'Sand', 'Lehm', 'Ton', 'Humus', 'Fels', 'Schotter', 'unbekannt']);
+export const bodentragfaehigkeitsklassenEnum = pgEnum('bodentragfaehigkeitsklassen', ['F1', 'F2', 'F3', 'unbekannt']);
+export const analysisTypeEnum = pgEnum('analysis_types', ['asphalt', 'ground']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -143,6 +146,27 @@ export const surfaceAnalyses = pgTable("tblsurface_analysis", {
   confidence: doublePrecision("confidence"),
   analyseDetails: text("analyse_details"),
   createdAt: timestamp("created_at").defaultNow(),
+  // Analyseart (Asphalt oder Boden)
+  analysisType: analysisTypeEnum("analysis_type").default('asphalt'),
+  // Felder für Bodenanalyse
+  bodenklasse: bodenklassenEnum("bodenklasse"),
+  bodentragfaehigkeitsklasse: bodentragfaehigkeitsklassenEnum("bodentragfaehigkeitsklasse"),
+});
+
+// Bodenreferenztabelle für erweiterte Bodendetails
+export const soilReferenceData = pgTable("tblsoil_reference_data", {
+  id: serial("id").primaryKey(),
+  bodenklasse: bodenklassenEnum("bodenklasse").notNull(),
+  bezeichnung: varchar("bezeichnung", { length: 255 }).notNull(),
+  beschreibung: text("beschreibung"),
+  korngroesse: varchar("korngroesse", { length: 100 }),
+  durchlaessigkeit: varchar("durchlaessigkeit", { length: 100 }),
+  tragfaehigkeit: bodentragfaehigkeitsklassenEnum("tragfaehigkeit"),
+  empfohleneVerdichtung: varchar("empfohlene_verdichtung", { length: 255 }),
+  empfohleneBelastungsklasse: belastungsklassenEnum("empfohlene_belastungsklasse"),
+  eigenschaften: text("eigenschaften"),
+  referenzbildPath: varchar("referenzbild_path", { length: 1000 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Define relations
@@ -205,6 +229,8 @@ export const surfaceAnalysesRelations = relations(surfaceAnalyses, ({ one }) => 
   }),
 }));
 
+export const soilReferenceDataRelations = relations(soilReferenceData, ({}) => ({}));
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -250,6 +276,8 @@ export const insertSurfaceAnalysisSchema = createInsertSchema(surfaceAnalyses).t
   };
 });
 
+export const insertSoilReferenceDataSchema = createInsertSchema(soilReferenceData);
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -277,3 +305,6 @@ export type Attachment = typeof attachments.$inferSelect;
 
 export type InsertSurfaceAnalysis = z.infer<typeof insertSurfaceAnalysisSchema>;
 export type SurfaceAnalysis = typeof surfaceAnalyses.$inferSelect;
+
+export type InsertSoilReferenceData = z.infer<typeof insertSoilReferenceDataSchema>;
+export type SoilReferenceData = typeof soilReferenceData.$inferSelect;
