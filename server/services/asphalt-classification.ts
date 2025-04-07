@@ -71,6 +71,24 @@ export const asphaltTypen = {
 };
 
 // Funktion zur KI-gestützten Analyse von Asphaltbildern mit DeepAI
+// Bodenklassen definieren
+export const bodenklassen = {
+  'Kies': 'Gut drainiert, hohe Tragfähigkeit',
+  'Sand': 'Moderate Drainage, mäßige Tragfähigkeit',
+  'Lehm': 'Schlechte Drainage, geringe Tragfähigkeit',
+  'Ton': 'Sehr schlechte Drainage, sehr geringe Tragfähigkeit',
+  'Humus': 'Organischer Boden, ungeeignet für Lasten',
+  'Fels': 'Hervorragende Tragfähigkeit, schwer zu bearbeiten',
+  'Schotter': 'Sehr gute Drainage und Tragfähigkeit, grobkörnig'
+};
+
+// Bodentragfähigkeitsklassen gemäß RStO 12
+export const bodentragfaehigkeitsklassen = {
+  'F1': 'Sehr gering tragfähiger Untergrund (Ev2 ≤ 20 MN/m²)',
+  'F2': 'Gering tragfähiger Untergrund (Ev2 > 20 bis 80 MN/m²)',
+  'F3': 'Tragfähiger Untergrund (Ev2 > 80 MN/m²)'
+};
+
 export async function analyzeAsphaltImage(imagePath: string): Promise<{
   belastungsklasse: keyof typeof belastungsklassen,
   asphalttyp: keyof typeof asphaltTypen,
@@ -145,6 +163,96 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
       asphalttyp: "Asphaltbeton (AC)",
       confidence: 30,
       analyseDetails: "Fehler bei der Analyse des Bildes mit DeepAI. Standardwerte werden angezeigt."
+    };
+  }
+}
+
+// Funktion zur KI-gestützten Analyse von Bodenbildern mit DeepAI
+export async function analyzeGroundImage(imagePath: string): Promise<{
+  belastungsklasse: keyof typeof belastungsklassen,
+  bodenklasse: keyof typeof bodenklassen,
+  bodentragfaehigkeitsklasse: keyof typeof bodentragfaehigkeitsklassen,
+  confidence: number,
+  analyseDetails: string
+}> {
+  try {
+    // DeepAI Bilderkennungsmodell verwenden
+    const resp = await deepai.callStandardApi("general-image-recognition", {
+      image: createReadStream(imagePath),
+    });
+    
+    // Ermittle die wahrscheinlichsten Materialien und Strukturen aus den erkannten Objekten
+    const output = resp.output;
+    console.log("DeepAI Ergebnis (Boden):", output);
+    
+    // Standardwerte basierend auf erkannten Eigenschaften setzen
+    let belastungsklasse: keyof typeof belastungsklassen = "Bk3.2"; // Mittlere Belastung als Standard
+    let bodenklasse: keyof typeof bodenklassen = "Sand"; // Standardwert
+    let bodentragfaehigkeitsklasse: keyof typeof bodentragfaehigkeitsklassen = "F2"; // Standardwert
+    let confidence = 65; // Standardkonfidenz
+    
+    // Bestimmte Schlüsselwörter suchen
+    const keywords = output.toLowerCase();
+    
+    // Bodenklasse anhand von Schlüsselwörtern bestimmen
+    if (keywords.includes("gravel") || keywords.includes("kies") || keywords.includes("stone") || keywords.includes("rock")) {
+      bodenklasse = "Kies";
+      confidence = 80;
+      bodentragfaehigkeitsklasse = "F3";
+    } else if (keywords.includes("sand") || keywords.includes("sandy") || keywords.includes("beach")) {
+      bodenklasse = "Sand";
+      confidence = 75;
+      bodentragfaehigkeitsklasse = "F2";
+    } else if (keywords.includes("loam") || keywords.includes("silt") || keywords.includes("lehm")) {
+      bodenklasse = "Lehm";
+      confidence = 70;
+      bodentragfaehigkeitsklasse = "F2";
+    } else if (keywords.includes("clay") || keywords.includes("ton") || keywords.includes("mud")) {
+      bodenklasse = "Ton";
+      confidence = 75;
+      bodentragfaehigkeitsklasse = "F1";
+    } else if (keywords.includes("humus") || keywords.includes("organic") || keywords.includes("soil") || keywords.includes("dirt")) {
+      bodenklasse = "Humus";
+      confidence = 65;
+      bodentragfaehigkeitsklasse = "F1";
+    } else if (keywords.includes("rock") || keywords.includes("fels") || keywords.includes("stone")) {
+      bodenklasse = "Fels";
+      confidence = 85;
+      bodentragfaehigkeitsklasse = "F3";
+    } else if (keywords.includes("crushed stone") || keywords.includes("schotter") || keywords.includes("gravel")) {
+      bodenklasse = "Schotter";
+      confidence = 80;
+      bodentragfaehigkeitsklasse = "F3";
+    }
+    
+    // Belastungsklasse basierend auf Bodentragfähigkeit bestimmen
+    if (bodentragfaehigkeitsklasse === "F3") {
+      belastungsklasse = "Bk32";
+    } else if (bodentragfaehigkeitsklasse === "F2") {
+      belastungsklasse = "Bk10";
+    } else {
+      belastungsklasse = "Bk1.8";
+    }
+    
+    // Analysebericht erstellen
+    const analyseDetails = `Basierend auf den visuellen Merkmalen (${output}) wurde die Bodenklasse ${bodenklasse} mit einer Konfidenz von ${confidence}% bestimmt. Die entsprechende Bodentragfähigkeitsklasse ist ${bodentragfaehigkeitsklasse}. Daraus ergibt sich eine empfohlene Belastungsklasse von ${belastungsklasse}.`;
+    
+    return {
+      belastungsklasse,
+      bodenklasse,
+      bodentragfaehigkeitsklasse,
+      confidence,
+      analyseDetails
+    };
+  } catch (error) {
+    console.error("Fehler bei der Bodenanalyse mit DeepAI:", error);
+    // Fallback-Ergebnisse, wenn die Analyse fehlschlägt
+    return {
+      belastungsklasse: "Bk3.2",
+      bodenklasse: "Sand",
+      bodentragfaehigkeitsklasse: "F2",
+      confidence: 30,
+      analyseDetails: "Fehler bei der Analyse des Bildes mit DeepAI. Ergebnisse möglicherweise unzuverlässig."
     };
   }
 }

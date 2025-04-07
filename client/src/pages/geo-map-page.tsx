@@ -170,6 +170,18 @@ interface MarkerInfo {
     visualizationUrl?: string; // URL der generierten RStO-Visualisierung
     timestamp?: number;        // Zeitstempel der Analyse
   };
+  
+  // Bodenanalyse-Daten
+  groundAnalysis?: {
+    imageUrl?: string;                  // URL des aufgenommenen/hochgeladenen Bildes
+    belastungsklasse?: string;          // Empfohlene Belastungsklasse
+    bodenklasse?: string;               // Analysierte Bodenklasse (z.B. Sand, Lehm, Ton)
+    bodentragfaehigkeitsklasse?: string; // Bodentragfähigkeitsklasse (F1, F2, F3)
+    confidence?: number;                // Konfidenz der Analyse (0-100)
+    analyseDetails?: string;            // Detaillierte Analyseergebnisse
+    visualizationUrl?: string;          // URL der generierten RStO-Visualisierung
+    timestamp?: number;                 // Zeitstempel der Analyse
+  };
 }
 
 // Berechnet die Entfernung zwischen zwei geografischen Punkten in Kilometern (Haversine-Formel)
@@ -614,6 +626,81 @@ export default function GeoMapPage() {
       return result;
     } catch (error) {
       console.error('Fehler bei der Oberflächenanalyse:', error);
+      setAnalyzeError(error instanceof Error ? error.message : 'Unbekannter Fehler bei der Analyse');
+      return null;
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
+  
+  // Bodenanalyse für einen Marker durchführen
+  const analyzeGround = useCallback(async (index: number, file: File) => {
+    if (!file) return;
+    
+    setIsAnalyzing(true);
+    setUploadProgress(0);
+    setAnalyzeError(null);
+    
+    try {
+      // Formular für den Upload vorbereiten
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Fortschritts-Tracking für den Upload
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/map-ground-analysis', true);
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(progress);
+        }
+      };
+      
+      // Promise für XHR-Request erstellen
+      const result = await new Promise<any>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Fehler beim Parsen der Antwort'));
+            }
+          } else {
+            reject(new Error(`Server-Fehler: ${xhr.status}`));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Netzwerkfehler bei der Übertragung'));
+        xhr.send(formData);
+      });
+      
+      // Aktuelle Zeit für Zeitstempel
+      const now = Date.now();
+      
+      // Marker mit den Analyseergebnissen aktualisieren
+      updateMarker(index, {
+        groundAnalysis: {
+          imageUrl: result.imageUrl,
+          belastungsklasse: result.belastungsklasse,
+          bodenklasse: result.bodenklasse,
+          bodentragfaehigkeitsklasse: result.bodentragfaehigkeitsklasse,
+          confidence: result.confidence,
+          analyseDetails: `${result.belastungsklasseDetails?.description || ''}, ${result.bodenklasseDetails || ''}, ${result.bodentragfaehigkeitsklasseDetails || ''}`,
+          visualizationUrl: result.visualizationUrl,
+          timestamp: now
+        }
+      });
+      
+      // Basierend auf der Analyse auch die Belastungsklasse des Markers aktualisieren
+      if (result.belastungsklasse) {
+        updateMarker(index, { belastungsklasse: result.belastungsklasse });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Fehler bei der Bodenanalyse:', error);
       setAnalyzeError(error instanceof Error ? error.message : 'Unbekannter Fehler bei der Analyse');
       return null;
     } finally {
@@ -1241,6 +1328,7 @@ export default function GeoMapPage() {
                               </div>
                             ) : (
                               <div>
+                                {/* Oberflächenanalyse-Ergebnisse */}
                                 {marker.surfaceAnalysis && (
                                   <div className="mt-3 mb-1">
                                     <Separator className="my-2" />
@@ -1286,6 +1374,60 @@ export default function GeoMapPage() {
                                     {marker.surfaceAnalysis.analyseDetails && (
                                       <div className="text-xs mt-0.5">
                                         <span className="font-medium">Details:</span> {marker.surfaceAnalysis.analyseDetails}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {/* Bodenanalyse-Ergebnisse */}
+                                {marker.groundAnalysis && (
+                                  <div className="mt-3 mb-1">
+                                    <Separator className="my-2" />
+                                    <div className="text-xs font-medium mb-1">Bodenanalyse</div>
+                                    
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div>
+                                        <div className="text-xs text-muted-foreground mb-1">Aufnahme</div>
+                                        <a href={marker.groundAnalysis.imageUrl} target="_blank" rel="noopener noreferrer">
+                                          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                                            <img 
+                                              src={marker.groundAnalysis.imageUrl} 
+                                              alt="Bodenaufnahme"
+                                              className="w-full h-full object-cover" 
+                                            />
+                                          </div>
+                                        </a>
+                                        <div className="text-[10px] text-muted-foreground mt-1">
+                                          {new Date(marker.groundAnalysis.timestamp || Date.now()).toLocaleString('de-DE')}
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <div className="text-xs text-muted-foreground mb-1">RStO-Visualisierung</div>
+                                        <a href={marker.groundAnalysis.visualizationUrl} target="_blank" rel="noopener noreferrer">
+                                          <div className="aspect-video bg-muted rounded-md overflow-hidden">
+                                            <img 
+                                              src={marker.groundAnalysis.visualizationUrl} 
+                                              alt="RStO Visualisierung"
+                                              className="w-full h-full object-cover" 
+                                            />
+                                          </div>
+                                        </a>
+                                        <div className="text-xs font-medium text-primary mt-1">
+                                          {marker.groundAnalysis.belastungsklasse} ({marker.groundAnalysis.confidence?.toFixed(0)}%)
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="text-xs mt-1">
+                                      <span className="font-medium">Bodenklasse:</span> {marker.groundAnalysis.bodenklasse}
+                                    </div>
+                                    <div className="text-xs mt-0.5">
+                                      <span className="font-medium">Bodentragfähigkeitsklasse:</span> {marker.groundAnalysis.bodentragfaehigkeitsklasse}
+                                    </div>
+                                    {marker.groundAnalysis.analyseDetails && (
+                                      <div className="text-xs mt-0.5">
+                                        <span className="font-medium">Details:</span> {marker.groundAnalysis.analyseDetails}
                                       </div>
                                     )}
                                   </div>
@@ -1344,22 +1486,22 @@ export default function GeoMapPage() {
                                   <div className="pt-1">
                                     {isAnalyzing ? (
                                       <div className="space-y-2">
-                                        <div className="text-xs text-center">Oberfläche wird analysiert...</div>
+                                        <div className="text-xs text-center">Bild wird analysiert...</div>
                                         <Progress value={uploadProgress} className="h-2" />
                                       </div>
                                     ) : (
                                       <div className="space-y-2">
                                         <div className="bg-muted/50 p-2 rounded-md text-xs">
-                                          <div className="font-medium mb-1 text-primary">Straßenoberfläche analysieren</div>
-                                          <p>Laden Sie ein Foto der Straßenoberfläche hoch, um die Belastungsklasse (RStO) automatisch zu bestimmen.</p>
+                                          <div className="font-medium mb-1 text-primary">Bildanalyse</div>
+                                          <p>Laden Sie ein Foto hoch, um Eigenschaften automatisch zu bestimmen.</p>
                                         </div>
-                                        <div className="flex gap-1">
+                                        <div className="flex flex-col gap-2">
                                           <Button
                                             variant="default"
                                             size="sm"
                                             className="w-full flex gap-1"
                                             onClick={() => {
-                                              // Erstelle ein unsichtbares Datei-Input-Element
+                                              // Erstelle ein unsichtbares Datei-Input-Element für Oberflächenanalyse
                                               const input = document.createElement('input');
                                               input.type = 'file';
                                               input.accept = 'image/*';
@@ -1383,7 +1525,39 @@ export default function GeoMapPage() {
                                             }}
                                           >
                                             <Camera className="h-4 w-4" />
-                                            <span>Foto hochladen & analysieren</span>
+                                            <span>Oberflächenanalyse</span>
+                                          </Button>
+                                          
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full flex gap-1"
+                                            onClick={() => {
+                                              // Erstelle ein unsichtbares Datei-Input-Element für Bodenanalyse
+                                              const input = document.createElement('input');
+                                              input.type = 'file';
+                                              input.accept = 'image/*';
+                                              input.style.display = 'none';
+                                              
+                                              // Füge das Element zum DOM hinzu
+                                              document.body.appendChild(input);
+                                              
+                                              // Überwache Dateiauswahl
+                                              input.onchange = async (e) => {
+                                                const file = (e.target as HTMLInputElement).files?.[0];
+                                                if (file) {
+                                                  await analyzeGround(index, file);
+                                                }
+                                                // Entferne das Element wieder
+                                                input.remove();
+                                              };
+                                              
+                                              // Klicke auf das Input-Element, um den Datei-Dialog zu öffnen
+                                              input.click();
+                                            }}
+                                          >
+                                            <Image className="h-4 w-4" />
+                                            <span>Bodenanalyse</span>
                                           </Button>
                                         </div>
                                       </div>
