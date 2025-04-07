@@ -192,12 +192,13 @@ export default function SurfaceAnalysis({ attachment }: SurfaceAnalysisProps) {
                       </CardHeader>
                       <CardContent>
                         <img 
-                          src={`/uploads/file-1744037061364-51806375.jpg`} 
+                          src={`/uploads/file-1744037732381-329912740.jpg`} 
                           alt={analysisType === "asphalt" ? "Asphaltprobe" : "Bodenprobe"} 
                           className="w-full h-auto rounded-md object-contain max-h-64"
                           onError={(e) => {
                             console.error("Bildfehler:", e);
-                            (e.target as HTMLImageElement).src = "/uploads/file-1744037061364-51806375.jpg";
+                            // Versuche andere Dateien im Uploads-Ordner
+                            (e.target as HTMLImageElement).src = "/uploads/image-1744031028497-696564420.jpg";
                           }}
                         />
                       </CardContent>
