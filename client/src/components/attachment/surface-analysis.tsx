@@ -364,23 +364,32 @@ export default function SurfaceAnalysis({ attachment }: SurfaceAnalysisProps) {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {analysisResult.visualizationUrl ? (
-                      <div className="flex justify-center">
-                        <img 
-                          src={analysisResult.visualizationUrl} 
-                          alt={`Straßenaufbau für RStO ${analysisResult.belastungsklasse}`}
-                          className="max-w-full h-auto rounded-md shadow-md"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col justify-center items-center h-64 border rounded-md bg-gray-50 p-4">
-                        <p className="text-gray-600 font-medium mb-2">Keine Visualisierung verfügbar</p>
-                        <p className="text-gray-500 text-sm text-center">
-                          Die Visualisierung konnte aufgrund von API-Kontingentlimits nicht erstellt werden. 
-                          Die Analysedetails zur Belastungsklasse und zum {analysisType === "asphalt" ? "Asphalttyp" : "Bodentyp"} sind aber weiterhin gültig.
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex justify-center">
+                      <img 
+                        src={analysisResult.visualizationUrl} 
+                        alt={`Straßenaufbau für RStO ${analysisResult.belastungsklasse}`}
+                        className="max-w-full h-auto rounded-md shadow-md"
+                        onError={(e) => {
+                          // Wenn das Bild nicht geladen werden kann, setzen wir ein Fallback
+                          e.currentTarget.onerror = null; // Verhindern einer Endlosschleife
+                          if (analysisResult.belastungsklasse === "Bk100") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk100.svg";
+                          } else if (analysisResult.belastungsklasse === "Bk32") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk32.svg";
+                          } else if (analysisResult.belastungsklasse === "Bk10") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk10.svg";
+                          } else if (analysisResult.belastungsklasse === "Bk3.2") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk3.svg";
+                          } else if (analysisResult.belastungsklasse === "Bk1.8" || analysisResult.belastungsklasse === "Bk1.0") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk1.svg";
+                          } else if (analysisResult.belastungsklasse === "Bk0.3") {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk0_3.svg";
+                          } else {
+                            e.currentTarget.src = "/static/rsto_visualizations/Bk3.svg"; // Standardwert
+                          }
+                        }}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
