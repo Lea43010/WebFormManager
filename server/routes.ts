@@ -22,7 +22,10 @@ import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./uploa
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
-
+  
+  // Serve uploaded files statically
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  
   // Error handling middleware
   app.use((err: any, req: any, res: any, next: any) => {
     if (err instanceof ZodError) {
