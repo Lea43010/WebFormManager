@@ -1,11 +1,19 @@
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
 export default function InformationPage() {
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Informationen</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Informationen</h1>
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4" />
+            Zurück zur Übersicht
+          </Link>
+        </Button>
+      </div>
       
       <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
         {/* Externe Links Karte */}
