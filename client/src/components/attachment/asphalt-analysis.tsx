@@ -141,10 +141,9 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
           
           {analysisResult && (
             <Tabs defaultValue="uebersicht">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
                 <TabsTrigger value="belastungsklasse">Belastungsklasse</TabsTrigger>
-                <TabsTrigger value="visualisierung">Straßenaufbau</TabsTrigger>
               </TabsList>
               
               <TabsContent value="uebersicht" className="pt-4">
@@ -153,21 +152,35 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-lg flex items-center justify-between">
-                          Bild
+                          Straßenaufbau
                           <Badge variant="outline" className="ml-2">
-                            {attachment.fileName}
+                            {analysisResult.belastungsklasse}
                           </Badge>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <img 
-                          src={analysisResult.imageBase64 ? `data:image/jpeg;base64,${analysisResult.imageBase64}` : `/uploads/${attachment.fileName}?t=${Date.now()}`} 
-                          alt="Asphaltprobe" 
-                          className="w-full h-auto rounded-md object-contain max-h-64"
+                          src={analysisResult.visualizationUrl} 
+                          alt={`Straßenaufbau für RStO ${analysisResult.belastungsklasse}`}
+                          className="max-w-full h-auto rounded-md shadow-md"
                           onError={(e) => {
-                            console.error("Bildfehler:", e);
-                            // Verwende einen Fallback, wenn das Bild nicht geladen werden kann
-                            (e.target as HTMLImageElement).src = "/static/image-placeholder.png";
+                            // Wenn das Bild nicht geladen werden kann, setzen wir ein Fallback
+                            e.currentTarget.onerror = null; // Verhindern einer Endlosschleife
+                            if (analysisResult.belastungsklasse === "Bk100") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk100.svg";
+                            } else if (analysisResult.belastungsklasse === "Bk32") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk32.svg";
+                            } else if (analysisResult.belastungsklasse === "Bk10") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk10.svg";
+                            } else if (analysisResult.belastungsklasse === "Bk3.2") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk3.svg";
+                            } else if (analysisResult.belastungsklasse === "Bk1.8" || analysisResult.belastungsklasse === "Bk1.0") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk1.svg";
+                            } else if (analysisResult.belastungsklasse === "Bk0.3") {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk0_3.svg";
+                            } else {
+                              e.currentTarget.src = "/static/rsto_visualizations/Bk3.svg"; // Standardwert
+                            }
                           }}
                         />
                       </CardContent>
@@ -277,35 +290,7 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="visualisierung" className="pt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Straßenaufbau für RStO-Belastungsklasse {analysisResult.belastungsklasse}</CardTitle>
-                    <CardDescription>
-                      Schematische Darstellung des Straßenaufbaus nach RStO 12
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {analysisResult.visualizationUrl ? (
-                      <div className="flex justify-center">
-                        <img 
-                          src={analysisResult.visualizationUrl} 
-                          alt={`Straßenaufbau für RStO ${analysisResult.belastungsklasse}`}
-                          className="max-w-full h-auto rounded-md shadow-md"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col justify-center items-center h-64 border rounded-md bg-gray-50 p-4">
-                        <p className="text-gray-600 font-medium mb-2">Keine Visualisierung verfügbar</p>
-                        <p className="text-gray-500 text-sm text-center">
-                          Die Visualisierung konnte aufgrund von API-Kontingentlimits nicht erstellt werden. 
-                          Die Analysedetails zur Belastungsklasse und zum Asphalttyp sind aber weiterhin gültig.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+
             </Tabs>
           )}
         </DialogContent>
