@@ -159,10 +159,10 @@ export default function SurfaceAnalysis({ attachment }: SurfaceAnalysisProps) {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {analysisType === "asphalt" ? "RStO Asphaltanalyse" : "Bodenanalyse"}
+              {analysisType === "asphalt" ? "RStO Asphaltanalyse" : "RStO Bodenanalyse"}
             </DialogTitle>
             <DialogDescription>
-              Ergebnisse der KI-gestützten {analysisType === "asphalt" ? "Asphalt" : "Boden"}analyse
+              Ergebnisse der KI-gestützten {analysisType === "asphalt" ? "Asphalt" : "Boden"}analyse nach RStO
             </DialogDescription>
           </DialogHeader>
           

@@ -426,7 +426,7 @@ export async function generateRstoVisualization(
 }
 
 // Fallback-Funktion für statische Visualisierungen, wenn die API-Generierung fehlschlägt
-async function useStaticVisualization(
+export async function useStaticVisualization(
   belastungsklasse: keyof typeof belastungsklassen,
   outputPath: string
 ): Promise<string> {
@@ -434,39 +434,27 @@ async function useStaticVisualization(
     // Normalisierte Belastungsklasse für den Dateinamen
     let normalizedBk = belastungsklasse;
     
-    // Statt die Datei zu kopieren, geben wir einfach den direkten Pfad zum statischen SVG zurück
-    const staticSvgUrl = `/static/rsto_visualizations/${normalizedBk}.svg`;
+    // Direkte URL-Pfade zu den vorhandenen statischen SVGs
+    const staticSvgUrls = {
+      "Bk100": "/static/rsto_visualizations/Bk100.svg",
+      "Bk32": "/static/rsto_visualizations/Bk32.svg",
+      "Bk10": "/static/rsto_visualizations/Bk10.svg",
+      "Bk3.2": "/static/rsto_visualizations/Bk3.2.svg",
+      "Bk1.8": "/static/rsto_visualizations/Bk1.8.svg",
+      "Bk1.0": "/static/rsto_visualizations/Bk1.0.svg",
+      "Bk0.3": "/static/rsto_visualizations/Bk0.3.svg"
+    };
     
-    // Pfad zum statischen SVG basierend auf der Belastungsklasse
-    const staticSvgPath = path.join(
-      process.cwd(),
-      'public',
-      'static',
-      'rsto_visualizations',
-      `${normalizedBk}.svg`
-    );
-    
-    // Prüfen, ob die statische Datei existiert
-    if (await fs.pathExists(staticSvgPath)) {
-      return staticSvgUrl;
+    // Prüfen, ob wir eine statische URL für diese Belastungsklasse haben
+    if (staticSvgUrls[normalizedBk as keyof typeof staticSvgUrls]) {
+      return staticSvgUrls[normalizedBk as keyof typeof staticSvgUrls];
     } else {
       // Wenn keine spezifische SVG-Datei gefunden wurde, nehmen wir Bk3.2 als Standard
-      const defaultSvgPath = path.join(
-        process.cwd(),
-        'public',
-        'static',
-        'rsto_visualizations',
-        'Bk3.2.svg'
-      );
-      
-      if (await fs.pathExists(defaultSvgPath)) {
-        return '/static/rsto_visualizations/Bk3.2.svg';
-      } else {
-        throw new Error("Keine statische Visualisierung verfügbar");
-      }
+      return "/static/rsto_visualizations/Bk3.2.svg";
     }
   } catch (error) {
     console.error("Fehler beim Verwenden der statischen Visualisierung:", error);
-    throw error;
+    // Bei einem Fehler geben wir immer einen Standardpfad zurück
+    return "/static/rsto_visualizations/Bk3.2.svg";
   }
 }

@@ -5,6 +5,7 @@ import {
   analyzeAsphaltImage, 
   analyzeGroundImage,
   generateRstoVisualization, 
+  useStaticVisualization,
   belastungsklassen, 
   asphaltTypen,
   bodenklassen,
@@ -96,8 +97,14 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
         }
       } catch (error) {
         console.error('Fehler bei der Visualisierungsgenerierung:', error);
-        // Fallback zur statischen Visualisierung
-        visualizationUrl = `/static/rsto_visualizations/${analysisResult.belastungsklasse}.svg`;
+        // Bei einem Fehler mit direkter statischer Visualisierung ausweichen
+        try {
+          visualizationUrl = await useStaticVisualization(analysisResult.belastungsklasse, visualizationPath);
+        } catch (fallbackError) {
+          console.error('Auch Fallback fehlgeschlagen:', fallbackError);
+          // Letzter Fallback: direkte URL
+          visualizationUrl = `/static/rsto_visualizations/Bk3.2.svg`;
+        }
       }
       
       // Analyseergebnisse in der Datenbank speichern (optional)
