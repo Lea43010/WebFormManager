@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
@@ -129,6 +129,45 @@ export default function InformationPage() {
               </Link>
             </Button>
           </div>
+        </div>
+      </div>
+      
+      {/* Hilfreiche Links */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mt-8">
+        <h2 className="text-xl font-semibold mb-4 border-b pb-2">Hilfreiche Links</h2>
+        <p className="text-gray-600 mb-4">
+          Externe Ressourcen für Straßenplanung und -bau
+        </p>
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={() => window.open("https://www.fgsv-verlag.de/rsto-12-richtlinien-fuer-die-standardisierung-des-oberbaues-von-verkehrsflaechen", "_blank")}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            <span>RStO 12 Richtlinien (FGSV)</span>
+            <ExternalLink className="ml-auto h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={() => window.open("https://www.bast.de/BASt_2017/DE/Verkehrstechnik/Publikationen/Regelwerke/Entwurf/RDO-Asphalt-09.html", "_blank")}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            <span>RDO Asphalt 09</span>
+            <ExternalLink className="ml-auto h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={() => window.open("https://www.bast.de", "_blank")}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            <span>BASt - Bundesanstalt für Straßenwesen</span>
+            <ExternalLink className="ml-auto h-4 w-4" />
+          </Button>
         </div>
       </div>
       

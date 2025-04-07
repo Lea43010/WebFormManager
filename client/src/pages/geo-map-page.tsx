@@ -865,31 +865,18 @@ export default function GeoMapPage() {
                 </CardContent>
               </Card>
               
+              {/* Hier ist die Hilfreiche Links-Karte entfernt und auf die Informationsseite verschoben */}
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Hilfreiche Links</CardTitle>
-                  <CardDescription>
-                    Externe Ressourcen für Straßenplanung
-                  </CardDescription>
+                  <CardTitle className="text-lg">Weiterführende Informationen</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start" onClick={() => window.open("https://www.fgsv-verlag.de/rsto-12-richtlinien-fuer-die-standardisierung-des-oberbaues-von-verkehrsflaechen", "_blank")}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>RStO 12 Richtlinien (FGSV)</span>
-                      <ExternalLink className="ml-auto h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => window.open("https://www.bast.de/BASt_2017/DE/Verkehrstechnik/Publikationen/Regelwerke/Entwurf/RDO-Asphalt-09.html", "_blank")}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>RDO Asphalt 09</span>
-                      <ExternalLink className="ml-auto h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => window.open("https://www.bast.de", "_blank")}>
-                      <FileText className="mr-2 h-4 w-4" />
-                      <span>BASt - Bundesanstalt für Straßenwesen</span>
-                      <ExternalLink className="ml-auto h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button asChild variant="outline" className="w-full justify-start">
+                    <Link to="/information">
+                      <Info className="mr-2 h-4 w-4" />
+                      <span>Informationsseite mit Links und Referenzen</span>
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
