@@ -62,6 +62,9 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
         return res.status(404).json({ message: 'Bilddatei nicht gefunden' });
       }
       
+      // Original-Bilddaten als Base64 für die Antwort
+      const imageBase64 = await getImageAsBase64(attachment.filePath);
+      
       // Bild analysieren je nach Typ
       let analysisResult: AsphaltAnalysisResult | GroundAnalysisResult;
       if (analysisType === 'ground') {
@@ -145,8 +148,7 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
         // Fehler beim Speichern sollte nicht die gesamte Analyse fehlschlagen lassen
       }
       
-      // Bild als Base64 einlesen
-      const imageBase64 = await getImageAsBase64(attachment.filePath);
+      // Wir haben das Base64-Bild bereits weiter oben eingelesen - hier nicht doppelt machen
       
       // Antwort mit allen Analysedaten vorbereiten
       const responseData: Record<string, any> = {
@@ -176,9 +178,89 @@ export function setupSurfaceAnalysisRoutes(app: express.Express) {
   
   // Bestehende /api/analyze-asphalt/:attachmentId Route weiterhin unterstützen (Abwärtskompatibilität)
   app.post('/api/analyze-asphalt/:attachmentId', async (req, res, next) => {
-    // Automatische Weiterleitung an die neue kombinierte Route mit analysisType=asphalt
-    req.body.analysisType = 'asphalt';
-    app._router.handle(req, res, next);
+    try {
+      // Überprüfen, ob der Benutzer authentifiziert ist
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Nicht autorisiert' });
+      }
+      
+      // Anhangsdaten abrufen
+      const attachmentId = parseInt(req.params.attachmentId);
+      const attachment = await storage.getAttachment(attachmentId);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: 'Anhang nicht gefunden' });
+      }
+      
+      console.log("Analysiere Datei:", attachment.filePath);
+      
+      // Prüfen, ob die Datei existiert und lesbar ist
+      try {
+        await fs.access(attachment.filePath, fs.constants.R_OK);
+      } catch (err: any) {
+        console.error("Dateizugriffsfehler:", err);
+        return res.status(404).json({ message: 'Dateizugriff nicht möglich: ' + (err.message || 'Unbekannter Fehler') });
+      }
+      
+      // Original-Bilddaten als Base64
+      const imageBase64 = await getImageAsBase64(attachment.filePath);
+      
+      // Analyse als Asphalt-Typ durchführen
+      const analysisResult = await analyzeAsphaltImage(attachment.filePath);
+      
+      // Visualisierung generieren
+      const visualizationDir = path.join(process.cwd(), 'uploads', 'visualizations');
+      await fs.ensureDir(visualizationDir);
+      
+      const visualizationPath = path.join(
+        visualizationDir, 
+        `rsto_viz_${attachmentId}_${Date.now()}.png`
+      );
+      
+      let visualizationUrl;
+      try {
+        const result = await generateRstoVisualization(
+          analysisResult.belastungsklasse,
+          visualizationPath
+        );
+        
+        // Prüfen, ob das Ergebnis bereits eine URL ist (statische SVG)
+        if (result.startsWith('/static/')) {
+          visualizationUrl = result;
+        } else {
+          // Sonst normalen Pfad verwenden (API-generiertes Bild)
+          visualizationUrl = '/uploads/visualizations/' + path.basename(result);
+        }
+      } catch (error) {
+        console.error('Fehler bei der Visualisierungsgenerierung:', error);
+        // Bei einem Fehler mit direkter statischer Visualisierung ausweichen
+        try {
+          visualizationUrl = await useStaticVisualization(analysisResult.belastungsklasse, visualizationPath);
+        } catch (fallbackError) {
+          console.error('Auch Fallback fehlgeschlagen:', fallbackError);
+          // Letzter Fallback: direkte URL
+          visualizationUrl = `/static/rsto_visualizations/Bk3.2.svg`;
+        }
+      }
+      
+      // Belastungsklasse-Details abrufen
+      const belastungsklassenInfo = belastungsklassen[analysisResult.belastungsklasse];
+      const asphaltTypInfo = asphaltTypen[analysisResult.asphalttyp];
+      
+      // Ergebnis zurückgeben
+      const result = {
+        ...analysisResult,
+        belastungsklasseDetails: belastungsklassenInfo,
+        asphaltTypDetails: asphaltTypInfo,
+        visualizationUrl,
+        imageBase64  // Hier wird das Base64-Bild hinzugefügt
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Fehler bei der Asphaltanalyse:", error);
+      next(error);
+    }
   });
   
   // Neue Routes für Bodenklassen und Bodentragfähigkeitsklassen

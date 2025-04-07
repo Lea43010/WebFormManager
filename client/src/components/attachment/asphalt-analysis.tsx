@@ -161,7 +161,7 @@ export default function AsphaltAnalysis({ attachment }: AsphaltAnalysisProps) {
                       </CardHeader>
                       <CardContent>
                         <img 
-                          src={analysisResult.imageBase64 || `/uploads/${attachment.fileName}`} 
+                          src={analysisResult.imageBase64 ? `data:image/jpeg;base64,${analysisResult.imageBase64}` : `/uploads/${attachment.fileName}?t=${Date.now()}`} 
                           alt="Asphaltprobe" 
                           className="w-full h-auto rounded-md object-contain max-h-64"
                           onError={(e) => {

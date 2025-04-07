@@ -23,8 +23,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
   
-  // Serve uploaded files statically
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  // Serve uploaded files statically with no-cache headers
+  app.use("/uploads", (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    express.static(path.join(process.cwd(), "uploads"))(req, res, next);
+  });
   
   // Error handling middleware
   app.use((err: any, req: any, res: any, next: any) => {
