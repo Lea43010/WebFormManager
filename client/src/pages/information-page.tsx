@@ -96,7 +96,7 @@ export default function InformationPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Informationen</h1>
+        <h1 className="text-3xl font-bold">Hilfe & Info</h1>
         <Button asChild variant="outline" className="gap-2">
           <Link to="/">
             <ArrowLeft className="h-4 w-4" />

@@ -157,7 +157,7 @@ export default function CompanyPage() {
   
   return (
     <DashboardLayout 
-      title="Unternehmensdaten" 
+      title="Firmendaten" 
       tabs={[]}
     >
       {!isEditing ? (

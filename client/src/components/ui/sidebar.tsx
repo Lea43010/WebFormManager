@@ -30,47 +30,47 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    title: "Projektübersicht",
+    title: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
   },
   {
-    title: "Unternehmen",
+    title: "Firmendaten",
     href: "/companies",
     icon: Building2,
   },
   {
-    title: "Kunden",
+    title: "Kundendaten",
     href: "/customers",
     icon: Users,
   },
   {
-    title: "Projekte",
+    title: "Projektverwaltung",
     href: "/projects",
     icon: Folders,
   },
   {
-    title: "Geo-Karte",
+    title: "Geo-Informationen",
     href: "/geo-map",
     icon: Map,
   },
   {
-    title: "Anhänge",
+    title: "Dokumente",
     href: "/attachments",
     icon: Paperclip,
   },
   {
-    title: "Informationen",
+    title: "Hilfe & Info",
     href: "/information",
     icon: Info,
   },
   {
-    title: "Benutzer",
+    title: "Nutzerverwaltung",
     href: "/users",
     icon: Settings,
   },
   {
-    title: "DB Migration",
+    title: "Datenübertragung",
     href: "/db-migration",
     icon: Database,
   },

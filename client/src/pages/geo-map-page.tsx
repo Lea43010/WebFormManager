@@ -856,7 +856,7 @@ export default function GeoMapPage() {
         </Button>
       </div>
     
-      <h1 className="text-3xl font-bold mb-2">Straßen-Belastungsklassen & Geoportal</h1>
+      <h1 className="text-3xl font-bold mb-2">Geo-Informationen</h1>
       <p className="text-gray-500 mb-6">
         Erfassen Sie Belastungsklassen für Projekte nach RStO 12 und nutzen Sie externe Kartendienste.
       </p>

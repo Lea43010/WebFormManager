@@ -198,7 +198,7 @@ export default function ProjectPage() {
 
   return (
     <DashboardLayout 
-      title="Projektübersicht"
+      title="Projektverwaltung"
       tabs={[]}
     >
       {!isEditing ? (

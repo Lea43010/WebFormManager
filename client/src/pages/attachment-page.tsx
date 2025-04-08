@@ -102,7 +102,7 @@ export default function AttachmentPage() {
     <DashboardLayout
       title={
         <div className="flex items-center space-x-4">
-          <span>Anhänge Übersicht</span>
+          <span>Dokumente</span>
         </div>
       }
       tabs={["Alle Anhänge", "Nach Projekt"]}
