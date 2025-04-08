@@ -167,7 +167,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           <p className="text-sm text-gray-500 mb-6">Geben Sie die Details des Projekts ein.</p>
           
           {/* Grundinformationen */}
-          <h3 className="text-lg font-medium mb-4">Grundinformationen</h3>
+          <h3 className="text-lg font-medium mb-4">📋 Grundinformationen</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div>
               <FormField
@@ -256,7 +256,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
           
           {/* Beteiligte */}
-          <h3 className="text-lg font-medium mb-4">Beteiligte</h3>
+          <h3 className="text-lg font-medium mb-4">👥 Beteiligte</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div>
               <FormField
@@ -353,7 +353,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
           
           {/* Zeitlicher Rahmen */}
-          <h3 className="text-lg font-medium mb-4">Zeitlicher Rahmen</h3>
+          <h3 className="text-lg font-medium mb-4">📅 Zeitlicher Rahmen</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
               <FormField
@@ -548,7 +548,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
           
           {/* Projektmaße */}
-          <h3 className="text-lg font-medium mb-4">Projektmaße</h3>
+          <h3 className="text-lg font-medium mb-4">📏 Projektmaße</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div>
               <FormField
@@ -615,7 +615,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
           
           {/* Sprachnotizen */}
-          <h3 className="text-lg font-medium mb-4">Sprachnotizen</h3>
+          <h3 className="text-lg font-medium mb-4">🎤 Sprachnotizen</h3>
           <div className="mb-8">
             <FormField
               control={form.control}
@@ -678,7 +678,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
           
           {/* Bemerkungen */}
-          <h3 className="text-lg font-medium mb-4">Bemerkungen</h3>
+          <h3 className="text-lg font-medium mb-4">💬 Bemerkungen</h3>
           <div className="mb-4">
             <FormField
               control={form.control}
