@@ -146,14 +146,16 @@ export default function UnprotectedAuthPage() {
           <div className="mb-8">
             <div className="flex items-center">
               <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white font-bold mr-3">
-                DB
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
               </div>
               <h2 className="mt-1 text-3xl font-extrabold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                DB Manager
+                Baustellen App
               </h2>
             </div>
             <p className="mt-2 text-sm text-gray-600">
-              Ihr persönliches Datenbankverwaltungssystem
+              Ihre professionelle Anwendung zur Verwaltung von Baustellen und Projekten
             </p>
             <div className="mt-4 text-sm text-primary">
               Melden Sie sich an, um Ihre personalisierten Funktionen zu nutzen
@@ -368,22 +370,22 @@ export default function UnprotectedAuthPage() {
       <div className="relative flex-1 hidden md:block">
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-700">
           <div className="flex flex-col justify-center h-full px-10 text-white">
-            <h1 className="text-4xl font-bold mb-6">Datenbankverwaltungssystem</h1>
+            <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
             <p className="text-xl mb-8">
-              Verwalten Sie Ihre Daten effizient und sicher mit unserem intuitiven Datenbankmanager.
+              Verwalten Sie Baustellen und Projekte effizient und sicher mit unserer intuitiven Anwendung.
             </p>
             <ul className="space-y-4">
               <li className="flex items-center">
                 <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Unternehmensdaten verwalten
+                Firmendaten verwalten
               </li>
               <li className="flex items-center">
                 <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Kundendatenbank pflegen
+                Kundendaten pflegen
               </li>
               <li className="flex items-center">
                 <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -395,7 +397,7 @@ export default function UnprotectedAuthPage() {
                 <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Materialbestände überwachen
+                Oberflächenanalysen durchführen
               </li>
             </ul>
           </div>
