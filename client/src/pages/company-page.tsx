@@ -15,14 +15,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { PlusCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CompanyPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  // Fixed active tab (keine Tabs mehr)
-  const activeTab = "Liste";
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -47,7 +46,7 @@ export default function CompanyPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
-      setIsDialogOpen(false);
+      setIsEditing(false);
       toast({
         title: currentCompany ? "Unternehmen aktualisiert" : "Unternehmen erstellt",
         description: `Das Unternehmen wurde erfolgreich ${currentCompany ? "aktualisiert" : "erstellt"}`,
@@ -87,13 +86,13 @@ export default function CompanyPage() {
   // Handle add button click
   const handleAddCompany = () => {
     setCurrentCompany(null);
-    setIsDialogOpen(true);
+    setIsEditing(true);
   };
   
   // Handle edit button click
   const handleEditCompany = (company: Company) => {
     setCurrentCompany(company);
-    setIsDialogOpen(true);
+    setIsEditing(true);
   };
   
   // Handle delete button click
@@ -161,29 +160,52 @@ export default function CompanyPage() {
       title="Unternehmensdaten" 
       tabs={[]}
     >
-      {!isDialogOpen ? (
-        <DataTable
-          data={companies}
-          columns={columns}
-          isLoading={isLoading}
-          onAdd={handleAddCompany}
-          onEdit={handleEditCompany}
-          onDelete={handleDeleteCompany}
-        />
-      ) : (
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">
-              {currentCompany ? "Unternehmen bearbeiten" : "Neues Unternehmen"}
-            </h2>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(false)}
-              className="ml-auto"
-            >
-              Zurück zur Liste
+      {!isEditing ? (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={handleAddCompany}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Neues Unternehmen
             </Button>
           </div>
+          <DataTable
+            data={companies}
+            columns={columns}
+            isLoading={isLoading}
+            onEdit={handleEditCompany}
+            onDelete={handleDeleteCompany}
+            title="Unternehmensliste"
+          />
+        </div>
+      ) : null}
+      
+      {isEditing && (
+        <div className="mt-8">
+          {currentCompany ? (
+            <div className="flex items-center mb-6">
+              <h2 className="text-2xl font-semibold mr-4">Unternehmen bearbeiten</h2>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück zur Liste
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center mb-6">
+              <h2 className="text-2xl font-semibold mr-4">Neues Unternehmen</h2>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="flex items-center"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück zur Liste
+              </Button>
+            </div>
+          )}
           
           <CompanyForm 
             company={currentCompany} 
