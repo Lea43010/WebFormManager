@@ -276,7 +276,7 @@ export default function AuthPage() {
         </div>
       </div>
       <div className="relative flex-1 hidden md:block">
-        <div className="absolute inset-0 bg-[#6a961f]">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#6a961f] to-[#4a8416]">
           <div className="flex flex-col justify-center h-full px-10 text-white">
             <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
             <p className="text-xl mb-8">
