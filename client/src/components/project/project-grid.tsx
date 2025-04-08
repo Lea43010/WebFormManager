@@ -93,7 +93,7 @@ export function ProjectGrid({
                       <h3 className="text-base font-medium mb-1">{project.projectName}</h3>
                       <CardDescription>
                         <Badge variant="outline" className="mr-2">
-                          {project.customerId ? `Kunde: ${project.customerId}` : 'Kein Kunde'}
+                          {project.personId ? `Ansprechpartner: ${project.personId}` : 'Kein Ansprechpartner'}
                         </Badge>
                         {project.projectArt && <Badge>{project.projectArt}</Badge>}
                       </CardDescription>
@@ -106,8 +106,8 @@ export function ProjectGrid({
                 <CardContent className="py-4">
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
-                      <span className="text-gray-600 font-medium">Projekt ID:</span>
-                      <span className="ml-1">{project.id}</span>
+                      <span className="text-gray-600 font-medium">Kunden ID:</span>
+                      <span className="ml-1">{project.customerId || '-'}</span>
                     </div>
                     {project.projectStartdate && (
                       <div className="flex items-center text-sm">
