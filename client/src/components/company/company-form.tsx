@@ -94,50 +94,28 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="bg-white p-6 rounded-md">
-          <h2 className="text-xl font-medium mb-6">{company ? "Unternehmen bearbeiten" : "Neues Unternehmen"}</h2>
-          <p className="text-sm text-gray-500 mb-6">Geben Sie die Details des Unternehmens ein.</p>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-4xl mx-auto">
+        <div className="bg-white rounded-md shadow-sm p-0 md:p-6">
+          <h2 className="text-2xl font-semibold mb-4 border-b pb-3">{company ? "Unternehmen bearbeiten" : "Neues Unternehmen"}</h2>
           
           {/* Unternehmensinformation */}
-          <h3 className="text-lg font-medium mb-4">🏢 Unternehmensdaten</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-              <FormField
-                control={form.control}
-                name="id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Firmennummer</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                        value={field.value || ''} 
-                        disabled={!!company}
-                        placeholder="Wird automatisch vergeben"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">🏢</span> Unternehmensdaten</h3>
             
-            <div>
+            {/* Unternehmensart */}
+            <div className="mb-4">
               <FormField
                 control={form.control}
                 name="companyArt"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unternehmensart</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Unternehmensart</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="modern-form-input">
                           <SelectValue placeholder="Unternehmensart auswählen" />
                         </SelectTrigger>
                       </FormControl>
@@ -155,15 +133,45 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
               />
             </div>
             
-            <div className="md:col-span-2">
+            {/* Firmenname und Ansprechpartner */}
+            <div className="mb-4">
               <FormField
                 control={form.control}
                 name="companyName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Firmenname</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Firmenname</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="Firmenname"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Firmennummer (versteckt) */}
+            <div className="hidden">
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="modern-form-label">Firmennummer</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''} 
+                        disabled={!!company}
+                        placeholder="Wird automatisch vergeben"
+                        className="modern-form-input"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -173,67 +181,65 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
           </div>
           
           {/* Adresse */}
-          <h3 className="text-lg font-medium mb-4"><span className="green-emoji">📍</span> Adresse</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="md:col-span-2">
-              <FormField
-                control={form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Straße</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">📍</span> Adresse</h3>
+            
+            {/* Straße und Hausnummer */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="md:col-span-3">
+                <FormField
+                  control={form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Straße</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className="modern-form-input" 
+                          placeholder="Straße"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div>
+                <FormField
+                  control={form.control}
+                  name="houseNumber"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Hausnummer</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className="modern-form-input" 
+                          placeholder="Hausnummer"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             
-            <div>
-              <FormField
-                control={form.control}
-                name="houseNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hausnummer</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="md:col-span-3">
+            {/* Zusatz (optional) */}
+            <div className="mb-4">
               <FormField
                 control={form.control}
                 name="addressLine2"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zusatz</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div>
-              <FormField
-                control={form.control}
-                name="postalCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Postleitzahl (PLZ)</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Zusatz (optional)</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
-                        value={field.value || ''}
+                        className="modern-form-input" 
+                        placeholder="Zusatz (optional)"
                       />
                     </FormControl>
                     <FormMessage />
@@ -242,15 +248,39 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
               />
             </div>
             
-            <div>
+            {/* PLZ und Stadt */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name="postalCode"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">PLZ</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        value={field.value || ''}
+                        className="modern-form-input"
+                        placeholder="PLZ"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ort / Stadt</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Ort</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="Ort"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -258,15 +288,20 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
               />
             </div>
             
-            <div>
+            {/* Stadtteil */}
+            <div className="mb-4">
               <FormField
                 control={form.control}
                 name="cityPart"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stadtteil</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Stadtteil (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="Stadtteil (optional)"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,19 +309,20 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
               />
             </div>
             
-            <div>
+            {/* Bundesland und Land (versteckt) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
               <FormField
                 control={form.control}
                 name="state"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bundesland</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Bundesland</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="modern-form-input">
                           <SelectValue placeholder="Bundesland auswählen" />
                         </SelectTrigger>
                       </FormControl>
@@ -302,21 +338,19 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <div>
+              
               <FormField
                 control={form.control}
                 name="country"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Land</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Land</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="modern-form-input">
                           <SelectValue placeholder="Land auswählen" />
                         </SelectTrigger>
                       </FormControl>
@@ -335,37 +369,44 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
             </div>
           </div>
           
-          {/* Kontaktinformationen */}
-          <h3 className="text-lg font-medium mb-4"><span className="green-emoji">📞</span> Kontaktinformationen</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          {/* Kontaktdaten */}
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">📞</span> Kontaktdaten</h3>
+            
+            {/* Telefon und Email */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <FormField
                 control={form.control}
                 name="companyPhone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefonnummer der Firma</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Telefonnummer</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
                         value={field.value || ''}
+                        className="modern-form-input"
+                        placeholder="Telefonnummer"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <div>
+              
               <FormField
                 control={form.control}
                 name="companyEmail"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-Mail-Adresse der Firma</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">E-Mail-Adresse</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input 
+                        type="email" 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="E-Mail-Adresse"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

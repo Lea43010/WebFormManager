@@ -6,6 +6,22 @@
   filter: hue-rotate(90deg) saturate(1.5);
 }
 
+.modern-form-input {
+  @apply border border-gray-300 rounded-md py-3 px-4 w-full bg-white;
+}
+
+.modern-form-label {
+  @apply block text-sm font-medium text-gray-500 mb-1;
+}
+
+.form-heading {
+  @apply flex items-center text-xl font-medium mb-4;
+}
+
+.form-section {
+  @apply mb-6;
+}
+
 @layer base {
   * {
     @apply border-border;

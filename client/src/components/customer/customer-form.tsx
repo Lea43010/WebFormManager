@@ -106,119 +106,114 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="bg-white p-6 rounded-md shadow-sm">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-4xl mx-auto">
+        <div className="bg-white rounded-md shadow-sm p-0 md:p-6">
           <h2 className="text-2xl font-semibold mb-4 border-b pb-3">{customer ? "Kunden bearbeiten" : "Neuer Kunde"}</h2>
           
           {/* Kundeninformation */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">👤</span> Persönliche Daten</h3>
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">👤</span> Persönliche Daten</h3>
             
-            {/* Reihe 1: Kunden-ID und Kundenart */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Kunden-ID</FormLabel>
+            {/* Kundenart */}
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="customerType"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Kundenart</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                          value={field.value || ''} 
-                          disabled={!!customer}
-                          placeholder="Wird automatisch vergeben"
-                          className="border-gray-300 h-10"
-                        />
+                        <SelectTrigger className="modern-form-input">
+                          <SelectValue placeholder="Kundenart wählen" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div>
-                <FormField
-                  control={form.control}
-                  name="customerType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Kundenart</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="border-gray-300 h-10">
-                            <SelectValue placeholder="Kundenart wählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Privatkunde">Privatkunde</SelectItem>
-                          <SelectItem value="Gewerbe">Gewerbe</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <SelectContent>
+                        <SelectItem value="Privatkunde">Privatkunde</SelectItem>
+                        <SelectItem value="Gewerbe">Gewerbe</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
-            {/* Reihe 2: Vorname und Nachname */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Vorname</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            {/* Vorname und Nachname */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Vorname</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="modern-form-input" placeholder="Vorname" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div>
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Nachname</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Nachname</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="modern-form-input" placeholder="Nachname" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Kunden-ID (versteckt in Collapsed-Sektion) */}
+            <div className="mt-4 hidden">
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="modern-form-label">Kunden-ID</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                        value={field.value || ''} 
+                        disabled={!!customer}
+                        placeholder="Wird automatisch vergeben"
+                        className="modern-form-input"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
           
-          {/* Adresse - Reihe 3-5 */}
-          <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">📍</span> Adresse</h3>
+          {/* Adresse */}
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">📍</span> Adresse</h3>
             
             {/* Straße und Hausnummer */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div className="md:col-span-3">
                 <FormField
                   control={form.control}
                   name="street"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Straße</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Straße</FormLabel>
                       <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
+                        <Input {...field} className="modern-form-input" placeholder="Straße" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -231,10 +226,10 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                   control={form.control}
                   name="houseNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Hausnummer</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Hausnummer</FormLabel>
                       <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
+                        <Input {...field} className="modern-form-input" placeholder="Hausnummer" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,164 +238,160 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
               </div>
             </div>
             
-            {/* PLZ, Stadt und Stadtteil */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="postalCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Postleitzahl (PLZ)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          value={field.value || ''}
-                          className="border-gray-300 h-10"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            {/* PLZ und Stadt */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name="postalCode"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">PLZ</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        value={field.value || ''}
+                        className="modern-form-input"
+                        placeholder="PLZ"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div>
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Ort / Stadt</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div>
-                <FormField
-                  control={form.control}
-                  name="cityPart"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Stadtteil</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="border-gray-300 h-10" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Ort</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="modern-form-input" placeholder="Ort" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
-            {/* Bundesland und Land */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Bundesland</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="border-gray-300 h-10">
-                            <SelectValue placeholder="Bundesland auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {BUNDESLAENDER.map((bundesland) => (
-                            <SelectItem key={bundesland} value={bundesland}>
-                              {bundesland}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            {/* Stadtteil */}
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="cityPart"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Stadtteil (optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="modern-form-input" placeholder="Stadtteil (optional)" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Bundesland und Land (versteckt) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Bundesland</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="modern-form-input">
+                          <SelectValue placeholder="Bundesland auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BUNDESLAENDER.map((bundesland) => (
+                          <SelectItem key={bundesland} value={bundesland}>
+                            {bundesland}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div>
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Land</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="border-gray-300 h-10">
-                            <SelectValue placeholder="Land auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {COUNTRIES.map((country) => (
-                            <SelectItem key={country} value={country}>
-                              {country}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Land</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="modern-form-input">
+                          <SelectValue placeholder="Land auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
           
           {/* Kontaktinformationen */}
-          <div className="mb-4">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">📞</span> Kontaktinformationen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="customerPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">Telefonnummer</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          value={field.value || ''}
-                          className="border-gray-300 h-10"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">📞</span> Kontaktinformationen</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="customerPhone"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Telefonnummer</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        value={field.value || ''}
+                        className="modern-form-input"
+                        placeholder="Telefonnummer"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div>
-                <FormField
-                  control={form.control}
-                  name="customerEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-md">E-Mail-Adresse</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} className="border-gray-300 h-10" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="customerEmail"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">E-Mail-Adresse</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="E-Mail-Adresse"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         </div>
