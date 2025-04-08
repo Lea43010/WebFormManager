@@ -90,12 +90,12 @@ export function ProjectGrid({
                 <CardHeader className={`py-3 px-4 ${project.projectStop ? 'bg-red-100' : 'bg-green-100'}`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="mb-1">{project.projectName}</CardTitle>
+                      <h3 className="text-base font-medium mb-1">{project.projectName}</h3>
                       <CardDescription>
                         <Badge variant="outline" className="mr-2">
-                          ID: {project.id}
+                          {project.customerId ? `Kunde: ${project.customerId}` : 'Kein Kunde'}
                         </Badge>
-                        <Badge>{project.projectArt}</Badge>
+                        {project.projectArt && <Badge>{project.projectArt}</Badge>}
                       </CardDescription>
                     </div>
                     <Badge variant={project.projectStop ? "destructive" : "default"} className={project.projectStop ? "" : "bg-green-600"}>
@@ -105,6 +105,10 @@ export function ProjectGrid({
                 </CardHeader>
                 <CardContent className="py-4">
                   <div className="space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="text-gray-600 font-medium">Projekt ID:</span>
+                      <span className="ml-1">{project.id}</span>
+                    </div>
                     {project.projectStartdate && (
                       <div className="flex items-center text-sm">
                         <Calendar className="w-4 h-4 mr-2 text-gray-500" />
