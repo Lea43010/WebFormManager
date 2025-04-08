@@ -177,18 +177,16 @@ export default function CustomerPage() {
       
       {isEditing && (
         <div className="mt-8">
-          {currentCustomer ? (
-            <div className="flex items-center mb-6">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(false)}
-                className="flex items-center"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Zurück zur Liste
-              </Button>
-            </div>
-          ) : null}
+          <div className="flex justify-end mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="flex items-center"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Zurück zur Liste
+            </Button>
+          </div>
           
           <CustomerForm 
             customer={currentCustomer} 
