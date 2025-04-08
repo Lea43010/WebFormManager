@@ -176,7 +176,7 @@ export default function HomeSimple() {
                 onClick={() => {
                   fetch('/api/logout', { method: 'POST' })
                     .then(() => {
-                      window.location.href = '/login';
+                      window.location.href = '/auth';
                     });
                 }}
                 className="text-base text-red-600 border-red-200 hover:bg-red-50"
@@ -187,7 +187,7 @@ export default function HomeSimple() {
           ) : (
             <Button 
               variant="link" 
-              onClick={() => navigate("/login")} 
+              onClick={() => navigate("/auth")} 
               className="text-base"
             >
               Jetzt anmelden oder registrieren

@@ -73,7 +73,7 @@ export default function DashboardLayout({
                   onClick={() => {
                     fetch('/api/logout', { method: 'POST' })
                       .then(() => {
-                        window.location.href = '/login';
+                        window.location.href = '/auth';
                       });
                   }}
                   className="text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100"
