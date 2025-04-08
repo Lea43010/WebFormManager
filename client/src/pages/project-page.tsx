@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
+import { ProjectGrid } from "@/components/project/project-grid";
+import { Grid, List } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -187,6 +189,13 @@ export default function ProjectPage() {
     },
   ];
   
+  // Ansichtsumschaltung
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'list' ? 'grid' : 'list');
+  };
+
   return (
     <DashboardLayout 
       title={
@@ -208,20 +217,50 @@ export default function ProjectPage() {
     >
       {!isEditing ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <div className="flex gap-2">
+              <Button 
+                variant={viewMode === 'list' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="mr-2 h-4 w-4" />
+                Liste
+              </Button>
+              <Button 
+                variant={viewMode === 'grid' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid className="mr-2 h-4 w-4" />
+                Kacheln
+              </Button>
+            </div>
             <Button onClick={handleAddProject}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Neues Projekt
             </Button>
           </div>
-          <DataTable
-            data={projects}
-            columns={columns}
-            isLoading={isLoading}
-            onEdit={handleEditProject}
-            onDelete={handleDeleteProject}
-            title="Projektliste"
-          />
+          
+          {viewMode === 'list' ? (
+            <DataTable
+              data={projects}
+              columns={columns}
+              isLoading={isLoading}
+              onEdit={handleEditProject}
+              onDelete={handleDeleteProject}
+              title="Projektliste"
+            />
+          ) : (
+            <ProjectGrid
+              projects={projects}
+              isLoading={isLoading}
+              onEdit={handleEditProject}
+              onDelete={handleDeleteProject}
+              onShowAttachments={handleShowAttachments}
+              onViewChange={() => setViewMode('list')}
+            />
+          )}
         </div>
       ) : null}
       
