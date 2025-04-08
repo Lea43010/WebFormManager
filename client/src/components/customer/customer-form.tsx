@@ -110,64 +110,65 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
         <div className="bg-white p-6 rounded-md shadow-sm">
           <h2 className="text-2xl font-semibold mb-4 border-b pb-3">{customer ? "Kunden bearbeiten" : "Neuer Kunde"}</h2>
           
-          {/* Kundeninformation - Reihe 1 */}
-          <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">👤</span> Persönliche Daten</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <FormField
-                control={form.control}
-                name="id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium text-md">Kunden-ID</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                        value={field.value || ''} 
-                        disabled={!!customer}
-                        placeholder="Wird automatisch vergeben"
-                        className="border-gray-300 h-10"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div>
-              <FormField
-                control={form.control}
-                name="customerType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium text-md">Kundenart</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="border-gray-300 h-10">
-                          <SelectValue placeholder="Kundenart wählen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Privatkunde">Privatkunde</SelectItem>
-                        <SelectItem value="Gewerbe">Gewerbe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          
-          {/* Persönliche Daten - Reihe 2 */}
+          {/* Kundeninformation */}
           <div className="mb-8">
             <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">👤</span> Persönliche Daten</h3>
+            
+            {/* Reihe 1: Kunden-ID und Kundenart */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+              <div>
+                <FormField
+                  control={form.control}
+                  name="id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium text-md">Kunden-ID</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
+                          value={field.value || ''} 
+                          disabled={!!customer}
+                          placeholder="Wird automatisch vergeben"
+                          className="border-gray-300 h-10"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div>
+                <FormField
+                  control={form.control}
+                  name="customerType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium text-md">Kundenart</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-gray-300 h-10">
+                            <SelectValue placeholder="Kundenart wählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Privatkunde">Privatkunde</SelectItem>
+                          <SelectItem value="Gewerbe">Gewerbe</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            {/* Reihe 2: Vorname und Nachname */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <FormField
