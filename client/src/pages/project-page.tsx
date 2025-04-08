@@ -198,21 +198,7 @@ export default function ProjectPage() {
 
   return (
     <DashboardLayout 
-      title={
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center">
-            <span>Projektübersicht</span>
-          </div>
-          <Button 
-            onClick={() => navigate("/quick-entry")}
-            className="ml-4"
-            variant="outline"
-          >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Kunden/Firma hinzufügen
-          </Button>
-        </div>
-      }
+      title="Projektübersicht"
       tabs={[]}
     >
       {!isEditing ? (
