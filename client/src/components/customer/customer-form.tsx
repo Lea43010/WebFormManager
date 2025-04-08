@@ -108,7 +108,6 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-4xl mx-auto">
         <div className="bg-white rounded-md shadow-sm p-0 md:p-6">
-          <h2 className="text-2xl font-semibold mb-4 border-b pb-3">{customer ? "Kunden bearbeiten" : "Neuer Kunde"}</h2>
           
           {/* Kundeninformation */}
           <div className="form-section">
