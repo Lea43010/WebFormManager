@@ -81,10 +81,10 @@ export function DataTable<T>({
 
   return (
     <div className="space-y-4">
-      {title && <h2 className="text-xl font-semibold text-gray-900">{title}</h2>}
+      {title && <h2 className="text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2 mb-3">{title}</h2>}
       
-      <div className="rounded-md border">
-        <div className="px-4 py-3 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="rounded-md border-2 border-gray-300 shadow-sm">
+        <div className="px-4 py-3 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-gray-300">
           <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
             <Select
               defaultValue={pageSize.toString()}
@@ -154,7 +154,7 @@ export function DataTable<T>({
               ))
             ) : currentData.length > 0 ? (
               currentData.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
+                <TableRow key={rowIndex} isEven={rowIndex % 2 === 0}>
                   {columns.map((column) => (
                     <TableCell key={column.accessorKey as string}>
                       {column.cell
@@ -219,7 +219,7 @@ export function DataTable<T>({
         </Table>
         
         {filteredData.length > 0 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-300 sm:px-6">
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
