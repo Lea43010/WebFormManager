@@ -126,19 +126,22 @@ export default function ProjectPage() {
   // Table columns
   const columns = [
     {
-      accessorKey: "projectId",
-      header: "Projektnummer",
+      accessorKey: "id" as keyof Project,
+      header: "Projekt ID",
+      cell: (value: number) => {
+        return <span className="font-medium">{value}</span>;
+      },
     },
     {
-      accessorKey: "projectName",
+      accessorKey: "projectName" as keyof Project,
       header: "Projektname",
     },
     {
-      accessorKey: "projectArt",
+      accessorKey: "projectArt" as keyof Project,
       header: "Projektart",
     },
     {
-      accessorKey: "projectStartdate",
+      accessorKey: "projectStartdate" as keyof Project,
       header: "Zeitraum",
       cell: (value: string, row: Project) => {
         const startDate = row.projectStartdate ? new Date(row.projectStartdate).toLocaleDateString() : 'N/A';
@@ -153,7 +156,7 @@ export default function ProjectPage() {
       },
     },
     {
-      accessorKey: "projectStop",
+      accessorKey: "projectStop" as keyof Project,
       header: "Status",
       cell: (value: boolean) => {
         return value ? (
@@ -164,7 +167,7 @@ export default function ProjectPage() {
       },
     },
     {
-      accessorKey: "id", // Wir benutzen die ID als Schlüssel
+      accessorKey: "id" as keyof Project, // Wir benutzen die ID als Schlüssel
       header: "Anhänge",
       cell: (value: any, row: Project) => {
         return (
