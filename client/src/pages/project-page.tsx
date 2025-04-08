@@ -201,7 +201,7 @@ export default function ProjectPage() {
       title={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center">
-            <span>Projekte</span>
+            <span>Projektübersicht</span>
           </div>
           <Button 
             onClick={() => navigate("/quick-entry")}
@@ -249,7 +249,7 @@ export default function ProjectPage() {
               isLoading={isLoading}
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
-              title="Projektliste"
+              title="Projektübersicht"
             />
           ) : (
             <ProjectGrid
