@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.green-emoji {
+  filter: hue-rotate(90deg) saturate(1.5);
+}
+
 @layer base {
   * {
     @apply border-border;

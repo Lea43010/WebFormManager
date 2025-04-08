@@ -111,6 +111,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           <h2 className="text-2xl font-semibold mb-4 border-b pb-3">{customer ? "Kunden bearbeiten" : "Neuer Kunde"}</h2>
           
           {/* Kundeninformation - Reihe 1 */}
+          <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">👤</span> Persönliche Daten</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
               <FormField
@@ -166,7 +167,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Persönliche Daten - Reihe 2 */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded">👤 Persönliche Daten</h3>
+            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">👤</span> Persönliche Daten</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <FormField
@@ -204,7 +205,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Adresse - Reihe 3-5 */}
           <div className="mb-8">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded">📍 Adresse</h3>
+            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">📍</span> Adresse</h3>
             
             {/* Straße und Hausnummer */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
@@ -362,7 +363,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Kontaktinformationen */}
           <div className="mb-4">
-            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded">📞 Kontaktinformationen</h3>
+            <h3 className="text-lg font-medium mb-4 bg-gray-50 p-2 rounded"><span className="green-emoji">📞</span> Kontaktinformationen</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <FormField

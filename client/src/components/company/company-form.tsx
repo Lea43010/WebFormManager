@@ -173,7 +173,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
           </div>
           
           {/* Adresse */}
-          <h3 className="text-lg font-medium mb-4">📍 Adresse</h3>
+          <h3 className="text-lg font-medium mb-4"><span className="green-emoji">📍</span> Adresse</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="md:col-span-2">
               <FormField
@@ -336,7 +336,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
           </div>
           
           {/* Kontaktinformationen */}
-          <h3 className="text-lg font-medium mb-4">📞 Kontaktinformationen</h3>
+          <h3 className="text-lg font-medium mb-4"><span className="green-emoji">📞</span> Kontaktinformationen</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <FormField
