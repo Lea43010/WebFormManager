@@ -117,10 +117,6 @@ export default function CustomerPage() {
   // Table columns
   const columns = [
     {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
       accessorKey: "customerId",
       header: "Kundennummer",
     },
