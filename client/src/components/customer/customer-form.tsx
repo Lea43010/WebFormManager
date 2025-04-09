@@ -58,6 +58,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     state: z.string().optional(),
     country: z.string().optional(),
     customerPhone: z.string().optional(),
+    // Optional oder leer
     customerEmail: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal('')),
   });
 
@@ -68,6 +69,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
       ? customer.customerId.toString() 
       : customer.customerId;
   }
+  console.log("Initialer customer:", customer);
 
   // Initialize form with default values from customer or empty values
   const form = useForm<z.infer<typeof formSchema>>({
@@ -99,8 +101,11 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     // Konvertiere die Daten, um den Typen des Schema zu entsprechen
     const transformedData = {
       ...data,
-      postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
+      customerId: data.customerId ? parseInt(data.customerId.toString(), 10) : null,
+      postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? parseInt(data.postalCode.toString(), 10) : null,
     };
+    console.log("Formular abgeschickt mit Daten:", data);
+    console.log("Transformierte Daten:", transformedData);
     onSubmit(transformedData as any);
   };
 

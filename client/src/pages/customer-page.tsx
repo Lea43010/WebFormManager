@@ -110,6 +110,7 @@ export default function CustomerPage() {
   
   // Submit form
   const handleFormSubmit = (data: Partial<Customer>) => {
+    console.log("Form submission handler called with:", data);
     saveCustomerMutation.mutate(data);
   };
   
