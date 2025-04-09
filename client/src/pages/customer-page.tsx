@@ -125,6 +125,18 @@ export default function CustomerPage() {
       header: "Kundennummer",
     },
     {
+      accessorKey: "firstName",
+      header: "Name",
+      cell: (value: string, row: Customer) => {
+        return (
+          <div>
+            <div>{[row.firstName, row.lastName].filter(Boolean).join(" ")}</div>
+            <div className="text-gray-500">{row.customerType}</div>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "street",
       header: "Adresse",
       cell: (value: string, row: Customer) => {
