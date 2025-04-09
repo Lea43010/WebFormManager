@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useLocation, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   MapContainer, 
   TileLayer, 
@@ -460,6 +461,18 @@ function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) 
 }
 
 export default function GeoMapPage() {
+  // Abfrage aller Projekte aus der API
+  const { data: projects = [] } = useQuery({
+    queryKey: ['/api/projects'],
+    queryFn: async () => {
+      const response = await fetch('/api/projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      return response.json();
+    }
+  });
+  
   const [notes, setNotes] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [strasse, setStrasse] = useState("");
@@ -1859,12 +1872,21 @@ export default function GeoMapPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="project-name">Projektname</Label>
-                <Input 
-                  id="project-name" 
-                  placeholder="Name des Projekts" 
+                <Select
                   value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                />
+                  onValueChange={setProjectName}
+                >
+                  <SelectTrigger id="project-name">
+                    <SelectValue placeholder="Projekt auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects?.map((project: any) => (
+                      <SelectItem key={project.id} value={project.projectName || ""}>
+                        {project.projectName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               {selectedBelastungsklasse && (
