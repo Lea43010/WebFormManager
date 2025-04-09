@@ -278,7 +278,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                         <SelectItem value="0">Keiner</SelectItem>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id.toString()}>
-                            {customer.id} - {customer.customerId}
+                            {customer.customerId} - {customer.firstName} {customer.lastName}
                           </SelectItem>
                         ))}
                       </SelectContent>
