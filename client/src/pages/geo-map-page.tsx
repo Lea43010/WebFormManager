@@ -387,6 +387,17 @@ const roadWidthPresets: Record<string, number> = {
   "Fußweg": 2.0           // Fuß-/Radweg
 };
 
+// Mapping von Belastungsklassen zu empfohlenen Straßentypen
+const belastungsklasseToRoadType: Record<string, string> = {
+  "Bk100": "Autobahn",
+  "Bk32": "Bundesstraße",
+  "Bk10": "Bundesstraße",
+  "Bk3,2": "Landstraße",
+  "Bk1,8": "Landstraße",
+  "Bk1,0": "Kreisstraße",
+  "Bk0,3": "Gemeindestraße"
+};
+
 // Hilfsfunktion zum Abrufen von Belastungsklasse-Informationen
 function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
   return belastungsklassen.find(k => k.klasse === klasseId);
@@ -861,6 +872,15 @@ export default function GeoMapPage() {
 
     return () => clearTimeout(timer);
   }, [searchAddress]);
+  
+  // Automatische Anpassung des Straßentyps basierend auf der gewählten Belastungsklasse
+  useEffect(() => {
+    if (selectedBelastungsklasse && belastungsklasseToRoadType[selectedBelastungsklasse]) {
+      const recommendedRoadType = belastungsklasseToRoadType[selectedBelastungsklasse];
+      setSelectedRoadPreset(recommendedRoadType);
+      setRoadWidth(roadWidthPresets[recommendedRoadType]);
+    }
+  }, [selectedBelastungsklasse]);
 
   // Adresse suchen und auf der Karte anzeigen
   const searchForAddress = async (selectedAddress?: string, selectedLat?: string, selectedLon?: string) => {
