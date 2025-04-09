@@ -46,10 +46,11 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
   const formSchema = z.object({
     id: z.number().optional(),
     projectId: z.number().optional(),
+    // Hier ist die Kundennummer als String definiert, wird aber später zu einer Zahl konvertiert
     customerId: z.string().min(1, "Kundennummer ist erforderlich"),
     customerType: z.enum(["Privatkunde", "Gewerbe"]).default("Privatkunde"),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
+    firstName: z.string().min(1, "Vorname ist erforderlich"),
+    lastName: z.string().min(1, "Nachname ist erforderlich"),
     street: z.string().optional(),
     houseNumber: z.string().optional(),
     postalCode: z.string().optional(),
@@ -193,6 +194,28 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                         value={field.value || ''} 
                         disabled={!!customer}
                         placeholder="Wird automatisch vergeben"
+                        className="modern-form-input"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Kundennummer */}
+            <div className="mt-4">
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="modern-form-label">Kundennummer</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        value={field.value || ''} 
+                        placeholder="Kundennummer eingeben"
                         className="modern-form-input"
                       />
                     </FormControl>
