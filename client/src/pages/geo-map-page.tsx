@@ -289,6 +289,36 @@ const baseMaterialCosts: MaterialCosts = {
   schottertragschicht: 18    // Schottertragschicht
 };
 
+// Liste deutscher Bodenklassen basierend auf BGR-Klassifikation
+const bodenklassen = [
+  "Sand",
+  "Lehm",
+  "Ton",
+  "Tonschluff",
+  "Sandlehm",
+  "Lehmiger Sand",
+  "Toniger Lehm",
+  "Löss",
+  "Kies",
+  "Schluff",
+  "Feinsand",
+  "Mittelsand",
+  "Grobsand",
+  "Moorböden",
+  "Torf",
+  "Lösslehm",
+  "Auenlehm",
+  "Geschiebemergel",
+  "Geschiebelehm",
+  "Kalkstein",
+  "Basalt",
+  "Granit",
+  "Sandstein",
+  "Tonstein",
+  "Gips",
+  "Fels"
+];
+
 // Verschiedene Maschinenfaktoren je nach Bodenklasse
 const maschinenKosten: Record<string, { 
   maschinen: string[],
@@ -329,6 +359,18 @@ const maschinenKosten: Record<string, {
       maschinen: ["Bodenfräse", "Grader", "Schwerer Verdichter", "Kalkdosiergerät"], 
       kostenProTag: 1800, 
       effizienzFaktor: 500
+    }
+  ],
+  "Tonschluff": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze", "Gummiradwalze", "Vorauflockerer"], 
+      kostenProTag: 1400, 
+      effizienzFaktor: 650
+    },
+    { 
+      maschinen: ["Bodenfräse", "Grader", "Schwerer Verdichter", "Kalkdosiergerät"], 
+      kostenProTag: 1700, 
+      effizienzFaktor: 550
     }
   ],
   "Kies": [
@@ -597,6 +639,7 @@ export default function GeoMapPage() {
   const [projectName, setProjectName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
+  const [selectedBodenklasse, setSelectedBodenklasse] = useState<string>("");
   const [mapSource, setMapSource] = useState<string>("bgr");
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
@@ -641,7 +684,11 @@ export default function GeoMapPage() {
         plz: plz,
         ort: ort,
         notes: notes,
-        belastungsklasse: selectedBelastungsklasse
+        belastungsklasse: selectedBelastungsklasse,
+        groundAnalysis: {
+          ...markers[selectedMarkerIndex]?.groundAnalysis,
+          bodenklasse: selectedBodenklasse
+        }
       });
     }
     
@@ -957,7 +1004,10 @@ export default function GeoMapPage() {
       hausnummer: hausnummer || undefined,
       plz: plz || undefined,
       ort: ort || undefined,
-      notes: notes || undefined
+      notes: notes || undefined,
+      groundAnalysis: {
+        bodenklasse: selectedBodenklasse || undefined
+      }
     };
     
     setMarkers(prev => [...prev, newMarker]);
@@ -1087,6 +1137,25 @@ export default function GeoMapPage() {
                         {belastungsklassen.map((klasse) => (
                           <SelectItem key={klasse.klasse} value={klasse.klasse}>
                             {klasse.klasse} - {klasse.beispiel}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bodenklasse-select">Bodenklasse</Label>
+                    <Select
+                      value={selectedBodenklasse}
+                      onValueChange={setSelectedBodenklasse}
+                    >
+                      <SelectTrigger id="bodenklasse-select">
+                        <SelectValue placeholder="Bodenklasse wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bodenklassen.map((klasse) => (
+                          <SelectItem key={klasse} value={klasse}>
+                            {klasse}
                           </SelectItem>
                         ))}
                       </SelectContent>
