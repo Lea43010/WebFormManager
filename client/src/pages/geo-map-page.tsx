@@ -1879,6 +1879,24 @@ export default function GeoMapPage() {
                                       onChange={(e) => setOrt(e.target.value)}
                                     />
                                   </div>
+                                  <div>
+                                    <Label htmlFor="popup-new-bodenklasse" className="text-xs">Bodenklasse</Label>
+                                    <Select
+                                      value={selectedBodenklasse}
+                                      onValueChange={setSelectedBodenklasse}
+                                    >
+                                      <SelectTrigger id="popup-new-bodenklasse" className="h-7 text-xs">
+                                        <SelectValue placeholder="Bodenklasse wählen" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {bodenklassen.map((klasse) => (
+                                          <SelectItem key={klasse} value={klasse}>
+                                            {klasse}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                   <div className="flex justify-between pt-1">
                                     <Button 
                                       variant="outline" 
