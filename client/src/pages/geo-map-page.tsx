@@ -879,8 +879,13 @@ export default function GeoMapPage() {
       const recommendedRoadType = belastungsklasseToRoadType[selectedBelastungsklasse];
       setSelectedRoadPreset(recommendedRoadType);
       setRoadWidth(roadWidthPresets[recommendedRoadType]);
+      
+      // Automatisch die Kostenschätzung anzeigen, wenn eine Belastungsklasse ausgewählt wurde
+      if (!showCostEstimation) {
+        setShowCostEstimation(true);
+      }
     }
-  }, [selectedBelastungsklasse]);
+  }, [selectedBelastungsklasse, showCostEstimation]);
 
   // Adresse suchen und auf der Karte anzeigen
   const searchForAddress = async (selectedAddress?: string, selectedLat?: string, selectedLon?: string) => {
