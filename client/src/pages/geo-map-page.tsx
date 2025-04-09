@@ -289,6 +289,81 @@ const baseMaterialCosts: MaterialCosts = {
   schottertragschicht: 18    // Schottertragschicht
 };
 
+// Verschiedene Maschinenfaktoren je nach Bodenklasse
+const maschinenKosten: Record<string, { 
+  maschinen: string[],
+  kostenProTag: number,
+  effizienzFaktor: number // m² pro Tag
+}[]> = {
+  "Sand": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze"], 
+      kostenProTag: 800, 
+      effizienzFaktor: 1000
+    },
+    { 
+      maschinen: ["Bodenfräse", "Grader", "Verdichter"], 
+      kostenProTag: 1200, 
+      effizienzFaktor: 800
+    }
+  ],
+  "Lehm": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze", "Gummiradwalze"], 
+      kostenProTag: 1200, 
+      effizienzFaktor: 800
+    },
+    { 
+      maschinen: ["Bodenfräse", "Grader", "Schwerer Verdichter"], 
+      kostenProTag: 1500, 
+      effizienzFaktor: 600
+    }
+  ],
+  "Ton": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze", "Gummiradwalze", "Vorauflockerer"], 
+      kostenProTag: 1500, 
+      effizienzFaktor: 600
+    },
+    { 
+      maschinen: ["Bodenfräse", "Grader", "Schwerer Verdichter", "Kalkdosiergerät"], 
+      kostenProTag: 1800, 
+      effizienzFaktor: 500
+    }
+  ],
+  "Kies": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze"], 
+      kostenProTag: 700, 
+      effizienzFaktor: 1200
+    },
+    { 
+      maschinen: ["Grader", "Verdichter"], 
+      kostenProTag: 900, 
+      effizienzFaktor: 1000
+    }
+  ],
+  "Fels": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze", "Schweißwalze"], 
+      kostenProTag: 1000, 
+      effizienzFaktor: 800
+    },
+    { 
+      maschinen: ["Hydraulikhammer", "Brecher", "Steinschredder"], 
+      kostenProTag: 2200, 
+      effizienzFaktor: 400
+    }
+  ],
+  "default": [
+    { 
+      maschinen: ["Straßenfertiger", "Tandemwalze"], 
+      kostenProTag: 900, 
+      effizienzFaktor: 900
+    }
+  ]
+};
+
 // Koeffizient für Kostenmultiplikatoren basierend auf Belastungsklasse
 const belastungsklassenCostFactors: Record<string, number> = {
   "Bk100": 1.5,   // Höchste Beanspruchung = teurere Materialien
@@ -321,10 +396,12 @@ function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
 // - Belastungsklasse (bestimmt Materialstärke und Qualität)
 // - Streckenlänge in km
 // - Straßenbreite in Metern
+// - Bodenklasse (optional)
 function calculateMaterialCosts(
   belastungsklasse: string,
   distanceKm: number,
-  roadWidthMeters: number
+  roadWidthMeters: number,
+  bodenklasse?: string
 ): {
   totalCost: number;
   costBreakdown: {
@@ -334,6 +411,12 @@ function calculateMaterialCosts(
     schottertragschicht?: number;
   };
   areaSquareMeters: number;
+  maschinenEmpfehlung?: {
+    maschinen: string[];
+    kostenProTag: number;
+    bauzeit: number; // In Tagen
+    maschinenGesamtkosten: number;
+  }[];
 } {
   const klasseInfo = getKlasseInfo(belastungsklasse);
   if (!klasseInfo) {
@@ -398,10 +481,31 @@ function calculateMaterialCosts(
     costBreakdown.schottertragschicht = Math.round(schottertragschichtKosten);
   }
   
+  // Maschinenempfehlungen basierend auf Bodenklasse (falls angegeben)
+  let maschinenEmpfehlung;
+  if (bodenklasse) {
+    const bodenklasseKey = bodenklasse in maschinenKosten ? bodenklasse : "default";
+    const maschinenOptionen = maschinenKosten[bodenklasseKey];
+    
+    maschinenEmpfehlung = maschinenOptionen.map(option => {
+      // Berechnung der Bauzeit in Tagen basierend auf Fläche und Effizienzfaktor
+      const bauzeit = Math.ceil(areaSquareMeters / option.effizienzFaktor);
+      const maschinenGesamtkosten = bauzeit * option.kostenProTag;
+      
+      return {
+        maschinen: option.maschinen,
+        kostenProTag: option.kostenProTag,
+        bauzeit,
+        maschinenGesamtkosten
+      };
+    });
+  }
+  
   return {
     totalCost: Math.round(totalCost),
     costBreakdown,
-    areaSquareMeters: Math.round(areaSquareMeters)
+    areaSquareMeters: Math.round(areaSquareMeters),
+    maschinenEmpfehlung
   };
 }
 
@@ -1964,10 +2068,14 @@ export default function GeoMapPage() {
                       <div className="p-3 border rounded-md bg-muted/30">
                         {(() => {
                           const routeDistance = calculateRouteDistances(markers).total;
+                          const selectedMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : null;
+                          const bodenklasse = selectedMarker?.groundAnalysis?.bodenklasse || "default";
+                          
                           const costEstimation = calculateMaterialCosts(
                             selectedBelastungsklasse,
                             routeDistance,
-                            roadWidth
+                            roadWidth,
+                            bodenklasse
                           );
                           
                           return (
@@ -2052,6 +2160,46 @@ export default function GeoMapPage() {
                                 die RStO 12 Bauklasse {getKlasseInfo(selectedBelastungsklasse)?.bauklasse} mit 
                                 entsprechenden Schichtdicken.
                               </div>
+                              
+                              {costEstimation.maschinenEmpfehlung && (
+                                <div className="mt-3 border-t pt-2">
+                                  <div className="font-medium mb-2 text-primary border-b pb-1">
+                                    Maschinenempfehlungen für Bodenklasse: {bodenklasse}
+                                  </div>
+                                  
+                                  {costEstimation.maschinenEmpfehlung.map((option, idx) => (
+                                    <div key={idx} className="mb-2 border rounded-md p-2 bg-muted/20">
+                                      <div className="font-medium text-[11px]">Option {idx + 1}:</div>
+                                      <div className="text-[10px] mb-1">
+                                        Benötigte Maschinen: {option.maschinen.join(", ")}
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-1 text-[10px]">
+                                        <div>Kosten pro Tag:</div>
+                                        <div className="text-right">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(option.kostenProTag)}</div>
+                                        
+                                        <div>Bauzeit:</div>
+                                        <div className="text-right">{option.bauzeit} Tage</div>
+                                        
+                                        <div className="font-medium">Maschinenkosten:</div>
+                                        <div className="font-medium text-right">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(option.maschinenGesamtkosten)}</div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  <div className="text-[10px] text-muted-foreground">
+                                    Zusätzlich zu den Materialkosten fallen diese Maschinenkosten an.
+                                    Die Bauzeit basiert auf der Fläche und dem Effizienzfaktor der Maschinen.
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })()}
@@ -2086,7 +2234,10 @@ export default function GeoMapPage() {
                                 }).format(calculateMaterialCosts(
                                   selectedBelastungsklasse,
                                   calculateRouteDistances(markers).total,
-                                  roadWidth
+                                  roadWidth,
+                                  selectedMarkerIndex !== null && markers[selectedMarkerIndex]?.groundAnalysis?.bodenklasse 
+                                    ? markers[selectedMarkerIndex].groundAnalysis?.bodenklasse 
+                                    : undefined
                                 ).totalCost)}
                               </div>
                             )}
