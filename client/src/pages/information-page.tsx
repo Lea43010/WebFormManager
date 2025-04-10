@@ -144,28 +144,7 @@ export default function InformationPage() {
         </Button>
       </div>
 
-      {/* Inhaltsverzeichnis */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
-        <h2 className="text-xl font-semibold mb-4">Inhaltsverzeichnis</h2>
-        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-          {sections.map((section) => (
-            <a
-              key={section.id}
-              href={`#${section.id}`}
-              className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(section.id)?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }}
-            >
-              <ChevronRight className="h-4 w-4 mr-1" />
-              {section.title}
-            </a>
-          ))}
-        </div>
-      </div>
+
       
       {/* Haupt-Content mit Sidebar für Navigation */}
       <div className="flex flex-col lg:flex-row gap-8">
