@@ -94,7 +94,7 @@ const belastungsklassen = [
   }
 ];
 
-// Definiere die Inhaltsabschnitte für das Inhaltsverzeichnis
+// Definiere die Inhaltsabschnitte für das Seitenmenü
 const sections = [
   { id: "externe-dienste", title: "Externe Geoportale und Dienste" },
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
@@ -144,8 +144,6 @@ export default function InformationPage() {
         </Button>
       </div>
 
-
-      
       {/* Haupt-Content mit Sidebar für Navigation */}
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sticky-Seitenmenü */}
@@ -248,49 +246,49 @@ export default function InformationPage() {
             </p>
             
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse">
+              <table className="min-w-full border-collapse text-sm">
                 <thead>
                   <tr className="bg-primary/10">
-                    <th className="border px-4 py-3 text-left font-semibold">Belastungsklasse</th>
-                    <th className="border px-4 py-3 text-left font-semibold">Bemessungsrelevante Achsübergänge</th>
-                    <th className="border px-4 py-3 text-left font-semibold">Typische Anwendung</th>
+                    <th className="border px-3 py-2 text-left font-semibold">Klasse</th>
+                    <th className="border px-3 py-2 text-left font-semibold">Beanspruchung</th>
+                    <th className="border px-3 py-2 text-left font-semibold">Typische Anwendung</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk100</td>
-                    <td className="border px-4 py-3">&gt; 32 Mio.</td>
-                    <td className="border px-4 py-3">Autobahnen, stark belastete Bundesstraßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk100</td>
+                    <td className="border px-3 py-2">&gt; 32 Mio.</td>
+                    <td className="border px-3 py-2">Autobahnen, stark belastete Bundesstraßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk32</td>
-                    <td className="border px-4 py-3">10 - 32 Mio.</td>
-                    <td className="border px-4 py-3">Bundesstraßen, Hauptverkehrsstraßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk32</td>
+                    <td className="border px-3 py-2">10 - 32 Mio.</td>
+                    <td className="border px-3 py-2">Bundesstraßen, Hauptverkehrsstraßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk10</td>
-                    <td className="border px-4 py-3">3,2 - 10 Mio.</td>
-                    <td className="border px-4 py-3">Landstraßen, Haupterschließungsstraßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk10</td>
+                    <td className="border px-3 py-2">3,2 - 10 Mio.</td>
+                    <td className="border px-3 py-2">Landstraßen, Haupterschließungsstraßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk3.2</td>
-                    <td className="border px-4 py-3">1,0 - 3,2 Mio.</td>
-                    <td className="border px-4 py-3">Erschließungsstraßen, Wohnsammelstraßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk3.2</td>
+                    <td className="border px-3 py-2">1,0 - 3,2 Mio.</td>
+                    <td className="border px-3 py-2">Erschließungsstraßen, Wohnsammelstraßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk1.8</td>
-                    <td className="border px-4 py-3">0,3 - 1,0 Mio.</td>
-                    <td className="border px-4 py-3">Wohnstraßen, Anliegerstraßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk1.8</td>
+                    <td className="border px-3 py-2">0,3 - 1,0 Mio.</td>
+                    <td className="border px-3 py-2">Wohnstraßen, Anliegerstraßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk1.0</td>
-                    <td className="border px-4 py-3">0,1 - 0,3 Mio.</td>
-                    <td className="border px-4 py-3">Gering belastete Straßen</td>
+                    <td className="border px-3 py-2 font-medium">Bk1.0</td>
+                    <td className="border px-3 py-2">0,1 - 0,3 Mio.</td>
+                    <td className="border px-3 py-2">Gering belastete Straßen</td>
                   </tr>
                   <tr className="even:bg-gray-50">
-                    <td className="border px-4 py-3 font-medium">Bk0.3</td>
-                    <td className="border px-4 py-3">&lt; 0,1 Mio.</td>
-                    <td className="border px-4 py-3">Sehr gering belastete Straßen, Wege</td>
+                    <td className="border px-3 py-2 font-medium">Bk0.3</td>
+                    <td className="border px-3 py-2">&lt; 0,1 Mio.</td>
+                    <td className="border px-3 py-2">Sehr gering belastete Straßen, Wege</td>
                   </tr>
                 </tbody>
               </table>
@@ -324,31 +322,33 @@ export default function InformationPage() {
                     Asphalttragschicht auf Frostschutzschicht
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-primary/10 border-b">
-                        <th className="text-left p-3 font-medium">Belastungsklasse</th>
-                        <th className="text-left p-3 font-medium">Beanspruchung</th>
-                        <th className="text-left p-3 font-medium">Dicke des Aufbaus</th>
-                        <th className="text-left p-3 font-medium">Asphaltdecke</th>
-                        <th className="text-left p-3 font-medium">Asphalttragschicht</th>
-                        <th className="text-left p-3 font-medium">Frostschutzschicht</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {belastungsklassen.map((klasse) => (
-                        <tr key={klasse.klasse + "-asphalt"} className="border-b hover:bg-gray-50">
-                          <td className="p-3 font-medium">{klasse.klasse}</td>
-                          <td className="p-3">{klasse.beanspruchung}</td>
-                          <td className="p-3">{klasse.dickeAsphaltbauweise}</td>
-                          <td className="p-3">{klasse.dickeAsphaltdecke}</td>
-                          <td className="p-3">{klasse.dickeAsphaltTragschicht}</td>
-                          <td className="p-3">{klasse.dickeFrostschutzschicht1}</td>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Klasse</th>
+                          <th className="text-left p-2 font-medium">Beanspruchung</th>
+                          <th className="text-left p-2 font-medium">Aufbau</th>
+                          <th className="text-left p-2 font-medium">Decke</th>
+                          <th className="text-left p-2 font-medium">Tragschicht</th>
+                          <th className="text-left p-2 font-medium">Frost</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {belastungsklassen.map((klasse) => (
+                          <tr key={klasse.klasse + "-asphalt"} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-medium">{klasse.klasse}</td>
+                            <td className="p-2">{klasse.beanspruchung}</td>
+                            <td className="p-2">{klasse.dickeAsphaltbauweise}</td>
+                            <td className="p-2">{klasse.dickeAsphaltdecke}</td>
+                            <td className="p-2">{klasse.dickeAsphaltTragschicht}</td>
+                            <td className="p-2">{klasse.dickeFrostschutzschicht1}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
               
@@ -359,31 +359,33 @@ export default function InformationPage() {
                     Asphalttragschicht und Schottertragschicht auf Frostschutzschicht
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-primary/10 border-b">
-                        <th className="text-left p-3 font-medium">Belastungsklasse</th>
-                        <th className="text-left p-3 font-medium">Beanspruchung</th>
-                        <th className="text-left p-3 font-medium">Asphaltdecke</th>
-                        <th className="text-left p-3 font-medium">Asphalttragschicht</th>
-                        <th className="text-left p-3 font-medium">Schottertragschicht</th>
-                        <th className="text-left p-3 font-medium">Frostschutzschicht</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {belastungsklassen.map((klasse) => (
-                        <tr key={klasse.klasse + "-schotter"} className="border-b hover:bg-gray-50">
-                          <td className="p-3 font-medium">{klasse.klasse}</td>
-                          <td className="p-3">{klasse.beanspruchung}</td>
-                          <td className="p-3">{klasse.dickeAsphaltdecke}</td>
-                          <td className="p-3">{klasse.dickeAsphaltTragschicht}</td>
-                          <td className="p-3">{klasse.dickeSchotterTragschicht || "-"}</td>
-                          <td className="p-3">{klasse.dickeFrostschutzschicht2 || "-"}</td>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Klasse</th>
+                          <th className="text-left p-2 font-medium">Beanspruchung</th>
+                          <th className="text-left p-2 font-medium">Decke</th>
+                          <th className="text-left p-2 font-medium">Tragschicht</th>
+                          <th className="text-left p-2 font-medium">Schotter</th>
+                          <th className="text-left p-2 font-medium">Frost</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {belastungsklassen.map((klasse) => (
+                          <tr key={klasse.klasse + "-schotter"} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-medium">{klasse.klasse}</td>
+                            <td className="p-2">{klasse.beanspruchung}</td>
+                            <td className="p-2">{klasse.dickeAsphaltdecke}</td>
+                            <td className="p-2">{klasse.dickeAsphaltTragschicht}</td>
+                            <td className="p-2">{klasse.dickeSchotterTragschicht || "-"}</td>
+                            <td className="p-2">{klasse.dickeFrostschutzschicht2 || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
             </div>
