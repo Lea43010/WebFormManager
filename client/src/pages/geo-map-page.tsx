@@ -1599,12 +1599,13 @@ export default function GeoMapPage() {
                           // Hier würde später die Projekt-Zuordnung erfolgen
                         }}
                       >
-                        <SelectTrigger id="projekt-select">
+                        <SelectTrigger id="projekt-select" className="w-full">
                           <SelectValue placeholder="Projekt wählen" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Baustelle Oberbrunn">Baustelle Oberbrunn</SelectItem>
                           <SelectItem value="Straßenbau Friedrichstraße">Straßenbau Friedrichstraße</SelectItem>
+                          <SelectItem value="Sanierung B12">Sanierung B12</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1635,30 +1636,97 @@ export default function GeoMapPage() {
                               </>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Materialkosten-Tabelle mit detaillierten Informationen für bessere Übersichtlichkeit */}
+                    {markers.length >= 2 && selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
+                      <div className="p-4 bg-primary/10 rounded-md border border-primary/30 text-sm">
+                        <div className="font-medium flex items-center gap-2 mb-3 text-primary">
+                          <Calculator className="h-4 w-4" /> Materialkosten-Berechnung
+                        </div>
+                        
+                        {(() => {
+                          const routeDistance = calculateRouteDistances(markers).total;
+                          const selectedMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : null;
+                          const bodenklasse = selectedMarker?.groundAnalysis?.bodenklasse || "default";
                           
-                          {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
-                            <div className="mt-3 pt-3 border-t">
+                          const costEstimation = calculateMaterialCosts(
+                            selectedBelastungsklasse,
+                            routeDistance,
+                            roadWidth,
+                            bodenklasse
+                          );
+                          
+                          return (
+                            <div className="space-y-3">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">Geschätzte Materialkosten:</span>
+                                <span className="text-sm font-medium">Gesamtkosten:</span>
                                 <span className="font-bold text-primary text-lg">
                                   {new Intl.NumberFormat('de-DE', { 
                                     style: 'currency', 
                                     currency: 'EUR',
                                     maximumFractionDigits: 0 
-                                  }).format(calculateMaterialCosts(
-                                    selectedBelastungsklasse,
-                                    calculateRouteDistances(markers).total,
-                                    roadWidth,
-                                    selectedMarkerIndex !== null && markers[selectedMarkerIndex]?.groundAnalysis?.bodenklasse 
-                                      ? markers[selectedMarkerIndex].groundAnalysis?.bodenklasse 
-                                      : undefined
-                                  ).totalCost)}
+                                  }).format(costEstimation.totalCost)}
                                 </span>
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">Basierend auf Belastungsklasse {selectedBelastungsklasse} und {roadWidth.toFixed(1)}m Straßenbreite</p>
+                              
+                              <div className="py-2 border-t border-b text-xs text-muted-foreground">
+                                <div>Fläche: {costEstimation.areaSquareMeters} m² ({routeDistance.toFixed(2)} km × {roadWidth.toFixed(1)} m)</div>
+                                {bodenklasse !== "default" && <div>Bodenklasse: {bodenklasse}</div>}
+                              </div>
+                              
+                              <div className="text-xs">
+                                <div className="font-medium mb-2">Kostenaufschlüsselung nach Schichten:</div>
+                                <table className="w-full">
+                                  <thead>
+                                    <tr className="border-b">
+                                      <th className="text-left py-1">Schicht</th>
+                                      <th className="text-right py-1">Kosten</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="py-1">Asphaltdecke</td>
+                                      <td className="text-right py-1">{new Intl.NumberFormat('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR',
+                                        maximumFractionDigits: 0 
+                                      }).format(costEstimation.costBreakdown.asphaltdecke)}</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-1">Asphalttragschicht</td>
+                                      <td className="text-right py-1">{new Intl.NumberFormat('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR',
+                                        maximumFractionDigits: 0 
+                                      }).format(costEstimation.costBreakdown.asphalttragschicht)}</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-1">Frostschutzschicht</td>
+                                      <td className="text-right py-1">{new Intl.NumberFormat('de-DE', { 
+                                        style: 'currency', 
+                                        currency: 'EUR',
+                                        maximumFractionDigits: 0 
+                                      }).format(costEstimation.costBreakdown.frostschutzschicht)}</td>
+                                    </tr>
+                                    {costEstimation.costBreakdown.schottertragschicht && (
+                                      <tr>
+                                        <td className="py-1">Schottertragschicht</td>
+                                        <td className="text-right py-1">{new Intl.NumberFormat('de-DE', { 
+                                          style: 'currency', 
+                                          currency: 'EUR',
+                                          maximumFractionDigits: 0 
+                                        }).format(costEstimation.costBreakdown.schottertragschicht)}</td>
+                                      </tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </div>
                     )}
                     
