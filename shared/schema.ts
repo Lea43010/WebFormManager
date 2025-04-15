@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, varchar, date, numeric, timestamp, foreignKey, pgEnum, uniqueIndex, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, varchar, date, numeric, timestamp, foreignKey, pgEnum, uniqueIndex, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -13,6 +13,7 @@ export const belastungsklassenEnum = pgEnum('belastungsklassen', ['Bk100', 'Bk32
 export const bodenklassenEnum = pgEnum('bodenklassen', ['Kies', 'Sand', 'Lehm', 'Ton', 'Humus', 'Fels', 'Schotter', 'unbekannt']);
 export const bodentragfaehigkeitsklassenEnum = pgEnum('bodentragfaehigkeitsklassen', ['F1', 'F2', 'F3', 'unbekannt']);
 export const analysisTypeEnum = pgEnum('analysis_types', ['asphalt', 'ground']);
+export const fileCategoryEnum = pgEnum('file_categories', ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -122,12 +123,14 @@ export const attachments = pgTable("tblattachment", {
   fileName: varchar("file_name", { length: 255 }).notNull(),
   originalName: varchar("original_name", { length: 255 }).notNull(),
   fileType: fileTypes("file_type").notNull(),
+  fileCategory: fileCategoryEnum("file_category").default('Andere'),
   filePath: varchar("file_path", { length: 1000 }).notNull(),
   fileSize: integer("file_size").notNull(),
   // mimeType Spalte existiert nicht in der aktuellen Datenbank
   // mimeType: varchar("mime_type", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   description: text("description"),
+  tags: varchar("tags", { length: 500 }),
 });
 
 // Oberflächenanalyse table
@@ -172,6 +175,20 @@ export const soilReferenceData = pgTable("tblsoil_reference_data", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// File Organization Suggestions table
+export const fileOrganizationSuggestions = pgTable("tblfile_organization_suggestion", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  fileIds: text("file_ids"), // Komma-getrennte Liste von Attachment-IDs
+  suggestedCategory: fileCategoryEnum("suggested_category"),
+  suggestedTags: varchar("suggested_tags", { length: 500 }),
+  reason: text("reason"),
+  confidence: doublePrecision("confidence"),
+  isApplied: boolean("is_applied").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  appliedAt: timestamp("applied_at"),
+});
+
 // Define relations
 export const companiesRelations = relations(companies, ({ many, one }) => ({
   projects: many(projects),
@@ -209,6 +226,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   components: many(components),
   attachments: many(attachments),
   surfaceAnalyses: many(surfaceAnalyses),
+  fileOrganizationSuggestions: many(fileOrganizationSuggestions),
 }));
 
 export const componentsRelations = relations(components, ({ one }) => ({
@@ -233,6 +251,13 @@ export const surfaceAnalysesRelations = relations(surfaceAnalyses, ({ one }) => 
 }));
 
 export const soilReferenceDataRelations = relations(soilReferenceData, ({}) => ({}));
+
+export const fileOrganizationSuggestionsRelations = relations(fileOrganizationSuggestions, ({ one }) => ({
+  project: one(projects, {
+    fields: [fileOrganizationSuggestions.projectId],
+    references: [projects.id],
+  }),
+}));
 
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -281,6 +306,13 @@ export const insertSurfaceAnalysisSchema = createInsertSchema(surfaceAnalyses).t
 
 export const insertSoilReferenceDataSchema = createInsertSchema(soilReferenceData);
 
+export const insertFileOrganizationSuggestionSchema = createInsertSchema(fileOrganizationSuggestions).transform((data) => {
+  return {
+    ...data,
+    confidence: typeof data.confidence === 'string' ? parseFloat(data.confidence) : data.confidence,
+  };
+});
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -311,3 +343,6 @@ export type SurfaceAnalysis = typeof surfaceAnalyses.$inferSelect;
 
 export type InsertSoilReferenceData = z.infer<typeof insertSoilReferenceDataSchema>;
 export type SoilReferenceData = typeof soilReferenceData.$inferSelect;
+
+export type InsertFileOrganizationSuggestion = z.infer<typeof insertFileOrganizationSuggestionSchema>;
+export type FileOrganizationSuggestion = typeof fileOrganizationSuggestions.$inferSelect;
