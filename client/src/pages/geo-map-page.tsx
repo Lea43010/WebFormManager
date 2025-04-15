@@ -1243,29 +1243,29 @@ export default function GeoMapPage() {
                             <div className="bg-muted/30 rounded-md p-2 text-xs">
                               <h4 className="font-medium mb-1">Materialkosten (Schätzung)</h4>
                               <div className="space-y-2">
-                                <div className="grid grid-cols-5 gap-1 text-xs font-medium text-muted-foreground">
-                                  <div className="truncate">Material</div>
-                                  <div className="truncate">Dicke</div>
-                                  <div className="truncate">Fläche</div>
-                                  <div className="truncate">€/m²</div>
-                                  <div className="truncate">Gesamt</div>
+                                <div className="grid grid-cols-12 gap-1 text-xs font-medium text-muted-foreground">
+                                  <div className="col-span-4">Material</div>
+                                  <div className="col-span-2">Dicke</div>
+                                  <div className="col-span-2">Fläche</div>
+                                  <div className="col-span-2">€/m²</div>
+                                  <div className="col-span-2">Gesamt</div>
                                 </div>
                                 
                                 {costInfo.materials.map((material, i) => (
-                                  <div key={`material-${i}`} className="grid grid-cols-5 gap-1 text-xs">
-                                    <div className="truncate whitespace-nowrap">{material.name}</div>
-                                    <div className="truncate whitespace-nowrap">{material.thickness} cm</div>
-                                    <div className="truncate whitespace-nowrap">{Math.round(material.area).toLocaleString()} m²</div>
-                                    <div className="truncate whitespace-nowrap">{material.costPerSqm.toFixed(2)} €</div>
-                                    <div className="truncate whitespace-nowrap font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
+                                  <div key={`material-${i}`} className="grid grid-cols-12 gap-1 text-xs">
+                                    <div className="col-span-4">{material.name}</div>
+                                    <div className="col-span-2">{material.thickness} cm</div>
+                                    <div className="col-span-2">{Math.round(material.area).toLocaleString()} m²</div>
+                                    <div className="col-span-2">{material.costPerSqm.toFixed(2)} €</div>
+                                    <div className="col-span-2 font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
                                   </div>
                                 ))}
                                 
                                 <Separator />
                                 
-                                <div className="grid grid-cols-5 gap-1 text-xs font-bold">
-                                  <div className="col-span-4 text-right">Gesamtkosten:</div>
-                                  <div className="truncate whitespace-nowrap">{Math.round(costInfo.total).toLocaleString()} €</div>
+                                <div className="grid grid-cols-12 gap-1 text-xs font-bold">
+                                  <div className="col-span-10 text-right">Gesamtkosten:</div>
+                                  <div className="col-span-2">{Math.round(costInfo.total).toLocaleString()} €</div>
                                 </div>
                               </div>
                             </div>
