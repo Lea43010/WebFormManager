@@ -849,22 +849,22 @@ export default function GeoMapPage() {
                                   setSearchLng(lng);
                                   setMapCenter([lat, lng]);
                                   
-                                  // Option zum Hinzufügen eines Markers an dieser Position
-                                  setTimeout(() => {
-                                    if (confirm("Möchten Sie an dieser Position einen Marker hinzufügen?")) {
-                                      setTempLocation([lat, lng]);
-                                      setNewLocationDialogOpen(true);
-                                      
-                                      // Leere Adressinfo setzen (wird später manuell eingetragen)
-                                      const emptyAddressInfo = {
-                                        strasse: "",
-                                        hausnummer: "",
-                                        plz: "",
-                                        ort: ""
-                                      };
-                                      setLocationInfo(emptyAddressInfo);
-                                    }
-                                  }, 300);
+                                  // Automatisch einen Marker an dieser Position hinzufügen
+                                  const newMarker: MarkerInfo = {
+                                    position: [lat, lng],
+                                    name: `Standort ${markers.length + 1}`,
+                                    belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+                                    strasse: "",
+                                    hausnummer: "",
+                                    plz: "",
+                                    ort: "",
+                                    notes: ""
+                                  };
+                                  setMarkers([...markers, newMarker]);
+                                  setSelectedMarkerIndex(markers.length);
+                                  
+                                  // Erfolgsmeldung anzeigen
+                                  alert(`Marker wurde an den Koordinaten ${lat.toFixed(5)}, ${lng.toFixed(5)} gesetzt.`);
                                 } else {
                                   alert("Keine Ergebnisse für diese Adresse gefunden.");
                                 }
