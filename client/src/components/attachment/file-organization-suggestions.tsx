@@ -194,7 +194,7 @@ export function FileOrganizationSuggestions({ projectId }: FileOrganizationSugge
                     <div className="flex items-center">
                       <span>Vorschlag: {suggestion.suggestedCategory}</span>
                       <Badge className="ml-2" variant="outline">
-                        {Math.round(suggestion.confidence * 100)}% Sicherheit
+                        {suggestion.confidence ? Math.round(suggestion.confidence * 100) : 0}% Sicherheit
                       </Badge>
                     </div>
                   </CardTitle>
@@ -242,7 +242,7 @@ export function FileOrganizationSuggestions({ projectId }: FileOrganizationSugge
                     <div className="flex items-center">
                       <span>Angewendet: {suggestion.suggestedCategory}</span>
                       <Badge className="ml-2" variant="outline">
-                        {Math.round(suggestion.confidence * 100)}% Sicherheit
+                        {suggestion.confidence ? Math.round(suggestion.confidence * 100) : 0}% Sicherheit
                       </Badge>
                     </div>
                   </CardTitle>

@@ -133,6 +133,41 @@ export default function AttachmentPage() {
               <Camera className="mr-2 h-4 w-4" />
               Kamera
             </Button>
+            
+            <Button
+              onClick={() => {
+                const activeProjectId = Object.keys(attachmentsByProject)[0]; 
+                if (activeProjectId) {
+                  apiRequest('POST', `/api/file-organization/suggestions/generate`, { 
+                    projectId: parseInt(activeProjectId) 
+                  })
+                  .then(() => {
+                    toast({
+                      title: "Vorschläge werden generiert",
+                      description: "Die Vorschläge werden jetzt erstellt und in Kürze angezeigt.",
+                    });
+                    queryClient.invalidateQueries({ queryKey: ['/api/file-organization/suggestions'] });
+                  })
+                  .catch(error => {
+                    toast({
+                      title: "Fehler",
+                      description: "Fehler beim Generieren der Vorschläge: " + error.message,
+                      variant: "destructive",
+                    });
+                  });
+                } else {
+                  toast({
+                    title: "Keine Projekte gefunden",
+                    description: "Es wurden keine Projekte mit Anhängen gefunden.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              variant="outline"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Vorschläge generieren
+            </Button>
           </div>
         </div>
 
@@ -275,6 +310,34 @@ export default function AttachmentPage() {
                           </CardFooter>
                         </Card>
                       ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="organization">
+            {isLoading ? (
+              <div className="flex justify-center my-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : Object.keys(attachmentsByProject).length === 0 ? (
+              <div className="text-center my-12">
+                <p className="text-lg text-gray-500">Keine Projekte gefunden für Dateiorganisation.</p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {Object.keys(attachmentsByProject).map((projectId) => (
+                  <div key={projectId} className="border rounded-lg overflow-hidden">
+                    <div className="bg-gray-100 p-4 border-b flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-medium">Projekt {projectId}</h3>
+                        <p className="text-sm text-gray-500">{attachmentsByProject[parseInt(projectId)].length} Anhänge</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <FileOrganizationSuggestions projectId={parseInt(projectId)} />
                     </div>
                   </div>
                 ))}
