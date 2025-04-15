@@ -100,6 +100,7 @@ const sections = [
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
   { id: "bauweisen", title: "Bauweisen nach RStO 12" },
   { id: "hilfreiche-links", title: "Hilfreiche Links" },
+  { id: "geo-anleitung", title: "Anleitung Geo-Informationen" },
   { id: "nutzungshinweise", title: "Nutzungshinweise" }
 ];
 
@@ -430,6 +431,126 @@ export default function InformationPage() {
                 <FileText className="mr-2 h-4 w-4" />
                 <span>BASt - Bundesanstalt für Straßenwesen</span>
                 <ExternalLink className="ml-auto h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Anleitung Geo-Informationen */}
+          <div id="geo-anleitung" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Anleitung Geo-Informationen</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Die Geo-Informationen-Seite bietet umfangreiche Funktionen zur Standortmarkierung, Streckenanalyse, Materialberechnung 
+              und Baumaschinenempfehlung für Straßenbauprojekte.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>1. Standorte markieren</CardTitle>
+                  <CardDescription>
+                    Es gibt drei Möglichkeiten, Standorte auf der Karte zu markieren:
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Direkt auf die Karte klicken</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Klicken Sie einfach an beliebigen Stellen auf die Karte, um dort einen Marker zu setzen. 
+                      Jeder Marker wird automatisch mit der aktuell ausgewählten Belastungsklasse verbunden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Koordinaten eingeben</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Verwenden Sie das "Koordinaten" Feld, um einen Standort anhand von Längen- und Breitengraden 
+                      exakt zu bestimmen. Geben Sie die Koordinaten im Format "Breitengrad, Längengrad" ein und 
+                      klicken Sie auf "Gehe zu".
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Adresse suchen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Nutzen Sie die Adresssuche, um einen Standort anhand einer Straßenadresse zu finden. 
+                      Geben Sie die vollständige Adresse ein und klicken Sie auf "Suchen", um die entsprechenden 
+                      Koordinaten zu finden und einen Marker zu setzen.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>2. Belastungsklassen und Streckenverbindungen</CardTitle>
+                  <CardDescription>
+                    Streckenplanung und Visualisierung der Belastungsklassen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Belastungsklasse auswählen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Wählen Sie vor dem Markieren die passende Belastungsklasse aus dem Dropdown-Menü über der Karte aus.
+                      Die gewählte Klasse bestimmt die Farbe der Marker und Verbindungslinien sowie die berechneten Materialkosten.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Verbindungslinien</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Verbindungslinien zwischen den Markern werden automatisch erzeugt und farblich entsprechend der 
+                      Belastungsklasse dargestellt. Diese Linien zeigen die geplante Route und dienen als Basis für die
+                      Materialkosten- und Streckenlängenberechnung.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>3. Materialkosten und Baumaschinen</CardTitle>
+                  <CardDescription>
+                    Automatische Berechnung von Materialkosten und Maschinenempfehlungen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Straßentyp und Breite</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Wählen Sie den passenden Straßentyp aus (z.B. Autobahn, Bundesstraße, Landstraße) oder 
+                      geben Sie eine benutzerdefinierte Straßenbreite ein. Die Breite ist entscheidend für die 
+                      Berechnung der Materialmengen und -kosten.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Materialkostenberechnung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Materialkosten werden automatisch basierend auf der gewählten Belastungsklasse, 
+                      der Streckenlänge und der Straßenbreite berechnet. Die Kosten werden getrennt für Asphaltdecke, 
+                      Asphalttragschicht und Frostschutzschicht angezeigt.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Baumaschinenempfehlungen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Basierend auf der gewählten Belastungsklasse werden passende Baumaschinen vorgeschlagen. 
+                      Für jede Maschine werden Tagesmiete und Leistungsdaten angezeigt, um die Bauplanung und 
+                      Kostenkalkulation zu unterstützen.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/geo-map">
+                  <MapIcon className="h-4 w-4" />
+                  Zur Geo-Informationsseite
+                </Link>
               </Button>
             </div>
           </div>
