@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera, BarChart4 } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera, BarChart4, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +13,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment } from "@shared/schema";
 import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
 import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
+import { FileOrganizationSuggestions } from "@/components/attachment/file-organization-suggestions";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
@@ -139,6 +140,7 @@ export default function AttachmentPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="all">Alle Anhänge</TabsTrigger>
             <TabsTrigger value="byProject">Nach Projekt</TabsTrigger>
+            <TabsTrigger value="organization">Dateiorganisation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">

@@ -71,7 +71,7 @@ router.get("/api/file-organization/suggestions/:projectId", async (req: Request,
     // Für jeden Vorschlag die zugehörigen Dateien laden
     const suggestionsWithFiles = await Promise.all(
       suggestions.map(async (suggestion) => {
-        const fileIds = suggestion.fileIds.split(',').map(id => parseInt(id, 10));
+        const fileIds = suggestion.fileIds?.split(',').map(id => parseInt(id, 10)) || [];
         
         const files = await db.select()
           .from(attachments)

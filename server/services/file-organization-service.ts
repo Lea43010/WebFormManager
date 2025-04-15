@@ -22,7 +22,7 @@ const CATEGORY_KEYWORDS = {
 };
 
 interface AnalysisResult {
-  suggestedCategory: string;
+  suggestedCategory: "Verträge" | "Rechnungen" | "Pläne" | "Protokolle" | "Genehmigungen" | "Fotos" | "Analysen" | "Andere";
   suggestedTags: string[];
   confidence: number;
   reason: string;
@@ -72,7 +72,7 @@ async function analyzeFile(attachment: Attachment): Promise<AnalysisResult> {
  * Bestimmt die Kategorie einer Datei anhand des Dateinamens
  */
 function determineCategoryByFileName(fileName: string): {
-  category: string;
+  category: "Verträge" | "Rechnungen" | "Pläne" | "Protokolle" | "Genehmigungen" | "Fotos" | "Analysen" | "Andere";
   tags: string[];
   confidence: number;
 } {
@@ -286,7 +286,7 @@ async function applySuggestion(suggestionId: number): Promise<boolean> {
     }
     
     // Extrahiere die Datei-IDs
-    const fileIds = suggestion.fileIds.split(',').map(id => parseInt(id, 10));
+    const fileIds = suggestion.fileIds?.split(',').map(id => parseInt(id, 10)) || [];
     
     // Aktualisiere jede Datei
     for (const fileId of fileIds) {

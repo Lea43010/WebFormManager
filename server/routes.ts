@@ -729,6 +729,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Einrichten der Download-Routen für Datenbankmigrationen
   setupDownloadRoutes(app);
   
+  // Smart File Organization Routen einrichten
+  setupFileOrganizationRoutes(app);
+  
   // Image Analyse und RStO-Routen einrichten
   setupImageAnalysisRoutes(app);
   setupSurfaceAnalysisRoutes(app);
