@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
+import { AddressToCoordinates } from "@/components/geo/address-to-coordinates";
 import { 
   MapContainer, 
   TileLayer, 
@@ -1156,7 +1157,7 @@ export default function GeoMapPage() {
                   
                   <div className="flex items-center space-x-2">
                     
-                    {/* Alternative: Direkte Koordinateneingabe statt Adresssuche */}
+                    {/* Direkte Koordinateneingabe und Adressumrechner-Dialog */}
                     <div className="flex space-x-1">
                       <Input 
                         type="number"
