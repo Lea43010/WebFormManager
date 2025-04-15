@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
@@ -644,6 +645,7 @@ export default function GeoMapPage() {
   const [searchLng, setSearchLng] = useState<number | null>(11.57); // München Standardwert
   const [newLocationName, setNewLocationName] = useState<string>("");
   const [newLocationDialogOpen, setNewLocationDialogOpen] = useState<boolean>(false);
+  const [addressToCoordinatesDialogOpen, setAddressToCoordinatesDialogOpen] = useState<boolean>(false);
   const [tempLocation, setTempLocation] = useState<[number, number] | null>(null);
   const [showCostEstimation, setShowCostEstimation] = useState<boolean>(true);
   const [roadWidth, setRoadWidth] = useState<number>(7.5); // Standard: Breite einer Bundesstraße
