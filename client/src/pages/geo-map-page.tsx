@@ -21,7 +21,7 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 
 
 // Leaflet imports mit dynamic import um SSR-Probleme zu vermeiden
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -31,15 +31,12 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Fix the L.Icon.Default issue with Vite/Webpack
-delete L.Icon.Default.prototype._getIconUrl;
+delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
 });
-
-// Tooltip muss umbenannt werden wegen Namenskollision mit shadcn
-const LeafletTooltip = Tooltip;
 
 // Farbschema für Belastungsklassen
 const belastungsklassenColors = {
@@ -436,26 +433,26 @@ export default function GeoMapPage() {
   
   // Materialkostenberechnung
   const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Bundesstraße");
-  const [roadWidth, setRoadWidth] = useState<number>(roadWidthPresets[selectedRoadPreset]);
+  const [roadWidth, setRoadWidth] = useState<number>(roadWidthPresets[selectedRoadPreset as keyof typeof roadWidthPresets]);
   const [showCostEstimation, setShowCostEstimation] = useState<boolean>(false);
   
   useEffect(() => {
     // Wenn die Belastungsklasse geändert wird, setze den Straßentyp automatisch
     if (selectedBelastungsklasse === "Bk100") {
       setSelectedRoadPreset("Autobahn");
-      setRoadWidth(roadWidthPresets["Autobahn"]);
+      setRoadWidth(roadWidthPresets["Autobahn" as keyof typeof roadWidthPresets]);
     } else if (selectedBelastungsklasse === "Bk32" || selectedBelastungsklasse === "Bk10") {
       setSelectedRoadPreset("Bundesstraße");
-      setRoadWidth(roadWidthPresets["Bundesstraße"]);
+      setRoadWidth(roadWidthPresets["Bundesstraße" as keyof typeof roadWidthPresets]);
     } else if (selectedBelastungsklasse === "Bk3,2" || selectedBelastungsklasse === "Bk1,8") {
       setSelectedRoadPreset("Landstraße");
-      setRoadWidth(roadWidthPresets["Landstraße"]);
+      setRoadWidth(roadWidthPresets["Landstraße" as keyof typeof roadWidthPresets]);
     } else if (selectedBelastungsklasse === "Bk1,0") {
       setSelectedRoadPreset("Kreisstraße");
-      setRoadWidth(roadWidthPresets["Kreisstraße"]);
+      setRoadWidth(roadWidthPresets["Kreisstraße" as keyof typeof roadWidthPresets]);
     } else if (selectedBelastungsklasse === "Bk0,3") {
       setSelectedRoadPreset("Gemeindestraße");
-      setRoadWidth(roadWidthPresets["Gemeindestraße"]);
+      setRoadWidth(roadWidthPresets["Gemeindestraße" as keyof typeof roadWidthPresets]);
     }
   }, [selectedBelastungsklasse]);
   
@@ -962,7 +959,7 @@ export default function GeoMapPage() {
                         }
                       }}
                     >
-                      <LeafletTooltip permanent={idx === selectedMarkerIndex}>
+                      <LeafletTooltip direction="top" offset={[0, -20]}>
                         {marker.name || `Standort ${idx + 1}`}
                       </LeafletTooltip>
                       <Popup maxWidth={300}>
