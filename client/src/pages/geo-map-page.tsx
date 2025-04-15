@@ -2191,17 +2191,10 @@ export default function GeoMapPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-sm font-medium">Materialkostenberechnung</Label>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowCostEstimation(!showCostEstimation)}
-                      className="text-xs h-7 px-2"
-                    >
-                      {showCostEstimation ? "Ausblenden" : "Berechnen"}
-                    </Button>
+                    <span className="text-xs text-muted-foreground">Automatische Berechnung</span>
                   </div>
                   
-                  <div className={`${showCostEstimation ? "block" : "hidden"} space-y-3`}>
+                  <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="road-type" className="text-xs">Straßentyp</Label>
@@ -2210,6 +2203,8 @@ export default function GeoMapPage() {
                           onValueChange={(value) => {
                             setSelectedRoadPreset(value);
                             setRoadWidth(roadWidthPresets[value]);
+                            // Kostenberechnung immer automatisch anzeigen
+                            setShowCostEstimation(true);
                           }}
                         >
                           <SelectTrigger id="road-type" className="h-8 text-xs">
@@ -2234,7 +2229,11 @@ export default function GeoMapPage() {
                           step="0.5"
                           className="h-8 text-xs"
                           value={roadWidth}
-                          onChange={(e) => setRoadWidth(parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            setRoadWidth(parseFloat(e.target.value));
+                            // Kostenberechnung immer automatisch anzeigen
+                            setShowCostEstimation(true);
+                          }}
                         />
                       </div>
                     </div>
@@ -2384,48 +2383,93 @@ export default function GeoMapPage() {
                 </div>
               )}
               
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="space-y-2">
-                      <Button className="w-full">
-                        Mit Projekt verknüpfen
-                        <MapIcon className="ml-2 h-4 w-4" />
-                      </Button>
+              <div className="space-y-4 mt-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <MapIcon className="h-5 w-5 text-primary" /> 
+                      Projektverknüpfung & Kostenabschätzung
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Verknüpfen Sie die Standortinformationen mit einem Projekt und berechnen Sie Materialkosten
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="projekt-select">Projekt auswählen</Label>
+                      <Select
+                        value="Baustelle Oberbrunn"
+                      >
+                        <SelectTrigger id="projekt-select">
+                          <SelectValue placeholder="Projekt wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Baustelle Oberbrunn">Baustelle Oberbrunn</SelectItem>
+                          <SelectItem value="Straßenbau Friedrichstraße">Straßenbau Friedrichstraße</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                       
-                      {markers.length >= 2 && (
-                        <div className="p-3 bg-muted/30 rounded-md border text-xs">
-                          <div className="font-medium flex items-center mb-1">
-                            <Ruler className="h-3 w-3 mr-1" /> Streckendaten speichern
-                          </div>
-                          <div className="text-gray-600">
-                            Gesamtlänge: {calculateRouteDistances(markers).total.toFixed(2)} km über {markers.length} Punkte
-                            {showCostEstimation && selectedBelastungsklasse && (
-                              <div className="mt-1 font-medium text-primary">
-                                Geschätzte Materialkosten: {new Intl.NumberFormat('de-DE', { 
-                                  style: 'currency', 
-                                  currency: 'EUR',
-                                  maximumFractionDigits: 0 
-                                }).format(calculateMaterialCosts(
-                                  selectedBelastungsklasse,
-                                  calculateRouteDistances(markers).total,
-                                  roadWidth,
-                                  selectedMarkerIndex !== null && markers[selectedMarkerIndex]?.groundAnalysis?.bodenklasse 
-                                    ? markers[selectedMarkerIndex].groundAnalysis?.bodenklasse 
-                                    : undefined
-                                ).totalCost)}
-                              </div>
+                    {markers.length >= 2 && (
+                      <div className="p-4 bg-primary/5 rounded-md border text-sm">
+                        <div className="font-medium flex items-center gap-2 mb-2">
+                          <Ruler className="h-4 w-4" /> Streckendaten
+                        </div>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <span className="text-muted-foreground">Gesamtlänge:</span>
+                            <span className="font-medium">{calculateRouteDistances(markers).total.toFixed(2)} km</span>
+                            
+                            <span className="text-muted-foreground">Markierte Punkte:</span>
+                            <span className="font-medium">{markers.length} Standorte</span>
+                            
+                            <span className="text-muted-foreground">Straßentyp:</span>
+                            <span className="font-medium">{selectedRoadPreset || "Nicht ausgewählt"}</span>
+                            
+                            <span className="text-muted-foreground">Straßenbreite:</span>
+                            <span className="font-medium">{roadWidth.toFixed(1)} m</span>
+                            
+                            {selectedBelastungsklasse && (
+                              <>
+                                <span className="text-muted-foreground">Belastungsklasse:</span>
+                                <span className="font-medium">{selectedBelastungsklasse}</span>
+                              </>
                             )}
                           </div>
+                          
+                          {showCostEstimation && selectedBelastungsklasse && (
+                            <div className="mt-3 pt-3 border-t">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">Geschätzte Materialkosten:</span>
+                                <span className="font-bold text-primary text-lg">
+                                  {new Intl.NumberFormat('de-DE', { 
+                                    style: 'currency', 
+                                    currency: 'EUR',
+                                    maximumFractionDigits: 0 
+                                  }).format(calculateMaterialCosts(
+                                    selectedBelastungsklasse,
+                                    calculateRouteDistances(markers).total,
+                                    roadWidth,
+                                    selectedMarkerIndex !== null && markers[selectedMarkerIndex]?.groundAnalysis?.bodenklasse 
+                                      ? markers[selectedMarkerIndex].groundAnalysis?.bodenklasse 
+                                      : undefined
+                                  ).totalCost)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Diese Funktion wird in einer zukünftigen Version verfügbar sein.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                      </div>
+                    )}
+                    
+                    <Button className="w-full">
+                      Mit Projekt verknüpfen und Daten speichern
+                      <Save className="ml-2 h-4 w-4" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">Diese Funktion wird in einer zukünftigen Version verfügbar sein.</p>
+                  </CardContent>
+                </Card>
+              </div>
             </CardContent>
           </Card>
         </div>
