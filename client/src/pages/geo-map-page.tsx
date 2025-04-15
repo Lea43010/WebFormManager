@@ -1243,29 +1243,29 @@ export default function GeoMapPage() {
                             <div className="bg-muted/30 rounded-md p-2 text-xs">
                               <h4 className="font-medium mb-1">Materialkosten (Schätzung)</h4>
                               <div className="space-y-2">
-                                <div className="grid grid-cols-5 gap-1 text-[10px] font-medium text-muted-foreground">
-                                  <div>Material</div>
-                                  <div>Dicke</div>
-                                  <div>Fläche</div>
-                                  <div>€/m²</div>
-                                  <div>Gesamt</div>
+                                <div className="grid grid-cols-5 gap-1 text-xs font-medium text-muted-foreground">
+                                  <div className="truncate">Material</div>
+                                  <div className="truncate">Dicke</div>
+                                  <div className="truncate">Fläche</div>
+                                  <div className="truncate">€/m²</div>
+                                  <div className="truncate">Gesamt</div>
                                 </div>
                                 
                                 {costInfo.materials.map((material, i) => (
-                                  <div key={`material-${i}`} className="grid grid-cols-5 gap-1 text-[10px]">
-                                    <div>{material.name}</div>
-                                    <div>{material.thickness} cm</div>
-                                    <div>{Math.round(material.area).toLocaleString()} m²</div>
-                                    <div>{material.costPerSqm.toFixed(2)} €</div>
-                                    <div className="font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
+                                  <div key={`material-${i}`} className="grid grid-cols-5 gap-1 text-xs">
+                                    <div className="truncate whitespace-nowrap">{material.name}</div>
+                                    <div className="truncate whitespace-nowrap">{material.thickness} cm</div>
+                                    <div className="truncate whitespace-nowrap">{Math.round(material.area).toLocaleString()} m²</div>
+                                    <div className="truncate whitespace-nowrap">{material.costPerSqm.toFixed(2)} €</div>
+                                    <div className="truncate whitespace-nowrap font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
                                   </div>
                                 ))}
                                 
                                 <Separator />
                                 
-                                <div className="grid grid-cols-5 gap-1 text-[10px] font-bold">
+                                <div className="grid grid-cols-5 gap-1 text-xs font-bold">
                                   <div className="col-span-4 text-right">Gesamtkosten:</div>
-                                  <div>{Math.round(costInfo.total).toLocaleString()} €</div>
+                                  <div className="truncate whitespace-nowrap">{Math.round(costInfo.total).toLocaleString()} €</div>
                                 </div>
                               </div>
                             </div>
@@ -1282,8 +1282,8 @@ export default function GeoMapPage() {
                                 .map((maschine, i) => (
                                   <div key={`maschine-${i}`} className="bg-card p-2 rounded-md text-xs">
                                     <div className="font-medium">{maschine.name}</div>
-                                    <div className="text-muted-foreground text-[10px] mt-0.5">{maschine.beschreibung}</div>
-                                    <div className="grid grid-cols-2 gap-1 mt-1 text-[10px]">
+                                    <div className="text-muted-foreground text-xs mt-0.5">{maschine.beschreibung}</div>
+                                    <div className="grid grid-cols-2 gap-1 mt-1 text-xs">
                                       <div>Tagesmiete: <span className="font-medium">{maschine.tagesmiete} €</span></div>
                                       <div>Leistung: <span className="font-medium">{maschine.leistung} m²/Tag</span></div>
                                     </div>
