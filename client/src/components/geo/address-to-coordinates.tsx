@@ -192,7 +192,7 @@ export function AddressToCoordinates({ onCoordinatesFound }: AddressToCoordinate
                 {showSuggestions && suggestions.length > 0 && (
                   <div 
                     ref={suggestionsRef}
-                    className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+                    className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
                   >
                     {suggestions.map((suggestion) => (
                       <div
@@ -218,7 +218,7 @@ export function AddressToCoordinates({ onCoordinatesFound }: AddressToCoordinate
                             setShowSuggestions(false);
                           }
                         }}
-                        className="cursor-pointer select-none py-2 pl-3 pr-9 hover:bg-slate-100 focus:bg-slate-100 outline-none"
+                        className="cursor-pointer select-none py-2 pl-3 pr-9 hover:bg-primary/10 focus:bg-primary/10 outline-none"
                         data-suggestion
                         tabIndex={0}
                       >

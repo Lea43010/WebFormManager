@@ -972,15 +972,35 @@ export default function GeoMapPage() {
           </DialogDescription>
         </DialogHeader>
         
-        <AddressToCoordinates 
-          onCoordinatesFound={(lat, lng) => {
-            setSearchLat(lat);
-            setSearchLng(lng);
-            setAddressToCoordinatesDialogOpen(false);
-          }} 
-        />
+        <div className="py-4">
+          <AddressToCoordinates 
+            onCoordinatesFound={(lat, lng) => {
+              setSearchLat(lat);
+              setSearchLng(lng);
+              setMapCenter([lat, lng]);
+              setAddressToCoordinatesDialogOpen(false);
+              
+              // Option zum Hinzufügen eines Markers an dieser Position
+              setTimeout(() => {
+                if (confirm("Möchten Sie an dieser Position einen Marker hinzufügen?")) {
+                  setTempLocation([lat, lng]);
+                  setNewLocationDialogOpen(true);
+                  
+                  // Leere Adressinfo setzen (wird später manuell eingetragen)
+                  const emptyAddressInfo = {
+                    strasse: "",
+                    hausnummer: "",
+                    plz: "",
+                    ort: ""
+                  };
+                  setLocationInfo(emptyAddressInfo);
+                }
+              }, 300);
+            }}
+          />
+        </div>
         
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-2">
           <Button variant="outline" onClick={() => setAddressToCoordinatesDialogOpen(false)}>
             Schließen
           </Button>
