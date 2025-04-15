@@ -739,7 +739,10 @@ export default function GeoMapPage() {
   
   // Adresssuche über MapBox-API
   const searchAddress = useCallback(async () => {
-    if (!searchQuery) return;
+    if (!searchQuery || searchQuery.trim() === "") {
+      alert("Bitte geben Sie eine Adresse ein");
+      return;
+    }
     
     console.log("Suche nach Adresse:", searchQuery);
     console.log("MapBox Token:", MAPBOX_TOKEN ? "Token vorhanden" : "Token fehlt");
@@ -752,6 +755,7 @@ export default function GeoMapPage() {
       
       if (!response.ok) {
         console.error("API Fehler:", response.status, response.statusText);
+        alert(`Fehler bei der Adresssuche: ${response.statusText}`);
         throw new Error("Fehler bei der Adresssuche");
       }
       
@@ -799,11 +803,14 @@ export default function GeoMapPage() {
         });
         
         setLocationInfo(addressInfo);
+      } else {
+        alert("Keine Ergebnisse für diese Adresse gefunden");
       }
     } catch (error) {
       console.error("Fehler bei der Adresssuche:", error);
+      alert("Fehler bei der Adresssuche. Bitte versuchen Sie es erneut.");
     }
-  }, [searchQuery]);
+  }, [searchQuery, setMapCenter, setTempLocation, setNewLocationDialogOpen, setLocationInfo]);
   
   const updateMarkerInfo = useCallback((index: number, key: string, value: any) => {
     setMarkers(prev => {
@@ -1218,12 +1225,18 @@ export default function GeoMapPage() {
                           className="pl-8 h-8 text-xs w-36"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault(); // Verhindert das Standardverhalten
+                              searchAddress();
+                            }
+                          }}
                         />
                       </div>
                       <Button
                         className="h-8 text-xs px-2"
-                        onClick={searchAddress}
+                        type="button"
+                        onClick={() => searchAddress()}
                         size="sm"
                         variant="outline"
                       >
