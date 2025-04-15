@@ -1590,54 +1590,7 @@ export default function GeoMapPage() {
                 </div>
               )}
               
-              <div className="space-y-4 mt-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <MapIcon className="h-5 w-5 text-primary" /> 
-                      Projektverknüpfung & Kostenabschätzung
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Verknüpfen Sie die Standortinformationen mit einem Projekt und berechnen Sie Materialkosten
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="projekt-select">Projekt auswählen</Label>
-                      <Select
-                        value={selectedProject}
-                        onValueChange={(value) => {
-                          console.log("Projekt ausgewählt:", value);
-                          setSelectedProject(value);
-                          // Hier würde später die Projekt-Zuordnung erfolgen
-                        }}
-                      >
-                        <SelectTrigger id="projekt-select" className="w-full">
-                          <SelectValue placeholder="Projekt wählen" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[9999]">
-                          <SelectItem value="Baustelle Oberbrunn">Baustelle Oberbrunn</SelectItem>
-                          <SelectItem value="Straßenbau Friedrichstraße">Straßenbau Friedrichstraße</SelectItem>
-                          <SelectItem value="Sanierung B12">Sanierung B12</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                      
-                    {/* Hinweis auf bereits vorhandene Daten in der rechten Spalte */}
-                    <div className="p-4 bg-muted/20 rounded-md border border-muted text-sm">
-                      <div className="text-xs text-muted-foreground text-center my-2">
-                        Die Streckendaten und Materialkostenberechnungen werden in der rechten Spalte unter "Standorte und Streckendaten" angezeigt.
-                      </div>
-                    </div>
-                    
-                    <Button className="w-full">
-                      Mit Projekt verknüpfen und Daten speichern
-                      <Save className="ml-2 h-4 w-4" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">Diese Funktion wird in einer zukünftigen Version verfügbar sein.</p>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Projektverknüpfungskarte wurde entfernt, da diese Funktionalität direkt über die Kartenansicht erfolgt */}
             </CardContent>
           </Card>
         </div>
