@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useLocation, Link } from "wouter";
@@ -1130,22 +1131,30 @@ export default function GeoMapPage() {
                   </TabsList>
                   
                   <div className="flex items-center space-x-2">
-                    <Select 
-                      value={selectedBelastungsklasse}
-                      onValueChange={setSelectedBelastungsklasse}
-                    >
-                      <SelectTrigger className="text-xs h-8 w-40">
-                        <SelectValue placeholder="Belastungsklasse" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none" className="text-xs">Keine Klassifizierung</SelectItem>
-                        {belastungsklassen.map((klasse) => (
-                          <SelectItem key={klasse.klasse} value={klasse.klasse} className="text-xs">
-                            {klasse.klasse} - {klasse.beispiel}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="relative flex items-center space-x-2">
+                      <div className="absolute -top-6 right-0 text-primary border border-primary/30 rounded-md bg-primary/5 px-2 py-0 text-[10px] animate-pulse">
+                        Bitte auswählen!
+                      </div>
+                      <div className="font-medium text-xs flex items-center mr-1">
+                        <Asterisk className="h-3 w-3 mr-1 text-primary" /> Belastungsklasse:
+                      </div>
+                      <Select 
+                        value={selectedBelastungsklasse}
+                        onValueChange={setSelectedBelastungsklasse}
+                      >
+                        <SelectTrigger className="text-xs h-8 w-44 border-primary/50 bg-primary/5">
+                          <SelectValue placeholder="Klasse wählen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none" className="text-xs">Keine Klassifizierung</SelectItem>
+                          {belastungsklassen.map((klasse) => (
+                            <SelectItem key={klasse.klasse} value={klasse.klasse} className="text-xs">
+                              {klasse.klasse} - {klasse.beispiel}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     
                     {/* Alternative: Direkte Koordinateneingabe statt Adresssuche */}
                     <div className="flex space-x-1">
