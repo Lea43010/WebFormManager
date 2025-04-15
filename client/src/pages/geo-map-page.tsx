@@ -698,18 +698,47 @@ export default function GeoMapPage() {
     }, 1000);
   };
   
-  // Adresse anhand der Koordinaten ermitteln (Reverse Geocoding mit OpenStreetMap)
+  // Adresse anhand der Koordinaten ermitteln (Reverse Geocoding mit MapBox)
   const getAddressFromCoordinates = async (lat: number, lng: number) => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      // Mapbox API akzeptiert Koordinaten in der Reihenfolge longitude,latitude
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&language=de&types=address`
+      );
       const data = await response.json();
       
-      if (data && data.address) {
-        // Straßennamen und Hausnummer aus den OSM-Daten extrahieren
-        const street = data.address.road || data.address.pedestrian || data.address.street || data.address.path || "";
-        const houseNumber = data.address.house_number || "";
-        const postalCode = data.address.postcode || "";
-        const city = data.address.city || data.address.town || data.address.village || data.address.municipality || "";
+      if (data && data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        
+        // Komplette Adresse
+        const address = feature.place_name;
+        
+        // Adresskomponenten extrahieren
+        const addressParts = feature.place_name.split(',');
+        
+        // Straße und Hausnummer aus dem ersten Teil extrahieren
+        const streetWithNumber = addressParts[0].trim();
+        const streetMatch = streetWithNumber.match(/^(.+?)(\s+\d+.*)$/);
+        
+        const street = streetMatch ? streetMatch[1] : streetWithNumber;
+        const houseNumber = streetMatch ? streetMatch[2].trim() : '';
+        
+        // PLZ und Stadt/Ort extrahieren (typischerweise im zweiten Teil)
+        let postalCode = '';
+        let city = '';
+        
+        if (addressParts.length > 1) {
+          // Versuche PLZ und Stadt zu trennen (z.B. "12345 Berlin")
+          const cityPart = addressParts[1].trim();
+          const postalMatch = cityPart.match(/^(\d{5})\s+(.+)$/);
+          
+          if (postalMatch) {
+            postalCode = postalMatch[1];
+            city = postalMatch[2];
+          } else {
+            city = cityPart;
+          }
+        }
         
         setStrasse(street);
         setHausnummer(houseNumber);
