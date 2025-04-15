@@ -741,16 +741,22 @@ export default function GeoMapPage() {
   const searchAddress = useCallback(async () => {
     if (!searchQuery) return;
     
+    console.log("Suche nach Adresse:", searchQuery);
+    console.log("MapBox Token:", MAPBOX_TOKEN ? "Token vorhanden" : "Token fehlt");
+    
     try {
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&language=de`
-      );
+      const searchUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&language=de`;
+      console.log("API URL:", searchUrl);
+      
+      const response = await fetch(searchUrl);
       
       if (!response.ok) {
+        console.error("API Fehler:", response.status, response.statusText);
         throw new Error("Fehler bei der Adresssuche");
       }
       
       const data = await response.json();
+      console.log("API Antwort:", data);
       
       if (data.features && data.features.length > 0) {
         const firstResult = data.features[0];
@@ -1204,15 +1210,25 @@ export default function GeoMapPage() {
                       </SelectContent>
                     </Select>
                     
-                    <div className="relative">
-                      <Search className="h-4 w-4 absolute left-2 top-2 text-muted-foreground" />
-                      <Input
-                        placeholder="Adresse suchen..."
-                        className="pl-8 h-8 text-xs w-48"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
-                      />
+                    <div className="flex space-x-1">
+                      <div className="relative">
+                        <Search className="h-4 w-4 absolute left-2 top-2 text-muted-foreground" />
+                        <Input
+                          placeholder="Adresse suchen..."
+                          className="pl-8 h-8 text-xs w-36"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+                        />
+                      </div>
+                      <Button
+                        className="h-8 text-xs px-2"
+                        onClick={searchAddress}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Suchen
+                      </Button>
                     </div>
                   </div>
                 </div>
