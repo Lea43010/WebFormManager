@@ -604,10 +604,31 @@ function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) 
   return null;
 }
 
+// Hilfskomponente für Map-Events und useMap-Hook
+function MapEvents({ onMoveEnd }: { onMoveEnd: (map: L.Map) => void }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!map) return;
+    
+    const handleMoveEnd = () => {
+      onMoveEnd(map);
+    };
+    
+    map.on('moveend', handleMoveEnd);
+    
+    return () => {
+      map.off('moveend', handleMoveEnd);
+    };
+  }, [map, onMoveEnd]);
+  
+  return null;
+}
+
 // Hauptkomponente: Geo-Map Page
 export default function GeoMapPage() {
   const [location, setLocation] = useLocation();
-  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("");
+  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("none");
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([48.1351, 11.5820]); // München
@@ -630,7 +651,7 @@ export default function GeoMapPage() {
   const addMarker = useCallback((lat: number, lng: number, name?: string) => {
     const newMarker: MarkerInfo = {
       position: [lat, lng],
-      belastungsklasse: selectedBelastungsklasse,
+      belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
       name: name || `Standort ${markers.length + 1}`
     };
     
@@ -638,7 +659,7 @@ export default function GeoMapPage() {
     setSelectedMarkerIndex(markers.length); // Wähle den neu hinzugefügten Marker aus
     
     // Wenn Belastungsklasse ausgewählt ist, setze Straßentyp-Preset automatisch
-    if (selectedBelastungsklasse && belastungsklasseToRoadType[selectedBelastungsklasse]) {
+    if (selectedBelastungsklasse !== "none" && belastungsklasseToRoadType[selectedBelastungsklasse]) {
       const recommendedRoadType = belastungsklasseToRoadType[selectedBelastungsklasse];
       setSelectedRoadPreset(recommendedRoadType);
       setRoadWidth(roadWidthPresets[recommendedRoadType]);
@@ -1169,7 +1190,7 @@ export default function GeoMapPage() {
                         <SelectValue placeholder="Belastungsklasse" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="" className="text-xs">Keine Klassifizierung</SelectItem>
+                        <SelectItem value="none" className="text-xs">Keine Klassifizierung</SelectItem>
                         {belastungsklassen.map((klasse) => (
                           <SelectItem key={klasse.klasse} value={klasse.klasse} className="text-xs">
                             {klasse.klasse} - {klasse.beispiel}
@@ -1209,15 +1230,12 @@ export default function GeoMapPage() {
                   center={mapCenter} 
                   zoom={13} 
                   style={{ height: '100%', width: '100%' }}
-                  whenReady={(e: { target: L.Map }) => {
-                    // Aktualisiere die Zentrumsposition wenn sich die Karte ändert
-                    const mapInstance = e.target;
-                    mapInstance.on('moveend', () => {
-                      const center = mapInstance.getCenter();
-                      setMapCenter([center.lat, center.lng]);
-                    });
-                  }}
                 >
+                  {/* Map Event Handler Component */}
+                  <MapEvents onMoveEnd={(map) => {
+                    const center = map.getCenter();
+                    setMapCenter([center.lat, center.lng]);
+                  }} />
                   <LayersControl position="topright">
                     <LayersControl.BaseLayer checked={activeTab === "map"} name="OpenStreetMap">
                       <TileLayer
@@ -1426,7 +1444,7 @@ export default function GeoMapPage() {
                       </div>
                     </div>
                     
-                    {selectedBelastungsklasse && (
+                    {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
                       <div className="p-3 border rounded-md bg-muted/30">
                         {(() => {
                           const routeDistance = calculateRouteDistances(markers).total;
@@ -1622,7 +1640,7 @@ export default function GeoMapPage() {
                             <span className="text-muted-foreground">Straßenbreite:</span>
                             <span className="font-medium">{roadWidth.toFixed(1)} m</span>
                             
-                            {selectedBelastungsklasse && (
+                            {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
                               <>
                                 <span className="text-muted-foreground">Belastungsklasse:</span>
                                 <span className="font-medium">{selectedBelastungsklasse}</span>
@@ -1630,7 +1648,7 @@ export default function GeoMapPage() {
                             )}
                           </div>
                           
-                          {selectedBelastungsklasse && (
+                          {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
                             <div className="mt-3 pt-3 border-t">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm font-medium">Geschätzte Materialkosten:</span>
