@@ -106,8 +106,6 @@ export default function AttachmentPage() {
           <span>Dokumente</span>
         </div>
       }
-      tabs={["Alle Anhänge", "Nach Projekt"]}
-      activeTab="Alle Anhänge"
     >
       <div className="container p-4">
         <div className="flex flex-wrap justify-between items-center mb-6">
@@ -171,151 +169,11 @@ export default function AttachmentPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="organization">
           <TabsList className="mb-6">
-            <TabsTrigger value="all">Alle Anhänge</TabsTrigger>
-            <TabsTrigger value="byProject">Nach Projekt</TabsTrigger>
             <TabsTrigger value="organization">Dateiorganisation</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all">
-            {isLoading ? (
-              <div className="flex justify-center my-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : error ? (
-              <Alert variant="destructive" className="mb-6">
-                <AlertDescription>
-                  Fehler beim Laden der Anhänge: {error instanceof Error ? error.message : "Unbekannter Fehler"}
-                </AlertDescription>
-              </Alert>
-            ) : attachments?.length === 0 ? (
-              <div className="text-center my-12">
-                <p className="text-lg text-gray-500">Keine Anhänge gefunden.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {attachments?.map((attachment) => (
-                  <Card key={attachment.id} className="overflow-hidden">
-                    <CardHeader className="p-4 bg-gray-50">
-                      <CardTitle className="text-sm font-medium truncate">{attachment.fileName}</CardTitle>
-                      <CardDescription className="text-xs">
-                        Projekt-ID: {attachment.projectId}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 flex items-center justify-center">
-                      <div className="text-center">
-                        {getFileIcon(attachment.fileType)}
-                        <p className="mt-2 text-sm text-gray-500">
-                          {(attachment.fileSize / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="p-4 bg-gray-50 flex justify-between">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="px-2 py-1 h-8 text-xs"
-                          onClick={() => openDeleteDialog(attachment)}
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Löschen
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="px-2 py-1 h-8 text-xs"
-                          onClick={() => handleDownload(attachment)}
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
-                        
-                        {attachment.fileType === 'image' && (
-                          <AsphaltAnalysis attachment={attachment} />
-                        )}
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="byProject">
-            {isLoading ? (
-              <div className="flex justify-center my-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : error ? (
-              <Alert variant="destructive" className="mb-6">
-                <AlertDescription>
-                  Fehler beim Laden der Anhänge: {error instanceof Error ? error.message : "Unbekannter Fehler"}
-                </AlertDescription>
-              </Alert>
-            ) : Object.keys(attachmentsByProject).length === 0 ? (
-              <div className="text-center my-12">
-                <p className="text-lg text-gray-500">Keine Anhänge gefunden.</p>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {Object.entries(attachmentsByProject).map(([projectId, projectAttachments]) => (
-                  <div key={projectId} className="border rounded-lg overflow-hidden">
-                    <div className="bg-gray-100 p-4 border-b">
-                      <h3 className="text-lg font-medium">Projekt {projectId}</h3>
-                      <p className="text-sm text-gray-500">{projectAttachments.length} Anhänge</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                      {projectAttachments.map((attachment) => (
-                        <Card key={attachment.id} className="overflow-hidden">
-                          <CardHeader className="p-3 bg-gray-50">
-                            <CardTitle className="text-sm font-medium truncate">{attachment.fileName}</CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-3 flex items-center justify-center">
-                            <div className="text-center">
-                              {getFileIcon(attachment.fileType)}
-                              <p className="mt-2 text-xs text-gray-500">
-                                {(attachment.fileSize / 1024).toFixed(2)} KB
-                              </p>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="p-3 bg-gray-50">
-                            <div className="flex flex-wrap gap-2 w-full">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="px-2 py-1 h-8 text-xs"
-                                onClick={() => openDeleteDialog(attachment)}
-                              >
-                                <Trash2 className="w-3 h-3 mr-1" />
-                                Löschen
-                              </Button>
-                              
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="px-2 py-1 h-8 text-xs"
-                                onClick={() => handleDownload(attachment)}
-                              >
-                                <Download className="w-3 h-3 mr-1" />
-                                Download
-                              </Button>
-                              
-                              {attachment.fileType === 'image' && (
-                                <AsphaltAnalysis attachment={attachment} />
-                              )}
-                            </div>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="organization">
             {isLoading ? (
