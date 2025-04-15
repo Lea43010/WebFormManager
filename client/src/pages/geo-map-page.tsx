@@ -624,6 +624,7 @@ export default function GeoMapPage() {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [locationInfo, setLocationInfo] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string>("Baustelle Oberbrunn");
   
   // Füge einen neuen Marker hinzu
   const addMarker = useCallback((lat: number, lng: number, name?: string) => {
@@ -1208,7 +1209,7 @@ export default function GeoMapPage() {
                   center={mapCenter} 
                   zoom={13} 
                   style={{ height: '100%', width: '100%' }}
-                  whenReady={(e) => {
+                  whenReady={(e: { target: L.Map }) => {
                     // Aktualisiere die Zentrumsposition wenn sich die Karte ändert
                     const mapInstance = e.target;
                     mapInstance.on('moveend', () => {
@@ -1585,9 +1586,10 @@ export default function GeoMapPage() {
                     <div>
                       <Label htmlFor="projekt-select">Projekt auswählen</Label>
                       <Select
-                        value="Baustelle Oberbrunn"
+                        value={selectedProject}
                         onValueChange={(value) => {
                           console.log("Projekt ausgewählt:", value);
+                          setSelectedProject(value);
                           // Hier würde später die Projekt-Zuordnung erfolgen
                         }}
                       >
