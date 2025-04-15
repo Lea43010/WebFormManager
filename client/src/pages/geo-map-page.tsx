@@ -737,80 +737,81 @@ export default function GeoMapPage() {
     }
   }, []);
   
-  // Adresssuche über MapBox-API
-  const searchAddress = useCallback(async () => {
+  // Vereinfachte Adresssuche mit einer regulären Funktion
+  function handleSearch() {
     if (!searchQuery || searchQuery.trim() === "") {
       alert("Bitte geben Sie eine Adresse ein");
       return;
     }
     
     console.log("Suche nach Adresse:", searchQuery);
-    console.log("MapBox Token:", MAPBOX_TOKEN ? "Token vorhanden" : "Token fehlt");
     
-    try {
-      const searchUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&language=de`;
-      console.log("API URL:", searchUrl);
-      
-      const response = await fetch(searchUrl);
-      
-      if (!response.ok) {
-        console.error("API Fehler:", response.status, response.statusText);
-        alert(`Fehler bei der Adresssuche: ${response.statusText}`);
-        throw new Error("Fehler bei der Adresssuche");
-      }
-      
-      const data = await response.json();
-      console.log("API Antwort:", data);
-      
-      if (data.features && data.features.length > 0) {
-        const firstResult = data.features[0];
-        const [lng, lat] = firstResult.center;
+    fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&language=de`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`API-Fehler: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("API Antwort:", data);
         
-        setMapCenter([lat, lng]);
-        setTempLocation([lat, lng]);
-        setNewLocationDialogOpen(true);
-        
-        // Straße und Ort aus dem Suchergebnis extrahieren
-        let addressInfo = {
-          strasse: "",
-          hausnummer: "",
-          plz: "",
-          ort: ""
-        };
-        
-        if (firstResult.place_type.includes('address')) {
-          const addressMatch = firstResult.place_name.match(/([^,]+),\s*([^,]+)/);
-          if (addressMatch) {
-            const streetAddress = addressMatch[1];
-            const streetMatch = streetAddress.match(/(.+)\s+(\d+\w*)/);
-            if (streetMatch) {
-              addressInfo.strasse = streetMatch[1];
-              addressInfo.hausnummer = streetMatch[2];
-            } else {
-              addressInfo.strasse = streetAddress;
+        if (data.features && data.features.length > 0) {
+          const firstResult = data.features[0];
+          const [lng, lat] = firstResult.center;
+          
+          console.log(`Koordinaten gefunden: ${lat}, ${lng}`);
+          
+          // Karten-Zentrum und temporären Standort setzen
+          setMapCenter([lat, lng]);
+          setTempLocation([lat, lng]);
+          
+          // Dialog zum Hinzufügen eines neuen Standorts öffnen
+          setNewLocationDialogOpen(true);
+          
+          // Adressinformationen extrahieren
+          let addressInfo = {
+            strasse: "",
+            hausnummer: "",
+            plz: "",
+            ort: ""
+          };
+          
+          if (firstResult.place_type.includes('address')) {
+            const addressMatch = firstResult.place_name.match(/([^,]+),\s*([^,]+)/);
+            if (addressMatch) {
+              const streetAddress = addressMatch[1];
+              const streetMatch = streetAddress.match(/(.+)\s+(\d+\w*)/);
+              if (streetMatch) {
+                addressInfo.strasse = streetMatch[1];
+                addressInfo.hausnummer = streetMatch[2];
+              } else {
+                addressInfo.strasse = streetAddress;
+              }
             }
           }
+          
+          // Durchsuche alle Features für PLZ und Ort
+          data.features.forEach((feature: any) => {
+            if (feature.place_type.includes('postcode')) {
+              addressInfo.plz = feature.text;
+            }
+            if (feature.place_type.includes('place')) {
+              addressInfo.ort = feature.text;
+            }
+          });
+          
+          // Standortinformationen für den neuen Marker setzen
+          setLocationInfo(addressInfo);
+        } else {
+          alert("Keine Ergebnisse für diese Adresse gefunden");
         }
-        
-        // Durchsuche alle Features für PLZ und Ort
-        data.features.forEach((feature: any) => {
-          if (feature.place_type.includes('postcode')) {
-            addressInfo.plz = feature.text;
-          }
-          if (feature.place_type.includes('place')) {
-            addressInfo.ort = feature.text;
-          }
-        });
-        
-        setLocationInfo(addressInfo);
-      } else {
-        alert("Keine Ergebnisse für diese Adresse gefunden");
-      }
-    } catch (error) {
-      console.error("Fehler bei der Adresssuche:", error);
-      alert("Fehler bei der Adresssuche. Bitte versuchen Sie es erneut.");
-    }
-  }, [searchQuery, setMapCenter, setTempLocation, setNewLocationDialogOpen, setLocationInfo]);
+      })
+      .catch(error => {
+        console.error("Fehler bei der Adresssuche:", error);
+        alert(`Fehler bei der Adresssuche: ${error.message}`);
+      });
+  }
   
   const updateMarkerInfo = useCallback((index: number, key: string, value: any) => {
     setMarkers(prev => {
@@ -1217,92 +1218,8 @@ export default function GeoMapPage() {
                       </SelectContent>
                     </Select>
                     
-                    {/* Adresssuchformular mit explizitem submit-Handler */}
-                    <form
-                      className="flex space-x-1"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        console.log("Formular abgesendet");
-                        
-                        if (!searchQuery.trim()) {
-                          alert("Bitte geben Sie eine Adresse ein");
-                          return;
-                        }
-                        
-                        // Direkte Implementierung der Suchfunktion (nicht über useCallback)
-                        const searchDirectly = async () => {
-                          console.log("Direkte Suche nach:", searchQuery);
-                          console.log("MapBox Token verfügbar:", !!MAPBOX_TOKEN);
-                          
-                          try {
-                            const searchUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&language=de`;
-                            console.log("API URL:", searchUrl);
-                            
-                            const response = await fetch(searchUrl);
-                            console.log("Response Status:", response.status);
-                            
-                            if (!response.ok) {
-                              throw new Error(`API-Fehler: ${response.status} ${response.statusText}`);
-                            }
-                            
-                            const data = await response.json();
-                            console.log("Gefundene Features:", data.features?.length);
-                            
-                            if (data.features && data.features.length > 0) {
-                              const firstResult = data.features[0];
-                              const [lng, lat] = firstResult.center;
-                              
-                              console.log(`Koordinaten gefunden: ${lat}, ${lng}`);
-                              
-                              setMapCenter([lat, lng]);
-                              setTempLocation([lat, lng]);
-                              setNewLocationDialogOpen(true);
-                              
-                              // Adressinfos extrahieren
-                              let addressInfo = {
-                                strasse: "",
-                                hausnummer: "",
-                                plz: "",
-                                ort: ""
-                              };
-                              
-                              if (firstResult.place_type.includes('address')) {
-                                const addressMatch = firstResult.place_name.match(/([^,]+),\s*([^,]+)/);
-                                if (addressMatch) {
-                                  const streetAddress = addressMatch[1];
-                                  const streetMatch = streetAddress.match(/(.+)\s+(\d+\w*)/);
-                                  if (streetMatch) {
-                                    addressInfo.strasse = streetMatch[1];
-                                    addressInfo.hausnummer = streetMatch[2];
-                                  } else {
-                                    addressInfo.strasse = streetAddress;
-                                  }
-                                }
-                              }
-                              
-                              data.features.forEach((feature: any) => {
-                                if (feature.place_type.includes('postcode')) {
-                                  addressInfo.plz = feature.text;
-                                }
-                                if (feature.place_type.includes('place')) {
-                                  addressInfo.ort = feature.text;
-                                }
-                              });
-                              
-                              setLocationInfo(addressInfo);
-                              console.log("Location Info gesetzt:", addressInfo);
-                            } else {
-                              alert("Keine Ergebnisse für diese Adresse gefunden");
-                            }
-                          } catch (error) {
-                            console.error("Fehler bei der Adresssuche:", error);
-                            alert(`Fehler bei der Adresssuche: ${error.message}`);
-                          }
-                        };
-                        
-                        searchDirectly();
-                      }}
-                    >
+                    {/* Alternative Implementierung des Suchformulars mit einfacherem Ansatz */}
+                    <div className="flex space-x-1">
                       <div className="relative">
                         <Search className="h-4 w-4 absolute left-2 top-2 text-muted-foreground" />
                         <Input
@@ -1310,17 +1227,23 @@ export default function GeoMapPage() {
                           className="pl-8 h-8 text-xs w-36"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSearch();
+                            }
+                          }}
                         />
                       </div>
                       <Button
                         className="h-8 text-xs px-2"
-                        type="submit"
+                        onClick={handleSearch}
                         size="sm"
                         variant="outline"
                       >
                         Suchen
                       </Button>
-                    </form>
+                    </div>
                   </div>
                 </div>
               </Tabs>
