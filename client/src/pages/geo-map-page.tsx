@@ -1590,7 +1590,7 @@ export default function GeoMapPage() {
                 </div>
               )}
               
-              <div className="space-y-4 mt-6">
+              <div className="mt-6">
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -1622,19 +1622,16 @@ export default function GeoMapPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                      
-                    {/* Hinweis auf bereits vorhandene Daten in der rechten Spalte */}
-                    <div className="p-4 bg-muted/20 rounded-md border border-muted text-sm">
-                      <div className="text-xs text-muted-foreground text-center my-2">
-                        Die Streckendaten und Materialkostenberechnungen werden in der rechten Spalte unter "Standorte und Streckendaten" angezeigt.
-                      </div>
+                    
+                    <div className="text-xs text-muted-foreground text-center my-2">
+                      Die Streckendaten und Materialkostenberechnungen werden in der rechten Spalte unter "Standorte und Streckendaten" angezeigt.
                     </div>
                     
-                    <Button className="w-full">
+                    <Button className="w-full mt-4 bg-primary">
                       Mit Projekt verknüpfen und Daten speichern
                       <Save className="ml-2 h-4 w-4" />
                     </Button>
-                    <p className="text-xs text-muted-foreground text-center">Diese Funktion wird in einer zukünftigen Version verfügbar sein.</p>
+                    <p className="text-xs text-muted-foreground text-center mt-2">Diese Funktion wird in einer zukünftigen Version verfügbar sein.</p>
                   </CardContent>
                 </Card>
               </div>
