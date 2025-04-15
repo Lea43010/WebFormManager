@@ -1208,8 +1208,9 @@ export default function GeoMapPage() {
                   center={mapCenter} 
                   zoom={13} 
                   style={{ height: '100%', width: '100%' }}
-                  whenCreated={(mapInstance) => {
+                  whenReady={(e) => {
                     // Aktualisiere die Zentrumsposition wenn sich die Karte ändert
+                    const mapInstance = e.target;
                     mapInstance.on('moveend', () => {
                       const center = mapInstance.getCenter();
                       setMapCenter([center.lat, center.lng]);
@@ -1585,6 +1586,10 @@ export default function GeoMapPage() {
                       <Label htmlFor="projekt-select">Projekt auswählen</Label>
                       <Select
                         value="Baustelle Oberbrunn"
+                        onValueChange={(value) => {
+                          console.log("Projekt ausgewählt:", value);
+                          // Hier würde später die Projekt-Zuordnung erfolgen
+                        }}
                       >
                         <SelectTrigger id="projekt-select">
                           <SelectValue placeholder="Projekt wählen" />
