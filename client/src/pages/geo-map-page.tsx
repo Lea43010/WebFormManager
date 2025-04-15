@@ -417,8 +417,7 @@ export default function GeoMapPage() {
   const [searchLat, setSearchLat] = useState<number | null>(null);
   const [searchLng, setSearchLng] = useState<number | null>(null);
   
-  // Address-to-Coordinates Dialog
-  const [addressToCoordinatesDialogOpen, setAddressToCoordinatesDialogOpen] = useState<boolean>(false);
+  // Diese Konstante wurde entfernt, um die Adress-zu-Koordinaten-Funktionalität zu vereinfachen
   
   // Standort-Dialog
   const [newLocationDialogOpen, setNewLocationDialogOpen] = useState<boolean>(false);
@@ -827,7 +826,55 @@ export default function GeoMapPage() {
                       <Button
                         variant="outline"
                         className="h-8 text-xs px-2"
-                        onClick={() => setAddressToCoordinatesDialogOpen(true)}
+                        onClick={() => {
+                          const address = prompt("Geben Sie eine Adresse ein (z.B. Berlin):");
+                          if (address && address.trim()) {
+                            // Direkte Geocoding-Anfrage mit MapBox API
+                            fetch(
+                              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+                                address
+                              )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
+                            )
+                              .then(response => {
+                                if (!response.ok) {
+                                  throw new Error("Fehler bei der Adresssuche");
+                                }
+                                return response.json();
+                              })
+                              .then(data => {
+                                if (data.features && data.features.length > 0) {
+                                  // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
+                                  const [lng, lat] = data.features[0].center;
+                                  setSearchLat(lat);
+                                  setSearchLng(lng);
+                                  setMapCenter([lat, lng]);
+                                  
+                                  // Option zum Hinzufügen eines Markers an dieser Position
+                                  setTimeout(() => {
+                                    if (confirm("Möchten Sie an dieser Position einen Marker hinzufügen?")) {
+                                      setTempLocation([lat, lng]);
+                                      setNewLocationDialogOpen(true);
+                                      
+                                      // Leere Adressinfo setzen (wird später manuell eingetragen)
+                                      const emptyAddressInfo = {
+                                        strasse: "",
+                                        hausnummer: "",
+                                        plz: "",
+                                        ort: ""
+                                      };
+                                      setLocationInfo(emptyAddressInfo);
+                                    }
+                                  }, 300);
+                                } else {
+                                  alert("Keine Ergebnisse für diese Adresse gefunden.");
+                                }
+                              })
+                              .catch(err => {
+                                console.error("Fehler bei der Adresssuche:", err);
+                                alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
+                              });
+                          }
+                        }}
                       >
                         <MapPin className="h-3 w-3 mr-1" />
                         Adresse suchen
@@ -962,146 +1009,7 @@ export default function GeoMapPage() {
       </div>
     </div>
     
-    {/* Einfache direkte Adresssuche statt eines komplexen Dialogs */}
-    <Dialog open={addressToCoordinatesDialogOpen} onOpenChange={setAddressToCoordinatesDialogOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Adresse zu Koordinaten umrechnen</DialogTitle>
-          <DialogDescription>
-            Geben Sie eine Adresse ein, um die geografischen Koordinaten zu erhalten.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4 flex flex-col space-y-4">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Adresse eingeben (z.B. Hauptstraße 1, Berlin)"
-              className="flex-1"
-              id="address-search-input"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const value = (e.target as HTMLInputElement).value;
-                  if (value.trim()) {
-                    // Direkte Geocoding-Anfrage mit MapBox API
-                    fetch(
-                      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-                        value
-                      )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
-                    )
-                      .then(response => {
-                        if (!response.ok) {
-                          throw new Error("Fehler bei der Adresssuche");
-                        }
-                        return response.json();
-                      })
-                      .then(data => {
-                        if (data.features && data.features.length > 0) {
-                          // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
-                          const [lng, lat] = data.features[0].center;
-                          setSearchLat(lat);
-                          setSearchLng(lng);
-                          setMapCenter([lat, lng]);
-                          setAddressToCoordinatesDialogOpen(false);
-                          
-                          // Option zum Hinzufügen eines Markers an dieser Position
-                          setTimeout(() => {
-                            if (confirm("Möchten Sie an dieser Position einen Marker hinzufügen?")) {
-                              setTempLocation([lat, lng]);
-                              setNewLocationDialogOpen(true);
-                              
-                              // Leere Adressinfo setzen (wird später manuell eingetragen)
-                              const emptyAddressInfo = {
-                                strasse: "",
-                                hausnummer: "",
-                                plz: "",
-                                ort: ""
-                              };
-                              setLocationInfo(emptyAddressInfo);
-                            }
-                          }, 300);
-                        } else {
-                          alert("Keine Ergebnisse für diese Adresse gefunden.");
-                        }
-                      })
-                      .catch(err => {
-                        console.error("Fehler bei der Adresssuche:", err);
-                        alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-                      });
-                  }
-                }
-              }}
-            />
-            <Button 
-              onClick={() => {
-                const input = document.getElementById("address-search-input") as HTMLInputElement;
-                const value = input?.value;
-                if (value && value.trim()) {
-                  // Direkte Geocoding-Anfrage mit MapBox API
-                  fetch(
-                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-                      value
-                    )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
-                  )
-                    .then(response => {
-                      if (!response.ok) {
-                        throw new Error("Fehler bei der Adresssuche");
-                      }
-                      return response.json();
-                    })
-                    .then(data => {
-                      if (data.features && data.features.length > 0) {
-                        // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
-                        const [lng, lat] = data.features[0].center;
-                        setSearchLat(lat);
-                        setSearchLng(lng);
-                        setMapCenter([lat, lng]);
-                        setAddressToCoordinatesDialogOpen(false);
-                        
-                        // Option zum Hinzufügen eines Markers an dieser Position
-                        setTimeout(() => {
-                          if (confirm("Möchten Sie an dieser Position einen Marker hinzufügen?")) {
-                            setTempLocation([lat, lng]);
-                            setNewLocationDialogOpen(true);
-                            
-                            // Leere Adressinfo setzen (wird später manuell eingetragen)
-                            const emptyAddressInfo = {
-                              strasse: "",
-                              hausnummer: "",
-                              plz: "",
-                              ort: ""
-                            };
-                            setLocationInfo(emptyAddressInfo);
-                          }
-                        }, 300);
-                      } else {
-                        alert("Keine Ergebnisse für diese Adresse gefunden.");
-                      }
-                    })
-                    .catch(err => {
-                      console.error("Fehler bei der Adresssuche:", err);
-                      alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-                    });
-                }
-              }}
-              className="bg-[#6a961f] hover:bg-[#5a8418] text-white"
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              Suchen
-            </Button>
-          </div>
-          
-          <p className="text-sm text-muted-foreground">
-            Drücken Sie ENTER nach Eingabe der Adresse oder klicken Sie auf "Suchen", um nach der Adresse zu suchen.
-          </p>
-        </div>
-        
-        <DialogFooter className="mt-2">
-          <Button variant="outline" onClick={() => setAddressToCoordinatesDialogOpen(false)}>
-            Schließen
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
     </>
   );
 }
