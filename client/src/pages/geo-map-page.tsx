@@ -650,7 +650,7 @@ export default function GeoMapPage() {
   const [newMarkerPosition, setNewMarkerPosition] = useState<[number, number] | null>(null);
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedMapProvider, setSelectedMapProvider] = useState("osm");
+  const [selectedMapProvider, setSelectedMapProvider] = useState("mapbox");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
