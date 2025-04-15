@@ -50,6 +50,82 @@ const belastungsklassenColors = {
   default: "#95a5a6"  // Grau für unklassifizierte
 };
 
+// Typen für Baumaschinen und Empfehlungen
+interface Baumaschine {
+  name: string;
+  beschreibung: string;
+  eignung: string[]; // Geeignet für diese Belastungsklassen
+  bildUrl?: string;
+  tagesmiete: number; // Euro pro Tag
+  leistung: number; // m²/Tag
+}
+
+const baumaschinen: Baumaschine[] = [
+  {
+    name: "Straßenfertiger (klein)",
+    beschreibung: "Für kleinere Straßenbauarbeiten und Reparaturen",
+    eignung: ["Bk0,3", "Bk1,0", "Bk1,8"],
+    tagesmiete: 850,
+    leistung: 500
+  },
+  {
+    name: "Straßenfertiger (mittel)",
+    beschreibung: "Für mittlere Straßenbauarbeiten und Landstraßen",
+    eignung: ["Bk1,8", "Bk3,2", "Bk10"],
+    tagesmiete: 1200,
+    leistung: 800
+  },
+  {
+    name: "Straßenfertiger (groß)",
+    beschreibung: "Für große Bundesstraßen und Autobahnen",
+    eignung: ["Bk10", "Bk32", "Bk100"],
+    tagesmiete: 2400,
+    leistung: 1500
+  },
+  {
+    name: "Walze (7t)",
+    beschreibung: "Verdichtung von Asphalt und Schotter",
+    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2"],
+    tagesmiete: 350,
+    leistung: 1200
+  },
+  {
+    name: "Walze (12t)",
+    beschreibung: "Schwere Verdichtung für stark belastete Straßen",
+    eignung: ["Bk3,2", "Bk10", "Bk32", "Bk100"],
+    tagesmiete: 550,
+    leistung: 1600
+  },
+  {
+    name: "Bagger (Raupe)",
+    beschreibung: "Für Erdarbeiten und Bodenaushub",
+    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2", "Bk10", "Bk32", "Bk100"],
+    tagesmiete: 750,
+    leistung: 400
+  },
+  {
+    name: "Radlader",
+    beschreibung: "Transport von Material auf der Baustelle",
+    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2", "Bk10", "Bk32", "Bk100"],
+    tagesmiete: 650,
+    leistung: 600
+  },
+  {
+    name: "Fräse (klein)",
+    beschreibung: "Entfernung bestehender Asphaltdecken",
+    eignung: ["Bk0,3", "Bk1,0", "Bk1,8"],
+    tagesmiete: 950,
+    leistung: 350
+  },
+  {
+    name: "Fräse (groß)",
+    beschreibung: "Großflächige Entfernung bestehender Straßenbeläge",
+    eignung: ["Bk3,2", "Bk10", "Bk32", "Bk100"],
+    tagesmiete: 1800,
+    leistung: 700
+  }
+];
+
 // Straßentyp-Presets mit Breiten
 const roadWidthPresets = {
   "Autobahn": 12.5,
@@ -1011,15 +1087,25 @@ export default function GeoMapPage() {
                     );
                   })}
                   
-                  {/* Route anzeigen */}
+                  {/* Route anzeigen - verbesserte Darstellung */}
                   {markers.length >= 2 && (
-                    <Polyline 
-                      positions={markers.map(m => m.position)}
-                      color="#3388ff"
-                      weight={3}
-                      opacity={0.8}
-                      dashArray="5, 10"
-                    />
+                    <>
+                      {/* Hauptlinie (dicker, auffälliger) */}
+                      <Polyline 
+                        positions={markers.map(m => m.position)}
+                        color="#3388ff"
+                        weight={5}
+                        opacity={0.8}
+                      />
+                      {/* Dekorative Linie (gestrichelt) für besseren visuellen Effekt */}
+                      <Polyline 
+                        positions={markers.map(m => m.position)}
+                        color="#ffffff"
+                        weight={2}
+                        opacity={0.6}
+                        dashArray="5, 10"
+                      />
+                    </>
                   )}
                   
                   {/* Marker-Klick-Handler */}
@@ -1044,6 +1130,184 @@ export default function GeoMapPage() {
                 Verwalten Sie Ihre markierten Standorte und berechnen Sie Materialkosten.
               </CardDescription>
             </CardHeader>
+            <CardContent className="space-y-4">
+              {markers.length > 0 ? (
+                <>
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Markierte Standorte ({markers.length})</h3>
+                    <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
+                      {markers.map((marker, idx) => (
+                        <div 
+                          key={`sidebar-marker-${idx}`} 
+                          className={`p-2 rounded-md border ${selectedMarkerIndex === idx ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-muted/50 border-border'}`}
+                          onClick={() => setSelectedMarkerIndex(idx)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">{marker.name || `Standort ${idx + 1}`}</span>
+                            <Badge variant={marker.belastungsklasse ? "default" : "outline"}>
+                              {marker.belastungsklasse || "Keine Klasse"}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {markers.length >= 2 && (
+                    <div className="border-t pt-3">
+                      <h3 className="text-sm font-medium mb-2 flex items-center">
+                        <Calculator className="h-4 w-4 mr-1 text-primary" /> 
+                        Strecken- und Materialberechnung
+                      </h3>
+                      
+                      {/* Streckenberechnung */}
+                      <div className="space-y-1 mb-3">
+                        {(() => {
+                          const { total, segments } = calculateRouteDistances(markers);
+                          return (
+                            <>
+                              <div className="flex justify-between text-sm">
+                                <span>Gesamtstrecke:</span>
+                                <span className="font-medium">{total.toFixed(2)} km</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Einzelabschnitte: {segments.map(s => s.toFixed(2)).join(' km, ')} km
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      
+                      {/* Materialkosten */}
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label htmlFor="roadWidth" className="text-xs">Straßenbreite (m)</Label>
+                            <Input 
+                              id="roadWidth"
+                              type="number"
+                              min={1}
+                              max={25}
+                              step={0.1}
+                              value={roadWidth}
+                              onChange={(e) => setRoadWidth(parseFloat(e.target.value))}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="roadType" className="text-xs">Straßentyp</Label>
+                            <Select 
+                              value={selectedRoadPreset}
+                              onValueChange={(value) => {
+                                setSelectedRoadPreset(value);
+                                if (value !== "Benutzerdefiniert") {
+                                  setRoadWidth(roadWidthPresets[value as keyof typeof roadWidthPresets]);
+                                }
+                              }}
+                            >
+                              <SelectTrigger id="roadType" className="h-8 text-xs">
+                                <SelectValue placeholder="Typ wählen" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Autobahn">Autobahn (12.5m)</SelectItem>
+                                <SelectItem value="Bundesstraße">Bundesstraße (7.5m)</SelectItem>
+                                <SelectItem value="Landstraße">Landstraße (6.5m)</SelectItem>
+                                <SelectItem value="Kreisstraße">Kreisstraße (5.5m)</SelectItem>
+                                <SelectItem value="Gemeindestraße">Gemeindestraße (5.0m)</SelectItem>
+                                <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        {/* Kostenanzeige */}
+                        {(() => {
+                          const { total: distance } = calculateRouteDistances(markers);
+                          if (selectedBelastungsklasse === "none") {
+                            return (
+                              <Alert variant="destructive" className="mt-2 py-2">
+                                <AlertTitle className="text-xs font-medium">Bitte Belastungsklasse wählen</AlertTitle>
+                                <AlertDescription className="text-xs">
+                                  Um Materialkosten zu berechnen, wählen Sie eine Belastungsklasse aus dem Dropdown-Menü über der Karte.
+                                </AlertDescription>
+                              </Alert>
+                            );
+                          }
+                          
+                          const costInfo = calculateMaterialCosts(distance, roadWidth, selectedBelastungsklasse);
+                          
+                          return (
+                            <div className="bg-muted/30 rounded-md p-2 text-xs">
+                              <h4 className="font-medium mb-1">Materialkosten (Schätzung)</h4>
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-5 gap-1 text-[10px] font-medium text-muted-foreground">
+                                  <div>Material</div>
+                                  <div>Dicke</div>
+                                  <div>Fläche</div>
+                                  <div>€/m²</div>
+                                  <div>Gesamt</div>
+                                </div>
+                                
+                                {costInfo.materials.map((material, i) => (
+                                  <div key={`material-${i}`} className="grid grid-cols-5 gap-1 text-[10px]">
+                                    <div>{material.name}</div>
+                                    <div>{material.thickness} cm</div>
+                                    <div>{Math.round(material.area).toLocaleString()} m²</div>
+                                    <div>{material.costPerSqm.toFixed(2)} €</div>
+                                    <div className="font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
+                                  </div>
+                                ))}
+                                
+                                <Separator />
+                                
+                                <div className="grid grid-cols-5 gap-1 text-[10px] font-bold">
+                                  <div className="col-span-4 text-right">Gesamtkosten:</div>
+                                  <div>{Math.round(costInfo.total).toLocaleString()} €</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
+                        {/* Empfohlene Baumaschinen */}
+                        {selectedBelastungsklasse !== "none" && (
+                          <div className="mt-4">
+                            <h4 className="text-xs font-medium mb-1">Empfohlene Baumaschinen</h4>
+                            <div className="space-y-2">
+                              {baumaschinen
+                                .filter(maschine => maschine.eignung.includes(selectedBelastungsklasse))
+                                .map((maschine, i) => (
+                                  <div key={`maschine-${i}`} className="bg-card p-2 rounded-md text-xs">
+                                    <div className="font-medium">{maschine.name}</div>
+                                    <div className="text-muted-foreground text-[10px] mt-0.5">{maschine.beschreibung}</div>
+                                    <div className="grid grid-cols-2 gap-1 mt-1 text-[10px]">
+                                      <div>Tagesmiete: <span className="font-medium">{maschine.tagesmiete} €</span></div>
+                                      <div>Leistung: <span className="font-medium">{maschine.leistung} m²/Tag</span></div>
+                                    </div>
+                                  </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <div className="rounded-full bg-muted p-3 mb-3">
+                    <MapPin className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium">Keine Standorte markiert</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Klicken Sie auf die Karte, um Standorte zu markieren und Materialberechnungen durchzuführen.
+                  </p>
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>
