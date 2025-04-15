@@ -886,17 +886,23 @@ export default function GeoMapPage() {
                           
                           // Breiten- und Längengrad direkt verwenden
                           setMapCenter([searchLat, searchLng]);
-                          setTempLocation([searchLat, searchLng]);
-                          setNewLocationDialogOpen(true);
                           
-                          // Leere Adressinfo setzen (wird später manuell eingetragen)
-                          const emptyAddressInfo = {
+                          // Automatisch einen Marker an dieser Position hinzufügen
+                          const newMarker: MarkerInfo = {
+                            position: [searchLat, searchLng],
+                            name: `Standort ${markers.length + 1}`,
+                            belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
                             strasse: "",
                             hausnummer: "",
                             plz: "",
-                            ort: ""
+                            ort: "",
+                            notes: ""
                           };
-                          setLocationInfo(emptyAddressInfo);
+                          setMarkers([...markers, newMarker]);
+                          setSelectedMarkerIndex(markers.length);
+                          
+                          // Erfolgsmeldung anzeigen
+                          alert(`Marker wurde an den Koordinaten ${searchLat.toFixed(5)}, ${searchLng.toFixed(5)} gesetzt.`);
                         }}
                         size="sm"
                         variant="outline"
