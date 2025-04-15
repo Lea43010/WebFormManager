@@ -703,7 +703,7 @@ export default function GeoMapPage() {
     try {
       // Mapbox API akzeptiert Koordinaten in der Reihenfolge longitude,latitude
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&language=de&types=address`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}&language=de&types=address`
       );
       const data = await response.json();
       
@@ -923,7 +923,7 @@ export default function GeoMapPage() {
     try {
       // MapBox Geocoding API für die Adresssuche verwenden
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&country=de&limit=5&language=de&types=address`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}&country=de&limit=5&language=de&types=address`
       );
       const data = await response.json();
       
@@ -1015,7 +1015,7 @@ export default function GeoMapPage() {
       } else {
         // Sonst über die Mapbox API suchen
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&country=de&limit=1&language=de`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}&country=de&limit=1&language=de`
         );
         const data = await response.json();
         
@@ -1433,28 +1433,28 @@ export default function GeoMapPage() {
                     {selectedMapProvider === "mapbox" && (
                       <TileLayer
                         attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                        url={`https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        url={`https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
                         maxZoom={19}
                       />
                     )}
                     {selectedMapProvider === "mapbox-streets" && (
                       <TileLayer
                         attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
                         maxZoom={19}
                       />
                     )}
                     {selectedMapProvider === "mapbox-satellite" && (
                       <TileLayer
                         attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
                         maxZoom={19}
                       />
                     )}
                     {selectedMapProvider === "mapbox-terrain" && (
                       <TileLayer
                         attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                        url={`https://api.mapbox.com/styles/v1/mapbox/terrain-v2/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        url={`https://api.mapbox.com/styles/v1/mapbox/terrain-v2/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
                         maxZoom={19}
                       />
                     )}
