@@ -637,7 +637,9 @@ export default function GeoMapPage() {
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([48.1351, 11.5820]); // München
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  // States für die Koordinateneingabe statt Adresssuche
+  const [searchLat, setSearchLat] = useState<number | null>(48.13); // München Standardwert
+  const [searchLng, setSearchLng] = useState<number | null>(11.57); // München Standardwert
   const [newLocationName, setNewLocationName] = useState<string>("");
   const [newLocationDialogOpen, setNewLocationDialogOpen] = useState<boolean>(false);
   const [tempLocation, setTempLocation] = useState<[number, number] | null>(null);
@@ -1145,100 +1147,54 @@ export default function GeoMapPage() {
                       </SelectContent>
                     </Select>
                     
-                    {/* Ganz einfaches, isoliertes Adresssuchformular ohne komplexe Interaktionen */}
-                    <div className="search-control flex space-x-1">
-                      <div className="relative">
-                        <Search className="h-4 w-4 absolute left-2 top-2 text-muted-foreground" />
-                        <Input
-                          placeholder="Adresse suchen..."
-                          className="pl-8 h-8 text-xs w-36"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                      </div>
+                    {/* Alternative: Direkte Koordinateneingabe statt Adresssuche */}
+                    <div className="flex space-x-1">
+                      <Input 
+                        type="number"
+                        placeholder="Breite (z.B. 48.13)"
+                        className="h-8 text-xs w-24"
+                        value={searchLat || ""}
+                        onChange={(e) => setSearchLat(parseFloat(e.target.value) || null)}
+                        min="-90"
+                        max="90"
+                        step="0.00001"
+                      />
+                      <Input 
+                        type="number"
+                        placeholder="Länge (z.B. 11.57)"
+                        className="h-8 text-xs w-24"
+                        value={searchLng || ""}
+                        onChange={(e) => setSearchLng(parseFloat(e.target.value) || null)}
+                        min="-180"
+                        max="180"
+                        step="0.00001"
+                      />
                       <Button
                         className="h-8 text-xs px-2"
                         onClick={() => {
-                          // Einfache, direkte, isolierte Implementierung
-                          if (!searchQuery || searchQuery.trim() === "") {
-                            alert("Bitte geben Sie eine Adresse ein");
+                          if (searchLat === null || searchLng === null) {
+                            alert("Bitte geben Sie gültige Koordinaten ein");
                             return;
                           }
                           
-                          const token = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
-                          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${token}&language=de`;
+                          // Breiten- und Längengrad direkt verwenden
+                          setMapCenter([searchLat, searchLng]);
+                          setTempLocation([searchLat, searchLng]);
+                          setNewLocationDialogOpen(true);
                           
-                          console.log("Direkter Suchvorgang gestartet");
-                          console.log("URL:", url);
-                          
-                          fetch(url)
-                            .then(response => {
-                              console.log("Status:", response.status);
-                              if (!response.ok) {
-                                throw new Error(`Fehler: ${response.status}`);
-                              }
-                              return response.json();
-                            })
-                            .then(data => {
-                              console.log("Antwort erhalten:", data);
-                              
-                              if (data.features && data.features.length > 0) {
-                                const firstResult = data.features[0];
-                                const [lng, lat] = firstResult.center;
-                                
-                                console.log(`Gefundene Koordinaten: ${lat}, ${lng}`);
-                                
-                                // Karte zentrieren und Dialog öffnen
-                                setMapCenter([lat, lng]);
-                                setTempLocation([lat, lng]);
-                                setNewLocationDialogOpen(true);
-                                
-                                // Adressinfos extrahieren
-                                let addressInfo = {
-                                  strasse: "",
-                                  hausnummer: "",
-                                  plz: "",
-                                  ort: ""
-                                };
-                                
-                                if (firstResult.place_type.includes('address')) {
-                                  const addressMatch = firstResult.place_name.match(/([^,]+),\s*([^,]+)/);
-                                  if (addressMatch) {
-                                    const streetAddress = addressMatch[1];
-                                    const streetMatch = streetAddress.match(/(.+)\s+(\d+\w*)/);
-                                    if (streetMatch) {
-                                      addressInfo.strasse = streetMatch[1];
-                                      addressInfo.hausnummer = streetMatch[2];
-                                    } else {
-                                      addressInfo.strasse = streetAddress;
-                                    }
-                                  }
-                                }
-                                
-                                data.features.forEach((feature: any) => {
-                                  if (feature.place_type.includes('postcode')) {
-                                    addressInfo.plz = feature.text;
-                                  }
-                                  if (feature.place_type.includes('place')) {
-                                    addressInfo.ort = feature.text;
-                                  }
-                                });
-                                
-                                setLocationInfo(addressInfo);
-                                console.log("Gefundene Adress-Infos:", addressInfo);
-                              } else {
-                                alert("Keine Ergebnisse für diese Adresse gefunden");
-                              }
-                            })
-                            .catch(error => {
-                              console.error("Fehler bei der Suche:", error);
-                              alert("Fehler bei der Adresssuche: " + error.message);
-                            });
+                          // Leere Adressinfo setzen (wird später manuell eingetragen)
+                          const emptyAddressInfo = {
+                            strasse: "",
+                            hausnummer: "",
+                            plz: "",
+                            ort: ""
+                          };
+                          setLocationInfo(emptyAddressInfo);
                         }}
                         size="sm"
                         variant="outline"
                       >
-                        Suchen
+                        Gehe zu
                       </Button>
                     </div>
                   </div>
