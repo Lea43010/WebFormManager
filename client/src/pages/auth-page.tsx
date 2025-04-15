@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +16,29 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { 
+  Loader2, 
+  Info, 
+  X,
+  MapPin,
+  BarChart3,
+  Layers,
+  LayoutGrid,
+  FileText,
+  Users,
+  Building,
+  Building2,
+  Settings 
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { insertUserSchema } from "@shared/schema";
 
 const loginSchema = insertUserSchema.pick({
@@ -278,7 +300,132 @@ export default function AuthPage() {
       <div className="relative flex-1 hidden md:block">
         <div className="absolute inset-0 bg-gradient-to-r from-[#6a961f] to-[#4a8416]">
           <div className="flex flex-col justify-center h-full px-10 text-white">
-            <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" className="rounded-full bg-white/30 hover:bg-white/40 p-2">
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl flex items-center">
+                      <Info className="mr-2 h-6 w-6 text-primary" />
+                      Über die Baustellen App
+                    </DialogTitle>
+                    <DialogDescription className="text-base py-2">
+                      Eine umfassende Lösung für die Verwaltung von Baustellen und Straßenbauprojekten
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="mt-4 space-y-6">
+                    <div className="flex flex-col space-y-4">
+                      {/* Einführung */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Allgemeine Funktionen</h3>
+                        <p className="text-gray-600 mb-2">
+                          Die Baustellen App bietet eine vollständige Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. 
+                          Mit einer benutzerfreundlichen Oberfläche können Unternehmen ihre Projekte, Kunden und Materialien 
+                          effizient organisieren.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Building className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Firmendaten</h4>
+                              <p className="text-sm text-gray-500">Verwaltung von Unternehmens- und Partnerfirmendaten</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Users className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Kundendaten</h4>
+                              <p className="text-sm text-gray-500">Zentrale Kundenverwaltung und Kontaktdatenbank</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Building2 className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Projektverwaltung</h4>
+                              <p className="text-sm text-gray-500">Projektorganisation mit Status- und Fortschrittsverfolgung</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Geo-Informationen */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Geo-Informationen & Standortanalyse</h3>
+                        <p className="text-gray-600 mb-3">
+                          Erweiterte Funktionen zur Standortanalyse, Routenplanung und Materialkostenberechnung für Straßenbauprojekte.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <MapPin className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Standortmarkierung</h4>
+                              <p className="text-sm text-gray-500">Interaktive Karte zur Markierung von Baustellen und geplanten Strecken</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <LayoutGrid className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Straßenplanung</h4>
+                              <p className="text-sm text-gray-500">Verbindung von Standorten mit automatischer Routenerstellung</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Layers className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">RStO 12 Integration</h4>
+                              <p className="text-sm text-gray-500">Auswahl und Visualisierung von Belastungsklassen nach RStO 12</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <BarChart3 className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Materialkostenberechnung</h4>
+                              <p className="text-sm text-gray-500">Automatische Berechnung von Material- und Maschinenkosten</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dokumentation und Analyse */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Dokumentation & Analyse</h3>
+                        <p className="text-gray-600 mb-3">
+                          Umfangreiche Funktionen für die Dokumentverwaltung und Bodenanalyse:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <FileText className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Dokumentenverwaltung</h4>
+                              <p className="text-sm text-gray-500">Zentrale Speicherung und Verwaltung aller projektbezogenen Dokumente</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Settings className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Bodenanalyse</h4>
+                              <p className="text-sm text-gray-500">KI-gestützte Analyse von Bodenbildern zur Bestimmung von Bodenklassen</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 border-t pt-4 flex justify-end">
+                    <DialogClose asChild>
+                      <Button variant="outline">Schließen</Button>
+                    </DialogClose>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <p className="text-xl mb-8">
               Verwalten Sie Ihre Baustellen und Projekte effizient und übersichtlich.
             </p>
@@ -294,6 +441,12 @@ export default function AuthPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Projekte organisieren
+              </li>
+              <li className="flex items-center">
+                <svg className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Geo-Informationen und Straßenplanung
               </li>
             </ul>
             
