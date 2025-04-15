@@ -1118,6 +1118,30 @@ export default function GeoMapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Card className="h-[calc(100vh-120px)] flex flex-col">
+            {/* Belastungsklasse-Auswahl als separater großer Button über der Karte */}
+            <div className="p-2 mx-4 mt-4 bg-primary/10 rounded-md border border-primary/30 flex items-center justify-between">
+              <div className="font-medium flex items-center gap-2">
+                <Asterisk className="h-5 w-5 text-primary" /> 
+                <span>WICHTIG: Belastungsklasse auswählen:</span>
+              </div>
+              <Select 
+                value={selectedBelastungsklasse}
+                onValueChange={setSelectedBelastungsklasse}
+              >
+                <SelectTrigger className="h-9 border-primary/50 bg-white w-72 font-medium">
+                  <SelectValue placeholder="Bitte Belastungsklasse wählen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Keine Klassifizierung</SelectItem>
+                  {belastungsklassen.map((klasse) => (
+                    <SelectItem key={klasse.klasse} value={klasse.klasse}>
+                      {klasse.klasse} - {klasse.beispiel}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <CardHeader className="pb-0">
               <Tabs defaultValue="map" value={activeTab} onValueChange={setActiveTab}>
                 <div className="flex justify-between items-center">
@@ -1131,30 +1155,6 @@ export default function GeoMapPage() {
                   </TabsList>
                   
                   <div className="flex items-center space-x-2">
-                    <div className="relative flex items-center space-x-2">
-                      <div className="absolute -top-6 right-0 text-primary border border-primary/30 rounded-md bg-primary/5 px-2 py-0 text-[10px] animate-pulse">
-                        Bitte auswählen!
-                      </div>
-                      <div className="font-medium text-xs flex items-center mr-1">
-                        <Asterisk className="h-3 w-3 mr-1 text-primary" /> Belastungsklasse:
-                      </div>
-                      <Select 
-                        value={selectedBelastungsklasse}
-                        onValueChange={setSelectedBelastungsklasse}
-                      >
-                        <SelectTrigger className="text-xs h-8 w-44 border-primary/50 bg-primary/5">
-                          <SelectValue placeholder="Klasse wählen..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none" className="text-xs">Keine Klassifizierung</SelectItem>
-                          {belastungsklassen.map((klasse) => (
-                            <SelectItem key={klasse.klasse} value={klasse.klasse} className="text-xs">
-                              {klasse.klasse} - {klasse.beispiel}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                     
                     {/* Alternative: Direkte Koordinateneingabe statt Adresssuche */}
                     <div className="flex space-x-1">
@@ -1442,7 +1442,11 @@ export default function GeoMapPage() {
                     </div>
                     
                     {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
-                      <div className="p-3 border rounded-md bg-muted/30">
+                      <div className="p-4 bg-primary/10 rounded-md border border-primary/30 text-sm">
+                        <div className="font-medium flex items-center gap-2 mb-3 text-primary">
+                          <Calculator className="h-4 w-4" /> Materialkosten-Berechnung
+                        </div>
+                        
                         {(() => {
                           const routeDistance = calculateRouteDistances(markers).total;
                           const selectedMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : null;
