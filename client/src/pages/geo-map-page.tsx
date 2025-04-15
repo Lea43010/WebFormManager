@@ -1623,70 +1623,12 @@ export default function GeoMapPage() {
                       </Select>
                     </div>
                       
-                    {markers.length >= 2 && (
-                      <div className="p-4 bg-primary/5 rounded-md border text-sm">
-                        <div className="font-medium flex items-center gap-2 mb-2">
-                          <Ruler className="h-4 w-4" /> Streckendaten
-                        </div>
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <span className="text-muted-foreground">Gesamtlänge:</span>
-                            <span className="font-medium">{calculateRouteDistances(markers).total.toFixed(2)} km</span>
-                            
-                            <span className="text-muted-foreground">Markierte Punkte:</span>
-                            <span className="font-medium">{markers.length} Standorte</span>
-                            
-                            <span className="text-muted-foreground">Straßentyp:</span>
-                            <span className="font-medium">{selectedRoadPreset || "Nicht ausgewählt"}</span>
-                            
-                            <span className="text-muted-foreground">Straßenbreite:</span>
-                            <span className="font-medium">{roadWidth.toFixed(1)} m</span>
-                            
-                            {selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
-                              <>
-                                <span className="text-muted-foreground">Belastungsklasse:</span>
-                                <span className="font-medium">{selectedBelastungsklasse}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                    {/* Hinweis auf bereits vorhandene Daten in der rechten Spalte */}
+                    <div className="p-4 bg-muted/20 rounded-md border border-muted text-sm">
+                      <div className="text-xs text-muted-foreground text-center my-2">
+                        Die Streckendaten und Materialkostenberechnungen werden in der rechten Spalte unter "Standorte und Streckendaten" angezeigt.
                       </div>
-                    )}
-                    
-                    {/* Link zur Materialkosten-Tabelle, die bereits oben angezeigt wird */}
-                    {markers.length >= 2 && selectedBelastungsklasse && selectedBelastungsklasse !== "none" && (
-                      <div className="p-4 bg-primary/5 rounded-md border text-sm">
-                        <div className="flex items-center gap-2 font-medium mb-2">
-                          <Calculator className="h-4 w-4 text-primary" /> Kostenkalkulation
-                        </div>
-                        <div className="text-xs text-muted-foreground mb-2">
-                          Die detaillierten Materialkosten werden oben im Bereich "Standorte und Streckendaten" angezeigt.
-                        </div>
-                        <div className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-                          <span className="text-sm">Gesamtkostenschätzung:</span>
-                          <span className="font-semibold text-primary">
-                          {(() => {
-                            const routeDistance = calculateRouteDistances(markers).total;
-                            const selectedMarker = selectedMarkerIndex !== null ? markers[selectedMarkerIndex] : null;
-                            const bodenklasse = selectedMarker?.groundAnalysis?.bodenklasse || "default";
-                            
-                            const costEstimation = calculateMaterialCosts(
-                              selectedBelastungsklasse,
-                              routeDistance,
-                              roadWidth, 
-                              bodenklasse
-                            );
-                            
-                            return new Intl.NumberFormat('de-DE', { 
-                              style: 'currency', 
-                              currency: 'EUR',
-                              maximumFractionDigits: 0 
-                            }).format(costEstimation.totalCost);
-                          })()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                    </div>
                     
                     <Button className="w-full">
                       Mit Projekt verknüpfen und Daten speichern
