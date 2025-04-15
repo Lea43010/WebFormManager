@@ -892,18 +892,46 @@ export default function GeoMapPage() {
     }
     
     try {
-      // Die Nominatim API unterstützt keine "autocomplete" Suche direkt, aber wir können nach Straßen filtern
-      // und mehrere Ergebnisse zeigen (countrycodes=de für Deutschland, limit=5 für maximal 5 Vorschläge)
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=de&limit=5&addressdetails=1`);
+      // MapBox Geocoding API für die Adresssuche verwenden
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&country=de&limit=5&language=de&types=address`
+      );
       const data = await response.json();
       
-      // Ergebnisse filtern, die Straßen enthalten
-      const filteredData = data.filter((item: any) => 
-        item.address && (item.address.road || item.address.pedestrian || item.address.street)
-      );
+      // Ergebnisse in das Format umwandeln, das die App erwartet
+      const formattedData = data.features.map((feature: any) => {
+        // Koordinaten aus Feature extrahieren (bei MapBox ist lon/lat umgekehrt)
+        const [lon, lat] = feature.center;
+        
+        // Adresskomponenten aus dem Feature extrahieren
+        const placeName = feature.place_name;
+        
+        // Straße und Hausnummer versuchen zu extrahieren
+        const addressParts = feature.place_name.split(',');
+        const streetWithNumber = addressParts[0].trim();
+        
+        // Versuch, Straße und Hausnummer zu trennen
+        const streetMatch = streetWithNumber.match(/^(.+?)(\s+\d+.*)$/);
+        const street = streetMatch ? streetMatch[1] : streetWithNumber;
+        const houseNumber = streetMatch ? streetMatch[2].trim() : '';
+        
+        // Stadt/Ort
+        const city = addressParts.length > 1 ? addressParts[1].trim() : '';
+        
+        return {
+          display_name: placeName,
+          lat: lat.toString(),
+          lon: lon.toString(),
+          address: {
+            road: street,
+            house_number: houseNumber,
+            city: city
+          }
+        };
+      });
       
-      setAddressSuggestions(filteredData);
-      setShowSuggestions(filteredData.length > 0);
+      setAddressSuggestions(formattedData);
+      setShowSuggestions(formattedData.length > 0);
     } catch (error) {
       console.error("Fehler beim Laden der Adressvorschläge:", error);
       setAddressSuggestions([]);
@@ -956,14 +984,17 @@ export default function GeoMapPage() {
         // Marker setzen
         addMarker(lat, lng);
       } else {
-        // Sonst über die API suchen
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=1`);
+        // Sonst über die Mapbox API suchen
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&country=de&limit=1&language=de`
+        );
         const data = await response.json();
         
-        if (data && data.length > 0) {
-          const result = data[0];
-          const lat = parseFloat(result.lat);
-          const lng = parseFloat(result.lon);
+        if (data && data.features && data.features.length > 0) {
+          const result = data.features[0];
+          // Mapbox gibt Koordinaten in der Reihenfolge [lng, lat] zurück
+          const lng = result.center[0];
+          const lat = result.center[1];
           
           // Karte auf die gefundene Adresse zentrieren
           mapRef.current.setView([lat, lng], 16);
@@ -1331,32 +1362,32 @@ export default function GeoMapPage() {
                           </div>
                           <div className="flex space-x-2">
                             <Button 
-                              variant={selectedMapProvider === "osm" ? "default" : "outline"}
+                              variant={selectedMapProvider === "mapbox" ? "default" : "outline"}
                               className="h-7 px-2 py-1 text-xs"
-                              onClick={() => setSelectedMapProvider("osm")}
+                              onClick={() => setSelectedMapProvider("mapbox")}
                             >
-                              OSM
+                              MapBox
                             </Button>
                             <Button 
-                              variant={selectedMapProvider === "satellit" ? "default" : "outline"}
+                              variant={selectedMapProvider === "mapbox-streets" ? "default" : "outline"}
                               className="h-7 px-2 py-1 text-xs"
-                              onClick={() => setSelectedMapProvider("satellit")}
+                              onClick={() => setSelectedMapProvider("mapbox-streets")}
+                            >
+                              Straßen
+                            </Button>
+                            <Button 
+                              variant={selectedMapProvider === "mapbox-satellite" ? "default" : "outline"}
+                              className="h-7 px-2 py-1 text-xs"
+                              onClick={() => setSelectedMapProvider("mapbox-satellite")}
                             >
                               Satellit
                             </Button>
                             <Button 
-                              variant={selectedMapProvider === "topo" ? "default" : "outline"}
+                              variant={selectedMapProvider === "mapbox-terrain" ? "default" : "outline"}
                               className="h-7 px-2 py-1 text-xs"
-                              onClick={() => setSelectedMapProvider("topo")}
+                              onClick={() => setSelectedMapProvider("mapbox-terrain")}
                             >
-                              Topo
-                            </Button>
-                            <Button 
-                              variant={selectedMapProvider === "cyclemap" ? "default" : "outline"}
-                              className="h-7 px-2 py-1 text-xs"
-                              onClick={() => setSelectedMapProvider("cyclemap")}
-                            >
-                              Cycle
+                              Gelände
                             </Button>
                           </div>
                         </div>
@@ -1370,29 +1401,31 @@ export default function GeoMapPage() {
                     ref={mapRef}
                   >
                     {/* Karten-Tiles basierend auf ausgewähltem Provider */}
-                    {selectedMapProvider === "osm" && (
+                    {selectedMapProvider === "mapbox" && (
                       <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                        url={`https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        maxZoom={19}
                       />
                     )}
-                    {selectedMapProvider === "satellit" && (
+                    {selectedMapProvider === "mapbox-streets" && (
                       <TileLayer
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        attribution='&copy; <a href="https://www.esri.com">Esri</a>'
+                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        maxZoom={19}
                       />
                     )}
-                    {selectedMapProvider === "topo" && (
+                    {selectedMapProvider === "mapbox-satellite" && (
                       <TileLayer
-                        url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors'
-                        maxZoom={17}
+                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
+                        maxZoom={19}
                       />
                     )}
-                    {selectedMapProvider === "cyclemap" && (
+                    {selectedMapProvider === "mapbox-terrain" && (
                       <TileLayer
-                        url="https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                        url={`https://api.mapbox.com/styles/v1/mapbox/terrain-v2/tiles/{z}/{x}/{y}?access_token=${process.env.MAPBOX_ACCESS_TOKEN}`}
                         maxZoom={19}
                       />
                     )}
