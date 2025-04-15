@@ -1131,7 +1131,7 @@ export default function GeoMapPage() {
                 <SelectTrigger className="h-9 border-primary/50 bg-white w-72 font-medium">
                   <SelectValue placeholder="Bitte Belastungsklasse wählen..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[9999]">
                   <SelectItem value="none">Keine Klassifizierung</SelectItem>
                   {belastungsklassen.map((klasse) => (
                     <SelectItem key={klasse.klasse} value={klasse.klasse}>
@@ -1413,7 +1413,7 @@ export default function GeoMapPage() {
                           <SelectTrigger id="road-type" className="h-8 text-xs">
                             <SelectValue placeholder="Straßentyp wählen" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             {Object.keys(roadWidthPresets).map((preset) => (
                               <SelectItem key={preset} value={preset} className="text-xs">
                                 {preset} ({roadWidthPresets[preset]} m)
@@ -1615,7 +1615,7 @@ export default function GeoMapPage() {
                         <SelectTrigger id="projekt-select" className="w-full">
                           <SelectValue placeholder="Projekt wählen" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[9999]">
                           <SelectItem value="Baustelle Oberbrunn">Baustelle Oberbrunn</SelectItem>
                           <SelectItem value="Straßenbau Friedrichstraße">Straßenbau Friedrichstraße</SelectItem>
                           <SelectItem value="Sanierung B12">Sanierung B12</SelectItem>
