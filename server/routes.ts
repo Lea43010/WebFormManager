@@ -9,6 +9,7 @@ import { setupDownloadRoutes } from "./download";
 import { setupImageAnalysisRoutes } from "./services/image-analysis-routes";
 import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./services/surface-analysis-api";
+import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
