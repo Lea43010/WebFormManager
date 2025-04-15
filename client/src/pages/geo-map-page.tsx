@@ -605,7 +605,12 @@ function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) 
 }
 
 // Hilfskomponente für Map-Events und useMap-Hook
-function MapEvents({ onMoveEnd }: { onMoveEnd: (map: L.Map) => void }) {
+// Map Events Handler Komponente
+interface MapEventsProps {
+  onMoveEnd: (map: L.Map) => void;
+}
+
+function MapEvents({ onMoveEnd }: MapEventsProps) {
   const map = useMap();
   
   useEffect(() => {
