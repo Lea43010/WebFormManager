@@ -133,41 +133,6 @@ export default function AttachmentPage() {
               <Camera className="mr-2 h-4 w-4" />
               Kamera
             </Button>
-            
-            <Button
-              onClick={() => {
-                const activeProjectId = Object.keys(attachmentsByProject)[0]; 
-                if (activeProjectId) {
-                  apiRequest('POST', `/api/file-organization/suggestions/generate`, { 
-                    projectId: parseInt(activeProjectId) 
-                  })
-                  .then(() => {
-                    toast({
-                      title: "Vorschläge werden generiert",
-                      description: "Die Vorschläge werden jetzt erstellt und in Kürze angezeigt.",
-                    });
-                    queryClient.invalidateQueries({ queryKey: ['/api/file-organization/suggestions'] });
-                  })
-                  .catch(error => {
-                    toast({
-                      title: "Fehler",
-                      description: "Fehler beim Generieren der Vorschläge: " + error.message,
-                      variant: "destructive",
-                    });
-                  });
-                } else {
-                  toast({
-                    title: "Keine Projekte gefunden",
-                    description: "Es wurden keine Projekte mit Anhängen gefunden.",
-                    variant: "destructive",
-                  });
-                }
-              }}
-              variant="outline"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Vorschläge generieren
-            </Button>
           </div>
         </div>
 
