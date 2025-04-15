@@ -369,13 +369,9 @@ interface MapClickerProps {
 function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) {
   const map = useMapEvents({
     click: (e) => {
-      // Nur einen Marker hinzufügen, wenn der Benutzer auf die Karte klickt
-      // (nicht auf einen bestehenden Marker oder ein Popup)
-      if (e.originalEvent.target instanceof HTMLElement && 
-          (e.originalEvent.target.className === 'leaflet-container' || 
-           e.originalEvent.target.closest('.leaflet-container'))) {
-        onMarkerAdd(e.latlng.lat, e.latlng.lng);
-      }
+      // Vereinfacht: Alle Klicks auf die Karte erlauben
+      console.log("Kartenklick erkannt an Position:", e.latlng);
+      onMarkerAdd(e.latlng.lat, e.latlng.lng);
     }
   });
   
@@ -405,6 +401,11 @@ function MapEvents({ onMoveEnd }: MapEventsProps) {
 export default function GeoMapPage() {
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.1657, 10.4515]); // Deutschland
+  
+  // State-Update-Log für Debugging
+  useEffect(() => {
+    console.log("Marker wurden aktualisiert:", markers);
+  }, [markers]);
   const [tempLocation, setTempLocation] = useState<[number, number] | null>(null);
   const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number>(-1);
   const [activeTab, setActiveTab] = useState<string>("map");
@@ -457,6 +458,11 @@ export default function GeoMapPage() {
   }, [selectedBelastungsklasse]);
   
   const addMarker = useCallback((lat: number, lng: number) => {
+    console.log("addMarker aufgerufen mit:", lat, lng);
+    
+    // Zwei Möglichkeiten: entweder Dialog öffnen oder direkt einen Marker setzen
+    // Option 1: Dialog öffnen (ursprüngliche Funktionalität)
+    /*
     setTempLocation([lat, lng]);
     setNewLocationDialogOpen(true);
     
@@ -467,7 +473,25 @@ export default function GeoMapPage() {
       plz: "",
       ort: ""
     });
-  }, []);
+    */
+    
+    // Option 2: Direkt einen Marker setzen (wie beim "Gehe zu" Button)
+    const newMarkerPosition: [number, number] = [lat, lng];
+    const newMarker: MarkerInfo = {
+      position: newMarkerPosition,
+      name: `Standort ${markers.length + 1}`,
+      belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+      strasse: "",
+      hausnummer: "",
+      plz: "",
+      ort: "",
+      notes: ""
+    };
+    
+    console.log("Füge neuen Marker hinzu:", newMarker);
+    setMarkers([...markers, newMarker]);
+    setSelectedMarkerIndex(markers.length);
+  }, [markers, selectedBelastungsklasse]);
   
   const saveLocation = () => {
     if (!tempLocation) return;
@@ -884,12 +908,15 @@ export default function GeoMapPage() {
                             return;
                           }
                           
+                          console.log("Gehe zu Button geklickt, Koordinaten:", searchLat, searchLng);
+                          
                           // Breiten- und Längengrad direkt verwenden
                           setMapCenter([searchLat, searchLng]);
                           
                           // Automatisch einen Marker an dieser Position hinzufügen
+                          const newMarkerPosition: [number, number] = [searchLat, searchLng];
                           const newMarker: MarkerInfo = {
-                            position: [searchLat, searchLng],
+                            position: newMarkerPosition,
                             name: `Standort ${markers.length + 1}`,
                             belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
                             strasse: "",
@@ -898,11 +925,17 @@ export default function GeoMapPage() {
                             ort: "",
                             notes: ""
                           };
-                          setMarkers([...markers, newMarker]);
-                          setSelectedMarkerIndex(markers.length);
                           
-                          // Erfolgsmeldung anzeigen
-                          alert(`Marker wurde an den Koordinaten ${searchLat.toFixed(5)}, ${searchLng.toFixed(5)} gesetzt.`);
+                          // Verzögerung für Kartenaktualisierung
+                          setTimeout(() => {
+                            console.log("Setze Marker an Position:", newMarkerPosition);
+                            const newMarkers = [...markers, newMarker];
+                            setMarkers(newMarkers);
+                            setSelectedMarkerIndex(newMarkers.length - 1);
+                            
+                            // Erfolgsmeldung anzeigen
+                            alert(`Marker wurde an den Koordinaten ${searchLat.toFixed(5)}, ${searchLng.toFixed(5)} gesetzt.`);
+                          }, 100);
                         }}
                         size="sm"
                         variant="outline"
@@ -954,25 +987,29 @@ export default function GeoMapPage() {
                   </LayersControl>
                   
                   {/* Marker anzeigen */}
-                  {markers.map((marker, idx) => (
-                    <Marker 
-                      key={`marker-${idx}`}
-                      position={marker.position}
-                      icon={createCustomIcon(marker.belastungsklasse)}
-                      eventHandlers={{
-                        click: () => {
-                          setSelectedMarkerIndex(idx);
-                        }
-                      }}
-                    >
-                      <LeafletTooltip direction="top" offset={[0, -20]}>
-                        {marker.name || `Standort ${idx + 1}`}
-                      </LeafletTooltip>
-                      <Popup maxWidth={300}>
-                        {renderMarkerPopup(marker, idx)}
-                      </Popup>
-                    </Marker>
-                  ))}
+                  {markers.map((marker, idx) => {
+                    console.log(`Rendering marker ${idx} at position:`, marker.position);
+                    return (
+                      <Marker 
+                        key={`marker-${idx}-${marker.position[0]}-${marker.position[1]}`}
+                        position={marker.position}
+                        icon={createCustomIcon(marker.belastungsklasse)}
+                        eventHandlers={{
+                          click: () => {
+                            console.log(`Marker ${idx} clicked`);
+                            setSelectedMarkerIndex(idx);
+                          }
+                        }}
+                      >
+                        <LeafletTooltip direction="top" offset={[0, -20]}>
+                          {marker.name || `Standort ${idx + 1}`}
+                        </LeafletTooltip>
+                        <Popup maxWidth={300}>
+                          {renderMarkerPopup(marker, idx)}
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
                   
                   {/* Route anzeigen */}
                   {markers.length >= 2 && (
