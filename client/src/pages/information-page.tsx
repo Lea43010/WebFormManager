@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -548,7 +548,7 @@ export default function InformationPage() {
             <div className="mt-6">
               <Button asChild className="gap-2">
                 <Link to="/geo-map">
-                  <MapIcon className="h-4 w-4" />
+                  <Map className="h-4 w-4" />
                   Zur Geo-Informationsseite
                 </Link>
               </Button>
