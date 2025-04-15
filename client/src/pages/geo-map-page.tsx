@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { 
   MapContainer, 
   TileLayer, 

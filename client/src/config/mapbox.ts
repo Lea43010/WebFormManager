@@ -1,0 +1,2 @@
+// Das Token von MapBox für die Kartendarstellung exportieren
+export const MAPBOX_TOKEN = "pk.eyJ1Ijo..."; // Hier bitte das vollständige Token einsetzen - wird aktuell aus Sicherheitsgründen nicht angezeigt
