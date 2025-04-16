@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -1211,11 +1211,12 @@ export default function GeoMapPage() {
               )}
             
               <div className="h-full w-full">
-                <MapContainer 
-                  center={mapCenter} 
-                  zoom={13} 
-                  style={{ height: '100%', width: '100%' }}
-                >
+                <div ref={mapRef} style={{ height: '100%', width: '100%' }}>
+                  <MapContainer 
+                    center={mapCenter} 
+                    zoom={13} 
+                    style={{ height: '100%', width: '100%' }}
+                  >
                   {/* Map Event Handler Component */}
                   <MapEvents onMoveEnd={(map) => {
                     const center = map.getCenter();
@@ -1293,6 +1294,7 @@ export default function GeoMapPage() {
                   />
                 </MapContainer>
               </div>
+            </div>
             </CardContent>
           </Card>
         </div>
@@ -1425,17 +1427,10 @@ export default function GeoMapPage() {
                                   size="sm"
                                   className="h-7 px-2 gap-1"
                                   onClick={exportToPdf}
-                                  disabled={isExporting || markers.length < 1 || selectedBelastungsklasse === "none"}
+                                  disabled={isExporting || markers.length < 1}
                                 >
-                                  {isExporting ? (
-                                    <>
-                                      <Loader2 className="h-3 w-3 animate-spin" /> Exportiere...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Download className="h-3 w-3" /> Als PDF
-                                    </>
-                                  )}
+                                  <Download className="h-3 w-3 mr-1" /> 
+                                  Als PDF
                                 </Button>
                               </div>
                               <div className="space-y-2">
