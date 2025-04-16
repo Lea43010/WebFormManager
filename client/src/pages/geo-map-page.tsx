@@ -510,8 +510,8 @@ export default function GeoMapPage() {
   
   // PDF Export Funktion
   const exportToPdf = async () => {
-    if (!mapRef.current || !materialCostsRef.current || !routeDataRef.current || markers.length < 1) {
-      alert("Bitte fügen Sie zuerst Marker hinzu und berechnen Sie die Materialkosten");
+    if (!mapRef.current || markers.length < 1) {
+      alert("Bitte fügen Sie zuerst Marker hinzu");
       return;
     }
     
@@ -1344,7 +1344,7 @@ export default function GeoMapPage() {
                       </h3>
                       
                       {/* Streckenberechnung */}
-                      <div className="space-y-1 mb-3">
+                      <div className="space-y-1 mb-3" ref={routeDataRef}>
                         {(() => {
                           const { total, segments } = calculateRouteDistances(markers);
                           return (
@@ -1420,7 +1420,7 @@ export default function GeoMapPage() {
                           const costInfo = calculateMaterialCosts(distance, roadWidth, selectedBelastungsklasse);
                           
                           return (
-                            <div className="bg-muted/30 rounded-md p-2 text-xs">
+                            <div className="bg-muted/30 rounded-md p-2 text-xs" ref={materialCostsRef}>
                               <div className="flex justify-between items-center mb-1">
                                 <h4 className="font-medium">Materialkosten (Schätzung)</h4>
                                 <Button
