@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, FilePdf } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, FileDown, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -502,6 +502,10 @@ export default function GeoMapPage() {
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.1657, 10.4515]); // Deutschland
   const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const materialCostsRef = useRef<HTMLDivElement>(null);
+  const routeDataRef = useRef<HTMLDivElement>(null);
   
   // State-Update-Log für Debugging
   useEffect(() => {
