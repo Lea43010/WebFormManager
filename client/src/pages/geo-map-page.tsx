@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, FilePdf } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,6 +24,8 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Hack um Leaflet-Marker-Icons in Vite zu fixen
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
