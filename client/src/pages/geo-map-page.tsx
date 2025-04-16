@@ -474,9 +474,32 @@ function MapEvents({ onMoveEnd }: MapEventsProps) {
   return null;
 }
 
+// Komponente zur Kontrolle der Karte und zum Zentrieren auf einen bestimmten Marker
+interface MapControlProps {
+  position: [number, number] | null;
+  zoomLevel?: number;
+}
+
+function MapControl({ position, zoomLevel = 15 }: MapControlProps) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (position) {
+      console.log("Zentriere Karte auf Position:", position);
+      map.flyTo(position, zoomLevel, {
+        animate: true,
+        duration: 1.5 // Animation in Sekunden
+      });
+    }
+  }, [map, position, zoomLevel]);
+  
+  return null;
+}
+
 export default function GeoMapPage() {
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.1657, 10.4515]); // Deutschland
+  const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
   
   // State-Update-Log für Debugging
   useEffect(() => {
@@ -567,6 +590,9 @@ export default function GeoMapPage() {
     console.log("Füge neuen Marker hinzu:", newMarker);
     setMarkers([...markers, newMarker]);
     setSelectedMarkerIndex(markers.length);
+    
+    // Setze den letzten hinzugefügten Marker für das Auto-Panning
+    setLastAddedMarkerPosition(newMarkerPosition);
   }, [markers, selectedBelastungsklasse]);
   
   const saveLocation = () => {
@@ -586,6 +612,9 @@ export default function GeoMapPage() {
     setMarkers([...markers, newMarker]);
     setSelectedMarkerIndex(markers.length);
     setNewLocationDialogOpen(false);
+    
+    // Setze den letzten hinzugefügten Marker für das Auto-Panning
+    setLastAddedMarkerPosition(tempLocation);
     
     // Reset the form
     setLocationName("");
@@ -947,8 +976,9 @@ export default function GeoMapPage() {
                                   setMapCenter([lat, lng]);
                                   
                                   // Automatisch einen Marker an dieser Position hinzufügen
+                                  const newMarkerPosition: [number, number] = [lat, lng];
                                   const newMarker: MarkerInfo = {
-                                    position: [lat, lng],
+                                    position: newMarkerPosition,
                                     name: `Standort ${markers.length + 1}`,
                                     belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
                                     strasse: "",
@@ -959,6 +989,9 @@ export default function GeoMapPage() {
                                   };
                                   setMarkers([...markers, newMarker]);
                                   setSelectedMarkerIndex(markers.length);
+                                  
+                                  // Setze den letzten hinzugefügten Marker für das Auto-Panning
+                                  setLastAddedMarkerPosition(newMarkerPosition);
                                   
                                   // Erfolgsmeldung anzeigen
                                   alert(`Marker wurde an den Koordinaten ${lat.toFixed(5)}, ${lng.toFixed(5)} gesetzt.`);
@@ -1009,6 +1042,9 @@ export default function GeoMapPage() {
                             setMarkers(newMarkers);
                             setSelectedMarkerIndex(newMarkers.length - 1);
                             
+                            // Setze den letzten hinzugefügten Marker für das Auto-Panning
+                            setLastAddedMarkerPosition(newMarkerPosition);
+                            
                             // Erfolgsmeldung anzeigen
                             alert(`Marker wurde an den Koordinaten ${searchLat.toFixed(5)}, ${searchLng.toFixed(5)} gesetzt.`);
                           }, 100);
@@ -1046,6 +1082,9 @@ export default function GeoMapPage() {
                     const center = map.getCenter();
                     setMapCenter([center.lat, center.lng]);
                   }} />
+                  
+                  {/* Auto-Panning zu neuen Markern */}
+                  <MapControl position={lastAddedMarkerPosition} zoomLevel={15} />
                   <LayersControl position="topright">
                     <LayersControl.BaseLayer checked={activeTab === "map"} name="OpenStreetMap">
                       <TileLayer
