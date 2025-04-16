@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, FileDown, Download } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -506,6 +506,139 @@ export default function GeoMapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const materialCostsRef = useRef<HTMLDivElement>(null);
   const routeDataRef = useRef<HTMLDivElement>(null);
+  const exportMapRef = useRef<HTMLDivElement>(null);
+  
+  // PDF Export Funktion
+  const exportToPdf = async () => {
+    if (!mapRef.current || !materialCostsRef.current || !routeDataRef.current || markers.length < 1) {
+      alert("Bitte fügen Sie zuerst Marker hinzu und berechnen Sie die Materialkosten");
+      return;
+    }
+    
+    try {
+      setIsExporting(true);
+      
+      // Timestamp für Dateinamen
+      const date = new Date();
+      const dateStr = date.toISOString().split('T')[0];
+      const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-');
+      const fileName = `Baustellen-Karte_${dateStr}_${timeStr}.pdf`;
+      
+      // PDF vorbereiten (A4 Querformat)
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Titel
+      pdf.setFontSize(18);
+      pdf.text('Baustellen-Projektdokumentation', pdfWidth / 2, 15, { align: 'center' });
+      pdf.setFontSize(12);
+      pdf.text(`Erstellt am: ${date.toLocaleString('de-DE')}`, pdfWidth / 2, 22, { align: 'center' });
+      
+      // Karte (wenn mapRef.current gesetzt ist)
+      if (mapRef.current) {
+        const mapCanvas = await html2canvas(mapRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false
+        });
+        
+        const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.8);
+        const mapAspectRatio = mapCanvas.width / mapCanvas.height;
+        
+        // Map positionieren (linke Hälfte)
+        const mapWidth = pdfWidth * 0.55;
+        const mapHeight = mapWidth / mapAspectRatio;
+        pdf.addImage(mapImgData, 'JPEG', 10, 30, mapWidth, mapHeight);
+      }
+      
+      // Standorte/Marker in Tabelle (rechts oben)
+      pdf.setFontSize(12);
+      pdf.text('Standorte', pdfWidth * 0.7, 35, { align: 'center' });
+      pdf.setFontSize(8);
+      
+      let yPos = 40;
+      markers.forEach((marker, index) => {
+        pdf.text(`${index + 1}. ${marker.name || `Standort ${index + 1}`}`, pdfWidth * 0.6, yPos);
+        yPos += 5;
+        if (marker.strasse) {
+          pdf.text(`   ${marker.strasse} ${marker.hausnummer}, ${marker.plz} ${marker.ort}`, pdfWidth * 0.6, yPos);
+          yPos += 5;
+        }
+        if (marker.belastungsklasse) {
+          pdf.text(`   Belastungsklasse: ${marker.belastungsklasse}`, pdfWidth * 0.6, yPos);
+          yPos += 5;
+        }
+        yPos += 2;
+      });
+      
+      // Streckendaten (rechts mitte)
+      const routeDistances = calculateRouteDistances(markers);
+      const totalKm = routeDistances.total;
+      
+      yPos += 5;
+      pdf.setFontSize(12);
+      pdf.text('Streckendaten', pdfWidth * 0.7, yPos, { align: 'center' });
+      pdf.setFontSize(8);
+      
+      yPos += 7;
+      pdf.text(`Gesamtstrecke: ${totalKm.toFixed(2)} km`, pdfWidth * 0.6, yPos);
+      
+      // Wenn eine Belastungsklasse und Straßenbreite ausgewählt ist, zeige Materialkosten
+      if (selectedBelastungsklasse !== "none" && roadWidth > 0) {
+        // Materialkosten (rechts unten)
+        const costs = calculateMaterialCosts(totalKm, roadWidth, selectedBelastungsklasse);
+        
+        yPos += 10;
+        pdf.setFontSize(12);
+        pdf.text('Materialkosten', pdfWidth * 0.7, yPos, { align: 'center' });
+        pdf.setFontSize(8);
+        
+        yPos += 7;
+        pdf.text(`Belastungsklasse: ${selectedBelastungsklasse}`, pdfWidth * 0.6, yPos);
+        yPos += 5;
+        pdf.text(`Straßenbreite: ${roadWidth.toFixed(1)} m`, pdfWidth * 0.6, yPos);
+        yPos += 5;
+        pdf.text(`Gesamtfläche: ${(totalKm * 1000 * roadWidth).toFixed(0)} m²`, pdfWidth * 0.6, yPos);
+        
+        yPos += 7;
+        pdf.text('Schicht', pdfWidth * 0.6, yPos);
+        pdf.text('Dicke (cm)', pdfWidth * 0.7, yPos);
+        pdf.text('Kosten (€)', pdfWidth * 0.8, yPos);
+        
+        costs.materials.forEach((material, i) => {
+          yPos += 5;
+          pdf.text(material.name, pdfWidth * 0.6, yPos);
+          pdf.text(material.thickness.toString(), pdfWidth * 0.7, yPos);
+          pdf.text(material.totalCost.toLocaleString('de-DE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }), pdfWidth * 0.8, yPos);
+        });
+        
+        yPos += 7;
+        pdf.setFontSize(10);
+        pdf.text('Gesamtkosten:', pdfWidth * 0.6, yPos);
+        pdf.text(costs.total.toLocaleString('de-DE', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) + ' €', pdfWidth * 0.8, yPos);
+      }
+      
+      // Fußzeile
+      pdf.setFontSize(8);
+      pdf.text('Automatisch erstellt mit der Baustellen App', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+      
+      // PDF speichern
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Fehler beim PDF-Export:', error);
+      alert('Beim Exportieren ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   // State-Update-Log für Debugging
   useEffect(() => {
@@ -1286,7 +1419,25 @@ export default function GeoMapPage() {
                           
                           return (
                             <div className="bg-muted/30 rounded-md p-2 text-xs">
-                              <h4 className="font-medium mb-1">Materialkosten (Schätzung)</h4>
+                              <div className="flex justify-between items-center mb-1">
+                                <h4 className="font-medium">Materialkosten (Schätzung)</h4>
+                                <Button
+                                  size="sm"
+                                  className="h-7 px-2 gap-1"
+                                  onClick={exportToPdf}
+                                  disabled={isExporting || markers.length < 1 || selectedBelastungsklasse === "none"}
+                                >
+                                  {isExporting ? (
+                                    <>
+                                      <Loader2 className="h-3 w-3 animate-spin" /> Exportiere...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download className="h-3 w-3" /> Als PDF
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
                               <div className="space-y-2">
                                 <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground">
                                   <div className="col-span-5">Material</div>
