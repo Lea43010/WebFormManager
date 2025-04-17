@@ -5,15 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera, BarChart4, Sparkles } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, ArrowLeft, Plus, Upload, Camera, BarChart4, Sparkles, FolderInput } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Attachment } from "@shared/schema";
+import { Attachment, Project } from "@shared/schema";
 import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
 import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
 import { FileOrganizationSuggestions } from "@/components/attachment/file-organization-suggestions";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
 
 export default function AttachmentPage() {
   const { toast } = useToast();
@@ -22,6 +30,13 @@ export default function AttachmentPage() {
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadMode, setUploadMode] = useState<"regular" | "camera">("regular");
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+
+  // Projekte laden
+  const { data: projects, isLoading: isLoadingProjects } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+    staleTime: 60 * 1000, // 60 Sekunden
+  });
 
   // Anhänge laden
   const { data: attachments, isLoading, error, refetch } = useQuery<Attachment[]>({
@@ -99,6 +114,12 @@ export default function AttachmentPage() {
     });
   };
 
+  // Finde Projektname basierend auf der Projekt-ID
+  const getProjectName = (projectId: number) => {
+    const project = projects?.find(p => p.id === projectId);
+    return project ? project.projectName : `Projekt ${projectId}`;
+  };
+
   return (
     <DashboardLayout
       title={
@@ -106,8 +127,6 @@ export default function AttachmentPage() {
           <span>Dokumente</span>
         </div>
       }
-      tabs={["Alle Anhänge", "Nach Projekt"]}
-      activeTab="Alle Anhänge"
     >
       <div className="container p-4">
         <div className="flex flex-wrap justify-between items-center mb-6">
@@ -140,6 +159,7 @@ export default function AttachmentPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="all">Alle Anhänge</TabsTrigger>
             <TabsTrigger value="byProject">Nach Projekt</TabsTrigger>
+            <TabsTrigger value="organization">Smart Organisation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
@@ -164,7 +184,7 @@ export default function AttachmentPage() {
                     <CardHeader className="p-4 bg-gray-50">
                       <CardTitle className="text-sm font-medium truncate">{attachment.fileName}</CardTitle>
                       <CardDescription className="text-xs">
-                        Projekt-ID: {attachment.projectId}
+                        {attachment.projectId ? getProjectName(attachment.projectId) : "Kein Projekt"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-4 flex items-center justify-center">
@@ -173,6 +193,9 @@ export default function AttachmentPage() {
                         <p className="mt-2 text-sm text-gray-500">
                           {(attachment.fileSize / 1024).toFixed(2)} KB
                         </p>
+                        {attachment.fileCategory && attachment.fileCategory !== "Andere" && (
+                          <Badge variant="secondary" className="mt-2">{attachment.fileCategory}</Badge>
+                        )}
                       </div>
                     </CardContent>
                     <CardFooter className="p-4 bg-gray-50 flex justify-between">
@@ -228,7 +251,9 @@ export default function AttachmentPage() {
                 {Object.entries(attachmentsByProject).map(([projectId, projectAttachments]) => (
                   <div key={projectId} className="border rounded-lg overflow-hidden">
                     <div className="bg-gray-100 p-4 border-b">
-                      <h3 className="text-lg font-medium">Projekt {projectId}</h3>
+                      <h3 className="text-lg font-medium">
+                        {parseInt(projectId) === 0 ? "Ohne Projektzuweisung" : getProjectName(parseInt(projectId))}
+                      </h3>
                       <p className="text-sm text-gray-500">{projectAttachments.length} Anhänge</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
@@ -243,6 +268,9 @@ export default function AttachmentPage() {
                               <p className="mt-2 text-xs text-gray-500">
                                 {(attachment.fileSize / 1024).toFixed(2)} KB
                               </p>
+                              {attachment.fileCategory && attachment.fileCategory !== "Andere" && (
+                                <Badge variant="secondary" className="mt-2">{attachment.fileCategory}</Badge>
+                              )}
                             </div>
                           </CardContent>
                           <CardFooter className="p-3 bg-gray-50">
@@ -280,6 +308,71 @@ export default function AttachmentPage() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="organization">
+            <div className="mb-8">
+              <div className="mb-6 rounded-lg border p-4 bg-muted/20">
+                <h2 className="text-xl font-semibold mb-2">Intelligente Dateiorganisation</h2>
+                <p className="text-muted-foreground mb-6">
+                  Mit unserer KI-gestützten Dateiorganisation können Sie Ihre Projektdateien automatisch nach Kategorien 
+                  und Eigenschaften sortieren lassen. Wählen Sie ein Projekt und erhalten Sie Vorschläge, wie 
+                  Ihre Dateien am besten organisiert werden können.
+                </p>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-medium mb-2 block">Projekt auswählen</label>
+                    <Select
+                      value={selectedProjectId?.toString() || ""}
+                      onValueChange={(value) => setSelectedProjectId(parseInt(value))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Projekt auswählen..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingProjects ? (
+                          <div className="flex items-center justify-center p-2">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            <span>Lade Projekte...</span>
+                          </div>
+                        ) : (
+                          projects?.map((project) => (
+                            <SelectItem key={project.id} value={project.id.toString()}>
+                              {project.projectName || `Projekt ${project.id}`}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <div className="space-y-2 w-full">
+                      <p className="text-sm text-muted-foreground">
+                        Die KI analysiert automatisch Ihre Dateien und erkennt Muster und Zusammenhänge, um optimale Kategorien vorzuschlagen.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm">KI-gesteuerte Analyse</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {selectedProjectId ? (
+                <FileOrganizationSuggestions projectId={selectedProjectId} />
+              ) : (
+                <div className="text-center p-12 border border-dashed rounded-lg bg-muted/10">
+                  <FolderInput className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Bitte wählen Sie ein Projekt</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Um Vorschläge zur Dateiorganisation zu erhalten, wählen Sie bitte zuerst ein Projekt aus der Liste aus.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Delete Dialog */}
@@ -295,7 +388,8 @@ export default function AttachmentPage() {
               <div className="my-4">
                 <p className="font-medium">{selectedAttachment.fileName}</p>
                 <p className="text-sm text-gray-500">
-                  Projekt: {selectedAttachment.projectId} • Größe: {(selectedAttachment.fileSize / 1024).toFixed(2)} KB
+                  Projekt: {selectedAttachment.projectId ? getProjectName(selectedAttachment.projectId) : "Kein Projekt"} • 
+                  Größe: {(selectedAttachment.fileSize / 1024).toFixed(2)} KB
                 </p>
               </div>
             )}
