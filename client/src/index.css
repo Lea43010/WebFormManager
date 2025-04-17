@@ -8,18 +8,35 @@
 
 .modern-form-input {
   @apply border border-gray-300 rounded-md py-3 px-4 w-full bg-white;
+  /* Mobile-Optimierungen */
+  @apply min-h-[48px] text-base sm:text-sm;
+  @apply touch-manipulation; /* Verbesserte Touch-Erkennung */
 }
 
 .modern-form-label {
   @apply block text-sm font-medium text-gray-500 mb-1;
+  /* Mobile-Optimierungen */
+  @apply text-base sm:text-sm;
 }
 
 .form-heading {
   @apply flex items-center text-xl font-medium mb-4;
+  /* Mobile-Optimierungen */
+  @apply text-lg sm:text-xl;
 }
 
 .form-section {
-  @apply mb-6;
+  @apply mb-8 sm:mb-6 px-4 sm:px-0;
+}
+
+/* Mobile Optimierte Select-Elemente */
+.mobile-select [data-radix-select-trigger] {
+  @apply min-h-[48px] text-base sm:text-sm;
+}
+
+/* Touch-optimierte Buttons für mobile Geräte */
+.mobile-touch-button {
+  @apply min-h-[48px] py-3 text-base;
 }
 
 @layer base {

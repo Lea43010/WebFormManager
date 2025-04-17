@@ -95,7 +95,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-4xl mx-auto">
-        <div className="bg-white rounded-md shadow-sm p-0 md:p-6">
+        <div className="bg-white rounded-md shadow-sm p-4 md:p-6">
           
           {/* Unternehmensinformation */}
           <div className="form-section">
@@ -415,11 +415,11 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
           </div>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 px-4 sm:px-0">
           <Button 
             type="submit" 
             disabled={isLoading} 
-            className="w-full md:w-64 py-6 text-lg"
+            className="w-full md:w-64 py-6 text-lg mobile-touch-button"
             size="lg"
           >
             {isLoading ? (
