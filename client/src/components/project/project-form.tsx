@@ -162,7 +162,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-        <div className="bg-white p-6 rounded-md">
+        <div className="bg-white p-4 md:p-6 rounded-md">
           <h2 className="text-xl font-medium mb-6">{project ? "Projekt bearbeiten" : "Neues Projekt"}</h2>
           <p className="text-sm text-gray-500 mb-6">Geben Sie die Details des Projekts ein.</p>
           
@@ -695,11 +695,11 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
           </div>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 px-4 sm:px-0">
           <Button 
             type="submit" 
             disabled={isLoading} 
-            className="w-full md:w-64 py-6 text-lg"
+            className="w-full md:w-64 py-6 text-lg mobile-touch-button"
             size="lg"
           >
             {isLoading ? (

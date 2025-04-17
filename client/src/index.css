@@ -39,6 +39,19 @@
   @apply min-h-[48px] py-3 text-base;
 }
 
+/* Kalender-Buttons für mobile Geräte optimieren */
+[class*="datepicker"] button,
+button[class*="calendar"],
+[data-radix-popper-content-wrapper] button {
+  @apply touch-manipulation;
+  min-height: 40px;
+}
+
+/* Für bessere Erkennbarkeit bei Datumsauswahl */
+.calendar-button {
+  @apply min-h-[48px] py-3 text-base w-full;
+}
+
 @layer base {
   * {
     @apply border-border;
