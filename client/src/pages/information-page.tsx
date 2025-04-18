@@ -560,7 +560,8 @@ export default function InformationPage() {
           {/* Nutzungshinweise */}
           <div id="nutzungshinweise" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Nutzungshinweise</h2>
-            <div className="grid md:grid-cols-2 gap-8">
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
               <div>
                 <h3 className="font-medium text-lg mb-3">Standortanalyse</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -576,6 +577,109 @@ export default function InformationPage() {
                   Die Anwendung unterstützt Sie bei der Berechnung von Materialkosten für unterschiedliche
                   Straßenbauweisen basierend auf der gewählten Belastungsklasse, Streckenlänge und Straßenbreite.
                 </p>
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Umfassende Benutzeranleitung</h3>
+            
+            <div className="space-y-6 text-gray-600">
+              <div>
+                <h4 className="font-medium text-lg mb-2">1. Anmeldung und Startbildschirm</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Melden Sie sich mit Ihrem Benutzernamen und Passwort an</li>
+                  <li>Nach erfolgreicher Anmeldung gelangen Sie zum Dashboard</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">2. Firmendaten anlegen</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Klicken Sie in der Seitenleiste auf "Firmendaten"</li>
+                  <li>Wählen Sie "Neue Firma" und füllen Sie das Formular aus</li>
+                  <li>Tragen Sie Firmennamen, Kontaktdaten und Ansprechpartner ein</li>
+                  <li>Wählen Sie das Bundesland aus der Dropdown-Liste</li>
+                  <li>Klicken Sie auf "Speichern"</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">3. Kundendaten anlegen</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Klicken Sie in der Seitenleiste auf "Kundendaten"</li>
+                  <li>Wählen Sie "Neuer Kunde" und füllen Sie das Formular aus</li>
+                  <li>Geben Sie die Kundennummer ein oder verwenden Sie die Vorschlagsfunktion</li>
+                  <li>Wählen Sie den Kundentyp und tragen Sie Vor- und Nachname ein</li>
+                  <li>Vervollständigen Sie die Adressdaten und Kontaktinformationen</li>
+                  <li>Klicken Sie auf "Speichern"</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">4. Projekt erstellen</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Navigieren Sie zur "Projektverwaltung" in der Seitenleiste</li>
+                  <li>Klicken Sie auf "Neues Projekt" und geben Sie die Basisdaten ein</li>
+                  <li>Wählen Sie Kunde, Firma und entsprechende Ansprechpartner aus</li>
+                  <li>Tragen Sie Abmessungen und Projektnotizen ein</li>
+                  <li>Klicken Sie auf "Speichern"</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">5. Bedarfs- und Kapazitätsplanung</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Öffnen Sie die Projektdetails durch Klicken auf "Details" bei einem Projekt</li>
+                  <li>Wechseln Sie zum Tab "Bedarf/Kapazitäten"</li>
+                  <li>Wählen Sie eine Kategorie aus dem Dropdown-Menü</li>
+                  <li>Geben Sie die Anzahl der benötigten Teams ein</li>
+                  <li>Legen Sie Kalenderwoche und Jahr fest</li>
+                  <li>Klicken Sie auf "Hinzufügen"</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">6. Meilensteine verwalten</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Öffnen Sie die Projektdetails und wechseln Sie zum Tab "Meilensteine"</li>
+                  <li>Wählen Sie einen Meilensteintyp aus</li>
+                  <li>Legen Sie Start- und Endtermin fest</li>
+                  <li>Wählen Sie den EWB/FÖB-Status und tragen Sie Soll-Mengen ein</li>
+                  <li>Klicken Sie auf "Meilenstein erstellen"</li>
+                  <li>Zur Bearbeitung klicken Sie auf einen Meilenstein in der Liste</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">7. Dokumentenverwaltung</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Navigieren Sie zu "Dokumente" in der Seitenleiste</li>
+                  <li>Wählen Sie ein Projekt aus und laden Sie Dokumente hoch</li>
+                  <li>Kategorisieren Sie die Dokumente und fügen Sie Beschreibungen hinzu</li>
+                  <li>Klicken Sie auf "Hochladen"</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">8. Geo-Informationen nutzen</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Klicken Sie auf "Geo-Informationen" in der Seitenleiste</li>
+                  <li>Wählen Sie ein Projekt aus dem Dropdown-Menü</li>
+                  <li>Markieren Sie Standorte durch direktes Klicken auf die Karte</li>
+                  <li>Wählen Sie für jeden Standort die entsprechende Boden- und Lastklasse</li>
+                  <li>Verbinden Sie Standorte für Routenberechnung und Materialbedarfsanalyse</li>
+                  <li>Exportieren Sie die Daten als PDF mit dem Export-Button</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-lg mb-2">9. Tipps zur effizienten Nutzung</h4>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Nutzen Sie die Kachelansicht für einen schnellen visuellen Überblick</li>
+                  <li>Verwenden Sie Filterung in Listen-Ansichten</li>
+                  <li>Sparen Sie Zeit durch Nutzung der Spracherkennung bei Notizen</li>
+                  <li>Planen Sie mit der Kalenderwochen-Ansicht für effiziente zeitliche Organisation</li>
+                  <li>Nutzen Sie die App auf mobilen Geräten für Zugriff von unterwegs</li>
+                </ul>
               </div>
             </div>
           </div>
