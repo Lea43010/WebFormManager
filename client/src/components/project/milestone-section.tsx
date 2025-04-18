@@ -109,6 +109,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("week-view");
   
   // Formular für neuen Meilenstein
   const milestoneForm = useForm<z.infer<typeof insertMilestoneSchema>>({
@@ -470,7 +471,10 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
             <div 
               key={milestone.id} 
               className="flex border-b hover:bg-gray-50 cursor-pointer"
-              onClick={() => setSelectedMilestoneId(milestone.id)}
+              onClick={() => {
+                setSelectedMilestoneId(milestone.id);
+                setActiveTab("detail-view");
+              }}
             >
               <div className={`w-60 p-2 border-r flex items-center ${
                 selectedMilestoneId === milestone.id ? 'bg-blue-50' : ''
@@ -527,7 +531,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="week-view">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="week-view">Kalenderwochenansicht</TabsTrigger>
@@ -798,7 +802,10 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            onClick={() => setSelectedMilestoneId(milestone.id)}
+                            onClick={() => {
+                setSelectedMilestoneId(milestone.id);
+                setActiveTab("detail-view");
+              }}
                             title="Details anzeigen"
                           >
                             <FileText className="h-4 w-4" />
