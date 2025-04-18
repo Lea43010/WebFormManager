@@ -15,7 +15,8 @@ import {
   Paperclip,
   Map,
   Info,
-  UserCircle
+  UserCircle,
+  ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -27,6 +28,7 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
+  showFor?: string[]; // Benutzerrollen, für die dieser Menüpunkt angezeigt werden soll
 }
 
 const navItems: NavItem[] = [
@@ -71,9 +73,16 @@ const navItems: NavItem[] = [
     icon: Settings,
   },
   {
+    title: "Admin-Bereich",
+    href: "/admin",
+    icon: ShieldAlert,
+    showFor: ['administrator', 'manager'],
+  },
+  {
     title: "Datenübertragung",
     href: "/db-migration",
     icon: Database,
+    showFor: ['administrator'],
   },
 ];
 
@@ -106,6 +115,12 @@ export function Sidebar() {
           <div className="space-y-1">
             {navItems.map((item) => {
               const isActive = location === item.href;
+              // Berechtigungsprüfung: Menüpunkt nur anzeigen, wenn der Benutzer die erforderliche Rolle hat
+              // oder wenn keine Rolle erforderlich ist
+              const hasPermission = !item.showFor || (user && item.showFor.includes(user.role));
+              
+              if (!hasPermission) return null;
+              
               return (
                 <Link
                   key={item.href}

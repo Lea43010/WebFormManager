@@ -16,6 +16,7 @@ import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
+import AdminPage from "@/pages/admin-page";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <ProtectedRoute path="/projects/:id" component={ProjectDetailPage} />
 
       <ProtectedRoute path="/users" component={UserPage} />
+      <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
