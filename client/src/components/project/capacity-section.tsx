@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -12,9 +12,23 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, Plus, Trash2, Save } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, Download, FileDown } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 import { Column } from '@/components/ui/data-table-types';
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 
 const bedarfTypes = [
   'Tiefbau',
@@ -59,9 +73,27 @@ interface CapacitySectionProps {
   projectId: number;
 }
 
+// Gruppierung der Daten nach Typ und Jahr/KW für die horizontale Darstellung
+interface GroupedData {
+  [year: string]: {
+    [type: string]: {
+      [week: string]: number;
+    }
+  }
+}
+
+// Typ-Definition für die horizontale Kalenderwochenplanung
+interface WeeklyPlanningRow {
+  teamType: string;
+  year: number;
+  weeks: { [week: number]: number };
+}
+
 export function CapacitySection({ projectId }: CapacitySectionProps) {
   const { toast } = useToast();
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const tableRef = useRef<HTMLDivElement>(null);
   
   // Fetch BedarfKapa data for the current project
   const { data: bedarfKapas, isLoading } = useQuery<BedarfKapa[]>({
@@ -75,6 +107,166 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
       console.log('Fetched BedarfKapa data:', bedarfKapas);
     }
   }, [bedarfKapas]);
+  
+  // Daten für horizontale Kalenderwochen-Ansicht gruppieren
+  const prepareHorizontalData = (): WeeklyPlanningRow[] => {
+    if (!bedarfKapas || bedarfKapas.length === 0) return [];
+    
+    // Gruppieren nach Typ und Jahr
+    const byTypeAndYear = bedarfKapas.reduce<{ [type: string]: { [year: number]: WeeklyPlanningRow } }>((acc, item) => {
+      if (!item.kalenderwoche || !item.jahr) return acc;
+      
+      const type = item.bedarfKapaName;
+      const year = item.jahr;
+      
+      if (!acc[type]) {
+        acc[type] = {};
+      }
+      
+      if (!acc[type][year]) {
+        acc[type][year] = {
+          teamType: type,
+          year: year,
+          weeks: {}
+        };
+      }
+      
+      // Anzahl für diese KW zuweisen
+      acc[type][year].weeks[item.kalenderwoche] = item.bedarfKapaAnzahl;
+      
+      return acc;
+    }, {});
+    
+    // Flache Liste für die Anzeige erstellen
+    const rows: WeeklyPlanningRow[] = [];
+    for (const type in byTypeAndYear) {
+      for (const year in byTypeAndYear[type]) {
+        rows.push(byTypeAndYear[type][parseInt(year)]);
+      }
+    }
+    
+    return rows;
+  };
+  
+  // Daten nach Jahren filtern
+  const filteredHorizontalData = (): WeeklyPlanningRow[] => {
+    return prepareHorizontalData().filter(row => row.year === selectedYear);
+  };
+  
+  // Export als PDF
+  const exportToPdf = () => {
+    if (!bedarfKapas || bedarfKapas.length === 0) {
+      toast({
+        title: "Export nicht möglich",
+        description: "Es sind keine Daten zum Exportieren vorhanden.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const doc = new jsPDF('landscape');
+      
+      // Titel
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(`Kapazitätsplanung - Jahr ${selectedYear}`, 14, 20);
+      
+      // Tabellendaten vorbereiten
+      const tableData = filteredHorizontalData().map(row => {
+        const rowData = [row.teamType];
+        
+        // Für jede Kalenderwoche einen Eintrag hinzufügen (1-53)
+        for (let i = 1; i <= 53; i++) {
+          rowData.push(row.weeks[i]?.toString() || "-");
+        }
+        
+        return rowData;
+      });
+      
+      // Spaltenüberschriften
+      const header = ["Team"];
+      for (let i = 1; i <= 53; i++) {
+        header.push(`KW${i}`);
+      }
+      
+      // Tabelle erstellen
+      (doc as any).autoTable({
+        head: [header],
+        body: tableData,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 1 },
+        headStyles: { fillColor: [106, 150, 31], textColor: [255, 255, 255] },
+        columnStyles: { 0: { fontStyle: 'bold' } }
+      });
+      
+      // PDF speichern
+      doc.save(`Kapazitätsplanung_${selectedYear}.pdf`);
+      
+      toast({
+        title: "Export erfolgreich",
+        description: "Die PDF-Datei wurde erstellt.",
+      });
+    } catch (error) {
+      console.error("PDF Export error:", error);
+      toast({
+        title: "Export fehlgeschlagen",
+        description: "Beim Erstellen der PDF-Datei ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Export als Excel
+  const exportToExcel = () => {
+    if (!bedarfKapas || bedarfKapas.length === 0) {
+      toast({
+        title: "Export nicht möglich",
+        description: "Es sind keine Daten zum Exportieren vorhanden.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Excel-Daten vorbereiten
+      const data = filteredHorizontalData().map(row => {
+        const excelRow: Record<string, any> = {
+          'Team': row.teamType
+        };
+        
+        // Für jede Kalenderwoche einen Eintrag hinzufügen (1-53)
+        for (let i = 1; i <= 53; i++) {
+          excelRow[`KW${i}`] = row.weeks[i] || "";
+        }
+        
+        return excelRow;
+      });
+      
+      // Excel-Datei erstellen
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Kapazitätsplanung");
+      
+      // Excel speichern
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, `Kapazitätsplanung_${selectedYear}.xlsx`);
+      
+      toast({
+        title: "Export erfolgreich",
+        description: "Die Excel-Datei wurde erstellt.",
+      });
+    } catch (error) {
+      console.error("Excel Export error:", error);
+      toast({
+        title: "Export fehlgeschlagen",
+        description: "Beim Erstellen der Excel-Datei ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Form setup
   const form = useForm<z.infer<typeof formSchema>>({
@@ -332,23 +524,122 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : !bedarfKapas || bedarfKapas.length === 0 ? (
-        <div className="text-center py-4 px-4 bg-white border rounded-md shadow-sm mt-4">
-          <p className="text-muted-foreground">
-            Keine Einträge vorhanden. Bitte fügen Sie oben einen neuen Bedarf hinzu.
-          </p>
-        </div>
       ) : (
-        <div className="bg-white border rounded-md shadow-sm overflow-hidden mt-4">
-          <div className="p-4">
-            <h3 className="text-lg font-medium mb-2">Vorhandene Bedarfe/Kapazitäten</h3>
-            <DataTable
-              data={bedarfKapas}
-              columns={columns}
-              onDelete={handleDelete}
-            />
+        <Tabs defaultValue="list" className="w-full">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="list">Listenansicht</TabsTrigger>
+              <TabsTrigger value="calendar">Kalenderwochen-Ansicht</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                size="sm" 
+                onClick={exportToPdf}
+                disabled={!bedarfKapas || bedarfKapas.length === 0}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                PDF Export
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm" 
+                onClick={exportToExcel}
+                disabled={!bedarfKapas || bedarfKapas.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Excel Export
+              </Button>
+            </div>
           </div>
-        </div>
+          
+          <TabsContent value="list" className="mt-0">
+            {!bedarfKapas || bedarfKapas.length === 0 ? (
+              <div className="text-center py-4 px-4 bg-white border rounded-md shadow-sm">
+                <p className="text-muted-foreground">
+                  Keine Einträge vorhanden. Bitte fügen Sie oben einen neuen Bedarf hinzu.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white border rounded-md shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <h3 className="text-lg font-medium mb-2">Vorhandene Bedarfe/Kapazitäten</h3>
+                  <DataTable
+                    data={bedarfKapas}
+                    columns={columns}
+                    onDelete={handleDelete}
+                  />
+                </div>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="calendar" className="mt-0">
+            <div className="bg-white border rounded-md shadow-sm p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Kalenderwochenplanung {selectedYear}</h3>
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) => setSelectedYear(parseInt(value))}
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Jahr auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="overflow-x-auto" ref={tableRef}>
+                {!bedarfKapas || bedarfKapas.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">
+                      Keine Einträge vorhanden. Bitte fügen Sie oben einen neuen Bedarf hinzu.
+                    </p>
+                  </div>
+                ) : filteredHorizontalData().length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">
+                      Keine Einträge für das Jahr {selectedYear} vorhanden.
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableCaption>Teamplanung nach Kalenderwochen für {selectedYear}</TableCaption>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="font-bold sticky left-0 bg-muted/50 z-10">Team</TableHead>
+                        {/* Generiere Spaltenköpfe für KW 1-53 */}
+                        {Array.from({ length: 53 }, (_, i) => i + 1).map(week => (
+                          <TableHead key={week} className="text-center w-16">KW {week}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredHorizontalData().map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium sticky left-0 bg-white z-10">{row.teamType}</TableCell>
+                          {/* Generiere Zellen für KW 1-53 */}
+                          {Array.from({ length: 53 }, (_, i) => i + 1).map(week => (
+                            <TableCell key={week} className="text-center">
+                              {row.weeks[week] || '-'}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
