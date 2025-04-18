@@ -521,7 +521,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     }`}
                   >
                     {isInRange && week === Math.floor((milestone.startKW + milestone.endKW) / 2) && (
-                      <div className="text-xs font-medium text-white overflow-hidden whitespace-nowrap" title={milestone.name}>
+                      <div className="text-xs font-medium text-black overflow-hidden whitespace-nowrap" title={milestone.name}>
                         {milestone.name}
                       </div>
                     )}
