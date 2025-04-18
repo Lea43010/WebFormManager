@@ -45,10 +45,7 @@ export default function DashboardLayout({
           )}
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex items-center">
-              {/* Logo */}
-              <div className="flex items-center mr-8">
-                <img src={logoImage} alt="Sachverständigenbüro - Justitia" className="h-9" />
-              </div>
+              {/* Logo wird bereits in der Sidebar angezeigt */}
               
               <div className="w-full flex md:ml-0">
                 <div className="relative w-full text-gray-400">
