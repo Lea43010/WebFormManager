@@ -36,6 +36,7 @@ const constructionPhases = [
     description: "Grundlegende Infrastrukturarbeiten und Erdaushub",
     team: "Team A",
     subcontractor: "Erdbau GmbH",
+    kw: "KW 18-24",
   },
   {
     id: 2,
@@ -47,6 +48,7 @@ const constructionPhases = [
     description: "Spezifische Tiefbauarbeiten für Hausanschlüsse",
     team: "Team B",
     subcontractor: "Anschluss & Co. KG",
+    kw: "KW 25-28",
   },
   {
     id: 3,
@@ -58,6 +60,7 @@ const constructionPhases = [
     description: "Montagearbeiten für Netzverteiler",
     team: "Team C",
     subcontractor: "Elektro Montage GmbH",
+    kw: "KW 29-35",
   },
   {
     id: 4,
@@ -69,6 +72,7 @@ const constructionPhases = [
     description: "Finale Montagearbeiten",
     team: "Team D",
     subcontractor: "Finalmontage KG",
+    kw: "KW 36-39",
   },
 ];
 
@@ -132,7 +136,10 @@ export default function ConstructionPhaseView({
                   className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-semibold">{phase.name}</h3>
+                    <div>
+                      <h3 className="text-lg font-semibold">{phase.name}</h3>
+                      {phase.kw && <span className="text-sm font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full inline-block mt-1">{phase.kw}</span>}
+                    </div>
                     {getStatusBadge(phase.status)}
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
@@ -148,9 +155,16 @@ export default function ConstructionPhaseView({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Zeitraum</p>
-                      <p>
-                        {phase.startDate} - {phase.endDate}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p>
+                          {phase.startDate} - {phase.endDate}
+                        </p>
+                        {phase.kw && (
+                          <span className="text-xs font-medium bg-primary-50 text-primary-700 px-2 py-0.5 rounded-md">
+                            {phase.kw}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Team</p>

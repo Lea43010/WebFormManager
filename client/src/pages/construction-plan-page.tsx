@@ -15,6 +15,35 @@ import ConstructionPhaseView from "@/components/construction-plan/construction-p
 import ResourcesView from "@/components/construction-plan/resources-view";
 import MilestonesView from "@/components/construction-plan/milestones-view";
 
+// Kalenderwochen-Hilfsfunktionen
+const getWeekNumber = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((+d - +yearStart) / 86400000 + 1) / 7);
+};
+
+const isSameDay = (date1: Date, date2: Date): boolean => {
+  return date1.getDate() === date2.getDate() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getFullYear() === date2.getFullYear();
+};
+
+const getMonday = (date: Date): Date => {
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Anpassung für Sonntag
+  return new Date(date.setDate(diff));
+};
+
+const generateWeekDays = (date: Date): Date[] => {
+  const monday = getMonday(new Date(date));
+  return Array(7).fill(0).map((_, i) => {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    return day;
+  });
+};
+
 export default function ConstructionPlanPage() {
   const [activeTab, setActiveTab] = useState("baumaßnahmen");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -112,12 +141,79 @@ export default function ConstructionPlanPage() {
                   <CardDescription>Zeitraum auswählen</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border"
-                  />
+                  <div className="flex flex-col space-y-4">
+                    {/* Verbesserte Kalenderwochenanzeige */}
+                    <div className="border rounded-md bg-white p-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <button 
+                          className="p-1 hover:bg-gray-100 rounded"
+                          onClick={() => {
+                            if (selectedDate) {
+                              const prevWeek = new Date(selectedDate);
+                              prevWeek.setDate(prevWeek.getDate() - 7);
+                              setSelectedDate(prevWeek);
+                            }
+                          }}
+                        >
+                          &lt;
+                        </button>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">
+                            {selectedDate?.toLocaleString('de-DE', { month: 'long', year: 'numeric' })}
+                          </div>
+                          <div className="text-sm font-medium text-primary px-2 py-1 rounded-full bg-primary-50 mt-1 inline-block">
+                            {selectedDate && `KW ${getWeekNumber(selectedDate)}`}
+                          </div>
+                        </div>
+                        <button 
+                          className="p-1 hover:bg-gray-100 rounded"
+                          onClick={() => {
+                            if (selectedDate) {
+                              const nextWeek = new Date(selectedDate);
+                              nextWeek.setDate(nextWeek.getDate() + 7);
+                              setSelectedDate(nextWeek);
+                            }
+                          }}
+                        >
+                          &gt;
+                        </button>
+                      </div>
+                      
+                      {/* Wochenübersicht */}
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day, i) => (
+                          <div key={i} className="text-xs font-medium text-gray-500">{day}</div>
+                        ))}
+                        
+                        {selectedDate && generateWeekDays(selectedDate).map((date, i) => {
+                          const isToday = isSameDay(date, new Date());
+                          const isSelected = selectedDate && isSameDay(date, selectedDate);
+                          
+                          return (
+                            <div 
+                              key={i}
+                              className={`
+                                aspect-square flex items-center justify-center text-sm cursor-pointer rounded-full
+                                ${isToday ? 'font-medium border border-primary' : ''}
+                                ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-gray-100'}
+                              `}
+                              onClick={() => setSelectedDate(date)}
+                            >
+                              {date.getDate()}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Normaler Kalender für andere Monate */}
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-md border"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </div>
