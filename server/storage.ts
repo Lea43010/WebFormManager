@@ -25,6 +25,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getProjectsByUser(userId: number): Promise<Project[]>;
   
@@ -145,6 +147,28 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+  
+  async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(user)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    // Erst prüfen, ob der Benutzer noch Projekte hat
+    const userProjects = await this.getProjectsByUser(id);
+    
+    // Wenn der Benutzer noch Projekte hat, können wir ihn nicht löschen
+    if (userProjects.length > 0) {
+      throw new Error("Der Benutzer hat noch Projekte. Bitte löschen Sie zuerst diese Projekte oder weisen Sie sie einem anderen Benutzer zu.");
+    }
+    
+    // Benutzer löschen
+    await db.delete(users).where(eq(users.id, id));
   }
   
   async getAllUsers(): Promise<User[]> {

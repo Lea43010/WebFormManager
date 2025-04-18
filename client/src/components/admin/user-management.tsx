@@ -24,6 +24,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,12 +46,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, Trash2 } from 'lucide-react';
 
 export function UserManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [newUser, setNewUser] = useState<Partial<InsertUser>>({
     username: '',
     password: '',
@@ -85,6 +97,29 @@ export function UserManagement() {
     onError: (error) => {
       toast({
         title: "Fehler beim Erstellen des Benutzers",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation zum Löschen eines Benutzers (nur für Administratoren)
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest('DELETE', `/api/admin/users/${userId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setUserToDelete(null);
+      toast({
+        title: "Benutzer gelöscht",
+        description: "Der Benutzer wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler beim Löschen des Benutzers",
         description: error.message,
         variant: "destructive",
       });
@@ -253,25 +288,68 @@ export function UserManagement() {
               <TableHead>Name</TableHead>
               <TableHead>E-Mail</TableHead>
               <TableHead>Rolle</TableHead>
+              {user.role === 'administrator' && <TableHead className="text-right">Aktionen</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users && users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.id}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
+            {users && users.map((userData) => (
+              <TableRow key={userData.id}>
+                <TableCell className="font-medium">{userData.id}</TableCell>
+                <TableCell>{userData.username}</TableCell>
+                <TableCell>{userData.name}</TableCell>
+                <TableCell>{userData.email}</TableCell>
                 <TableCell>
                   <span className={`
                     px-2 py-1 rounded-full text-xs
-                    ${user.role === 'administrator' ? 'bg-red-100 text-red-800' : ''}
-                    ${user.role === 'manager' ? 'bg-blue-100 text-blue-800' : ''}
-                    ${user.role === 'benutzer' ? 'bg-green-100 text-green-800' : ''}
+                    ${userData.role === 'administrator' ? 'bg-red-100 text-red-800' : ''}
+                    ${userData.role === 'manager' ? 'bg-blue-100 text-blue-800' : ''}
+                    ${userData.role === 'benutzer' ? 'bg-green-100 text-green-800' : ''}
                   `}>
-                    {user.role}
+                    {userData.role}
                   </span>
                 </TableCell>
+                {user.role === 'administrator' && (
+                  <TableCell className="text-right">
+                    {/* Löschknopf nur für Administratoren und nicht für den eigenen Benutzer */}
+                    {userData.id !== user.id ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Benutzer löschen</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Sind Sie sicher, dass Sie den Benutzer "{userData.username}" löschen möchten?
+                              <br /><br />
+                              Dies kann nicht rückgängig gemacht werden. Der Benutzer kann nur gelöscht werden, 
+                              wenn er keine Projekte mehr besitzt.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteUserMutation.mutate(userData.id)}
+                              className="bg-red-500 hover:bg-red-700"
+                              disabled={deleteUserMutation.isPending}
+                            >
+                              {deleteUserMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Löschen
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      <div className="text-xs italic text-muted-foreground">
+                        Aktiv
+                      </div>
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

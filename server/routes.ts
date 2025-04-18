@@ -1061,6 +1061,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Benutzer löschen (nur Admin)
+  app.delete("/api/admin/users/:id", checkAdminOnly, async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Verhindere, dass Administratoren sich selbst löschen
+      if (userId === req.user.id) {
+        return res.status(400).json({
+          message: "Sie können Ihren eigenen Benutzer nicht löschen."
+        });
+      }
+      
+      // Prüfe, ob der zu löschende Benutzer existiert
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({
+          message: "Benutzer nicht gefunden."
+        });
+      }
+      
+      await storage.deleteUser(userId);
+      res.status(200).json({ message: "Benutzer erfolgreich gelöscht." });
+    } catch (error) {
+      if (error.message && error.message.includes("Benutzer hat noch Projekte")) {
+        return res.status(400).json({ message: error.message });
+      }
+      next(error);
+    }
+  });
 
   // Projekte des angemeldeten Benutzers
   app.get("/api/user/projects", async (req, res, next) => {
