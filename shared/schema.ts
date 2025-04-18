@@ -133,6 +133,15 @@ export const attachments = pgTable("tblattachment", {
   tags: varchar("tags", { length: 500 }),
 });
 
+// Bedarfs- und Kapazitätsplanung table
+export const bedarfKapa = pgTable("tblBedarfKapa", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  bedarfKapaName: varchar("BedarfKapa_name", { length: 100 }).notNull(),
+  bedarfKapaAnzahl: integer("BedarfKapa_Anzahl").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Oberflächenanalyse table
 export const surfaceAnalyses = pgTable("tblsurface_analysis", {
   id: serial("id").primaryKey(),
@@ -226,6 +235,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   components: many(components),
   attachments: many(attachments),
   surfaceAnalyses: many(surfaceAnalyses),
+  bedarfKapas: many(bedarfKapa),
   fileOrganizationSuggestions: many(fileOrganizationSuggestions),
 }));
 
@@ -246,6 +256,13 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
 export const surfaceAnalysesRelations = relations(surfaceAnalyses, ({ one }) => ({
   project: one(projects, {
     fields: [surfaceAnalyses.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const bedarfKapaRelations = relations(bedarfKapa, ({ one }) => ({
+  project: one(projects, {
+    fields: [bedarfKapa.projectId],
     references: [projects.id],
   }),
 }));
@@ -304,6 +321,13 @@ export const insertSurfaceAnalysisSchema = createInsertSchema(surfaceAnalyses).t
   };
 });
 
+export const insertBedarfKapaSchema = createInsertSchema(bedarfKapa).transform((data) => {
+  return {
+    ...data,
+    bedarfKapaAnzahl: typeof data.bedarfKapaAnzahl === 'string' ? parseInt(data.bedarfKapaAnzahl, 10) : data.bedarfKapaAnzahl,
+  };
+});
+
 export const insertSoilReferenceDataSchema = createInsertSchema(soilReferenceData);
 
 export const insertFileOrganizationSuggestionSchema = createInsertSchema(fileOrganizationSuggestions).transform((data) => {
@@ -343,6 +367,9 @@ export type SurfaceAnalysis = typeof surfaceAnalyses.$inferSelect;
 
 export type InsertSoilReferenceData = z.infer<typeof insertSoilReferenceDataSchema>;
 export type SoilReferenceData = typeof soilReferenceData.$inferSelect;
+
+export type InsertBedarfKapa = z.infer<typeof insertBedarfKapaSchema>;
+export type BedarfKapa = typeof bedarfKapa.$inferSelect;
 
 export type InsertFileOrganizationSuggestion = z.infer<typeof insertFileOrganizationSuggestionSchema>;
 export type FileOrganizationSuggestion = typeof fileOrganizationSuggestions.$inferSelect;
