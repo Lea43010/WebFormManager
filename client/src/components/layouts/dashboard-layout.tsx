@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import logoImage from "@/assets/Logo.png";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -46,7 +47,7 @@ export default function DashboardLayout({
             <div className="flex-1 flex items-center">
               {/* Logo */}
               <div className="flex items-center mr-8">
-                <img src="/Logo.png" alt="Sachverständigenbüro - Justitia" className="h-9" />
+                <img src={logoImage} alt="Sachverständigenbüro - Justitia" className="h-9" />
               </div>
               
               <div className="w-full flex md:ml-0">
