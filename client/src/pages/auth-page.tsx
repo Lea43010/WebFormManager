@@ -102,7 +102,10 @@ export default function AuthPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       <div className="flex-1 flex flex-col px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96 pt-16">
-          <div className="mb-8">
+          <div className="mb-8 flex flex-col items-center">
+            <div className="mb-4">
+              <img src="/Logo.png" alt="Sachverständigenbüro - Justitia" className="h-24" />
+            </div>
             <h2 className="text-4xl font-bold text-gray-900 text-center">
               Anmeldung
             </h2>
