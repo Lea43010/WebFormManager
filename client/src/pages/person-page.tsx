@@ -18,19 +18,19 @@ export default function PersonPage() {
   // Table columns
   const columns = [
     {
-      accessorKey: "id",
+      accessorKey: "id" as const,
       header: "ID",
     },
     {
-      accessorKey: "firstname",
+      accessorKey: "firstname" as const,
       header: "Vorname",
     },
     {
-      accessorKey: "lastname",
+      accessorKey: "lastname" as const,
       header: "Nachname",
     },
     {
-      accessorKey: "companyId",
+      accessorKey: "companyId" as const,
       header: "Firma ID",
     },
   ];
@@ -53,7 +53,7 @@ export default function PersonPage() {
   return (
     <DashboardLayout 
       title="Personalverwaltung" 
-      tabs={["Liste", "Neue Person", selectedPerson ? "Person bearbeiten" : null].filter(Boolean)}
+      tabs={["Liste", "Neue Person", selectedPerson ? "Person bearbeiten" : ""].filter(Boolean) as string[]}
       activeTab={activeTab}
       onTabChange={(tab) => {
         if (tab === "Liste") {
