@@ -1,237 +1,246 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2 } from "lucide-react";
-import { BedarfKapa } from "@shared/schema";
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { InsertBedarfKapa, BedarfKapa } from '@shared/schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { DataTable } from '@/components/ui/data-table';
 
-const bedarfKapaTypes = [
-  "Tiefbau", 
-  "HSA Tiefbau", 
-  "NVT Montage", 
-  "Endmontage NE3", 
-  "Bauleiter", 
-  "Sonstiges"
+const bedarfTypes = [
+  'Tiefbau',
+  'HSA Tiefbau', 
+  'NVT Montage', 
+  'Endmontage NE3', 
+  'Bauleiter', 
+  'Sonstiges'
 ];
 
-// Schema für die Eingabevalidierung
-const bedarfKapaSchema = z.object({
-  bedarfKapaName: z.string().min(1, { message: "Bitte Typ auswählen" }),
-  bedarfKapaAnzahl: z.string().min(1, { message: "Anzahl eingeben" }).refine(
-    (val) => !isNaN(parseInt(val)) && parseInt(val) >= 0, 
-    { message: "Anzahl muss eine positive Zahl sein" }
-  ),
+const formSchema = z.object({
+  bedarfKapaName: z.string().min(1, 'Bitte wählen Sie einen Typ aus'),
+  bedarfKapaAnzahl: z.coerce.number().min(1, 'Bitte geben Sie eine Anzahl ein'),
 });
 
-type BedarfKapaFormData = z.infer<typeof bedarfKapaSchema>;
+interface CapacitySectionProps {
+  projectId: number;
+}
 
-export function CapacitySection({ projectId }: { projectId: number }) {
+export function CapacitySection({ projectId }: CapacitySectionProps) {
   const { toast } = useToast();
   const [isAddingNew, setIsAddingNew] = useState(false);
-
-  // Formular-Setup
-  const form = useForm<BedarfKapaFormData>({
-    resolver: zodResolver(bedarfKapaSchema),
-    defaultValues: {
-      bedarfKapaName: "",
-      bedarfKapaAnzahl: "",
-    },
-  });
-
-  // Bedarf/Kapazitäten aus der Datenbank laden
-  const { data: bedarfKapas, isLoading: isLoadingBedarfKapas } = useQuery<BedarfKapa[]>({
-    queryKey: ['/api/projects', projectId, 'bedarfKapa'],
+  
+  // Fetch BedarfKapa data for the current project
+  const { data: bedarfKapas, isLoading } = useQuery<BedarfKapa[]>({
+    queryKey: [`/api/projects/${projectId}/bedarfkapa`],
     enabled: !!projectId,
   });
-
-  // Mutation zum Speichern neuer Bedarfe/Kapazitäten
-  const createMutation = useMutation({
-    mutationFn: async (data: BedarfKapaFormData) => {
-      const res = await apiRequest('POST', `/api/projects/${projectId}/bedarfKapa`, {
+  
+  // Form setup
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      bedarfKapaName: '',
+      bedarfKapaAnzahl: 1,
+    },
+  });
+  
+  // Add bedarfKapa mutation
+  const addMutation = useMutation({
+    mutationFn: async (data: Omit<InsertBedarfKapa, 'projectId'>) => {
+      const res = await apiRequest('POST', `/api/projects/${projectId}/bedarfkapa`, {
         ...data,
         projectId,
-        bedarfKapaAnzahl: parseInt(data.bedarfKapaAnzahl),
       });
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'bedarfKapa'] });
-      form.reset();
-      setIsAddingNew(false);
       toast({
-        title: "Bedarf/Kapazität gespeichert",
-        description: "Die Bedarf/Kapazität wurde erfolgreich gespeichert",
+        title: 'Erfolg',
+        description: 'Bedarf/Kapazität wurde hinzugefügt',
       });
+      setIsAddingNew(false);
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bedarfkapa`] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Fehler",
-        description: `Die Bedarf/Kapazität konnte nicht gespeichert werden: ${error.message}`,
-        variant: "destructive",
+        title: 'Fehler',
+        description: `Fehler beim Hinzufügen: ${error.message}`,
+        variant: 'destructive',
       });
     },
   });
-
-  // Mutation zum Löschen von Bedarfen/Kapazitäten
+  
+  // Delete bedarfKapa mutation
   const deleteMutation = useMutation({
-    mutationFn: async (bedarfKapaId: number) => {
-      await apiRequest('DELETE', `/api/projects/${projectId}/bedarfKapa/${bedarfKapaId}`);
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/projects/${projectId}/bedarfkapa/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'bedarfKapa'] });
       toast({
-        title: "Bedarf/Kapazität gelöscht",
-        description: "Die Bedarf/Kapazität wurde erfolgreich gelöscht",
+        title: 'Erfolg',
+        description: 'Bedarf/Kapazität wurde gelöscht',
       });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bedarfkapa`] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Fehler",
-        description: `Die Bedarf/Kapazität konnte nicht gelöscht werden: ${error.message}`,
-        variant: "destructive",
+        title: 'Fehler',
+        description: `Fehler beim Löschen: ${error.message}`,
+        variant: 'destructive',
       });
     },
   });
-
-  // Formular absenden
-  const onSubmit = (data: BedarfKapaFormData) => {
-    createMutation.mutate(data);
+  
+  // Handle form submission
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    addMutation.mutate(data);
   };
-
+  
+  // Handle delete
+  const handleDelete = (bedarfKapa: BedarfKapa) => {
+    if (confirm(`Möchten Sie wirklich '${bedarfKapa.bedarfKapaName}' löschen?`)) {
+      deleteMutation.mutate(bedarfKapa.id);
+    }
+  };
+  
+  // Table columns
+  const columns = [
+    {
+      header: 'Typ',
+      accessorKey: 'bedarfKapaName',
+    },
+    {
+      header: 'Anzahl',
+      accessorKey: 'bedarfKapaAnzahl',
+    },
+    {
+      header: 'Erstellt am',
+      accessorKey: 'createdAt',
+      cell: (value: string) => {
+        return value ? new Date(value).toLocaleDateString() : '-';
+      }
+    },
+  ];
+  
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Bedarf/Kapazitäten</span>
-          {!isAddingNew && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddingNew(true)}
-              disabled={isAddingNew}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Neu hinzufügen
-            </Button>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoadingBedarfKapas ? (
-          <div className="flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            {/* Aktuelle Bedarfe/Kapazitäten anzeigen */}
-            {bedarfKapas && bedarfKapas.length > 0 ? (
-              <div className="space-y-2 mb-4">
-                <div className="grid grid-cols-5 gap-2 font-medium text-sm text-muted-foreground">
-                  <div className="col-span-2">Art</div>
-                  <div className="col-span-2">Anzahl</div>
-                  <div className="col-span-1"></div>
-                </div>
-                {bedarfKapas.map((item) => (
-                  <div key={item.id} className="grid grid-cols-5 gap-2 items-center border-b pb-2">
-                    <div className="col-span-2">{item.bedarfKapaName}</div>
-                    <div className="col-span-2">{item.bedarfKapaAnzahl}</div>
-                    <div className="col-span-1 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteMutation.mutate(item.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : !isAddingNew ? (
-              <div className="text-center py-4 text-muted-foreground">
-                Keine Bedarfe/Kapazitäten angelegt. Klicken Sie auf "Neu hinzufügen".
-              </div>
-            ) : null}
-
-            {/* Formular für neuen Bedarf/Kapazität */}
-            {isAddingNew && (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="bedarfKapaName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Art</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Bitte wählen..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {bedarfKapaTypes.map((type) => (
-                                <SelectItem key={type} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bedarfKapaAnzahl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Anzahl</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="0" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsAddingNew(false)}
-                    >
-                      Abbrechen
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={createMutation.isPending}
-                    >
-                      {createMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Speichern
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Bedarf & Kapazitäten</h3>
+        {!isAddingNew && (
+          <Button
+            onClick={() => setIsAddingNew(true)}
+            disabled={isAddingNew}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Neuen Bedarf hinzufügen
+          </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      {isAddingNew && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Neuen Bedarf/Kapazität hinzufügen</CardTitle>
+          </CardHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="bedarfKapaName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Typ</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Typ auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {bedarfTypes.map(type => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="bedarfKapaAnzahl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Anzahl</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          {...field}
+                          onChange={e => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddingNew(false)}
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={addMutation.isPending}
+                >
+                  {addMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Speichern
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
+        </Card>
+      )}
+      
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : !bedarfKapas || bedarfKapas.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          {isAddingNew ? 
+            'Fügen Sie Ihren ersten Bedarf/Kapazität hinzu.' : 
+            'Keine Bedarf/Kapazitäten vorhanden. Klicken Sie auf "Neuen Bedarf hinzufügen", um zu beginnen.'}
+        </div>
+      ) : (
+        <DataTable
+          data={bedarfKapas}
+          columns={columns}
+          onDelete={handleDelete}
+        />
+      )}
+    </div>
   );
 }
