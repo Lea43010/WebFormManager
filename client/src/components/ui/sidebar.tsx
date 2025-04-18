@@ -46,11 +46,6 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: "Personalverwaltung",
-    href: "/persons",
-    icon: UserCircle,
-  },
-  {
     title: "Projektverwaltung",
     href: "/projects",
     icon: Folders,

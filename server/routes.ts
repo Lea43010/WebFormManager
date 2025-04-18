@@ -282,62 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Person routes
-  app.get("/api/persons", async (req, res, next) => {
-    try {
-      const persons = await storage.getPersons();
-      res.json(persons);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.get("/api/persons/:id", async (req, res, next) => {
-    try {
-      const id = parseInt(req.params.id);
-      const person = await storage.getPerson(id);
-      if (!person) {
-        return res.status(404).json({ message: "Person nicht gefunden" });
-      }
-      res.json(person);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.post("/api/persons", async (req, res, next) => {
-    try {
-      const validatedData = insertPersonSchema.parse(req.body);
-      const person = await storage.createPerson(validatedData);
-      res.status(201).json(person);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.put("/api/persons/:id", async (req, res, next) => {
-    try {
-      const id = parseInt(req.params.id);
-      const validatedData = insertPersonSchema.partial().parse(req.body);
-      const person = await storage.updatePerson(id, validatedData);
-      if (!person) {
-        return res.status(404).json({ message: "Person nicht gefunden" });
-      }
-      res.json(person);
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.delete("/api/persons/:id", async (req, res, next) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deletePerson(id);
-      res.status(204).send();
-    } catch (error) {
-      next(error);
-    }
-  });
+  
 
   // Material routes
   app.get("/api/materials", async (req, res, next) => {

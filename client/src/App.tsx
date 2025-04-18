@@ -8,7 +8,6 @@ import { ProtectedRoute } from "./lib/protected-route";
 import CompanyPage from "@/pages/company-page";
 import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
-import PersonPage from "@/pages/person-page";
 import UserPage from "@/pages/user-page";
 import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
@@ -24,7 +23,6 @@ function Router() {
       <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
-      <ProtectedRoute path="/persons" component={PersonPage} />
       <ProtectedRoute path="/projects" component={ProjectPage} />
 
       <ProtectedRoute path="/users" component={UserPage} />
