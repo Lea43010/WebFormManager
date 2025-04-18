@@ -855,8 +855,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startKW: typeof req.body.startKW === 'string' ? parseInt(req.body.startKW, 10) : req.body.startKW,
         endKW: typeof req.body.endKW === 'string' ? parseInt(req.body.endKW, 10) : req.body.endKW,
         jahr: typeof req.body.jahr === 'string' ? parseInt(req.body.jahr, 10) : req.body.jahr,
-        sollMenge: req.body.sollMenge !== undefined && req.body.sollMenge !== null && typeof req.body.sollMenge === 'string' ? 
-          parseFloat(req.body.sollMenge) : req.body.sollMenge,
+        sollMenge: req.body.sollMenge,
       };
       
       const validatedData = insertMilestoneSchema.parse(formData);
@@ -880,8 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startKW: typeof req.body.startKW === 'string' ? parseInt(req.body.startKW, 10) : req.body.startKW,
         endKW: typeof req.body.endKW === 'string' ? parseInt(req.body.endKW, 10) : req.body.endKW,
         jahr: typeof req.body.jahr === 'string' ? parseInt(req.body.jahr, 10) : req.body.jahr,
-        sollMenge: req.body.sollMenge !== undefined && req.body.sollMenge !== null && typeof req.body.sollMenge === 'string' ? 
-          parseFloat(req.body.sollMenge) : req.body.sollMenge,
+        sollMenge: req.body.sollMenge,
       };
       
       const baseSchema = createInsertSchema(milestones);
@@ -945,8 +943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseInt(req.body.kalenderwoche, 10) : req.body.kalenderwoche,
         jahr: typeof req.body.jahr === 'string' ? 
           parseInt(req.body.jahr, 10) : req.body.jahr,
-        sollMenge: req.body.sollMenge !== undefined && req.body.sollMenge !== null && typeof req.body.sollMenge === 'string' ? 
-          parseFloat(req.body.sollMenge) : req.body.sollMenge,
+        sollMenge: req.body.sollMenge,
       };
       
       const validatedData = insertMilestoneDetailSchema.parse(formData);
@@ -971,8 +968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseInt(req.body.kalenderwoche, 10) : req.body.kalenderwoche,
         jahr: typeof req.body.jahr === 'string' ? 
           parseInt(req.body.jahr, 10) : req.body.jahr,
-        sollMenge: req.body.sollMenge !== undefined && req.body.sollMenge !== null && typeof req.body.sollMenge === 'string' ? 
-          parseFloat(req.body.sollMenge) : req.body.sollMenge,
+        sollMenge: req.body.sollMenge,
       };
       
       const baseSchema = createInsertSchema(milestoneDetails);
