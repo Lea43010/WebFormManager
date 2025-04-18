@@ -242,6 +242,7 @@ export default function ProjectPage() {
               isLoading={isLoading}
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
+              onViewDetails={handleViewDetails}
               title="Projektübersicht"
             />
           ) : (
@@ -251,6 +252,7 @@ export default function ProjectPage() {
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
               onShowAttachments={handleShowAttachments}
+              onViewDetails={handleViewDetails}
               onViewChange={() => setViewMode('list')}
             />
           )}

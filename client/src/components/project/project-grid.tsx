@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Paperclip, Star, Calendar, List } from "lucide-react";
+import { Edit, Trash2, Paperclip, Star, Calendar, List, BookOpen } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -25,6 +25,7 @@ interface ProjectGridProps {
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
   onShowAttachments: (project: Project) => void;
+  onViewDetails?: (project: Project) => void;
   onViewChange: () => void;
 }
 
@@ -34,6 +35,7 @@ export function ProjectGrid({
   onEdit,
   onDelete,
   onShowAttachments,
+  onViewDetails,
   onViewChange,
 }: ProjectGridProps) {
   const [filterText, setFilterText] = useState("");
@@ -140,6 +142,23 @@ export function ProjectGrid({
                           <p>Anhänge</p>
                         </TooltipContent>
                       </Tooltip>
+                      
+                      {onViewDetails && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewDetails(project)}
+                            >
+                              <BookOpen className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Details</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Tooltip>
