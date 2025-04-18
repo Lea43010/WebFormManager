@@ -134,31 +134,39 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
 
   const projectStopValue = form.watch("projectStop");
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    // Wenn Sprachnotizen vorhanden sind, in projectText übernehmen oder anhängen
-    let finalProjectText = data.projectText || '';
-    if (data.speechNotes && data.speechNotes.trim() !== '') {
-      // Wenn bereits Text vorhanden ist, füge die Sprachnotizen mit Trenner hinzu
-      if (finalProjectText.trim() !== '') {
-        finalProjectText += '\n\n--- Sprachnotizen ---\n' + data.speechNotes.trim();
-      } else {
-        finalProjectText = data.speechNotes.trim();
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      // Wenn Sprachnotizen vorhanden sind, in projectText übernehmen oder anhängen
+      let finalProjectText = data.projectText || '';
+      if (data.speechNotes && data.speechNotes.trim() !== '') {
+        // Wenn bereits Text vorhanden ist, füge die Sprachnotizen mit Trenner hinzu
+        if (finalProjectText.trim() !== '') {
+          finalProjectText += '\n\n--- Sprachnotizen ---\n' + data.speechNotes.trim();
+        } else {
+          finalProjectText = data.speechNotes.trim();
+        }
       }
+      
+      // Convert string values to numbers for numeric fields before submitting
+      const transformedData = {
+        ...data,
+        projectWidth: data.projectWidth && data.projectWidth.trim() !== '' ? parseFloat(data.projectWidth) : null,
+        projectLength: data.projectLength && data.projectLength.trim() !== '' ? parseFloat(data.projectLength) : null,
+        projectHeight: data.projectHeight && data.projectHeight.trim() !== '' ? parseFloat(data.projectHeight) : null,
+        projectText: finalProjectText, // Text als String speichern, nicht als Zahl
+      };
+      
+      // Sprachnotizen nicht mit an Backend senden, da kein Datenbankfeld existiert
+      delete (transformedData as any).speechNotes;
+      
+      // Sende die Projektdaten und warte auf die Antwort
+      const savedProject = await onSubmit(transformedData as any);
+      
+      return savedProject;
+    } catch (error) {
+      console.error('Fehler beim Speichern des Projekts:', error);
+      throw error;
     }
-    
-    // Convert string values to numbers for numeric fields before submitting
-    const transformedData = {
-      ...data,
-      projectWidth: data.projectWidth && data.projectWidth.trim() !== '' ? parseFloat(data.projectWidth) : null,
-      projectLength: data.projectLength && data.projectLength.trim() !== '' ? parseFloat(data.projectLength) : null,
-      projectHeight: data.projectHeight && data.projectHeight.trim() !== '' ? parseFloat(data.projectHeight) : null,
-      projectText: finalProjectText, // Text als String speichern, nicht als Zahl
-    };
-    
-    // Sprachnotizen nicht mit an Backend senden, da kein Datenbankfeld existiert
-    delete (transformedData as any).speechNotes;
-    
-    onSubmit(transformedData as any); // Als temporäre Lösung zur Typumgehung
   };
 
   return (

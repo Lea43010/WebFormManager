@@ -40,10 +40,15 @@ export default function ProjectDetailPage() {
   });
 
   // Handle form submission
-  const handleFormSubmit = (data: Partial<Project>) => {
+  const handleFormSubmit = async (data: Partial<Project>): Promise<Project> => {
     // This is handled in the ProjectForm component via the onSubmit callback
     // After successful update, navigate back to the project detail view
-    setIsEditing(false);
+    return new Promise((resolve) => {
+      // Da in diesem Fall kein tatsächlicher API-Aufruf stattfindet (dies wird im Formular selbst erledigt), 
+      // geben wir einfach die Daten zurück und setzen den Bearbeitungsmodus zurück
+      setIsEditing(false);
+      resolve(data as Project);
+    });
   };
 
   // Go back to projects list
