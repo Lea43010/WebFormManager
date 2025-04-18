@@ -12,7 +12,7 @@ import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./s
 import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { ZodError, z } from "zod";
 import { 
-  insertCompanySchema, insertCustomerSchema, insertProjectSchema, insertPersonSchema, 
+  insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
   createInsertSchema, companies, customers, projects, 
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
