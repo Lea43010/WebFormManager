@@ -14,8 +14,8 @@ import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
-  insertBedarfKapaSchema, insertPersonSchema,
-  createInsertSchema, companies, customers, projects, persons,
+  insertBedarfKapaSchema, insertPersonSchema, insertMilestoneSchema, insertMilestoneDetailSchema,
+  createInsertSchema, companies, customers, projects, persons, milestones, milestoneDetails,
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -813,6 +813,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteBedarfKapa(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Milestone routes
+  app.get("/api/projects/:projectId/milestones", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const milestones = await storage.getMilestones(projectId);
+      res.json(milestones);
+    } catch (error) {
+      console.error("Error fetching milestones:", error);
+      next(error);
+    }
+  });
+
+  app.get("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const milestone = await storage.getMilestone(id);
+      if (!milestone) {
+        return res.status(404).json({ message: "Meilenstein nicht gefunden" });
+      }
+      res.json(milestone);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/milestones", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        projectId,
+        startKW: typeof req.body.startKW === 'string' ? parseInt(req.body.startKW, 10) : req.body.startKW,
+        endKW: typeof req.body.endKW === 'string' ? parseInt(req.body.endKW, 10) : req.body.endKW,
+        jahr: typeof req.body.jahr === 'string' ? parseInt(req.body.jahr, 10) : req.body.jahr,
+      };
+      
+      const validatedData = insertMilestoneSchema.parse(formData);
+      const milestone = await storage.createMilestone(validatedData);
+      res.status(201).json(milestone);
+    } catch (error) {
+      console.error("Milestone creation error:", error);
+      next(error);
+    }
+  });
+
+  app.put("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const projectId = parseInt(req.params.projectId);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        projectId,
+        startKW: typeof req.body.startKW === 'string' ? parseInt(req.body.startKW, 10) : req.body.startKW,
+        endKW: typeof req.body.endKW === 'string' ? parseInt(req.body.endKW, 10) : req.body.endKW,
+        jahr: typeof req.body.jahr === 'string' ? parseInt(req.body.jahr, 10) : req.body.jahr,
+      };
+      
+      const baseSchema = createInsertSchema(milestones);
+      const validatedData = baseSchema.partial().parse(formData);
+      
+      const milestone = await storage.updateMilestone(id, validatedData);
+      if (!milestone) {
+        return res.status(404).json({ message: "Meilenstein nicht gefunden" });
+      }
+      res.json(milestone);
+    } catch (error) {
+      console.error("Milestone update error:", error);
+      next(error);
+    }
+  });
+
+  app.delete("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMilestone(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Milestone Detail routes
+  app.get("/api/milestones/:milestoneId/details", async (req, res, next) => {
+    try {
+      const milestoneId = parseInt(req.params.milestoneId);
+      const details = await storage.getMilestoneDetails(milestoneId);
+      res.json(details);
+    } catch (error) {
+      console.error("Error fetching milestone details:", error);
+      next(error);
+    }
+  });
+
+  app.get("/api/milestones/:milestoneId/details/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const detail = await storage.getMilestoneDetail(id);
+      if (!detail) {
+        return res.status(404).json({ message: "Meilenstein-Detail nicht gefunden" });
+      }
+      res.json(detail);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/milestones/:milestoneId/details", async (req, res, next) => {
+    try {
+      const milestoneId = parseInt(req.params.milestoneId);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        milestoneId,
+        kalenderwoche: typeof req.body.kalenderwoche === 'string' ? 
+          parseInt(req.body.kalenderwoche, 10) : req.body.kalenderwoche,
+        jahr: typeof req.body.jahr === 'string' ? 
+          parseInt(req.body.jahr, 10) : req.body.jahr,
+      };
+      
+      const validatedData = insertMilestoneDetailSchema.parse(formData);
+      const detail = await storage.createMilestoneDetail(validatedData);
+      res.status(201).json(detail);
+    } catch (error) {
+      console.error("Milestone detail creation error:", error);
+      next(error);
+    }
+  });
+
+  app.put("/api/milestones/:milestoneId/details/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const milestoneId = parseInt(req.params.milestoneId);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        milestoneId,
+        kalenderwoche: typeof req.body.kalenderwoche === 'string' ? 
+          parseInt(req.body.kalenderwoche, 10) : req.body.kalenderwoche,
+        jahr: typeof req.body.jahr === 'string' ? 
+          parseInt(req.body.jahr, 10) : req.body.jahr,
+      };
+      
+      const baseSchema = createInsertSchema(milestoneDetails);
+      const validatedData = baseSchema.partial().parse(formData);
+      
+      const detail = await storage.updateMilestoneDetail(id, validatedData);
+      if (!detail) {
+        return res.status(404).json({ message: "Meilenstein-Detail nicht gefunden" });
+      }
+      res.json(detail);
+    } catch (error) {
+      console.error("Milestone detail update error:", error);
+      next(error);
+    }
+  });
+
+  app.delete("/api/milestones/:milestoneId/details/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMilestoneDetail(id);
       res.status(204).send();
     } catch (error) {
       next(error);

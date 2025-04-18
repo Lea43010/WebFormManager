@@ -13,7 +13,9 @@ import {
   attachments, type Attachment, type InsertAttachment,
   surfaceAnalyses, type SurfaceAnalysis, type InsertSurfaceAnalysis,
   soilReferenceData, type SoilReferenceData, type InsertSoilReferenceData,
-  bedarfKapa, type BedarfKapa, type InsertBedarfKapa
+  bedarfKapa, type BedarfKapa, type InsertBedarfKapa,
+  milestones, type Milestone, type InsertMilestone,
+  milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -96,6 +98,20 @@ export interface IStorage {
   getBedarfKapa(id: number): Promise<BedarfKapa | undefined>;
   createBedarfKapa(data: InsertBedarfKapa): Promise<BedarfKapa>;
   deleteBedarfKapa(id: number): Promise<void>;
+  
+  // Milestone operations
+  getMilestones(projectId: number): Promise<Milestone[]>;
+  getMilestone(id: number): Promise<Milestone | undefined>;
+  createMilestone(milestone: InsertMilestone): Promise<Milestone>;
+  updateMilestone(id: number, milestone: Partial<InsertMilestone>): Promise<Milestone | undefined>;
+  deleteMilestone(id: number): Promise<void>;
+  
+  // Milestone Detail operations
+  getMilestoneDetails(milestoneId: number): Promise<MilestoneDetail[]>;
+  getMilestoneDetail(id: number): Promise<MilestoneDetail | undefined>;
+  createMilestoneDetail(detail: InsertMilestoneDetail): Promise<MilestoneDetail>;
+  updateMilestoneDetail(id: number, detail: Partial<InsertMilestoneDetail>): Promise<MilestoneDetail | undefined>;
+  deleteMilestoneDetail(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -415,6 +431,83 @@ export class DatabaseStorage implements IStorage {
   
   async deleteBedarfKapa(id: number): Promise<void> {
     await db.delete(bedarfKapa).where(eq(bedarfKapa.id, id));
+  }
+  
+  // Milestone operations
+  async getMilestones(projectId: number): Promise<Milestone[]> {
+    console.log(`Fetching Milestones for project ID: ${projectId}`);
+    const result = await db.select().from(milestones).where(eq(milestones.projectId, projectId));
+    console.log(`Found ${result.length} Milestones`);
+    return result;
+  }
+  
+  async getMilestone(id: number): Promise<Milestone | undefined> {
+    const [milestone] = await db.select().from(milestones).where(eq(milestones.id, id));
+    return milestone;
+  }
+  
+  async createMilestone(milestone: InsertMilestone): Promise<Milestone> {
+    console.log('Creating new Milestone with data:', milestone);
+    const [createdMilestone] = await db.insert(milestones).values(milestone).returning();
+    console.log('Created Milestone:', createdMilestone);
+    return createdMilestone;
+  }
+  
+  async updateMilestone(id: number, milestone: Partial<InsertMilestone>): Promise<Milestone | undefined> {
+    console.log(`Updating Milestone with ID: ${id}`, milestone);
+    const [updatedMilestone] = await db
+      .update(milestones)
+      .set(milestone)
+      .where(eq(milestones.id, id))
+      .returning();
+    console.log('Updated Milestone:', updatedMilestone);
+    return updatedMilestone;
+  }
+  
+  async deleteMilestone(id: number): Promise<void> {
+    console.log(`Deleting Milestone with ID: ${id}`);
+    // Zuerst alle Details für diesen Meilenstein löschen
+    await db.delete(milestoneDetails).where(eq(milestoneDetails.milestoneId, id));
+    // Dann den Meilenstein selbst löschen
+    await db.delete(milestones).where(eq(milestones.id, id));
+    console.log('Milestone and associated details deleted');
+  }
+  
+  // Milestone Detail operations
+  async getMilestoneDetails(milestoneId: number): Promise<MilestoneDetail[]> {
+    console.log(`Fetching MilestoneDetails for milestone ID: ${milestoneId}`);
+    const result = await db.select().from(milestoneDetails).where(eq(milestoneDetails.milestoneId, milestoneId));
+    console.log(`Found ${result.length} MilestoneDetails`);
+    return result;
+  }
+  
+  async getMilestoneDetail(id: number): Promise<MilestoneDetail | undefined> {
+    const [detail] = await db.select().from(milestoneDetails).where(eq(milestoneDetails.id, id));
+    return detail;
+  }
+  
+  async createMilestoneDetail(detail: InsertMilestoneDetail): Promise<MilestoneDetail> {
+    console.log('Creating new MilestoneDetail with data:', detail);
+    const [createdDetail] = await db.insert(milestoneDetails).values(detail).returning();
+    console.log('Created MilestoneDetail:', createdDetail);
+    return createdDetail;
+  }
+  
+  async updateMilestoneDetail(id: number, detail: Partial<InsertMilestoneDetail>): Promise<MilestoneDetail | undefined> {
+    console.log(`Updating MilestoneDetail with ID: ${id}`, detail);
+    const [updatedDetail] = await db
+      .update(milestoneDetails)
+      .set(detail)
+      .where(eq(milestoneDetails.id, id))
+      .returning();
+    console.log('Updated MilestoneDetail:', updatedDetail);
+    return updatedDetail;
+  }
+  
+  async deleteMilestoneDetail(id: number): Promise<void> {
+    console.log(`Deleting MilestoneDetail with ID: ${id}`);
+    await db.delete(milestoneDetails).where(eq(milestoneDetails.id, id));
+    console.log('MilestoneDetail deleted');
   }
 }
 
