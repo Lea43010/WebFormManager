@@ -393,22 +393,24 @@ export const insertFileOrganizationSuggestionSchema = createInsertSchema(fileOrg
   };
 });
 
-export const insertMilestoneSchema = createInsertSchema(milestones).transform((data) => {
+export const insertMilestoneSchema = createInsertSchema(milestones, {
+  sollMenge: z.string().nullable().optional().transform((val) => val === null || val === undefined ? val : parseFloat(val))
+}).transform((data) => {
   return {
     ...data,
     startKW: typeof data.startKW === 'string' ? parseInt(data.startKW, 10) : data.startKW,
     endKW: typeof data.endKW === 'string' ? parseInt(data.endKW, 10) : data.endKW,
     jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
-    sollMenge: typeof data.sollMenge === 'string' ? parseFloat(data.sollMenge) : data.sollMenge,
   };
 });
 
-export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails).transform((data) => {
+export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails, {
+  sollMenge: z.string().nullable().optional().transform((val) => val === null || val === undefined ? val : parseFloat(val))
+}).transform((data) => {
   return {
     ...data,
     kalenderwoche: typeof data.kalenderwoche === 'string' ? parseInt(data.kalenderwoche, 10) : data.kalenderwoche,
     jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
-    sollMenge: typeof data.sollMenge === 'string' ? parseFloat(data.sollMenge) : data.sollMenge,
   };
 });
 
