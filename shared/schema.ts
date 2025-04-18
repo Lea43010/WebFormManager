@@ -139,6 +139,8 @@ export const bedarfKapa = pgTable("tblBedarfKapa", {
   projectId: integer("project_id").references(() => projects.id),
   bedarfKapaName: varchar("BedarfKapa_name", { length: 100 }).notNull(),
   bedarfKapaAnzahl: integer("BedarfKapa_Anzahl").notNull(),
+  kalenderwoche: integer("kalenderwoche").notNull().default(0), // Kalenderwoche für die Planung (1-53)
+  jahr: integer("jahr").notNull().default(new Date().getFullYear()), // Jahr für die Kalenderwoche
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -325,6 +327,8 @@ export const insertBedarfKapaSchema = createInsertSchema(bedarfKapa).transform((
   return {
     ...data,
     bedarfKapaAnzahl: typeof data.bedarfKapaAnzahl === 'string' ? parseInt(data.bedarfKapaAnzahl, 10) : data.bedarfKapaAnzahl,
+    kalenderwoche: typeof data.kalenderwoche === 'string' ? parseInt(data.kalenderwoche, 10) : data.kalenderwoche,
+    jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
   };
 });
 

@@ -25,9 +25,34 @@ const bedarfTypes = [
   'Sonstiges'
 ];
 
+// Hilfsfunktion für die Generierung von Kalenderwochen
+const generateWeeks = () => {
+  const weeks = [];
+  for (let i = 1; i <= 53; i++) {
+    weeks.push(i);
+  }
+  return weeks;
+};
+
+// Jahre generieren (aktuelles Jahr + 3 Jahre in die Zukunft)
+const generateYears = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let i = 0; i < 4; i++) {
+    years.push(currentYear + i);
+  }
+  return years;
+};
+
+const weeks = generateWeeks();
+const years = generateYears();
+
+// Erweitertes Schema für Kalenderwochenplanung
 const formSchema = z.object({
   bedarfKapaName: z.string().min(1, 'Bitte wählen Sie einen Typ aus'),
   bedarfKapaAnzahl: z.coerce.number().min(1, 'Bitte geben Sie eine Anzahl ein'),
+  kalenderwoche: z.coerce.number().min(1).max(53).default(1),
+  jahr: z.coerce.number().min(2020).default(new Date().getFullYear()),
 });
 
 interface CapacitySectionProps {
@@ -57,6 +82,8 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
     defaultValues: {
       bedarfKapaName: '',
       bedarfKapaAnzahl: 1,
+      kalenderwoche: 1,
+      jahr: new Date().getFullYear(),
     },
   });
   
@@ -139,6 +166,20 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
       }
     },
     {
+      header: 'Kalenderwoche',
+      accessorKey: 'kalenderwoche',
+      cell: (value: any, row: BedarfKapa) => {
+        return row.kalenderwoche ? `KW ${row.kalenderwoche}` : '-';
+      }
+    },
+    {
+      header: 'Jahr',
+      accessorKey: 'jahr',
+      cell: (value: any, row: BedarfKapa) => {
+        return row.jahr?.toString() || '-';
+      }
+    },
+    {
       header: 'Erstellt am',
       accessorKey: 'createdAt',
       cell: (value: any, row: BedarfKapa) => {
@@ -186,24 +227,82 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="bedarfKapaAnzahl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Anzahl Teams</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        {...field}
-                        onChange={e => field.onChange(parseInt(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="bedarfKapaAnzahl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Anzahl Teams</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          {...field}
+                          onChange={e => field.onChange(parseInt(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="kalenderwoche"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kalenderwoche</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="KW auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {weeks.map(week => (
+                            <SelectItem key={week} value={week.toString()}>
+                              KW {week}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="jahr"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Jahr</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Jahr auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {years.map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button
