@@ -682,6 +682,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupImageAnalysisRoutes(app);
   setupSurfaceAnalysisRoutes(app);
   setupSurfaceAnalysisAPIRoutes(app);
+  
+  // BedarfKapa routes
+  app.get("/api/projects/:projectId/bedarfKapa", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const bedarfKapas = await storage.getBedarfKapas(projectId);
+      res.json(bedarfKapas);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/projects/:projectId/bedarfKapa", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      // Stelle sicher, dass numerische Felder korrekt konvertiert werden
+      const formData = {
+        ...req.body,
+        projectId,
+        bedarfKapaAnzahl: typeof req.body.bedarfKapaAnzahl === 'string' ? 
+          parseInt(req.body.bedarfKapaAnzahl, 10) : req.body.bedarfKapaAnzahl,
+      };
+      
+      const validatedData = insertBedarfKapaSchema.parse(formData);
+      const bedarfKapa = await storage.createBedarfKapa(validatedData);
+      res.status(201).json(bedarfKapa);
+    } catch (error) {
+      console.error("BedarfKapa creation error:", error);
+      next(error);
+    }
+  });
+  
+  app.get("/api/projects/:projectId/bedarfKapa/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const bedarfKapa = await storage.getBedarfKapa(id);
+      if (!bedarfKapa) {
+        return res.status(404).json({ message: "Bedarf/Kapazität nicht gefunden" });
+      }
+      res.json(bedarfKapa);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.delete("/api/projects/:projectId/bedarfKapa/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteBedarfKapa(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
