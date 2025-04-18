@@ -112,8 +112,8 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
     }
   };
   
-  // Table columns
-  const columns = [
+  // Table columns mit korrekten Typangaben
+  const columns: Column<BedarfKapa>[] = [
     {
       header: 'Typ',
       accessorKey: 'bedarfKapaName',
@@ -125,8 +125,8 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
     {
       header: 'Erstellt am',
       accessorKey: 'createdAt',
-      cell: (value: string) => {
-        return value ? new Date(value).toLocaleDateString() : '-';
+      cell: (value, row) => {
+        return value ? new Date(value.toString()).toLocaleDateString() : '-';
       }
     },
   ];

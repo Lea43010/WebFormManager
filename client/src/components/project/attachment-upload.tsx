@@ -72,7 +72,7 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
   });
 
   const handleDelete = (attachment: Attachment) => {
-    if (confirm(`Möchten Sie wirklich "${attachment.filename}" löschen?`)) {
+    if (confirm(`Möchten Sie wirklich "${attachment.fileName}" löschen?`)) {
       deleteMutation.mutate(attachment.id);
     }
   };
@@ -136,8 +136,8 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
   };
 
   // Get file icon based on filename
-  const getFileIcon = (filename: string) => {
-    const ext = filename.split('.').pop()?.toLowerCase();
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
     
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
       return <Image className="w-6 h-6 text-blue-500" />;
@@ -223,11 +223,11 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
               <CardContent className="p-4">
                 <div className="flex items-start space-x-4">
                   <div className="pt-1">
-                    {getFileIcon(attachment.filename)}
+                    {getFileIcon(attachment.fileName)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {attachment.filename}
+                      {attachment.fileName}
                     </p>
                     {attachment.description && (
                       <p className="text-sm text-muted-foreground truncate">
