@@ -12,6 +12,8 @@ import { CapacitySection } from "@/components/project/capacity-section";
 import { MilestoneSection } from "@/components/project/milestone-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 // Hilfsfunktion zur Berechnung der Kalenderwoche (ISO-Format)
 const getWeekNumber = (date: Date): number => {
@@ -24,6 +26,8 @@ const getWeekNumber = (date: Date): number => {
 export default function ProjectDetailPage() {
   const [, navigate] = useLocation();
   const [_, params] = useRoute("/projects/:id");
+  const { user } = useAuth();
+  const { toast } = useToast(); 
   const [isEditing, setIsEditing] = useState(false);
   const projectId = params?.id ? parseInt(params.id) : null;
 
@@ -38,6 +42,22 @@ export default function ProjectDetailPage() {
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId,
+    onSuccess: (data) => {
+      // Berechtigungsprüfung auf Client-Seite
+      // Wenn der Benutzer weder Administrator noch Manager ist und nicht der Ersteller des Projekts, zurück zur Projektliste
+      if (
+        user?.role !== "administrator" && 
+        user?.role !== "manager" && 
+        data.createdBy !== user?.id
+      ) {
+        toast({
+          title: "Keine Berechtigung",
+          description: "Sie haben keine Berechtigung, dieses Projekt anzusehen.",
+          variant: "destructive"
+        });
+        navigate("/projects");
+      }
+    }
   });
 
   // Handle form submission

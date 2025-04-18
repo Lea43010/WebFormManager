@@ -85,6 +85,8 @@ export default function ProjectPage() {
       // Beide Abfrage-Keys invalidieren, um sicherzustellen, dass alle Ansichten aktualisiert werden
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
+      // Auch die aktuelle projekteigene Ansicht invalidieren
+      queryClient.invalidateQueries({ queryKey: [projectsEndpoint] });
       setIsEditing(false);
       toast({
         title: currentProject ? "Projekt aktualisiert" : "Projekt erstellt",
@@ -109,6 +111,8 @@ export default function ProjectPage() {
       // Beide Abfrage-Keys invalidieren
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
+      // Auch die aktuelle projekteigene Ansicht invalidieren
+      queryClient.invalidateQueries({ queryKey: [projectsEndpoint] });
       setIsDeleteDialogOpen(false);
       toast({
         title: "Projekt gelöscht",
