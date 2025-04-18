@@ -24,17 +24,19 @@ interface MilestoneSectionProps {
   projectId: number;
 }
 
-// Hilfsfunktion für Kalenderwochenfarben
+// Hilfsfunktion für Kalenderwochenfarben - angepasst an die Typen aus dem Bedarf/Kapazitäten-Tab
 const getMilestoneColor = (type: string | null) => {
   switch (type) {
-    case 'Bauphase':
+    case 'Tiefbau':
       return 'bg-blue-100 border-blue-500 text-blue-700';
-    case 'Planungsphase':
+    case 'HSA Tiefbau':
       return 'bg-green-100 border-green-500 text-green-700';
-    case 'Abnahmephase':
+    case 'NVT Montage':
       return 'bg-amber-100 border-amber-500 text-amber-700';
-    case 'Ausführungsphase':
+    case 'Endmontage NE3':
       return 'bg-purple-100 border-purple-500 text-purple-700';
+    case 'Bauleiter':
+      return 'bg-yellow-100 border-yellow-500 text-yellow-700';
     default:
       return 'bg-gray-100 border-gray-500 text-gray-700';
   }
@@ -91,12 +93,13 @@ const yearOptions = () => {
   return Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 };
 
-// Typenoptionen für Meilensteine
+// Typenoptionen für Meilensteine - übernommen aus dem Bedarf/Kapazitäten-Tab
 const milestoneTypes = [
-  'Bauphase',
-  'Planungsphase', 
-  'Abnahmephase', 
-  'Ausführungsphase',
+  'Tiefbau',
+  'HSA Tiefbau', 
+  'NVT Montage', 
+  'Endmontage NE3', 
+  'Bauleiter', 
   'Sonstiges'
 ];
 
@@ -117,7 +120,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
       endKW: getCurrentWeek() + 1,
       jahr: getCurrentYear(),
       color: '#4F46E5',
-      type: 'Bauphase'
+      type: 'Tiefbau'
     }
   });
   
@@ -169,7 +172,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         endKW: getCurrentWeek() + 1,
         jahr: getCurrentYear(),
         color: '#4F46E5',
-        type: 'Bauphase'
+        type: 'Tiefbau'
       });
     },
     onError: (error) => {
