@@ -59,20 +59,9 @@ export default function DashboardLayout({
                 </span>
               </div>
               <div className="flex items-center">
-                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white mr-2">
+                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
                   {user?.username.charAt(0).toUpperCase()}
                 </div>
-                <button 
-                  onClick={() => {
-                    fetch('/api/logout', { method: 'POST' })
-                      .then(() => {
-                        window.location.href = '/auth';
-                      });
-                  }}
-                  className="text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100"
-                >
-                  Abmelden
-                </button>
               </div>
             </div>
           </div>
