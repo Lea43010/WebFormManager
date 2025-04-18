@@ -129,8 +129,13 @@ export default function ProjectPage() {
   };
   
   // Submit form
-  const handleFormSubmit = (data: Partial<Project>) => {
-    saveProjectMutation.mutate(data);
+  const handleFormSubmit = async (data: Partial<Project>): Promise<Project> => {
+    return new Promise((resolve, reject) => {
+      saveProjectMutation.mutate(data, {
+        onSuccess: (savedProject) => resolve(savedProject),
+        onError: (error) => reject(error)
+      });
+    });
   };
   
   // Handler für Anhänge anzeigen

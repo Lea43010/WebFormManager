@@ -29,7 +29,7 @@ const PROJECT_TYPES = ["Hochbau", "Tiefbau"];
 
 interface ProjectFormProps {
   project?: Project | null;
-  onSubmit: (data: Partial<Project>) => void;
+  onSubmit: (data: Partial<Project>) => Promise<Project>;
   isLoading?: boolean;
 }
 
