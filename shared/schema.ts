@@ -145,6 +145,9 @@ export const bedarfKapa = pgTable("tblBedarfKapa", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// EWB/FÖB Enum für die Meilenstein-Details
+export const ewbFoebEnum = pgEnum('ewb_foeb_type', ['EWB', 'FÖB', 'EWB,FÖB', 'keine']);
+
 // Meilensteine-Tabelle
 export const milestones = pgTable("tblmilestones", {
   id: serial("id").primaryKey(),
@@ -155,11 +158,10 @@ export const milestones = pgTable("tblmilestones", {
   jahr: integer("jahr").notNull(),
   color: varchar("color", { length: 50 }),
   type: varchar("type", { length: 100 }),
+  ewbFoeb: ewbFoebEnum("ewb_foeb").default('keine'),
+  sollMenge: numeric("soll_menge", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// EWB/FÖB Enum für die Meilenstein-Details
-export const ewbFoebEnum = pgEnum('ewb_foeb_type', ['EWB', 'FÖB', 'EWB,FÖB', 'keine']);
 
 // Meilenstein-Details-Tabelle
 export const milestoneDetails = pgTable("tblmilestonedetails", {
@@ -397,6 +399,7 @@ export const insertMilestoneSchema = createInsertSchema(milestones).transform((d
     startKW: typeof data.startKW === 'string' ? parseInt(data.startKW, 10) : data.startKW,
     endKW: typeof data.endKW === 'string' ? parseInt(data.endKW, 10) : data.endKW,
     jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
+    sollMenge: typeof data.sollMenge === 'string' ? parseFloat(data.sollMenge) : data.sollMenge,
   };
 });
 

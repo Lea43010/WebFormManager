@@ -121,7 +121,9 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
       endKW: getCurrentWeek() + 1,
       jahr: getCurrentYear(),
       color: '#4F46E5',
-      type: 'Tiefbau'
+      type: 'Tiefbau',
+      ewbFoeb: 'keine',
+      sollMenge: undefined
     }
   });
   
@@ -175,7 +177,9 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         endKW: getCurrentWeek() + 1,
         jahr: getCurrentYear(),
         color: '#4F46E5',
-        type: 'Tiefbau'
+        type: 'Tiefbau',
+        ewbFoeb: 'keine',
+        sollMenge: undefined
       });
     },
     onError: (error) => {
