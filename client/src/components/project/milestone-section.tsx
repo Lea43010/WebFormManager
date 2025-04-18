@@ -488,7 +488,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   style={{ backgroundColor: milestone.color || '#CBD5E1' }}
                 />
                 <div>
-                  <div className="font-medium">{milestone.name}</div>
+                  <div className="font-medium">{milestone.ewbFoeb || 'keine'}</div>
                   <div className="text-xs text-gray-500">{milestone.type || 'Sonstiges'}</div>
                 </div>
               </div>
@@ -520,8 +520,13 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                       isInRange && !isStart && !isEnd ? 'border-t border-b' : ''
                     }`}
                   >
+                    {isInRange && week === Math.floor((milestone.startKW + milestone.endKW) / 2) && (
+                      <div className="text-xs font-medium text-white overflow-hidden whitespace-nowrap" title={milestone.name}>
+                        {milestone.name}
+                      </div>
+                    )}
                     {hasDetail && (
-                      <div className="w-3 h-3 rounded-full bg-white mx-auto" title="Details vorhanden" />
+                      <div className="w-3 h-3 rounded-full bg-white mx-auto mt-1" title="Details vorhanden" />
                     )}
                   </div>
                 );
