@@ -117,6 +117,11 @@ export interface IStorage {
   updateMilestoneDetail(id: number, detail: Partial<InsertMilestoneDetail>): Promise<MilestoneDetail | undefined>;
   deleteMilestoneDetail(id: number): Promise<void>;
   
+  // Login Logs operations
+  getLoginLogs(): Promise<LoginLog[]>;
+  getLoginLogsByUser(userId: number): Promise<LoginLog[]>;
+  createLoginLog(log: InsertLoginLog): Promise<LoginLog>;
+  
   // Session store
   sessionStore: session.SessionStore;
 }
@@ -542,6 +547,22 @@ export class DatabaseStorage implements IStorage {
     console.log(`Deleting MilestoneDetail with ID: ${id}`);
     await db.delete(milestoneDetails).where(eq(milestoneDetails.id, id));
     console.log('MilestoneDetail deleted');
+  }
+  
+  // Login Logs operations
+  async getLoginLogs(): Promise<LoginLog[]> {
+    return await db.select().from(loginLogs).orderBy(desc(loginLogs.timestamp));
+  }
+  
+  async getLoginLogsByUser(userId: number): Promise<LoginLog[]> {
+    return await db.select().from(loginLogs)
+      .where(eq(loginLogs.userId, userId))
+      .orderBy(desc(loginLogs.timestamp));
+  }
+  
+  async createLoginLog(log: InsertLoginLog): Promise<LoginLog> {
+    const [createdLog] = await db.insert(loginLogs).values(log).returning();
+    return createdLog;
   }
 }
 

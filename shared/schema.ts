@@ -360,6 +360,13 @@ export const fileOrganizationSuggestionsRelations = relations(fileOrganizationSu
   }),
 }));
 
+export const loginLogsRelations = relations(loginLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [loginLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -446,6 +453,10 @@ export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails, 
   };
 });
 
+export const insertLoginLogSchema = createInsertSchema(loginLogs, {
+  failReason: z.string().nullable().optional()
+});
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -488,3 +499,6 @@ export type Milestone = typeof milestones.$inferSelect;
 
 export type InsertMilestoneDetail = z.infer<typeof insertMilestoneDetailSchema>;
 export type MilestoneDetail = typeof milestoneDetails.$inferSelect;
+
+export type InsertLoginLog = z.infer<typeof insertLoginLogSchema>;
+export type LoginLog = typeof loginLogs.$inferSelect;
