@@ -19,6 +19,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Erweiterte Projektschnittstelle mit Kundennamen
+interface ProjectWithCustomerName extends Project {
+  customerName?: string;
+}
+
 // Hilfsfunktion zur Berechnung der Kalenderwoche (ISO-Format)
 const getWeekNumber = (date: Date): number => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -28,7 +33,7 @@ const getWeekNumber = (date: Date): number => {
 };
 
 interface ProjectGridProps {
-  projects: Project[];
+  projects: ProjectWithCustomerName[];
   isLoading: boolean;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
@@ -102,9 +107,6 @@ export function ProjectGrid({
                     <div>
                       <h3 className="text-base font-medium mb-1">{project.projectName}</h3>
                       <CardDescription>
-                        <Badge variant="outline" className="mr-2">
-                          {project.personId ? `Ansprechpartner: ${project.personId}` : 'Kein Ansprechpartner'}
-                        </Badge>
                         {project.projectArt && <Badge>{project.projectArt}</Badge>}
                       </CardDescription>
                     </div>
@@ -116,8 +118,8 @@ export function ProjectGrid({
                 <CardContent className="py-4">
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
-                      <span className="text-gray-600 font-medium">Kunden ID:</span>
-                      <span className="ml-1">{project.customerId || '-'}</span>
+                      <span className="text-gray-600 font-medium">Kunde:</span>
+                      <span className="ml-1">{project.customerName || (project.customerId ? `ID: ${project.customerId}` : '-')}</span>
                     </div>
                     {project.projectStartdate && (
                       <div className="space-y-1">
