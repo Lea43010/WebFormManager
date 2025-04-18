@@ -918,50 +918,117 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   </CardDescription>
                 </div>
                 
-                <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Detail hinzufügen
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Meilenstein-Detail hinzufügen</DialogTitle>
-                    </DialogHeader>
-                    
-                    <Form {...detailForm}>
-                      <form onSubmit={detailForm.handleSubmit(onDetailSubmit)} className="space-y-4">
-                        <input 
-                          type="hidden" 
-                          {...detailForm.register('milestoneId')} 
-                          value={selectedMilestoneId}
-                        />
-                        
-                        <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => {
+                      if (selectedMilestoneId && confirm('Sind Sie sicher, dass Sie diesen Meilenstein löschen möchten?')) {
+                        deleteMilestoneMutation.mutate(selectedMilestoneId);
+                        setActiveTab("week-view");
+                      }
+                    }}
+                  >
+                    <Trash className="h-4 w-4 mr-2" />
+                    Meilenstein löschen
+                  </Button>
+                  
+                  <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Detail hinzufügen
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Meilenstein-Detail hinzufügen</DialogTitle>
+                      </DialogHeader>
+                      
+                      <Form {...detailForm}>
+                        <form onSubmit={detailForm.handleSubmit(onDetailSubmit)} className="space-y-4">
+                          <input 
+                            type="hidden" 
+                            {...detailForm.register('milestoneId')} 
+                            value={selectedMilestoneId}
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={detailForm.control}
+                              name="kalenderwoche"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Kalenderwoche</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => field.onChange(parseInt(value))}
+                                    defaultValue={field.value.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="KW auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {weekOptions.map(week => (
+                                        <SelectItem key={week} value={week.toString()}>
+                                          KW {week}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={detailForm.control}
+                              name="jahr"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Jahr</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => field.onChange(parseInt(value))}
+                                    defaultValue={field.value.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Jahr auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {yearOptions().map(year => (
+                                        <SelectItem key={year} value={year.toString()}>
+                                          {year}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
                           <FormField
                             control={detailForm.control}
-                            name="kalenderwoche"
+                            name="text"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Kalenderwoche</FormLabel>
-                                <Select
-                                  onValueChange={(value) => field.onChange(parseInt(value))}
-                                  defaultValue={field.value.toString()}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="KW auswählen" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {weekOptions.map(week => (
-                                      <SelectItem key={week} value={week.toString()}>
-                                        KW {week}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <FormLabel>Beschreibung</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Kurze Beschreibung" 
+                                    value={field.value || ''} 
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    disabled={field.disabled}
+                                  />
+                                </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -969,143 +1036,93 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           
                           <FormField
                             control={detailForm.control}
-                            name="jahr"
+                            name="supplementaryInfo"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Jahr</FormLabel>
+                                <FormLabel>Zusätzliche Informationen</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Weitere Details" 
+                                    value={field.value || ''} 
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    disabled={field.disabled}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={detailForm.control}
+                            name="ewbFoeb"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>EWB/FÖB</FormLabel>
                                 <Select
-                                  onValueChange={(value) => field.onChange(parseInt(value))}
-                                  defaultValue={field.value.toString()}
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="Jahr auswählen" />
+                                      <SelectValue placeholder="Bitte auswählen" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {yearOptions().map(year => (
-                                      <SelectItem key={year} value={year.toString()}>
-                                        {year}
-                                      </SelectItem>
-                                    ))}
+                                    <SelectItem value="keine">Keine</SelectItem>
+                                    <SelectItem value="EWB">EWB</SelectItem>
+                                    <SelectItem value="FÖB">FÖB</SelectItem>
+                                    <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        </div>
-                        
-                        <FormField
-                          control={detailForm.control}
-                          name="text"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Beschreibung</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Kurze Beschreibung" 
-                                  value={field.value || ''} 
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  name={field.name}
-                                  ref={field.ref}
-                                  disabled={field.disabled}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={detailForm.control}
-                          name="supplementaryInfo"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Zusätzliche Informationen</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Weitere Details" 
-                                  value={field.value || ''} 
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  name={field.name}
-                                  ref={field.ref}
-                                  disabled={field.disabled}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
 
-                        <FormField
-                          control={detailForm.control}
-                          name="ewbFoeb"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>EWB/FÖB</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                          <FormField
+                            control={detailForm.control}
+                            name="sollMenge"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Soll-Menge</FormLabel>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Bitte auswählen" />
-                                  </SelectTrigger>
+                                  <Input 
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="Soll-Menge eingeben" 
+                                    value={field.value?.toString() || ''} 
+                                    onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    disabled={field.disabled}
+                                  />
                                 </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="keine">Keine</SelectItem>
-                                  <SelectItem value="EWB">EWB</SelectItem>
-                                  <SelectItem value="FÖB">FÖB</SelectItem>
-                                  <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={detailForm.control}
-                          name="sollMenge"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Soll-Menge</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="Soll-Menge eingeben" 
-                                  value={field.value?.toString() || ''} 
-                                  onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
-                                  onBlur={field.onBlur}
-                                  name={field.name}
-                                  ref={field.ref}
-                                  disabled={field.disabled}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <DialogFooter>
-                          <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
-                            Abbrechen
-                          </Button>
-                          <Button type="submit" disabled={createDetailMutation.isPending}>
-                            {createDetailMutation.isPending && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <FormMessage />
+                              </FormItem>
                             )}
-                            Detail hinzufügen
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
+                          />
+                          
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+                              Abbrechen
+                            </Button>
+                            <Button type="submit" disabled={createDetailMutation.isPending}>
+                              {createDetailMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Detail hinzufügen
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               
               <CardContent>
