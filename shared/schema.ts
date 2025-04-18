@@ -145,6 +145,30 @@ export const bedarfKapa = pgTable("tblBedarfKapa", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Meilensteine-Tabelle
+export const milestones = pgTable("tblmilestones", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  startKW: integer("start_kw").notNull(),
+  endKW: integer("end_kw").notNull(),
+  jahr: integer("jahr").notNull(),
+  color: varchar("color", { length: 50 }),
+  type: varchar("type", { length: 100 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Meilenstein-Details-Tabelle
+export const milestoneDetails = pgTable("tblmilestonedetails", {
+  id: serial("id").primaryKey(),
+  milestoneId: integer("milestone_id").notNull().references(() => milestones.id, { onDelete: "cascade" }),
+  kalenderwoche: integer("kalenderwoche").notNull(),
+  jahr: integer("jahr").notNull(),
+  text: varchar("text", { length: 255 }),
+  supplementaryInfo: text("supplementary_info"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Oberflächenanalyse table
 export const surfaceAnalyses = pgTable("tblsurface_analysis", {
   id: serial("id").primaryKey(),
@@ -243,6 +267,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   attachments: many(attachments),
   surfaceAnalyses: many(surfaceAnalyses),
   bedarfKapas: many(bedarfKapa),
+  milestones: many(milestones),
   fileOrganizationSuggestions: many(fileOrganizationSuggestions),
 }));
 
@@ -275,6 +300,21 @@ export const bedarfKapaRelations = relations(bedarfKapa, ({ one }) => ({
 }));
 
 export const soilReferenceDataRelations = relations(soilReferenceData, ({}) => ({}));
+
+export const milestonesRelations = relations(milestones, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [milestones.projectId],
+    references: [projects.id],
+  }),
+  details: many(milestoneDetails),
+}));
+
+export const milestoneDetailsRelations = relations(milestoneDetails, ({ one }) => ({
+  milestone: one(milestones, {
+    fields: [milestoneDetails.milestoneId],
+    references: [milestones.id],
+  }),
+}));
 
 export const fileOrganizationSuggestionsRelations = relations(fileOrganizationSuggestions, ({ one }) => ({
   project: one(projects, {
@@ -346,6 +386,23 @@ export const insertFileOrganizationSuggestionSchema = createInsertSchema(fileOrg
   };
 });
 
+export const insertMilestoneSchema = createInsertSchema(milestones).transform((data) => {
+  return {
+    ...data,
+    startKW: typeof data.startKW === 'string' ? parseInt(data.startKW, 10) : data.startKW,
+    endKW: typeof data.endKW === 'string' ? parseInt(data.endKW, 10) : data.endKW,
+    jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
+  };
+});
+
+export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails).transform((data) => {
+  return {
+    ...data,
+    kalenderwoche: typeof data.kalenderwoche === 'string' ? parseInt(data.kalenderwoche, 10) : data.kalenderwoche,
+    jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
+  };
+});
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -382,3 +439,9 @@ export type BedarfKapa = typeof bedarfKapa.$inferSelect;
 
 export type InsertFileOrganizationSuggestion = z.infer<typeof insertFileOrganizationSuggestionSchema>;
 export type FileOrganizationSuggestion = typeof fileOrganizationSuggestions.$inferSelect;
+
+export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
+export type Milestone = typeof milestones.$inferSelect;
+
+export type InsertMilestoneDetail = z.infer<typeof insertMilestoneDetailSchema>;
+export type MilestoneDetail = typeof milestoneDetails.$inferSelect;
