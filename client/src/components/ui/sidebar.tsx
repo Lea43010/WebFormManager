@@ -14,7 +14,8 @@ import {
   Database,
   Paperclip,
   Map,
-  Info
+  Info,
+  UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -43,6 +44,11 @@ const navItems: NavItem[] = [
     title: "Kundendaten",
     href: "/customers",
     icon: Users,
+  },
+  {
+    title: "Personalverwaltung",
+    href: "/persons",
+    icon: UserCircle,
   },
   {
     title: "Projektverwaltung",
