@@ -173,19 +173,15 @@ export default function ProjectPage() {
         const endDateStr = endDate ? endDate.toLocaleDateString() : 'N/A';
         
         return (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span>{startDateStr}</span>
-              {startKW && (
-                <Badge variant="outline" className="text-xs">KW {startKW}</Badge>
-              )}
+          <div>
+            <div>
+              {startKW && <span className="font-medium">KW {startKW}</span>}
+              <span> {startDateStr}</span>
             </div>
             <div>-</div>
-            <div className="flex items-center gap-2">
-              <span>{endDateStr}</span>
-              {endKW && (
-                <Badge variant="outline" className="text-xs">KW {endKW}</Badge>
-              )}
+            <div>
+              {endKW && <span className="font-medium">KW {endKW}</span>}
+              <span> {endDateStr}</span>
             </div>
           </div>
         );

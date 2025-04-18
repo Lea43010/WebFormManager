@@ -120,16 +120,16 @@ export function DataTable<T>({
           )}
         </div>
         
-        <Table>
+        <Table className="border border-border">
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-100">
               {columns.map((column) => (
-                <TableHead key={column.accessorKey as string}>
+                <TableHead key={column.accessorKey as string} className="font-semibold text-black py-3">
                   {column.header}
                 </TableHead>
               ))}
               {(onEdit || onDelete || onViewDetails) && (
-                <TableHead className="text-right">Aktionen</TableHead>
+                <TableHead className="text-right font-semibold text-black py-3">Aktionen</TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -152,16 +152,16 @@ export function DataTable<T>({
               ))
             ) : currentData.length > 0 ? (
               currentData.map((row, rowIndex) => (
-                <TableRow key={rowIndex} isEven={rowIndex % 2 === 0}>
+                <TableRow key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   {columns.map((column) => (
-                    <TableCell key={column.accessorKey as string}>
+                    <TableCell key={column.accessorKey as string} className="py-2.5">
                       {column.cell
                         ? column.cell(row[column.accessorKey], row)
                         : String(row[column.accessorKey] || '')}
                     </TableCell>
                   ))}
                   {(onEdit || onDelete || onViewDetails) && (
-                    <TableCell className="text-right">
+                    <TableCell className="text-right py-2.5">
                       <TooltipProvider>
                         <div className="flex justify-end space-x-2">
                           {onViewDetails && (

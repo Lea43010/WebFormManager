@@ -151,13 +151,11 @@ export default function ProjectDetailPage() {
                       </div>
                       
                       <div className="font-medium">Startdatum:</div>
-                      <div className="flex items-center gap-2">
+                      <div>
                         {project.projectStartdate ? (
                           <>
-                            <span>{new Date(project.projectStartdate).toLocaleDateString()}</span>
-                            <Badge variant="outline" className="text-xs">
-                              KW {getWeekNumber(new Date(project.projectStartdate))}
-                            </Badge>
+                            <span className="font-medium">KW {getWeekNumber(new Date(project.projectStartdate))}</span>
+                            <span> {new Date(project.projectStartdate).toLocaleDateString()}</span>
                           </>
                         ) : (
                           "Nicht angegeben"
@@ -165,13 +163,11 @@ export default function ProjectDetailPage() {
                       </div>
                       
                       <div className="font-medium">Enddatum:</div>
-                      <div className="flex items-center gap-2">
+                      <div>
                         {project.projectEnddate ? (
                           <>
-                            <span>{new Date(project.projectEnddate).toLocaleDateString()}</span>
-                            <Badge variant="outline" className="text-xs">
-                              KW {getWeekNumber(new Date(project.projectEnddate))}
-                            </Badge>
+                            <span className="font-medium">KW {getWeekNumber(new Date(project.projectEnddate))}</span>
+                            <span> {new Date(project.projectEnddate).toLocaleDateString()}</span>
                           </>
                         ) : (
                           "Nicht angegeben"

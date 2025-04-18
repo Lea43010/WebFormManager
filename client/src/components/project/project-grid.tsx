@@ -126,20 +126,16 @@ export function ProjectGrid({
                           <span className="font-medium">Zeitraum:</span>
                         </div>
                         <div className="ml-6 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span>{new Date(project.projectStartdate).toLocaleDateString()}</span>
-                            <Badge variant="outline" className="text-xs">
-                              KW {getWeekNumber(new Date(project.projectStartdate))}
-                            </Badge>
+                          <div>
+                            <span className="font-medium">KW {getWeekNumber(new Date(project.projectStartdate))}</span>
+                            <span> {new Date(project.projectStartdate).toLocaleDateString()}</span>
                           </div>
-                          <div className="mt-1">-</div>
-                          <div className="flex items-center gap-2">
+                          <div>-</div>
+                          <div>
                             {project.projectEnddate ? (
                               <>
-                                <span>{new Date(project.projectEnddate).toLocaleDateString()}</span>
-                                <Badge variant="outline" className="text-xs">
-                                  KW {getWeekNumber(new Date(project.projectEnddate))}
-                                </Badge>
+                                <span className="font-medium">KW {getWeekNumber(new Date(project.projectEnddate))}</span>
+                                <span> {new Date(project.projectEnddate).toLocaleDateString()}</span>
                               </>
                             ) : (
                               <span>Offen</span>
