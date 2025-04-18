@@ -177,7 +177,7 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
               />
             </div>
             
-            {/* Firmenname und Ansprechpartner */}
+            {/* Firmenname */}
             <div className="mb-4">
               <FormField
                 control={form.control}
@@ -196,6 +196,49 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                   </FormItem>
                 )}
               />
+            </div>
+            
+            {/* Ansprechpartner - Vorname und Nachname */}
+            <h3 className="text-lg font-medium mb-2 mt-6">Ansprechpartner</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <FormField
+                  control={form.control}
+                  name="contactFirstname"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Vorname</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className="modern-form-input" 
+                          placeholder="Vorname"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="contactLastname"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Nachname</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className="modern-form-input" 
+                          placeholder="Nachname"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             
             {/* Firmennummer (versteckt) */}
