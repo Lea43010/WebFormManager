@@ -14,6 +14,7 @@ import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
+  insertBedarfKapaSchema,
   createInsertSchema, companies, customers, projects, 
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";

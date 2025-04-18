@@ -12,7 +12,8 @@ import {
   components, type Component, type InsertComponent,
   attachments, type Attachment, type InsertAttachment,
   surfaceAnalyses, type SurfaceAnalysis, type InsertSurfaceAnalysis,
-  soilReferenceData, type SoilReferenceData, type InsertSoilReferenceData
+  soilReferenceData, type SoilReferenceData, type InsertSoilReferenceData,
+  bedarfKapa, type BedarfKapa, type InsertBedarfKapa
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -89,6 +90,12 @@ export interface IStorage {
   
   // Projekt Analysis Overview
   getProjectAnalyses(projectId: number): Promise<SurfaceAnalysis[]>;
+  
+  // BedarfKapa operations
+  getBedarfKapas(projectId: number): Promise<BedarfKapa[]>;
+  getBedarfKapa(id: number): Promise<BedarfKapa | undefined>;
+  createBedarfKapa(data: InsertBedarfKapa): Promise<BedarfKapa>;
+  deleteBedarfKapa(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -384,6 +391,25 @@ export class DatabaseStorage implements IStorage {
   // Projektanalysenübersicht
   async getProjectAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
     return await db.select().from(surfaceAnalyses).where(eq(surfaceAnalyses.projectId, projectId));
+  }
+  
+  // BedarfKapa operations
+  async getBedarfKapas(projectId: number): Promise<BedarfKapa[]> {
+    return await db.select().from(bedarfKapa).where(eq(bedarfKapa.projectId, projectId));
+  }
+  
+  async getBedarfKapa(id: number): Promise<BedarfKapa | undefined> {
+    const [data] = await db.select().from(bedarfKapa).where(eq(bedarfKapa.id, id));
+    return data;
+  }
+  
+  async createBedarfKapa(data: InsertBedarfKapa): Promise<BedarfKapa> {
+    const [createdData] = await db.insert(bedarfKapa).values(data).returning();
+    return createdData;
+  }
+  
+  async deleteBedarfKapa(id: number): Promise<void> {
+    await db.delete(bedarfKapa).where(eq(bedarfKapa.id, id));
   }
 }
 
