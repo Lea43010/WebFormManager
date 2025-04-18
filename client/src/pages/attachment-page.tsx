@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment, Project } from "@shared/schema";
 import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
+import EnhancedUploadForm from "@/components/attachment/enhanced-upload-form";
 import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
 import { FileOrganizationSuggestions } from "@/components/attachment/file-organization-suggestions";
 import { Badge } from "@/components/ui/badge";
@@ -411,20 +412,20 @@ export default function AttachmentPage() {
         
         {/* Upload Dialog */}
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>
-                {uploadMode === "camera" ? "Kamerafoto hochladen" : "Anhang hochladen"}
+                {uploadMode === "camera" ? "Kamerafoto hochladen" : "Dateien hochladen"}
               </DialogTitle>
               <DialogDescription>
                 {uploadMode === "camera" 
                   ? "Nehmen Sie ein Foto mit Ihrer Kamera auf oder wählen Sie ein bestehendes Foto aus."
-                  : "Wählen Sie ein Projekt und laden Sie eine Datei hoch."
+                  : "Wählen Sie ein Projekt und laden Sie Dateien hoch. Sie können auch Dateien per Drag & Drop hinzufügen."
                 }
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <AttachmentUploadForm 
+              <EnhancedUploadForm 
                 onUploadSuccess={handleUploadSuccess}
                 mode={uploadMode}
               />

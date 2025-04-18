@@ -664,9 +664,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fileName: req.file.originalname,
           originalName: req.file.originalname,
           fileType: getFileType(req.file.mimetype),
+          fileCategory: req.body.fileCategory || "Andere",
           filePath: req.file.path,
           fileSize: req.file.size,
-          description: req.body.description || null
+          description: req.body.description || null,
+          tags: req.body.tags || null
         };
         
         const attachment = await storage.createAttachment(attachmentData);
