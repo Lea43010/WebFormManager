@@ -395,7 +395,10 @@ export class DatabaseStorage implements IStorage {
   
   // BedarfKapa operations
   async getBedarfKapas(projectId: number): Promise<BedarfKapa[]> {
-    return await db.select().from(bedarfKapa).where(eq(bedarfKapa.projectId, projectId));
+    console.log(`Fetching BedarfKapas for project ID: ${projectId}`);
+    const result = await db.select().from(bedarfKapa).where(eq(bedarfKapa.projectId, projectId));
+    console.log(`Found ${result.length} BedarfKapas:`, result);
+    return result;
   }
   
   async getBedarfKapa(id: number): Promise<BedarfKapa | undefined> {
@@ -404,7 +407,9 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createBedarfKapa(data: InsertBedarfKapa): Promise<BedarfKapa> {
+    console.log('Creating new BedarfKapa with data:', data);
     const [createdData] = await db.insert(bedarfKapa).values(data).returning();
+    console.log('Created BedarfKapa:', createdData);
     return createdData;
   }
   

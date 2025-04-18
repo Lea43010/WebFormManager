@@ -684,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupSurfaceAnalysisAPIRoutes(app);
   
   // BedarfKapa routes
-  app.get("/api/projects/:projectId/bedarfKapa", async (req, res, next) => {
+  app.get("/api/projects/:projectId/bedarfkapa", async (req, res, next) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const bedarfKapas = await storage.getBedarfKapas(projectId);
@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/projects/:projectId/bedarfKapa", async (req, res, next) => {
+  app.post("/api/projects/:projectId/bedarfkapa", async (req, res, next) => {
     try {
       const projectId = parseInt(req.params.projectId);
       
@@ -715,7 +715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/projects/:projectId/bedarfKapa/:id", async (req, res, next) => {
+  app.get("/api/projects/:projectId/bedarfkapa/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       const bedarfKapa = await storage.getBedarfKapa(id);
@@ -728,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete("/api/projects/:projectId/bedarfKapa/:id", async (req, res, next) => {
+  app.delete("/api/projects/:projectId/bedarfkapa/:id", async (req, res, next) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteBedarfKapa(id);
