@@ -158,6 +158,9 @@ export const milestones = pgTable("tblmilestones", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// EWB/FÖB Enum für die Meilenstein-Details
+export const ewbFoebEnum = pgEnum('ewb_foeb_type', ['EWB', 'FÖB', 'EWB,FÖB', 'keine']);
+
 // Meilenstein-Details-Tabelle
 export const milestoneDetails = pgTable("tblmilestonedetails", {
   id: serial("id").primaryKey(),
@@ -166,6 +169,8 @@ export const milestoneDetails = pgTable("tblmilestonedetails", {
   jahr: integer("jahr").notNull(),
   text: varchar("text", { length: 255 }),
   supplementaryInfo: text("supplementary_info"),
+  ewbFoeb: ewbFoebEnum("ewb_foeb").default('keine'),
+  sollMenge: numeric("soll_menge", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -400,6 +405,7 @@ export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails).
     ...data,
     kalenderwoche: typeof data.kalenderwoche === 'string' ? parseInt(data.kalenderwoche, 10) : data.kalenderwoche,
     jahr: typeof data.jahr === 'string' ? parseInt(data.jahr, 10) : data.jahr,
+    sollMenge: typeof data.sollMenge === 'string' ? parseFloat(data.sollMenge) : data.sollMenge,
   };
 });
 
