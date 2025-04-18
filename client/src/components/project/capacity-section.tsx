@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
 
 const bedarfTypes = [
@@ -133,113 +133,107 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Bedarf & Kapazitäten</h3>
-        {!isAddingNew && (
-          <Button
-            onClick={() => setIsAddingNew(true)}
-            disabled={isAddingNew}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Neuen Bedarf hinzufügen
-          </Button>
-        )}
-      </div>
+      <h2 className="text-xl font-semibold">Bedarf & Kapazitäten</h2>
       
-      {isAddingNew && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Neuen Bedarf/Kapazität hinzufügen</CardTitle>
-          </CardHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="bedarfKapaName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Typ</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Typ auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {bedarfTypes.map(type => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="bedarfKapaAnzahl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Anzahl</FormLabel>
+      <Card className="bg-gray-50">
+        <CardHeader>
+          <CardTitle>Neuen Bedarf/Kapazität hinzufügen</CardTitle>
+        </CardHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="bedarfKapaName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Typ</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          min="1" 
-                          {...field}
-                          onChange={e => field.onChange(parseInt(e.target.value))}
-                        />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Typ auswählen" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddingNew(false)}
-                >
-                  Abbrechen
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addMutation.isPending}
-                >
-                  {addMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Speichern
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
-        </Card>
-      )}
+                      <SelectContent>
+                        {bedarfTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="bedarfKapaAnzahl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Anzahl</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        {...field}
+                        onChange={e => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => form.reset()}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700"
+                disabled={addMutation.isPending}
+              >
+                {addMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                <Save className="mr-2 h-4 w-4" />
+                Speichern
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </Card>
       
       {isLoading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : !bedarfKapas || bedarfKapas.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {isAddingNew ? 
-            'Fügen Sie Ihren ersten Bedarf/Kapazität hinzu.' : 
-            'Keine Bedarf/Kapazitäten vorhanden. Klicken Sie auf "Neuen Bedarf hinzufügen", um zu beginnen.'}
+        <div className="text-center py-4 px-4 bg-white border rounded-md shadow-sm mt-4">
+          <p className="text-muted-foreground">
+            Keine Einträge vorhanden. Bitte fügen Sie oben einen neuen Bedarf hinzu.
+          </p>
         </div>
       ) : (
-        <DataTable
-          data={bedarfKapas}
-          columns={columns}
-          onDelete={handleDelete}
-        />
+        <div className="bg-white border rounded-md shadow-sm overflow-hidden mt-4">
+          <div className="p-4">
+            <h3 className="text-lg font-medium mb-2">Vorhandene Bedarfe/Kapazitäten</h3>
+            <DataTable
+              data={bedarfKapas}
+              columns={columns}
+              onDelete={handleDelete}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
