@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Project } from "@shared/schema";
+import { Project, Customer } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -39,10 +39,27 @@ export default function ProjectPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Fetch projects
-  const { data: projects = [], isLoading } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     staleTime: 1000 * 60, // 1 minute
   });
+  
+  // Fetch customers
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<Customer[]>({
+    queryKey: ["/api/customers"],
+    staleTime: 1000 * 60, // 1 minute
+  });
+  
+  // Combine projects with customer names
+  const projectsWithCustomerNames = useMemo(() => {
+    return projects.map(project => {
+      const customer = customers.find(c => c.id === project.customerId);
+      return {
+        ...project,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : undefined
+      };
+    });
+  }, [projects, customers]);
   
   // Create or update project mutation
   const saveProjectMutation = useMutation({
@@ -265,9 +282,9 @@ export default function ProjectPage() {
           
           {viewMode === 'list' ? (
             <DataTable
-              data={projects}
+              data={projectsWithCustomerNames}
               columns={columns}
-              isLoading={isLoading}
+              isLoading={isLoadingProjects || isLoadingCustomers}
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
               onViewDetails={handleViewDetails}
@@ -275,8 +292,8 @@ export default function ProjectPage() {
             />
           ) : (
             <ProjectGrid
-              projects={projects}
-              isLoading={isLoading}
+              projects={projectsWithCustomerNames}
+              isLoading={isLoadingProjects || isLoadingCustomers}
               onEdit={handleEditProject}
               onDelete={handleDeleteProject}
               onShowAttachments={handleShowAttachments}
