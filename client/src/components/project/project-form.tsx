@@ -323,10 +323,41 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
             <div>
               <FormField
                 control={form.control}
+                name="customerContactId" // Neues Feld für den Kunden-Ansprechpartner
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ansprechpartner Kunde</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                      defaultValue={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kunde auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">Keiner</SelectItem>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id.toString()}>
+                            {customer.firstName} {customer.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div>
+              <FormField
+                control={form.control}
                 name="personId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ansprechpartner</FormLabel>
+                    <FormLabel>Ansprechpartner Firma</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                       defaultValue={field.value?.toString()}
