@@ -1158,7 +1158,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Project creation error:", error);
         next(error);
       }
-    });
+  });
+  
+  // Login-Logs abfragen - nur für Administratoren
+  app.get("/api/login-logs", async (req, res, next) => {
+    // Prüfe, ob der Benutzer authentifiziert ist
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    // Prüfe, ob der Benutzer Administrator ist
+    if (req.user.role !== 'administrator') {
+      return res.status(403).json({ message: "Keine Berechtigung. Diese Funktion steht nur Administratoren zur Verfügung." });
+    }
+
+    try {
+      const logs = await storage.getLoginLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching login logs:", error);
+      next(error);
+    }
+  });
+  
+  // Login-Logs für einen bestimmten Benutzer abfragen - nur für Administratoren
+  app.get("/api/login-logs/user/:userId", async (req, res, next) => {
+    // Prüfe, ob der Benutzer authentifiziert ist
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    // Prüfe, ob der Benutzer Administrator ist
+    if (req.user.role !== 'administrator') {
+      return res.status(403).json({ message: "Keine Berechtigung. Diese Funktion steht nur Administratoren zur Verfügung." });
+    }
+
+    try {
+      const userId = parseInt(req.params.userId, 10);
+      const logs = await storage.getLoginLogsByUser(userId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching user login logs:", error);
+      next(error);
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

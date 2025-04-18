@@ -146,8 +146,23 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
+    // Benutzer-ID speichern, bevor wir die Sitzung beenden
+    const userId = req.user?.id;
+    
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        // Fehler beim Abmelden protokollieren
+        if (userId) {
+          logLoginEvent(req, 'logout', userId, false, String(err));
+        }
+        return next(err);
+      }
+      
+      // Erfolgreiche Abmeldung protokollieren, falls ein Benutzer vorhanden war
+      if (userId) {
+        logLoginEvent(req, 'logout', userId);
+      }
+      
       res.sendStatus(200);
     });
   });
