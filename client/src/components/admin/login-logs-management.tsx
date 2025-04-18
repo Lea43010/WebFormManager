@@ -58,10 +58,10 @@ export function LoginLogsManagement() {
       log.ipAddress.includes(filter);
     
     // Ereignistyp-Filter anwenden
-    const eventMatch = eventTypeFilter === null || log.eventType === eventTypeFilter;
+    const eventMatch = eventTypeFilter === null || eventTypeFilter === 'all' || log.eventType === eventTypeFilter;
     
     // Erfolgs-Filter anwenden
-    const successMatch = successFilter === null || 
+    const successMatch = successFilter === null || successFilter === 'all' || 
       (successFilter === 'success' && log.success) || 
       (successFilter === 'fail' && !log.success);
     
@@ -129,7 +129,7 @@ export function LoginLogsManagement() {
                   <SelectValue placeholder="Alle Ereignistypen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Alle Ereignistypen</SelectItem>
+                  <SelectItem value="all">Alle Ereignistypen</SelectItem>
                   <SelectItem value="login">Anmeldung</SelectItem>
                   <SelectItem value="logout">Abmeldung</SelectItem>
                   <SelectItem value="register">Registrierung</SelectItem>
@@ -148,7 +148,7 @@ export function LoginLogsManagement() {
                   <SelectValue placeholder="Alle Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Alle Status</SelectItem>
+                  <SelectItem value="all">Alle Status</SelectItem>
                   <SelectItem value="success">Erfolgreich</SelectItem>
                   <SelectItem value="fail">Fehlgeschlagen</SelectItem>
                 </SelectContent>
