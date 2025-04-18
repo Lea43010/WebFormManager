@@ -104,7 +104,7 @@ export default function AuthPage() {
         <div className="mx-auto w-full max-w-sm lg:w-96 pt-16">
           <div className="mb-8 flex flex-col items-center">
             <div className="mb-4">
-              <img src="/Logo.png" alt="Sachverständigenbüro - Justitia" className="h-24" />
+              <img src="/static/logo.png" alt="Sachverständigenbüro - Justitia" className="h-24" />
             </div>
             <h2 className="text-4xl font-bold text-gray-900 text-center">
               Anmeldung

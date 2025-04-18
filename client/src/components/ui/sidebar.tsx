@@ -106,7 +106,10 @@ export function Sidebar() {
   const sidebarContent = (
     <div className="flex flex-col h-full bg-primary-dark text-black">
       <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
-        <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Baustellen App</span>
+        <div className="flex items-center">
+          <img src="/static/logo.png" alt="Sachverständigenbüro - Justitia" className="h-8 mr-3" />
+          <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Baustellen App</span>
+        </div>
         {isMobile && (
           <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
             <X className="h-6 w-6" />
