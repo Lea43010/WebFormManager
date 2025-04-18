@@ -15,6 +15,7 @@ export const bodentragfaehigkeitsklassenEnum = pgEnum('bodentragfaehigkeitsklass
 export const analysisTypeEnum = pgEnum('analysis_types', ['asphalt', 'ground']);
 export const fileCategoryEnum = pgEnum('file_categories', ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere']);
 export const userRolesEnum = pgEnum('user_roles', ['administrator', 'manager', 'benutzer']);
+export const loginEventTypesEnum = pgEnum('login_event_types', ['login', 'logout', 'register', 'failed_login']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -237,10 +238,24 @@ export const fileOrganizationSuggestions = pgTable("tblfile_organization_suggest
   appliedAt: timestamp("applied_at"),
 });
 
+// Login-Logs table - Für die Nachverfolgung aller Anmeldungen und Registrierungen
+export const loginLogs = pgTable("tbllogin_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  username: varchar("username", { length: 255 }).notNull(), // Für gescheiterte Anmeldeversuche mit nicht existierenden Benutzern
+  eventType: loginEventTypesEnum("event_type").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv6 kann bis zu 45 Zeichen haben
+  userAgent: varchar("user_agent", { length: 500 }),
+  timestamp: timestamp("timestamp").defaultNow(),
+  success: boolean("success").default(true),
+  failReason: text("fail_reason"),
+});
+
 // Define relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects, { relationName: 'createdByUser' }),
   createdUsers: many(users, { relationName: 'createdByAdmin' }),
+  loginEvents: many(loginLogs),
 }));
 
 export const companiesRelations = relations(companies, ({ many, one }) => ({
