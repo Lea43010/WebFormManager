@@ -38,7 +38,7 @@ const BUNDESLAENDER = [
 
 interface CompanyFormProps {
   company?: Company | null;
-  onSubmit: (data: Partial<Company>) => void;
+  onSubmit: (data: Partial<Company>) => Promise<Company>;
   isLoading?: boolean;
 }
 
@@ -89,40 +89,51 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    // Konvertiere die Daten, um den Typen der Schema zu entsprechen
-    const transformedData = {
-      ...data,
-      postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
-      companyPhone: data.companyPhone && data.companyPhone.toString().trim() !== '' ? data.companyPhone : null,
-    };
-    
-    // Entferne die Ansprechpartner-Felder aus dem transformedData-Objekt
-    const { contactFirstname, contactLastname, ...companyData } = transformedData;
-    
-    // Speichere die Firmendaten
-    const savedCompany = await onSubmit(companyData as any);
-    
-    // Wenn Vor- und Nachname angegeben wurden, erstelle einen neuen Ansprechpartner
-    if (contactFirstname && contactLastname && savedCompany?.id) {
-      try {
-        // Erstelle einen neuen Ansprechpartner und verknüpfe ihn mit der Firma
-        const personData = {
-          companyId: savedCompany.id,
-          firstname: contactFirstname,
-          lastname: contactLastname,
-        };
-        
-        // Sende die Ansprechpartner-Daten an den Server
-        await fetch('/api/persons', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(personData),
-        });
-      } catch (error) {
-        console.error('Fehler beim Speichern des Ansprechpartners:', error);
+    try {
+      // Konvertiere die Daten, um den Typen der Schema zu entsprechen
+      const transformedData = {
+        ...data,
+        postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
+        companyPhone: data.companyPhone && data.companyPhone.toString().trim() !== '' ? data.companyPhone : null,
+      };
+      
+      // Entferne die Ansprechpartner-Felder aus dem transformedData-Objekt
+      const { contactFirstname, contactLastname, ...companyData } = transformedData;
+      
+      // Speichere die Firmendaten
+      const savedCompany = await onSubmit(companyData as any);
+      
+      // Wenn Vor- und Nachname angegeben wurden, erstelle einen neuen Ansprechpartner
+      if (contactFirstname && contactLastname && savedCompany && savedCompany.id) {
+        try {
+          // Erstelle einen neuen Ansprechpartner und verknüpfe ihn mit der Firma
+          const personData = {
+            companyId: savedCompany.id,
+            firstname: contactFirstname,
+            lastname: contactLastname,
+          };
+          
+          // Sende die Ansprechpartner-Daten an den Server
+          const response = await fetch('/api/persons', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(personData),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Fehler beim Speichern des Ansprechpartners: ${response.statusText}`);
+          }
+          
+          console.log('Ansprechpartner erfolgreich gespeichert');
+        } catch (error) {
+          console.error('Fehler beim Speichern des Ansprechpartners:', error);
+        }
       }
+    } catch (error) {
+      console.error('Fehler beim Speichern der Firmendaten:', error);
+      throw error;
     }
   };
 

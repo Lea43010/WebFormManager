@@ -109,8 +109,13 @@ export default function CompanyPage() {
   };
   
   // Submit form
-  const handleFormSubmit = (data: Partial<Company>) => {
-    saveCompanyMutation.mutate(data);
+  const handleFormSubmit = async (data: Partial<Company>): Promise<Company> => {
+    return new Promise((resolve, reject) => {
+      saveCompanyMutation.mutate(data, {
+        onSuccess: (savedCompany) => resolve(savedCompany),
+        onError: (error) => reject(error)
+      });
+    });
   };
   
   // Table columns

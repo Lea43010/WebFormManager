@@ -14,8 +14,8 @@ import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
-  insertBedarfKapaSchema,
-  createInsertSchema, companies, customers, projects, 
+  insertBedarfKapaSchema, insertPersonSchema,
+  createInsertSchema, companies, customers, projects, persons,
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -393,6 +393,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteComponent(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Person routes (Ansprechpartner)
+  app.get("/api/persons", async (req, res, next) => {
+    try {
+      const persons = await storage.getPersons();
+      res.json(persons);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const person = await storage.getPerson(id);
+      if (!person) {
+        return res.status(404).json({ message: "Ansprechpartner nicht gefunden" });
+      }
+      res.json(person);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/persons", async (req, res, next) => {
+    try {
+      // Numerische Felder konvertieren
+      const formData = {
+        ...req.body,
+        personId: typeof req.body.personId === 'string' ? parseInt(req.body.personId, 10) : req.body.personId,
+        projectId: typeof req.body.projectId === 'string' ? parseInt(req.body.projectId, 10) : req.body.projectId,
+        companyId: typeof req.body.companyId === 'string' ? parseInt(req.body.companyId, 10) : req.body.companyId,
+        professionalName: typeof req.body.professionalName === 'string' ? parseInt(req.body.professionalName, 10) : req.body.professionalName,
+      };
+      
+      const validatedData = insertPersonSchema.parse(formData);
+      const person = await storage.createPerson(validatedData);
+      res.status(201).json(person);
+    } catch (error) {
+      console.error("Person creation error:", error);
+      next(error);
+    }
+  });
+
+  app.put("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Numerische Felder konvertieren
+      const formData = {
+        ...req.body,
+        personId: typeof req.body.personId === 'string' ? parseInt(req.body.personId, 10) : req.body.personId,
+        projectId: typeof req.body.projectId === 'string' ? parseInt(req.body.projectId, 10) : req.body.projectId,
+        companyId: typeof req.body.companyId === 'string' ? parseInt(req.body.companyId, 10) : req.body.companyId,
+        professionalName: typeof req.body.professionalName === 'string' ? parseInt(req.body.professionalName, 10) : req.body.professionalName,
+      };
+      
+      // Schema für die partielle Validierung
+      const baseSchema = createInsertSchema(persons);
+      const validatedData = baseSchema.partial().parse(formData);
+      
+      const person = await storage.updatePerson(id, validatedData);
+      if (!person) {
+        return res.status(404).json({ message: "Ansprechpartner nicht gefunden" });
+      }
+      res.json(person);
+    } catch (error) {
+      console.error("Person update error:", error);
+      next(error);
+    }
+  });
+
+  app.delete("/api/persons/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePerson(id);
       res.status(204).send();
     } catch (error) {
       next(error);
