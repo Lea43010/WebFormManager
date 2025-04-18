@@ -23,6 +23,7 @@ import { useMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import logoImage from "@/assets/Logo.png";
 
 interface NavItem {
   title: string;
@@ -107,7 +108,7 @@ export function Sidebar() {
     <div className="flex flex-col h-full bg-primary-dark text-black">
       <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
         <div className="flex items-center">
-          <img src="/static/logo.png" alt="Sachverständigenbüro - Justitia" className="h-8 mr-3" />
+          <img src={logoImage} alt="Sachverständigenbüro - Justitia" className="h-8 mr-3" />
           <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Baustellen App</span>
         </div>
         {isMobile && (

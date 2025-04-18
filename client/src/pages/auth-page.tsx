@@ -30,6 +30,7 @@ import {
   Building2,
   Settings 
 } from "lucide-react";
+import logoImage from "@/assets/Logo.png";
 import {
   Dialog,
   DialogContent,
@@ -104,7 +105,7 @@ export default function AuthPage() {
         <div className="mx-auto w-full max-w-sm lg:w-96 pt-16">
           <div className="mb-8 flex flex-col items-center">
             <div className="mb-4">
-              <img src="/static/logo.png" alt="Sachverständigenbüro - Justitia" className="h-24" />
+              <img src={logoImage} alt="Sachverständigenbüro - Justitia" className="h-24" />
             </div>
             <h2 className="text-4xl font-bold text-gray-900 text-center">
               Anmeldung
