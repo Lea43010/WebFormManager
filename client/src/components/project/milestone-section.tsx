@@ -775,7 +775,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                               step="0.01"
                               placeholder="Soll-Menge eingeben" 
                               value={field.value?.toString() || ''} 
-                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
                               onBlur={field.onBlur}
                               name={field.name}
                             />
