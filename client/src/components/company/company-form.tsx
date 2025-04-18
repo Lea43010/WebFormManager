@@ -59,6 +59,9 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
     country: z.string().optional(),
     companyPhone: z.string().optional(),
     companyEmail: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal('')),
+    // Felder für den Ansprechpartner
+    contactFirstname: z.string().optional(),
+    contactLastname: z.string().optional(),
   });
 
   // Initialize form with default values from company or empty values
@@ -79,17 +82,48 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
       country: company?.country || "Deutschland",
       companyPhone: company?.companyPhone ? String(company.companyPhone) : '',
       companyEmail: company?.companyEmail || "",
+      // Standardwerte für Ansprechpartner-Felder
+      contactFirstname: "",
+      contactLastname: "",
     },
   });
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     // Konvertiere die Daten, um den Typen der Schema zu entsprechen
     const transformedData = {
       ...data,
       postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? data.postalCode : null,
       companyPhone: data.companyPhone && data.companyPhone.toString().trim() !== '' ? data.companyPhone : null,
     };
-    onSubmit(transformedData as any);
+    
+    // Entferne die Ansprechpartner-Felder aus dem transformedData-Objekt
+    const { contactFirstname, contactLastname, ...companyData } = transformedData;
+    
+    // Speichere die Firmendaten
+    const savedCompany = await onSubmit(companyData as any);
+    
+    // Wenn Vor- und Nachname angegeben wurden, erstelle einen neuen Ansprechpartner
+    if (contactFirstname && contactLastname && savedCompany?.id) {
+      try {
+        // Erstelle einen neuen Ansprechpartner und verknüpfe ihn mit der Firma
+        const personData = {
+          companyId: savedCompany.id,
+          firstname: contactFirstname,
+          lastname: contactLastname,
+        };
+        
+        // Sende die Ansprechpartner-Daten an den Server
+        await fetch('/api/persons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(personData),
+        });
+      } catch (error) {
+        console.error('Fehler beim Speichern des Ansprechpartners:', error);
+      }
+    }
   };
 
   return (
@@ -405,6 +439,50 @@ export default function CompanyForm({ company, onSubmit, isLoading = false }: Co
                         {...field} 
                         className="modern-form-input" 
                         placeholder="E-Mail-Adresse"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+          
+          {/* Ansprechpartner */}
+          <div className="form-section">
+            <h3 className="form-heading"><span className="green-emoji mr-2">👤</span> Firmen-Ansprechpartner</h3>
+            
+            {/* Vorname und Nachname */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name="contactFirstname"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Vorname</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="Vorname des Ansprechpartners"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="contactLastname"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="modern-form-label">Nachname</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        className="modern-form-input" 
+                        placeholder="Nachname des Ansprechpartners"
                       />
                     </FormControl>
                     <FormMessage />
