@@ -132,7 +132,9 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
       kalenderwoche: getCurrentWeek(),
       jahr: getCurrentYear(),
       text: '',
-      supplementaryInfo: ''
+      supplementaryInfo: '',
+      ewbFoeb: 'keine',
+      sollMenge: undefined
     }
   });
   
@@ -235,7 +237,9 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         kalenderwoche: getCurrentWeek(),
         jahr: getCurrentYear(),
         text: '',
-        supplementaryInfo: ''
+        supplementaryInfo: '',
+        ewbFoeb: 'keine',
+        sollMenge: undefined
       });
     },
     onError: (error) => {
@@ -963,6 +967,57 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                             </FormItem>
                           )}
                         />
+
+                        <FormField
+                          control={detailForm.control}
+                          name="ewbFoeb"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>EWB/FÖB</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Bitte auswählen" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="keine">Keine</SelectItem>
+                                  <SelectItem value="EWB">EWB</SelectItem>
+                                  <SelectItem value="FÖB">FÖB</SelectItem>
+                                  <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={detailForm.control}
+                          name="sollMenge"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Soll-Menge</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Soll-Menge eingeben" 
+                                  value={field.value || ''} 
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  ref={field.ref}
+                                  disabled={field.disabled}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         
                         <DialogFooter>
                           <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
@@ -994,6 +1049,8 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                         <TableHead>Jahr</TableHead>
                         <TableHead>Beschreibung</TableHead>
                         <TableHead>Zusatzinformationen</TableHead>
+                        <TableHead>EWB/FÖB</TableHead>
+                        <TableHead>Soll-Menge</TableHead>
                         <TableHead>Aktionen</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1004,6 +1061,8 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           <TableCell>{detail.jahr}</TableCell>
                           <TableCell>{detail.text}</TableCell>
                           <TableCell>{detail.supplementaryInfo}</TableCell>
+                          <TableCell>{detail.ewbFoeb || 'keine'}</TableCell>
+                          <TableCell>{detail.sollMenge}</TableCell>
                           <TableCell>
                             <Button 
                               variant="ghost" 
