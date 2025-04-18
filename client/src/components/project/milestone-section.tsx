@@ -914,9 +914,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     EWB/FÖB: {milestones?.find(m => m.id === selectedMilestoneId)?.ewbFoeb || 'keine'}
                     {milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge !== null && 
                      milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge !== undefined ? 
-                     ` - Soll-Menge: ${typeof milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge === 'number' ? 
-                     (milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge as number).toFixed(2) :
-                     milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge}` : ''}
+                     ` - Soll-Menge: ${milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge}` : ''}
                   </CardDescription>
                 </div>
                 
@@ -1136,10 +1134,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           <TableCell>{detail.text}</TableCell>
                           <TableCell>{detail.supplementaryInfo}</TableCell>
                           <TableCell>{detail.ewbFoeb || 'keine'}</TableCell>
-                          <TableCell>{detail.sollMenge !== null && detail.sollMenge !== undefined ? 
-                            (typeof detail.sollMenge === 'number' ? 
-                              (detail.sollMenge as number).toFixed(2) : 
-                              detail.sollMenge) : '-'}</TableCell>
+                          <TableCell>{detail.sollMenge !== null && detail.sollMenge !== undefined ? detail.sollMenge : '-'}</TableCell>
                           <TableCell>
                             <Button 
                               variant="ghost" 

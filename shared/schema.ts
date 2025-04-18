@@ -159,7 +159,7 @@ export const milestones = pgTable("tblmilestones", {
   color: varchar("color", { length: 50 }),
   type: varchar("type", { length: 100 }),
   ewbFoeb: ewbFoebEnum("ewb_foeb").default('keine'),
-  sollMenge: numeric("soll_menge", { precision: 10, scale: 2 }),
+  sollMenge: varchar("soll_menge", { length: 20 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -172,7 +172,7 @@ export const milestoneDetails = pgTable("tblmilestonedetails", {
   text: varchar("text", { length: 255 }),
   supplementaryInfo: text("supplementary_info"),
   ewbFoeb: ewbFoebEnum("ewb_foeb").default('keine'),
-  sollMenge: numeric("soll_menge", { precision: 10, scale: 2 }),
+  sollMenge: varchar("soll_menge", { length: 20 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -394,7 +394,7 @@ export const insertFileOrganizationSuggestionSchema = createInsertSchema(fileOrg
 });
 
 export const insertMilestoneSchema = createInsertSchema(milestones, {
-  sollMenge: z.string().nullable().optional().transform((val) => val === null || val === undefined ? val : parseFloat(val))
+  sollMenge: z.string().nullable().optional()
 }).transform((data) => {
   return {
     ...data,
@@ -405,7 +405,7 @@ export const insertMilestoneSchema = createInsertSchema(milestones, {
 });
 
 export const insertMilestoneDetailSchema = createInsertSchema(milestoneDetails, {
-  sollMenge: z.string().nullable().optional().transform((val) => val === null || val === undefined ? val : parseFloat(val))
+  sollMenge: z.string().nullable().optional()
 }).transform((data) => {
   return {
     ...data,
