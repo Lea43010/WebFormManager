@@ -71,12 +71,12 @@ export default function ProjectDetailPage() {
     <DashboardLayout
       title={`Projekt: ${project.projectName}`}
       description={
-        <div className="flex items-center space-x-2 mt-1">
+        <span className="flex items-center space-x-2 mt-1">
           <Badge variant={project.projectStop ? "destructive" : "default"} className={project.projectStop ? "" : "bg-green-600"}>
             {project.projectStop ? "Gestoppt" : "Aktiv"}
           </Badge>
           <span className="text-sm text-muted-foreground">Projektart: {project.projectArt || "Nicht angegeben"}</span>
-        </div>
+        </span>
       }
     >
       {isEditing ? (
@@ -167,10 +167,10 @@ export default function ProjectDetailPage() {
                       <div>{project.projectHeight || "Nicht angegeben"}</div>
                       
                       <div className="font-medium">Kunde:</div>
-                      <div>{project.customerName || "Nicht angegeben"}</div>
+                      <div>{"Nicht angegeben"}</div>
                       
                       <div className="font-medium">Unternehmen:</div>
-                      <div>{project.companyName || "Nicht angegeben"}</div>
+                      <div>{"Nicht angegeben"}</div>
                     </div>
                   </CardContent>
                 </Card>

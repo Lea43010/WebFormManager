@@ -100,6 +100,13 @@ export default function ProjectPage() {
     setIsEditing(true);
   };
   
+  // Handle view details click
+  const handleViewDetails = (project: Project) => {
+    if (project.id) {
+      navigate(`/projects/${project.id}`);
+    }
+  };
+  
   // Handle delete button click
   const handleDeleteProject = (project: Project) => {
     setCurrentProject(project);

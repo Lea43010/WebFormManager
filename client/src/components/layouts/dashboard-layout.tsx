@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 interface DashboardLayoutProps {
   children: ReactNode;
   title: string | ReactNode;
-  description?: string;
+  description?: string | ReactNode;
   tabs?: string[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
