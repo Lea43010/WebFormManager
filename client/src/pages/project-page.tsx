@@ -161,13 +161,32 @@ export default function ProjectPage() {
       accessorKey: "projectStartdate" as keyof Project,
       header: "Zeitraum",
       cell: (value: string, row: Project) => {
-        const startDate = row.projectStartdate ? new Date(row.projectStartdate).toLocaleDateString() : 'N/A';
-        const endDate = row.projectEnddate ? new Date(row.projectEnddate).toLocaleDateString() : 'N/A';
+        const startDate = row.projectStartdate ? new Date(row.projectStartdate) : null;
+        const endDate = row.projectEnddate ? new Date(row.projectEnddate) : null;
+        
+        // Berechne Kalenderwoche für Start- und Enddatum
+        const startKW = startDate ? getWeekNumber(startDate) : null;
+        const endKW = endDate ? getWeekNumber(endDate) : null;
+        
+        // Formatiere für die Anzeige
+        const startDateStr = startDate ? startDate.toLocaleDateString() : 'N/A';
+        const endDateStr = endDate ? endDate.toLocaleDateString() : 'N/A';
+        
         return (
-          <div>
-            <div>{startDate}</div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span>{startDateStr}</span>
+              {startKW && (
+                <Badge variant="outline" className="text-xs">KW {startKW}</Badge>
+              )}
+            </div>
             <div>-</div>
-            <div>{endDate}</div>
+            <div className="flex items-center gap-2">
+              <span>{endDateStr}</span>
+              {endKW && (
+                <Badge variant="outline" className="text-xs">KW {endKW}</Badge>
+              )}
+            </div>
           </div>
         );
       },

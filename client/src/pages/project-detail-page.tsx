@@ -12,6 +12,14 @@ import { CapacitySection } from "@/components/project/capacity-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
 
+// Hilfsfunktion zur Berechnung der Kalenderwoche (ISO-Format)
+const getWeekNumber = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+};
+
 export default function ProjectDetailPage() {
   const [, navigate] = useLocation();
   const [_, params] = useRoute("/projects/:id");
@@ -143,10 +151,32 @@ export default function ProjectDetailPage() {
                       </div>
                       
                       <div className="font-medium">Startdatum:</div>
-                      <div>{project.projectStartdate ? new Date(project.projectStartdate).toLocaleDateString() : "Nicht angegeben"}</div>
+                      <div className="flex items-center gap-2">
+                        {project.projectStartdate ? (
+                          <>
+                            <span>{new Date(project.projectStartdate).toLocaleDateString()}</span>
+                            <Badge variant="outline" className="text-xs">
+                              KW {getWeekNumber(new Date(project.projectStartdate))}
+                            </Badge>
+                          </>
+                        ) : (
+                          "Nicht angegeben"
+                        )}
+                      </div>
                       
                       <div className="font-medium">Enddatum:</div>
-                      <div>{project.projectEnddate ? new Date(project.projectEnddate).toLocaleDateString() : "Nicht angegeben"}</div>
+                      <div className="flex items-center gap-2">
+                        {project.projectEnddate ? (
+                          <>
+                            <span>{new Date(project.projectEnddate).toLocaleDateString()}</span>
+                            <Badge variant="outline" className="text-xs">
+                              KW {getWeekNumber(new Date(project.projectEnddate))}
+                            </Badge>
+                          </>
+                        ) : (
+                          "Nicht angegeben"
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

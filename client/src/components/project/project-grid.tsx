@@ -19,6 +19,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Hilfsfunktion zur Berechnung der Kalenderwoche (ISO-Format)
+const getWeekNumber = (date: Date): number => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+};
+
 interface ProjectGridProps {
   projects: Project[];
   isLoading: boolean;
@@ -112,12 +120,32 @@ export function ProjectGrid({
                       <span className="ml-1">{project.customerId || '-'}</span>
                     </div>
                     {project.projectStartdate && (
-                      <div className="flex items-center text-sm">
-                        <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                        <span>
-                          {new Date(project.projectStartdate).toLocaleDateString()} - 
-                          {project.projectEnddate ? new Date(project.projectEnddate).toLocaleDateString() : 'Offen'}
-                        </span>
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm">
+                          <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+                          <span className="font-medium">Zeitraum:</span>
+                        </div>
+                        <div className="ml-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span>{new Date(project.projectStartdate).toLocaleDateString()}</span>
+                            <Badge variant="outline" className="text-xs">
+                              KW {getWeekNumber(new Date(project.projectStartdate))}
+                            </Badge>
+                          </div>
+                          <div className="mt-1">-</div>
+                          <div className="flex items-center gap-2">
+                            {project.projectEnddate ? (
+                              <>
+                                <span>{new Date(project.projectEnddate).toLocaleDateString()}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  KW {getWeekNumber(new Date(project.projectEnddate))}
+                                </Badge>
+                              </>
+                            ) : (
+                              <span>Offen</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                     {project.projectNotes && (
