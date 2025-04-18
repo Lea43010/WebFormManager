@@ -15,7 +15,8 @@ import {
   Paperclip,
   Map,
   Info,
-  UserCircle
+  UserCircle,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -49,6 +50,11 @@ const navItems: NavItem[] = [
     title: "Projektverwaltung",
     href: "/projects",
     icon: Folders,
+  },
+  {
+    title: "Bauprojektplan",
+    href: "/construction-plan",
+    icon: CalendarDays,
   },
   {
     title: "Geo-Informationen",
