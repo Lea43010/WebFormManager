@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { 
@@ -15,7 +15,8 @@ import {
   soilReferenceData, type SoilReferenceData, type InsertSoilReferenceData,
   bedarfKapa, type BedarfKapa, type InsertBedarfKapa,
   milestones, type Milestone, type InsertMilestone,
-  milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail
+  milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail,
+  loginLogs, type LoginLog, type InsertLoginLog
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
