@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CapacitySection } from "@/components/project/capacity-section";
+import { MilestoneSection } from "@/components/project/milestone-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
 
@@ -130,6 +131,7 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="overview" className="mt-4">
             <TabsList>
               <TabsTrigger value="overview">Übersicht</TabsTrigger>
+              <TabsTrigger value="milestones">Meilensteine</TabsTrigger>
               <TabsTrigger value="capacity">Bedarf/Kapazitäten</TabsTrigger>
               <TabsTrigger value="attachments">Anhänge</TabsTrigger>
             </TabsList>
@@ -217,6 +219,10 @@ export default function ProjectDetailPage() {
                   </Card>
                 )}
               </div>
+            </TabsContent>
+            
+            <TabsContent value="milestones" className="mt-4">
+              {project.id && <MilestoneSection projectId={project.id} />}
             </TabsContent>
 
             <TabsContent value="capacity" className="mt-4">
