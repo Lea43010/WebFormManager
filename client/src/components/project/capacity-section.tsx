@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2, Plus, Trash2, Save } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
+import { Column } from '@/components/ui/data-table-types';
 
 const bedarfTypes = [
   'Tiefbau',
@@ -125,7 +126,7 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
     {
       header: 'Erstellt am',
       accessorKey: 'createdAt',
-      cell: (value, row) => {
+      cell: (value: any, row: BedarfKapa) => {
         return value ? new Date(value.toString()).toLocaleDateString() : '-';
       }
     },

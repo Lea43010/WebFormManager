@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
-import { FileText, File, Loader2, Plus, Trash2, Image, Download } from 'lucide-react';
+import { FileText, File, Loader2, Plus, Trash2, Image as ImageIcon, Download } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -140,7 +140,7 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
     const ext = fileName.split('.').pop()?.toLowerCase();
     
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
-      return <Image className="w-6 h-6 text-blue-500" />;
+      return <ImageIcon className="w-6 h-6 text-blue-500" />;
     } else if (['pdf'].includes(ext || '')) {
       return <FileText className="w-6 h-6 text-red-500" />;
     } else {
