@@ -235,6 +235,10 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     fields: [projects.personId],
     references: [persons.id],
   }),
+  customerContact: one(customers, {
+    fields: [projects.customerContactId],
+    references: [customers.id],
+  }),
   components: many(components),
   attachments: many(attachments),
   surfaceAnalyses: many(surfaceAnalyses),
