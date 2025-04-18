@@ -1,10 +1,11 @@
-import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, FileCheck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
+import { generateCompliancePdf } from "@/utils/pdf-generator";
 
 // Belastungsklassen und Bauweisen-Daten für die Tabellen
 const belastungsklassen = [
@@ -101,7 +102,8 @@ const sections = [
   { id: "bauweisen", title: "Bauweisen nach RStO 12" },
   { id: "hilfreiche-links", title: "Hilfreiche Links" },
   { id: "geo-anleitung", title: "Anleitung Geo-Informationen" },
-  { id: "nutzungshinweise", title: "Nutzungshinweise" }
+  { id: "nutzungshinweise", title: "Nutzungshinweise" },
+  { id: "eu-konformitaet", title: "EU-Konformität" }
 ];
 
 export default function InformationPage() {
