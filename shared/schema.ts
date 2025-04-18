@@ -14,6 +14,7 @@ export const bodenklassenEnum = pgEnum('bodenklassen', ['Kies', 'Sand', 'Lehm', 
 export const bodentragfaehigkeitsklassenEnum = pgEnum('bodentragfaehigkeitsklassen', ['F1', 'F2', 'F3', 'unbekannt']);
 export const analysisTypeEnum = pgEnum('analysis_types', ['asphalt', 'ground']);
 export const fileCategoryEnum = pgEnum('file_categories', ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere']);
+export const userRolesEnum = pgEnum('user_roles', ['administrator', 'manager', 'benutzer']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -22,6 +23,8 @@ export const users = pgTable("tbluser", {
   password: varchar("password", { length: 255 }).notNull(),
   name: varchar("user_name", { length: 100 }),
   email: varchar("user_email", { length: 255 }),
+  role: userRolesEnum("role").default('benutzer'),
+  createdBy: integer("created_by").references(() => users.id),
 });
 
 // Companies table
@@ -97,6 +100,8 @@ export const projects = pgTable("tblproject", {
   projectStopstartdate: date("project_stopstartdate"),
   projectStopenddate: date("project_stopenddate"),
   projectNotes: text("project_notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Materials table
@@ -233,6 +238,11 @@ export const fileOrganizationSuggestions = pgTable("tblfile_organization_suggest
 });
 
 // Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  createdProjects: many(projects, { relationName: 'createdByUser' }),
+  createdUsers: many(users, { relationName: 'createdByAdmin' }),
+}));
+
 export const companiesRelations = relations(companies, ({ many, one }) => ({
   projects: many(projects),
   persons: many(persons),
@@ -269,6 +279,11 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   customerContact: one(customers, {
     fields: [projects.customerContactId],
     references: [customers.id],
+  }),
+  createdByUser: one(users, {
+    fields: [projects.createdBy],
+    references: [users.id],
+    relationName: 'createdByUser',
   }),
   components: many(components),
   attachments: many(attachments),
@@ -336,6 +351,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   name: true,
   email: true,
+  role: true,
+  createdBy: true,
 });
 
 export const insertCompanySchema = createInsertSchema(companies).transform((data) => {
