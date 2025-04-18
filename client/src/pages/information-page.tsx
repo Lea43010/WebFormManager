@@ -579,6 +579,103 @@ export default function InformationPage() {
               </div>
             </div>
           </div>
+          
+          {/* EU-Konformität */}
+          <div id="eu-konformitaet" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">EU-Konformität</h2>
+            
+            <Alert className="mb-6">
+              <ShieldCheck className="h-4 w-4" />
+              <AlertTitle>Konformität mit EU Data Act und EU KI Act</AlertTitle>
+              <AlertDescription>
+                Die Baustellen-App wurde unter Berücksichtigung der Anforderungen des EU Data Act und des EU KI Act entwickelt.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>EU Data Act Konformität</CardTitle>
+                  <CardDescription>
+                    Maßnahmen zur Gewährleistung von Transparenz, Datenportabilität und Datenschutz
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Datenportabilität</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Datenbankstruktur unterstützt den Export aller projektbezogenen Daten in standardisierten 
+                      Formaten, was den Nutzern ermöglicht, ihre Daten zwischen verschiedenen Diensten zu übertragen.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Transparenz</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die App bietet eine klare Dokumentation der Datenstrukturen und ihrer Beziehungen, 
+                      was für die Benutzer verständlich ist und ihnen ermöglicht, den Umfang der gespeicherten 
+                      Daten zu verstehen.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Datenschutz</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Sensible Daten wie Benutzerpasswörter werden nur in gehashter Form gespeichert, und 
+                      personenbezogene Daten werden nur im erforderlichen Umfang gespeichert, um das Prinzip 
+                      der Datenminimierung zu erfüllen.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>EU KI Act Konformität</CardTitle>
+                  <CardDescription>
+                    Risikominimierung und Transparenz bei KI-gestützten Funktionen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Risikobasierte Kategorisierung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die in der App implementierten KI-Systeme fallen in die Kategorie mit minimalem Risiko, 
+                      da sie keine autonomen Entscheidungen über Personen treffen, keine Bereiche mit hohem 
+                      Risiko betreffen und jederzeit menschlicher Überprüfung unterliegen.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Boden- und Asphaltklassifizierung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse und 
+                      Belastungsklasse wird mit Transparenzmaßnahmen wie der Anzeige von Konfidenzwerten, 
+                      menschlicher Aufsicht, Korrekturfunktionen und Erklärbarkeit umgesetzt.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Intelligente Dateiorganisation</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die KI-gestützte Analyse von Dokumenten erfolgt nur auf explizite Anforderung des Benutzers (Opt-in). 
+                      Vorschläge werden mit Begründung und Konfidenzwert angezeigt und erst nach expliziter Bestätigung angewendet.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <div className="flex justify-center">
+                <Button 
+                  className="gap-2" 
+                  onClick={() => generateCompliancePdf()}
+                >
+                  <Download className="h-4 w-4" />
+                  Vollständige EU-Konformitätsdokumentation herunterladen (PDF)
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
