@@ -42,6 +42,12 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
   const { data: bedarfKapas, isLoading } = useQuery<BedarfKapa[]>({
     queryKey: [`/api/projects/${projectId}/bedarfkapa`],
     enabled: !!projectId,
+    onSuccess: (data) => {
+      console.log('Fetched BedarfKapa data:', data);
+    },
+    onError: (error) => {
+      console.error('Error fetching BedarfKapa data:', error);
+    }
   });
   
   // Form setup
@@ -118,16 +124,24 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
     {
       header: 'Typ',
       accessorKey: 'bedarfKapaName',
+      cell: (value: any, row: BedarfKapa) => {
+        // Für die Debugging-Zwecke das volle Objekt in der Konsole ausgeben
+        console.log('Row data:', row);
+        return row.bedarfKapaName || '-';
+      }
     },
     {
       header: 'Anzahl',
       accessorKey: 'bedarfKapaAnzahl',
+      cell: (value: any, row: BedarfKapa) => {
+        return row.bedarfKapaAnzahl?.toString() || '-';
+      }
     },
     {
       header: 'Erstellt am',
       accessorKey: 'createdAt',
       cell: (value: any, row: BedarfKapa) => {
-        return value ? new Date(value.toString()).toLocaleDateString() : '-';
+        return row.createdAt ? new Date(row.createdAt.toString()).toLocaleDateString() : '-';
       }
     },
   ];
