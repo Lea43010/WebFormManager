@@ -1062,6 +1062,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Projekte des angemeldeten Benutzers
+  app.get("/api/user/projects", async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+
+    try {
+      const projects = await storage.getProjectsByUser(req.user.id);
+      res.json(projects);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Projekte nach Benutzer filtern (für projekteigene Ansichten)
   app.get("/api/projects/by-user", async (req, res, next) => {
     if (!req.isAuthenticated()) {

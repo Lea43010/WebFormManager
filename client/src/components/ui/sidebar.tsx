@@ -41,11 +41,13 @@ const navItems: NavItem[] = [
     title: "Firmendaten",
     href: "/companies",
     icon: Building2,
+    showFor: ['administrator', 'manager'],
   },
   {
     title: "Kundendaten",
     href: "/customers",
     icon: Users,
+    showFor: ['administrator', 'manager'],
   },
   {
     title: "Projektverwaltung",
@@ -71,6 +73,7 @@ const navItems: NavItem[] = [
     title: "Nutzerverwaltung",
     href: "/users",
     icon: Settings,
+    showFor: ['administrator'],
   },
   {
     title: "Admin-Bereich",

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Paperclip, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 // Hilfsfunktion zur Berechnung der Kalenderwoche (ISO-Format)
 const getWeekNumber = (date: Date): number => {
@@ -33,14 +34,20 @@ const getWeekNumber = (date: Date): number => {
 export default function ProjectPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
+  // API-Endpunkt basierend auf Benutzerrolle auswählen
+  const projectsEndpoint = user?.role === 'administrator' || user?.role === 'manager' 
+    ? "/api/projects"  // Admin und Manager sehen alle Projekte
+    : "/api/user/projects"; // Normale Benutzer sehen nur ihre eigenen Projekte
+  
   // Fetch projects
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: [projectsEndpoint],
     staleTime: 1000 * 60, // 1 minute
   });
   
@@ -75,7 +82,9 @@ export default function ProjectPage() {
       }
     },
     onSuccess: () => {
+      // Beide Abfrage-Keys invalidieren, um sicherzustellen, dass alle Ansichten aktualisiert werden
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
       setIsEditing(false);
       toast({
         title: currentProject ? "Projekt aktualisiert" : "Projekt erstellt",
@@ -97,7 +106,9 @@ export default function ProjectPage() {
       await apiRequest("DELETE", `/api/projects/${id}`);
     },
     onSuccess: () => {
+      // Beide Abfrage-Keys invalidieren
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
       setIsDeleteDialogOpen(false);
       toast({
         title: "Projekt gelöscht",
