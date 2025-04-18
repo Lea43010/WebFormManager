@@ -15,7 +15,6 @@ import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
-import ConstructionPlanPage from "@/pages/construction-plan-page";
 
 function Router() {
   return (
@@ -25,7 +24,6 @@ function Router() {
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
       <ProtectedRoute path="/projects" component={ProjectPage} />
-      <ProtectedRoute path="/construction-plan" component={ConstructionPlanPage} />
 
       <ProtectedRoute path="/users" component={UserPage} />
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
