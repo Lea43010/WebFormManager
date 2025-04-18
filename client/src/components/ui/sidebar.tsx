@@ -70,12 +70,7 @@ const navItems: NavItem[] = [
     href: "/information",
     icon: Info,
   },
-  {
-    title: "Nutzerverwaltung",
-    href: "/users",
-    icon: Settings,
-    showFor: ['administrator'],
-  },
+  // Nutzerverwaltung wurde in den Admin-Bereich verschoben
   {
     title: "Admin-Bereich",
     href: "/admin",

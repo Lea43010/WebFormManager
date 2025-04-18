@@ -9,7 +9,8 @@ import CompanyPage from "@/pages/company-page";
 import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
 import ProjectDetailPage from "@/pages/project-detail-page";
-import UserPage from "@/pages/user-page";
+// UserPage wurde in den Admin-Bereich integriert
+// import UserPage from "@/pages/user-page";
 import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
 import AttachmentPage from "@/pages/attachment-page";
@@ -27,8 +28,8 @@ function Router() {
       <ProtectedRoute path="/customers" component={CustomerPage} />
       <ProtectedRoute path="/projects" component={ProjectPage} />
       <ProtectedRoute path="/projects/:id" component={ProjectDetailPage} />
-
-      <ProtectedRoute path="/users" component={UserPage} />
+      
+      {/* UserPage-Route wurde in den Admin-Bereich integriert */}
       <ProtectedRoute path="/admin" component={AdminPage} />
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
