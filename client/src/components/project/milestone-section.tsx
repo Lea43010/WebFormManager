@@ -735,6 +735,55 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={milestoneForm.control}
+                      name="ewbFoeb"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>EWB/FÖB</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Typ auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="keine">keine</SelectItem>
+                              <SelectItem value="EWB">EWB</SelectItem>
+                              <SelectItem value="FÖB">FÖB</SelectItem>
+                              <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={milestoneForm.control}
+                      name="sollMenge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Soll-Menge</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number"
+                              step="0.01"
+                              placeholder="Soll-Menge eingeben" 
+                              value={field.value?.toString() || ''} 
+                              onChange={(e) => field.onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -778,6 +827,8 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   <TableHead>Start</TableHead>
                   <TableHead>Ende</TableHead>
                   <TableHead>Jahr</TableHead>
+                  <TableHead>EWB/FÖB</TableHead>
+                  <TableHead>Soll-Menge</TableHead>
                   <TableHead>Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
@@ -801,6 +852,11 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                       <TableCell>KW {milestone.startKW}</TableCell>
                       <TableCell>KW {milestone.endKW}</TableCell>
                       <TableCell>{milestone.jahr}</TableCell>
+                      <TableCell>{milestone.ewbFoeb || "keine"}</TableCell>
+                      <TableCell>{milestone.sollMenge !== null && milestone.sollMenge !== undefined ? 
+                        (typeof milestone.sollMenge === 'number' ? 
+                          (milestone.sollMenge as number).toFixed(2) : 
+                          milestone.sollMenge) : "-"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button 
@@ -832,7 +888,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center">
+                    <TableCell colSpan={8} className="text-center">
                       Keine Meilensteine vorhanden
                     </TableCell>
                   </TableRow>
@@ -854,6 +910,13 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     {milestones?.find(m => m.id === selectedMilestoneId)?.type || 'Kein Typ'}
                     {' - '}
                     KW {milestones?.find(m => m.id === selectedMilestoneId)?.startKW} bis KW {milestones?.find(m => m.id === selectedMilestoneId)?.endKW}, {milestones?.find(m => m.id === selectedMilestoneId)?.jahr}
+                    {' - '}
+                    EWB/FÖB: {milestones?.find(m => m.id === selectedMilestoneId)?.ewbFoeb || 'keine'}
+                    {milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge !== null && 
+                     milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge !== undefined ? 
+                     ` - Soll-Menge: ${typeof milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge === 'number' ? 
+                     (milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge as number).toFixed(2) :
+                     milestones?.find(m => m.id === selectedMilestoneId)?.sollMenge}` : ''}
                   </CardDescription>
                 </div>
                 
@@ -1073,7 +1136,10 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           <TableCell>{detail.text}</TableCell>
                           <TableCell>{detail.supplementaryInfo}</TableCell>
                           <TableCell>{detail.ewbFoeb || 'keine'}</TableCell>
-                          <TableCell>{detail.sollMenge}</TableCell>
+                          <TableCell>{detail.sollMenge !== null && detail.sollMenge !== undefined ? 
+                            (typeof detail.sollMenge === 'number' ? 
+                              (detail.sollMenge as number).toFixed(2) : 
+                              detail.sollMenge) : '-'}</TableCell>
                           <TableCell>
                             <Button 
                               variant="ghost" 
