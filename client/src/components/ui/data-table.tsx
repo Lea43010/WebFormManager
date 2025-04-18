@@ -35,6 +35,7 @@ interface DataTableProps<T> {
   onAdd?: () => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onViewDetails?: (row: T) => void;
   title?: string;
 }
 
@@ -45,6 +46,7 @@ export function DataTable<T>({
   onAdd,
   onEdit,
   onDelete,
+  onViewDetails,
   title,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,7 +128,7 @@ export function DataTable<T>({
                   {column.header}
                 </TableHead>
               ))}
-              {(onEdit || onDelete) && (
+              {(onEdit || onDelete || onViewDetails) && (
                 <TableHead className="text-right">Aktionen</TableHead>
               )}
             </TableRow>
@@ -141,7 +143,7 @@ export function DataTable<T>({
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {(onEdit || onDelete || onViewDetails) && (
                     <TableCell>
                       <Skeleton className="h-6 w-20 ml-auto" />
                     </TableCell>
@@ -158,10 +160,39 @@ export function DataTable<T>({
                         : String(row[column.accessorKey] || '')}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {(onEdit || onDelete || onViewDetails) && (
                     <TableCell className="text-right">
                       <TooltipProvider>
                         <div className="flex justify-end space-x-2">
+                          {onViewDetails && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onViewDetails(row)}
+                                >
+                                  <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    className="h-4 w-4 text-green-600"
+                                  >
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                                  </svg>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Details</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+
                           {onEdit && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -204,7 +235,7 @@ export function DataTable<T>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+                  colSpan={columns.length + (onEdit || onDelete || onViewDetails ? 1 : 0)}
                   className="h-24 text-center"
                 >
                   Keine Daten gefunden.
