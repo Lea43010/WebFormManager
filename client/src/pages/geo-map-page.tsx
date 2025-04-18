@@ -698,40 +698,101 @@ export default function GeoMapPage() {
   const addMarker = useCallback((lat: number, lng: number) => {
     console.log("addMarker aufgerufen mit:", lat, lng);
     
-    // Zwei Möglichkeiten: entweder Dialog öffnen oder direkt einen Marker setzen
-    // Option 1: Dialog öffnen (ursprüngliche Funktionalität)
-    /*
-    setTempLocation([lat, lng]);
-    setNewLocationDialogOpen(true);
-    
-    // Leere Adressinfo setzen (wird später manuell eingetragen)
-    setLocationInfo({
-      strasse: "",
-      hausnummer: "",
-      plz: "",
-      ort: ""
-    });
-    */
-    
-    // Option 2: Direkt einen Marker setzen (wie beim "Gehe zu" Button)
-    const newMarkerPosition: [number, number] = [lat, lng];
-    const newMarker: MarkerInfo = {
-      position: newMarkerPosition,
-      name: `Standort ${markers.length + 1}`,
-      belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-      strasse: "",
-      hausnummer: "",
-      plz: "",
-      ort: "",
-      notes: ""
-    };
-    
-    console.log("Füge neuen Marker hinzu:", newMarker);
-    setMarkers([...markers, newMarker]);
-    setSelectedMarkerIndex(markers.length);
-    
-    // Setze den letzten hinzugefügten Marker für das Auto-Panning
-    setLastAddedMarkerPosition(newMarkerPosition);
+    // Reverse Geocoding verwenden, um Adresse zu ermitteln
+    fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&country=de&types=address&language=de`
+    )
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Fehler bei der Adresssuche");
+        }
+        return response.json();
+      })
+      .then(data => {
+        let strasse = "";
+        let hausnummer = "";
+        let plz = "";
+        let ort = "";
+        let markerName = `Standort ${markers.length + 1}`;
+        
+        if (data.features && data.features.length > 0) {
+          const addressInfo = data.features[0];
+          
+          // Adresskomponenten extrahieren
+          if (addressInfo.text) {
+            // Mapbox liefert oft Straße und Hausnummer zusammen im "text"-Feld
+            const addressParts = addressInfo.text.split(' ');
+            
+            // Letztes Element könnte die Hausnummer sein, wenn es numerisch ist
+            const lastPart = addressParts[addressParts.length - 1];
+            if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
+              hausnummer = lastPart;
+              strasse = addressParts.slice(0, -1).join(' ');
+            } else {
+              strasse = addressInfo.text;
+            }
+          }
+          
+          if (addressInfo.context) {
+            // Mapbox liefert Postleitzahl und Ort in context-Array
+            for (const context of addressInfo.context) {
+              if (context.id.startsWith('postcode')) {
+                plz = context.text;
+              } else if (context.id.startsWith('place')) {
+                ort = context.text;
+              }
+            }
+          }
+          
+          // Einen aussagekräftigen Namen für den Marker generieren
+          if (strasse && hausnummer && ort) {
+            markerName = `${strasse} ${hausnummer}, ${ort}`;
+          } else if (strasse && ort) {
+            markerName = `${strasse}, ${ort}`;
+          } else if (ort) {
+            markerName = ort;
+          }
+        }
+        
+        const newMarkerPosition: [number, number] = [lat, lng];
+        const newMarker: MarkerInfo = {
+          position: newMarkerPosition,
+          name: markerName,
+          belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+          strasse: strasse,
+          hausnummer: hausnummer,
+          plz: plz,
+          ort: ort,
+          notes: ""
+        };
+        
+        console.log("Füge neuen Marker hinzu:", newMarker);
+        setMarkers([...markers, newMarker]);
+        setSelectedMarkerIndex(markers.length);
+        
+        // Setze den letzten hinzugefügten Marker für das Auto-Panning
+        setLastAddedMarkerPosition(newMarkerPosition);
+      })
+      .catch(error => {
+        console.error("Fehler beim Reverse Geocoding:", error);
+        
+        // Fallback: Marker ohne Adressinformationen hinzufügen
+        const newMarkerPosition: [number, number] = [lat, lng];
+        const newMarker: MarkerInfo = {
+          position: newMarkerPosition,
+          name: `Standort ${markers.length + 1}`,
+          belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+          strasse: "",
+          hausnummer: "",
+          plz: "",
+          ort: "",
+          notes: ""
+        };
+        
+        setMarkers([...markers, newMarker]);
+        setSelectedMarkerIndex(markers.length);
+        setLastAddedMarkerPosition(newMarkerPosition);
+      });
   }, [markers, selectedBelastungsklasse]);
   
   const saveLocation = () => {
@@ -1114,16 +1175,61 @@ export default function GeoMapPage() {
                                   setSearchLng(lng);
                                   setMapCenter([lat, lng]);
                                   
-                                  // Automatisch einen Marker an dieser Position hinzufügen
+                                  // Automatisch einen Marker an dieser Position hinzufügen mit Adressinformationen
                                   const newMarkerPosition: [number, number] = [lat, lng];
+                                  
+                                  // Adressinformationen aus der Mapbox-Antwort extrahieren
+                                  let strasse = "";
+                                  let hausnummer = "";
+                                  let plz = "";
+                                  let ort = "";
+                                  let markerName = `Standort ${markers.length + 1}`;
+                                  
+                                  // Feature-Objekt enthält die Adressinformationen
+                                  if (data.features && data.features[0]) {
+                                    const feature = data.features[0];
+                                    
+                                    // Straße und Hausnummer aus dem text-Feld extrahieren
+                                    if (feature.text) {
+                                      const addressParts = feature.text.split(' ');
+                                      const lastPart = addressParts[addressParts.length - 1];
+                                      if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
+                                        hausnummer = lastPart;
+                                        strasse = addressParts.slice(0, -1).join(' ');
+                                      } else {
+                                        strasse = feature.text;
+                                      }
+                                    }
+                                    
+                                    // PLZ und Ort aus dem context-Array extrahieren
+                                    if (feature.context) {
+                                      for (const context of feature.context) {
+                                        if (context.id.startsWith('postcode')) {
+                                          plz = context.text;
+                                        } else if (context.id.startsWith('place')) {
+                                          ort = context.text;
+                                        }
+                                      }
+                                    }
+                                    
+                                    // Marker-Namen aus den Adresskomponenten generieren
+                                    if (strasse && hausnummer && ort) {
+                                      markerName = `${strasse} ${hausnummer}, ${ort}`;
+                                    } else if (strasse && ort) {
+                                      markerName = `${strasse}, ${ort}`;
+                                    } else if (ort) {
+                                      markerName = ort;
+                                    }
+                                  }
+                                  
                                   const newMarker: MarkerInfo = {
                                     position: newMarkerPosition,
-                                    name: `Standort ${markers.length + 1}`,
+                                    name: markerName,
                                     belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-                                    strasse: "",
-                                    hausnummer: "",
-                                    plz: "",
-                                    ort: "",
+                                    strasse: strasse,
+                                    hausnummer: hausnummer,
+                                    plz: plz,
+                                    ort: ort,
                                     notes: ""
                                   };
                                   setMarkers([...markers, newMarker]);
@@ -1133,7 +1239,7 @@ export default function GeoMapPage() {
                                   setLastAddedMarkerPosition(newMarkerPosition);
                                   
                                   // Erfolgsmeldung anzeigen
-                                  alert(`Marker wurde an den Koordinaten ${lat.toFixed(5)}, ${lng.toFixed(5)} gesetzt.`);
+                                  alert(`Marker wurde gesetzt: ${markerName}`);
                                 } else {
                                   alert("Keine Ergebnisse für diese Adresse gefunden.");
                                 }
@@ -1161,32 +1267,8 @@ export default function GeoMapPage() {
                           // Breiten- und Längengrad direkt verwenden
                           setMapCenter([searchLat, searchLng]);
                           
-                          // Automatisch einen Marker an dieser Position hinzufügen
-                          const newMarkerPosition: [number, number] = [searchLat, searchLng];
-                          const newMarker: MarkerInfo = {
-                            position: newMarkerPosition,
-                            name: `Standort ${markers.length + 1}`,
-                            belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-                            strasse: "",
-                            hausnummer: "",
-                            plz: "",
-                            ort: "",
-                            notes: ""
-                          };
-                          
-                          // Verzögerung für Kartenaktualisierung
-                          setTimeout(() => {
-                            console.log("Setze Marker an Position:", newMarkerPosition);
-                            const newMarkers = [...markers, newMarker];
-                            setMarkers(newMarkers);
-                            setSelectedMarkerIndex(newMarkers.length - 1);
-                            
-                            // Setze den letzten hinzugefügten Marker für das Auto-Panning
-                            setLastAddedMarkerPosition(newMarkerPosition);
-                            
-                            // Erfolgsmeldung anzeigen
-                            alert(`Marker wurde an den Koordinaten ${searchLat.toFixed(5)}, ${searchLng.toFixed(5)} gesetzt.`);
-                          }, 100);
+                          // Den addMarker-Callback verwenden, der bereits Reverse-Geocoding implementiert
+                          addMarker(searchLat, searchLng);
                         }}
                         size="sm"
                         variant="outline"
