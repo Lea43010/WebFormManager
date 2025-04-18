@@ -15,6 +15,7 @@ import {
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
   insertBedarfKapaSchema, insertPersonSchema, insertMilestoneSchema, insertMilestoneDetailSchema,
+  insertUserSchema,
   createInsertSchema, companies, customers, projects, persons, milestones, milestoneDetails,
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
@@ -994,6 +995,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+
+  // =================== Admin Routen ===================
+  // Middleware für Berechtigungsprüfung
+  const checkAdminRole = (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    // Nur Administratoren oder Manager haben Zugriff
+    if (req.user.role !== "administrator" && req.user.role !== "manager") {
+      return res.status(403).json({ message: "Keine Berechtigung" });
+    }
+    
+    next();
+  };
+
+  // Nur für Administratoren
+  const checkAdminOnly = (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    // Nur Administratoren haben Zugriff
+    if (req.user.role !== "administrator") {
+      return res.status(403).json({ message: "Keine Berechtigung. Diese Funktion ist nur für Administratoren verfügbar." });
+    }
+    
+    next();
+  };
+
+  // Benutzerliste für Admins
+  app.get("/api/admin/users", checkAdminRole, async (req, res, next) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Benutzer erstellen (nur Admin)
+  app.post("/api/admin/users", checkAdminRole, async (req, res, next) => {
+    try {
+      // Nur Administratoren können andere Administratoren erstellen
+      if (req.body.role === "administrator" && req.user.role !== "administrator") {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung. Nur Administratoren können neue Administratoren erstellen." 
+        });
+      }
+
+      // Passworthashing erfolgt in der storage.createUser Funktion
+      const userData = {
+        ...req.body,
+        createdBy: req.user.id,
+      };
+      
+      const validatedData = insertUserSchema.parse(userData);
+      const newUser = await storage.createUser(validatedData);
+      
+      // Passwort aus der Antwort entfernen
+      const { password, ...userWithoutPassword } = newUser;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Projekte nach Benutzer filtern (für projekteigene Ansichten)
+  app.get("/api/projects/by-user", async (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+
+    try {
+      let projects;
+      
+      // Administrator und Manager sehen alle Projekte
+      if (req.user.role === 'administrator' || req.user.role === 'manager') {
+        projects = await storage.getProjects();
+      } else {
+        // Normale Benutzer sehen nur ihre eigenen Projekte
+        projects = await storage.getProjectsByUser(req.user.id);
+      }
+      
+      res.json(projects);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Bei Projekterstellung den aktuellen Benutzer als Ersteller speichern
+  // Überschreibe die ursprüngliche POST /api/projects Route
+  app.post("/api/projects", async (req, res, next) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+
+      try {
+        // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
+        // Da Zod die Konversion erwartet, schicken wir die Daten als Strings
+        const formData = {
+          ...req.body,
+          projectWidth: req.body.projectWidth?.toString() || null,
+          projectLength: req.body.projectLength?.toString() || null,
+          projectHeight: req.body.projectHeight?.toString() || null,
+          projectText: req.body.projectText?.toString() || null,
+          createdBy: req.user.id, // Aktueller Benutzer als Ersteller
+        };
+        
+        // Schema übernimmt die Konversion zu Zahlen
+        const validatedData = insertProjectSchema.parse(formData);
+        const project = await storage.createProject(validatedData);
+        res.status(201).json(project);
+      } catch (error) {
+        console.error("Project creation error:", error);
+        next(error);
+      }
+    });
 
   const httpServer = createServer(app);
   return httpServer;
