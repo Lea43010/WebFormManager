@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -41,14 +41,15 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
   // Fetch BedarfKapa data for the current project
   const { data: bedarfKapas, isLoading } = useQuery<BedarfKapa[]>({
     queryKey: [`/api/projects/${projectId}/bedarfkapa`],
-    enabled: !!projectId,
-    onSuccess: (data) => {
-      console.log('Fetched BedarfKapa data:', data);
-    },
-    onError: (error) => {
-      console.error('Error fetching BedarfKapa data:', error);
-    }
+    enabled: !!projectId
   });
+  
+  // Separate effect für Debug-Logs
+  React.useEffect(() => {
+    if (bedarfKapas) {
+      console.log('Fetched BedarfKapa data:', bedarfKapas);
+    }
+  }, [bedarfKapas]);
   
   // Form setup
   const form = useForm<z.infer<typeof formSchema>>({
@@ -131,7 +132,7 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
       }
     },
     {
-      header: 'Anzahl',
+      header: 'Anzahl Teams',
       accessorKey: 'bedarfKapaAnzahl',
       cell: (value: any, row: BedarfKapa) => {
         return row.bedarfKapaAnzahl?.toString() || '-';
@@ -190,7 +191,7 @@ export function CapacitySection({ projectId }: CapacitySectionProps) {
                 name="bedarfKapaAnzahl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Anzahl</FormLabel>
+                    <FormLabel>Anzahl Teams</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
