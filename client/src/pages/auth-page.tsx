@@ -28,7 +28,9 @@ import {
   Users,
   Building,
   Building2,
-  Settings 
+  Settings,
+  MailCheck,
+  Key
 } from "lucide-react";
 import logoImage from "@/assets/Logo.png";
 import {
@@ -40,6 +42,8 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { insertUserSchema } from "@shared/schema";
 
 const loginSchema = insertUserSchema.pick({
@@ -54,9 +58,41 @@ const registerSchema = insertUserSchema.extend({
   path: ["confirmPassword"],
 });
 
+// Verifizierungscode Schema
+const verificationCodeSchema = z.object({
+  code: z.string().min(6, "Bitte geben Sie den 6-stelligen Code ein").max(6, "Der Code muss 6 Ziffern haben"),
+});
+
+// Passwort-Reset Anforderungs-Schema
+const resetRequestSchema = z.object({
+  email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein"),
+});
+
+// Passwort-Reset Schema
+const resetPasswordSchema = z.object({
+  newPassword: z.string().min(6, "Das Passwort muss mindestens 6 Zeichen lang sein"),
+  confirmPassword: z.string().min(6, "Das Passwort muss mindestens 6 Zeichen lang sein"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwörter stimmen nicht überein",
+  path: ["confirmPassword"],
+});
+
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { 
+    user, 
+    loginMutation, 
+    registerMutation, 
+    verifyCodeMutation, 
+    requestPasswordResetMutation, 
+    resetPasswordMutation,
+    requiresTwoFactor,
+    pendingUserId
+  } = useAuth();
+  
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [resetUserId, setResetUserId] = useState<number | null>(null);
 
   // If user is already logged in, redirect to projects page
   useEffect(() => {
@@ -64,6 +100,19 @@ export default function AuthPage() {
       navigate("/projects");
     }
   }, [user, navigate]);
+
+  // Überprüfe URL-Parameter für Passwort-Reset
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const userId = params.get('userId');
+    
+    if (code && userId) {
+      setResetToken(code);
+      setResetUserId(parseInt(userId, 10));
+      setShowPasswordReset(true);
+    }
+  }, []);
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -85,18 +134,63 @@ export default function AuthPage() {
       email: "",
     },
   });
+  
+  // Verification code form
+  const verificationForm = useForm<z.infer<typeof verificationCodeSchema>>({
+    resolver: zodResolver(verificationCodeSchema),
+    defaultValues: {
+      code: "",
+    },
+  });
+  
+  // Passwort-Reset-Anforderungs-Formular
+  const resetRequestForm = useForm<z.infer<typeof resetRequestSchema>>({
+    resolver: zodResolver(resetRequestSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+  
+  // Passwort-Reset-Formular
+  const resetPasswordForm = useForm<z.infer<typeof resetPasswordSchema>>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate(values, {
-      onSuccess: () => {
-        navigate("/projects");
-      }
-    });
+    loginMutation.mutate(values);
   };
 
   const onRegisterSubmit = (values: z.infer<typeof registerSchema>) => {
     const { confirmPassword, ...userData } = values;
     registerMutation.mutate(userData);
+  };
+  
+  const onVerificationSubmit = (values: z.infer<typeof verificationCodeSchema>) => {
+    if (pendingUserId) {
+      verifyCodeMutation.mutate({
+        userId: pendingUserId,
+        code: values.code
+      });
+    }
+  };
+  
+  const onResetRequestSubmit = (values: z.infer<typeof resetRequestSchema>) => {
+    requestPasswordResetMutation.mutate(values);
+    resetRequestForm.reset();
+  };
+  
+  const onResetPasswordSubmit = (values: z.infer<typeof resetPasswordSchema>) => {
+    if (resetToken && resetUserId) {
+      resetPasswordMutation.mutate({
+        userId: resetUserId,
+        code: resetToken,
+        newPassword: values.newPassword
+      });
+    }
   };
 
   return (
@@ -112,6 +206,106 @@ export default function AuthPage() {
             </h2>
           </div>
 
+          {/* 2FA Verifizierungsformular, wenn auf einen Verifizierungscode gewartet wird */}
+          {requiresTwoFactor && pendingUserId ? (
+            <div className="mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Key className="mr-2 h-5 w-5 text-primary" />
+                    Zwei-Faktor-Authentifizierung
+                  </CardTitle>
+                  <CardDescription>
+                    Bitte geben Sie den Verifizierungscode ein, der an Ihre E-Mail-Adresse gesendet wurde.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...verificationForm}>
+                    <form onSubmit={verificationForm.handleSubmit(onVerificationSubmit)} className="space-y-4">
+                      <FormField
+                        control={verificationForm.control}
+                        name="code"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Verifizierungscode</FormLabel>
+                            <FormControl>
+                              <Input {...field} maxLength={6} placeholder="123456" className="text-center text-lg font-mono" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                        disabled={verifyCodeMutation.isPending}
+                      >
+                        {verifyCodeMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Verifizieren
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          ) : showPasswordReset && resetToken && resetUserId ? (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Key className="mr-2 h-5 w-5 text-primary" />
+                  Passwort zurücksetzen
+                </CardTitle>
+                <CardDescription>
+                  Bitte geben Sie Ihr neues Passwort ein.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...resetPasswordForm}>
+                  <form onSubmit={resetPasswordForm.handleSubmit(onResetPasswordSubmit)} className="space-y-4">
+                    <FormField
+                      control={resetPasswordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Neues Passwort</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="password" autoComplete="new-password" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={resetPasswordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Passwort bestätigen</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="password" autoComplete="new-password" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                      disabled={resetPasswordMutation.isPending}
+                    >
+                      {resetPasswordMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Passwort zurücksetzen
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          ) : null}
+        
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1">
               <TabsTrigger value="login" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Anmelden</TabsTrigger>
@@ -169,12 +363,59 @@ export default function AuthPage() {
                       </div>
 
                       <div className="text-sm">
-                        <a
-                          href="#"
-                          className="font-medium text-gray-900 hover:text-gray-700"
-                        >
-                          Passwort vergessen?
-                        </a>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button 
+                              className="font-medium text-gray-900 hover:text-gray-700"
+                              type="button" 
+                            >
+                              Passwort vergessen?
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center">
+                                <MailCheck className="mr-2 h-5 w-5 text-primary" />
+                                Passwort zurücksetzen
+                              </DialogTitle>
+                              <DialogDescription>
+                                Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <Form {...resetRequestForm}>
+                              <form onSubmit={resetRequestForm.handleSubmit(onResetRequestSubmit)} className="space-y-4">
+                                <FormField
+                                  control={resetRequestForm.control}
+                                  name="email"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>E-Mail-Adresse</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} type="email" autoComplete="email" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <div className="flex justify-end gap-3">
+                                  <DialogClose asChild>
+                                    <Button type="button" variant="outline">Abbrechen</Button>
+                                  </DialogClose>
+                                  <Button 
+                                    type="submit" 
+                                    className="bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                                    disabled={requestPasswordResetMutation.isPending}
+                                  >
+                                    {requestPasswordResetMutation.isPending && (
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    )}
+                                    Link senden
+                                  </Button>
+                                </div>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </div>
 
