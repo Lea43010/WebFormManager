@@ -21,7 +21,7 @@ export default function LandingPage() {
       <header className="bg-white py-4 shadow-sm">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Baustellen App</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Bau - Structura App</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/auth">
@@ -42,7 +42,7 @@ export default function LandingPage() {
                 Baustellen und Projekte einfach verwalten
               </h1>
               <p className="text-xl text-gray-700 mb-8">
-                Mit unserer Baustellen App organisieren Sie Ihre Projekte, 
+                Mit unserer Bau - Structura App organisieren Sie Ihre Projekte, 
                 Kunden und Dokumente effizient und übersichtlich – speziell 
                 entwickelt für die Baubranche.
               </p>
@@ -199,7 +199,7 @@ export default function LandingPage() {
             Bereit, Ihre Bauprojekte effizienter zu verwalten?
           </h2>
           <p className="text-white/90 text-xl mb-8 max-w-3xl mx-auto">
-            Registrieren Sie sich jetzt und erfahren Sie, wie die Baustellen App 
+            Registrieren Sie sich jetzt und erfahren Sie, wie die Bau - Structura App 
             Ihre tägliche Arbeit erleichtern kann.
           </p>
           <Link href="/auth">
@@ -215,7 +215,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Baustellen App</h3>
+              <h3 className="text-lg font-semibold mb-4">Bau - Structura App</h3>
               <p className="text-gray-400">
                 Die umfassende Lösung für die Verwaltung von Bauprojekten, 
                 speziell entwickelt für die Bedürfnisse der Baubranche.
@@ -257,7 +257,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
-            <p>&copy; {new Date().getFullYear()} Baustellen App. Alle Rechte vorbehalten.</p>
+            <p>&copy; {new Date().getFullYear()} Bau - Structura App. Alle Rechte vorbehalten.</p>
           </div>
         </div>
       </footer>

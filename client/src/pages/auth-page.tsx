@@ -578,7 +578,7 @@ export default function AuthPage() {
                       <div>
                         <h3 className="text-lg font-semibold mb-2">Allgemeine Funktionen</h3>
                         <p className="text-gray-600 mb-2">
-                          Die Baustellen App bietet eine vollständige Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. 
+                          Die Bau - Structura App bietet eine vollständige Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. 
                           Mit einer benutzerfreundlichen Oberfläche können Unternehmen ihre Projekte, Kunden und Materialien 
                           effizient organisieren.
                         </p>

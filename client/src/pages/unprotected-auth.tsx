@@ -151,7 +151,7 @@ export default function UnprotectedAuthPage() {
                 </svg>
               </div>
               <h2 className="mt-1 text-3xl font-extrabold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Baustellen App
+                Bau - Structura App
               </h2>
             </div>
             <p className="mt-2 text-sm text-gray-600">
@@ -370,7 +370,7 @@ export default function UnprotectedAuthPage() {
       <div className="relative flex-1 hidden md:block">
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-700">
           <div className="flex flex-col justify-center h-full px-10 text-white">
-            <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
+            <h1 className="text-4xl font-bold mb-6">Bau - Structura App</h1>
             <p className="text-xl mb-8">
               Verwalten Sie Baustellen und Projekte effizient und sicher mit unserer intuitiven Anwendung.
             </p>
