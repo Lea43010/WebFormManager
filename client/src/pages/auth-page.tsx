@@ -554,7 +554,7 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#6a961f] to-[#4a8416]">
           <div className="flex flex-col justify-center h-full px-10 text-white">
             <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-bold mb-6">Baustellen App</h1>
+              <h1 className="text-4xl font-bold mb-6">Bau - Structura App</h1>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" className="rounded-full bg-white/30 hover:bg-white/40 p-2">
@@ -565,7 +565,7 @@ export default function AuthPage() {
                   <DialogHeader>
                     <DialogTitle className="text-2xl flex items-center">
                       <Info className="mr-2 h-6 w-6 text-primary" />
-                      Über die Baustellen App
+                      Über die Bau - Structura App
                     </DialogTitle>
                     <DialogDescription className="text-base py-2">
                       Eine umfassende Lösung für die Verwaltung von Baustellen und Straßenbauprojekten
