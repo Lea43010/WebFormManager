@@ -39,7 +39,7 @@ export async function sendVerificationCode(
     const emailData = {
       sender: { name: 'BauStructura App', email: 'noreply@baustructuraapp.de' },
       to: [{ email }],
-      subject: resetLink ? 'Passwort zurücksetzen - Baustellen App' : 'Ihr Anmeldecode - Baustellen App',
+      subject: resetLink ? 'Passwort zurücksetzen - BauStructura App' : 'Ihr Anmeldecode - BauStructura App',
       htmlContent: resetLink 
         ? `<html><body>
             <h1>Passwort zurücksetzen</h1>
@@ -48,15 +48,15 @@ export async function sendVerificationCode(
             <p>Oder klicken Sie auf diesen Link zum Zurücksetzen: <a href="${resetLink}">Passwort zurücksetzen</a></p>
             <p>Dieser Code ist 30 Minuten lang gültig.</p>
             <p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.</p>
-            <p>Mit freundlichen Grüßen<br>Ihr Baustellen App Team</p>
+            <p>Mit freundlichen Grüßen<br>Ihr BauStructura App Team</p>
           </body></html>`
         : `<html><body>
             <h1>Ihr Anmeldecode</h1>
             <p>Bitte verwenden Sie den folgenden Code zur Verifizierung Ihrer Anmeldung:</p>
             <p style="font-size: 24px; font-weight: bold; padding: 10px; background-color: #f4f4f4; display: inline-block;">${code}</p>
             <p>Dieser Code ist 30 Minuten lang gültig.</p>
-            <p>Falls Sie sich nicht bei der Baustellen App angemeldet haben, können Sie diese E-Mail ignorieren.</p>
-            <p>Mit freundlichen Grüßen<br>Ihr Baustellen App Team</p>
+            <p>Falls Sie sich nicht bei der BauStructura App angemeldet haben, können Sie diese E-Mail ignorieren.</p>
+            <p>Mit freundlichen Grüßen<br>Ihr BauStructura App Team</p>
           </body></html>`,
     };
     
