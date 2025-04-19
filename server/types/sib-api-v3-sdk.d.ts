@@ -8,8 +8,13 @@ declare module 'sib-api-v3-sdk' {
     };
   }
 
+  export enum TransactionalEmailsApiApiKeys {
+    apiKey = 'api-key'
+  }
+
   export class TransactionalEmailsApi {
     sendTransacEmail(email: SendSmtpEmail): Promise<any>;
+    setApiKey(name: string, value: string): void;
   }
 
   export class SendSmtpEmail {
