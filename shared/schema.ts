@@ -16,6 +16,7 @@ export const analysisTypeEnum = pgEnum('analysis_types', ['asphalt', 'ground']);
 export const fileCategoryEnum = pgEnum('file_categories', ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere']);
 export const userRolesEnum = pgEnum('user_roles', ['administrator', 'manager', 'benutzer']);
 export const loginEventTypesEnum = pgEnum('login_event_types', ['login', 'logout', 'register', 'failed_login']);
+export const verificationTypeEnum = pgEnum('verification_types', ['login', 'password_reset']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -251,11 +252,24 @@ export const loginLogs = pgTable("tbllogin_logs", {
   failReason: text("fail_reason"),
 });
 
+// Verification Codes table - Für die Zwei-Faktor-Authentifizierung
+export const verificationCodes = pgTable("tblverification_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  code: varchar("code", { length: 10 }).notNull(),
+  type: verificationTypeEnum("type").default('login'),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  isValid: boolean("is_valid").default(true),
+});
+
 // Define relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects, { relationName: 'createdByUser' }),
   createdUsers: many(users, { relationName: 'createdByAdmin' }),
   loginEvents: many(loginLogs),
+  verificationCodes: many(verificationCodes),
 }));
 
 export const companiesRelations = relations(companies, ({ many, one }) => ({
@@ -363,6 +377,13 @@ export const fileOrganizationSuggestionsRelations = relations(fileOrganizationSu
 export const loginLogsRelations = relations(loginLogs, ({ one }) => ({
   user: one(users, {
     fields: [loginLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const verificationCodesRelations = relations(verificationCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [verificationCodes.userId],
     references: [users.id],
   }),
 }));
