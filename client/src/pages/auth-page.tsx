@@ -379,7 +379,14 @@ export default function AuthPage() {
                                 Passwort zurücksetzen
                               </DialogTitle>
                               <DialogDescription>
-                                Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.
+                                Geben Sie Ihre E-Mail-Adresse ein, um einen Verifizierungscode zum Zurücksetzen Ihres Passworts zu erhalten.
+                                <Alert variant="info" className="mt-2">
+                                  <Terminal className="h-4 w-4" />
+                                  <AlertTitle>Testumgebung</AlertTitle>
+                                  <AlertDescription>
+                                    Der Verifizierungscode wird in der Serverkonsole angezeigt.
+                                  </AlertDescription>
+                                </Alert>
                               </DialogDescription>
                             </DialogHeader>
                             <Form {...resetRequestForm}>
@@ -409,7 +416,7 @@ export default function AuthPage() {
                                     {requestPasswordResetMutation.isPending && (
                                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     )}
-                                    Link senden
+                                    Code anfordern
                                   </Button>
                                 </div>
                               </form>
