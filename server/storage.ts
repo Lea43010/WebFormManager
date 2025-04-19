@@ -16,7 +16,8 @@ import {
   bedarfKapa, type BedarfKapa, type InsertBedarfKapa,
   milestones, type Milestone, type InsertMilestone,
   milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail,
-  loginLogs, type LoginLog, type InsertLoginLog
+  loginLogs, type LoginLog, type InsertLoginLog,
+  verificationCodes, type VerificationCode, type InsertVerificationCode
 } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
@@ -122,6 +123,13 @@ export interface IStorage {
   getLoginLogs(): Promise<LoginLog[]>;
   getLoginLogsByUser(userId: number): Promise<LoginLog[]>;
   createLoginLog(log: InsertLoginLog): Promise<LoginLog>;
+  
+  // Verification Codes operations
+  createVerificationCode(code: InsertVerificationCode): Promise<VerificationCode>;
+  getVerificationCode(code: string): Promise<VerificationCode | undefined>;
+  getActiveVerificationCodesByUser(userId: number): Promise<VerificationCode[]>;
+  invalidateVerificationCode(id: number): Promise<void>;
+  markVerificationCodeAsUsed(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.SessionStore;
@@ -564,6 +572,55 @@ export class DatabaseStorage implements IStorage {
   async createLoginLog(log: InsertLoginLog): Promise<LoginLog> {
     const [createdLog] = await db.insert(loginLogs).values(log).returning();
     return createdLog;
+  }
+
+  // Verification Codes operations
+  async createVerificationCode(code: InsertVerificationCode): Promise<VerificationCode> {
+    const [createdCode] = await db.insert(verificationCodes).values(code).returning();
+    return createdCode;
+  }
+
+  async getVerificationCode(code: string): Promise<VerificationCode | undefined> {
+    // Hole nur gültige Codes, die noch nicht abgelaufen sind
+    const [verificationCode] = await db
+      .select()
+      .from(verificationCodes)
+      .where(eq(verificationCodes.code, code))
+      .where(eq(verificationCodes.isValid, true))
+      .where(
+        // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
+        verificationCodes.expiresAt.gte(new Date())
+      );
+    return verificationCode;
+  }
+
+  async getActiveVerificationCodesByUser(userId: number): Promise<VerificationCode[]> {
+    return await db
+      .select()
+      .from(verificationCodes)
+      .where(eq(verificationCodes.userId, userId))
+      .where(eq(verificationCodes.isValid, true))
+      .where(
+        // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
+        verificationCodes.expiresAt.gte(new Date())
+      );
+  }
+
+  async invalidateVerificationCode(id: number): Promise<void> {
+    await db
+      .update(verificationCodes)
+      .set({ isValid: false })
+      .where(eq(verificationCodes.id, id));
+  }
+
+  async markVerificationCodeAsUsed(id: number): Promise<void> {
+    await db
+      .update(verificationCodes)
+      .set({ 
+        isValid: false,
+        usedAt: new Date() 
+      })
+      .where(eq(verificationCodes.id, id));
   }
 }
 
