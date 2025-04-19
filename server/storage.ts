@@ -2,6 +2,7 @@ import { db } from "./db";
 import { eq, desc, gte } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { Store } from "express-session";
 import { 
   users, type User, type InsertUser,
   companies, type Company, type InsertCompany,
@@ -132,11 +133,11 @@ export interface IStorage {
   markVerificationCodeAsUsed(id: number): Promise<void>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
   
   constructor() {
     this.sessionStore = new PostgresSessionStore({
