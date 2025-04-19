@@ -1,96 +1,113 @@
 import * as SibApiV3Sdk from 'sib-api-v3-sdk';
 
-// Konfiguriere Brevo API-Client
-const defaultClient = SibApiV3Sdk.ApiClient.instance;
-const apiKey = defaultClient.authentications['api-key'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
-
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-interface EmailOptions {
-  to: string;
-  subject: string;
-  htmlContent: string;
-  textContent: string;
-  senderName?: string;
-  senderEmail?: string;
+// Generiert einen zufälligen 6-stelligen Code für die Verifizierung
+export function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 /**
- * Sendet eine E-Mail über Brevo
+ * Sendet einen Verifizierungscode per E-Mail.
+ * 
+ * @param email Die E-Mail-Adresse des Empfängers
+ * @param code Der Verifizierungscode
+ * @param resetLink Optional: Reset-Link für Passwort-Reset-E-Mails
+ * @returns true, wenn die E-Mail erfolgreich gesendet wurde, sonst false
  */
-export async function sendEmail({
-  to,
-  subject,
-  htmlContent,
-  textContent,
-  senderName = 'Baustellen App',
-  senderEmail = 'noreply@baustellenapp.de'
-}: EmailOptions): Promise<boolean> {
+export async function sendVerificationCode(
+  email: string,
+  code: string,
+  resetLink?: string
+): Promise<boolean> {
   try {
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    if (!process.env.BREVO_API_KEY) {
+      console.error('Brevo API-Schlüssel nicht gefunden');
+      return false;
+    }
+
+    // Brevo API Client initialisieren
+    const defaultClient = SibApiV3Sdk.ApiClient.instance;
+    const apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_API_KEY;
+
+    const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
     
+    // E-Mail-Inhalte vorbereiten
+    let subject, htmlContent, textContent;
+    
+    if (resetLink) {
+      // Passwort-Reset-E-Mail
+      subject = 'Passwort zurücksetzen - Baustellen App';
+      htmlContent = `
+        <html>
+          <body>
+            <h1>Passwort zurücksetzen</h1>
+            <p>Sie haben angefordert, Ihr Passwort zurückzusetzen.</p>
+            <p>Ihr Verifizierungscode lautet: <strong>${code}</strong></p>
+            <p>Alternativ können Sie auf den folgenden Link klicken, um Ihr Passwort zurückzusetzen:</p>
+            <p><a href="${resetLink}">Passwort zurücksetzen</a></p>
+            <p>Dieser Link ist eine Stunde lang gültig.</p>
+            <p>Falls Sie diese Anfrage nicht getätigt haben, können Sie diese E-Mail ignorieren.</p>
+          </body>
+        </html>
+      `;
+      textContent = `
+        Passwort zurücksetzen
+        
+        Sie haben angefordert, Ihr Passwort zurückzusetzen.
+        
+        Ihr Verifizierungscode lautet: ${code}
+        
+        Alternativ können Sie den folgenden Link besuchen, um Ihr Passwort zurückzusetzen:
+        ${resetLink}
+        
+        Dieser Link ist eine Stunde lang gültig.
+        
+        Falls Sie diese Anfrage nicht getätigt haben, können Sie diese E-Mail ignorieren.
+      `;
+    } else {
+      // Login-Verifizierungs-E-Mail
+      subject = 'Ihr Anmeldecode - Baustellen App';
+      htmlContent = `
+        <html>
+          <body>
+            <h1>Ihr Anmeldecode</h1>
+            <p>Um Ihre Anmeldung abzuschließen, geben Sie bitte den folgenden Code ein:</p>
+            <p style="font-size: 24px; font-weight: bold;">${code}</p>
+            <p>Dieser Code ist 10 Minuten lang gültig.</p>
+            <p>Falls Sie sich nicht angemeldet haben, ignorieren Sie bitte diese E-Mail.</p>
+          </body>
+        </html>
+      `;
+      textContent = `
+        Ihr Anmeldecode
+        
+        Um Ihre Anmeldung abzuschließen, geben Sie bitte den folgenden Code ein:
+        
+        ${code}
+        
+        Dieser Code ist 10 Minuten lang gültig.
+        
+        Falls Sie sich nicht angemeldet haben, ignorieren Sie bitte diese E-Mail.
+      `;
+    }
+
+    // E-Mail-Objekt erstellen
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
     sendSmtpEmail.textContent = textContent;
-    sendSmtpEmail.sender = { name: senderName, email: senderEmail };
-    sendSmtpEmail.to = [{ email: to }];
+    sendSmtpEmail.sender = {
+      name: 'Baustellen App',
+      email: 'noreply@baustellenapp.de'
+    };
+    sendSmtpEmail.to = [{ email }];
+
+    // E-Mail senden
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
     
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('E-Mail erfolgreich gesendet:', response);
     return true;
   } catch (error) {
     console.error('Fehler beim Senden der E-Mail:', error);
     return false;
   }
-}
-
-/**
- * Generiert einen zufälligen 5-stelligen Code
- */
-export function generateVerificationCode(): string {
-  return Math.floor(10000 + Math.random() * 90000).toString();
-}
-
-/**
- * Sendet einen Verifizierungscode per E-Mail
- */
-export async function sendVerificationCode(email: string, code: string): Promise<boolean> {
-  const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-      <h2 style="color: #6a961f;">Baustellen App - Sicherheitscode</h2>
-      <p>Guten Tag,</p>
-      <p>hier ist Ihr Sicherheitscode für die Anmeldung bei der Baustellen App:</p>
-      <div style="background-color: #f5f5f5; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
-        <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px;">${code}</span>
-      </div>
-      <p>Dieser Code ist 10 Minuten gültig.</p>
-      <p>Falls Sie diese Anfrage nicht getätigt haben, können Sie diese E-Mail ignorieren.</p>
-      <p>Mit freundlichen Grüßen,<br>Ihr Baustellen App Team</p>
-    </div>
-  `;
-  
-  const textContent = `
-    Baustellen App - Sicherheitscode
-
-    Guten Tag,
-    
-    hier ist Ihr Sicherheitscode für die Anmeldung bei der Baustellen App:
-    
-    ${code}
-    
-    Dieser Code ist 10 Minuten gültig.
-    
-    Falls Sie diese Anfrage nicht getätigt haben, können Sie diese E-Mail ignorieren.
-    
-    Mit freundlichen Grüßen,
-    Ihr Baustellen App Team
-  `;
-  
-  return sendEmail({
-    to: email,
-    subject: 'Ihr Sicherheitscode für die Baustellen App',
-    htmlContent,
-    textContent
-  });
 }

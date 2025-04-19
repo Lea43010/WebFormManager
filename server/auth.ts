@@ -5,7 +5,8 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser, type InsertLoginLog } from "@shared/schema";
+import { User as SelectUser, type InsertLoginLog, type InsertVerificationCode } from "@shared/schema";
+import { generateVerificationCode, sendVerificationCode } from "./email";
 
 declare global {
   namespace Express {
@@ -121,7 +122,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", async (err, user, info) => {
       if (err) {
         // Erfasse Fehler bei der Authentifizierung
         logLoginEvent(req, 'failed_login', null, false, String(err));
@@ -132,16 +133,58 @@ export function setupAuth(app: Express) {
         logLoginEvent(req, 'failed_login', null, false, 'Ungültiger Benutzername oder Passwort');
         return res.status(401).json({ message: "Ungültiger Benutzername oder Passwort" });
       }
-      req.login(user, (err) => {
-        if (err) {
-          // Erfasse Fehler bei der Sitzungserstellung
-          logLoginEvent(req, 'failed_login', user.id, false, String(err));
-          return next(err);
+
+      try {
+        // Prüfen, ob der Benutzer eine E-Mail-Adresse hat (für 2FA)
+        if (!user.email) {
+          // Bei Benutzern ohne E-Mail-Adresse überspringen wir die 2FA
+          req.login(user, (err) => {
+            if (err) {
+              logLoginEvent(req, 'failed_login', user.id, false, String(err));
+              return next(err);
+            }
+            // Erfasse erfolgreichen Login
+            logLoginEvent(req, 'login', user.id);
+            res.status(200).json(user);
+          });
+        } else {
+          // Für Benutzer mit E-Mail-Adresse generieren wir einen Verifizierungscode
+          const code = generateVerificationCode();
+          
+          // Berechne Ablaufzeit (10 Minuten)
+          const expiresAt = new Date();
+          expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+          
+          // Speichere den Code in der Datenbank
+          const verificationData: InsertVerificationCode = {
+            userId: user.id,
+            code,
+            type: 'login',
+            expiresAt,
+            isValid: true
+          };
+          
+          await storage.createVerificationCode(verificationData);
+          
+          // Sende den Code per E-Mail
+          const emailSent = await sendVerificationCode(user.email, code);
+          
+          if (!emailSent) {
+            return res.status(500).json({ message: "Fehler beim Senden des Verifizierungscodes" });
+          }
+          
+          // Wir setzen hier den Benutzer noch nicht in die Session, das erfolgt erst nach der Verifizierung
+          res.status(200).json({ 
+            requiresVerification: true, 
+            userId: user.id,
+            message: "Verifizierungscode gesendet. Bitte überprüfen Sie Ihre E-Mails."
+          });
         }
-        // Erfasse erfolgreichen Login
-        logLoginEvent(req, 'login', user.id);
-        res.status(200).json(user);
-      });
+      } catch (error) {
+        console.error("Fehler bei der Zwei-Faktor-Authentifizierung:", error);
+        logLoginEvent(req, 'failed_login', user.id, false, "Fehler bei der Zwei-Faktor-Authentifizierung");
+        return res.status(500).json({ message: "Interner Serverfehler" });
+      }
     })(req, res, next);
   });
 
@@ -170,5 +213,129 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
+  });
+
+  // Route zum Verifizieren des 2FA-Codes
+  app.post("/api/verify-code", async (req, res, next) => {
+    try {
+      const { userId, code } = req.body;
+
+      if (!userId || !code) {
+        return res.status(400).json({ message: "Benutzer-ID und Verifizierungscode sind erforderlich" });
+      }
+
+      // Verifizierungscode aus der Datenbank holen
+      const verificationCode = await storage.getVerificationCode(code);
+
+      if (!verificationCode) {
+        return res.status(400).json({ message: "Ungültiger Verifizierungscode" });
+      }
+
+      if (verificationCode.userId !== userId) {
+        return res.status(400).json({ message: "Ungültiger Verifizierungscode für diesen Benutzer" });
+      }
+
+      // Verifizierungscode als verwendet markieren
+      await storage.markVerificationCodeAsUsed(verificationCode.id);
+
+      // Benutzer aus der Datenbank holen
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(400).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Benutzer in die Session setzen (Login abschließen)
+      req.login(user, (err) => {
+        if (err) {
+          logLoginEvent(req, 'failed_login', user.id, false, "Fehler beim Login nach Verifizierung");
+          return next(err);
+        }
+
+        // Erfolgreichen Login protokollieren
+        logLoginEvent(req, 'login', user.id);
+        res.status(200).json(user);
+      });
+    } catch (error) {
+      console.error("Fehler bei der Verifizierung:", error);
+      res.status(500).json({ message: "Interner Serverfehler bei der Verifizierung" });
+    }
+  });
+
+  // Route zum Zurücksetzen des Passworts (Anfrage für Reset-Link)
+  app.post("/api/request-password-reset", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "E-Mail-Adresse ist erforderlich" });
+      }
+
+      // Suche nach Benutzer mit dieser E-Mail
+      const users = await storage.getAllUsers();
+      const user = users.find(u => u.email === email);
+
+      if (!user) {
+        // Aus Sicherheitsgründen teilen wir nicht mit, ob die E-Mail-Adresse existiert
+        return res.status(200).json({ message: "Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Passwort-Reset-Link gesendet." });
+      }
+
+      // Verifizierungscode generieren
+      const code = generateVerificationCode();
+      
+      // Ablaufzeit (1 Stunde)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+      
+      // Verifizierungscode speichern
+      const verificationData: InsertVerificationCode = {
+        userId: user.id,
+        code,
+        type: 'password_reset',
+        expiresAt,
+        isValid: true
+      };
+      
+      await storage.createVerificationCode(verificationData);
+      
+      // Reset-Link per E-Mail senden
+      const resetLink = `${req.protocol}://${req.get('host')}/auth/reset-password?code=${code}&userId=${user.id}`;
+      await sendVerificationCode(user.email, code, resetLink);
+      
+      res.status(200).json({ message: "Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Passwort-Reset-Link gesendet." });
+    } catch (error) {
+      console.error("Fehler beim Anfordern des Passwort-Resets:", error);
+      res.status(500).json({ message: "Interner Serverfehler" });
+    }
+  });
+
+  // Route zum Zurücksetzen des Passworts (Durchführung des Resets)
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { userId, code, newPassword } = req.body;
+
+      if (!userId || !code || !newPassword) {
+        return res.status(400).json({ message: "Benutzer-ID, Verifizierungscode und neues Passwort sind erforderlich" });
+      }
+
+      // Verifizierungscode überprüfen
+      const verificationCode = await storage.getVerificationCode(code);
+
+      if (!verificationCode || verificationCode.userId !== userId || verificationCode.type !== 'password_reset') {
+        return res.status(400).json({ message: "Ungültiger oder abgelaufener Verifizierungscode" });
+      }
+
+      // Verifizierungscode als verwendet markieren
+      await storage.markVerificationCodeAsUsed(verificationCode.id);
+
+      // Passwort aktualisieren
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUser(userId, { password: hashedPassword });
+
+      res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
+    } catch (error) {
+      console.error("Fehler beim Zurücksetzen des Passworts:", error);
+      res.status(500).json({ message: "Interner Serverfehler" });
+    }
   });
 }
