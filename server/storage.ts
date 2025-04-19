@@ -198,16 +198,16 @@ export class DatabaseStorage implements IStorage {
   
   // Company operations
   async getCompanies(): Promise<Company[]> {
-    return await db.select().from(companies);
+    return await db.select().from(companies) as Company[];
   }
   
   async getCompany(id: number): Promise<Company | undefined> {
-    const [company] = await db.select().from(companies).where(eq(companies.id, id));
+    const [company] = await db.select().from(companies).where(eq(companies.id, id)) as Company[];
     return company;
   }
   
   async createCompany(company: InsertCompany): Promise<Company> {
-    const [createdCompany] = await db.insert(companies).values(company).returning();
+    const [createdCompany] = await db.insert(companies).values(company).returning() as Company[];
     return createdCompany;
   }
   
@@ -216,7 +216,7 @@ export class DatabaseStorage implements IStorage {
       .update(companies)
       .set(company)
       .where(eq(companies.id, id))
-      .returning();
+      .returning() as Company[];
     return updatedCompany;
   }
   
@@ -226,16 +226,16 @@ export class DatabaseStorage implements IStorage {
   
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers);
+    return await db.select().from(customers) as Customer[];
   }
   
   async getCustomer(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id)) as Customer[];
     return customer;
   }
   
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const [createdCustomer] = await db.insert(customers).values(customer).returning();
+    const [createdCustomer] = await db.insert(customers).values(customer).returning() as Customer[];
     return createdCustomer;
   }
   
@@ -244,7 +244,7 @@ export class DatabaseStorage implements IStorage {
       .update(customers)
       .set(customer)
       .where(eq(customers.id, id))
-      .returning();
+      .returning() as Customer[];
     return updatedCustomer;
   }
   
@@ -254,16 +254,16 @@ export class DatabaseStorage implements IStorage {
   
   // Project operations
   async getProjects(): Promise<Project[]> {
-    return await db.select().from(projects);
+    return await db.select().from(projects) as Project[];
   }
   
   async getProject(id: number): Promise<Project | undefined> {
-    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    const [project] = await db.select().from(projects).where(eq(projects.id, id)) as Project[];
     return project;
   }
   
   async createProject(project: InsertProject): Promise<Project> {
-    const [createdProject] = await db.insert(projects).values(project).returning();
+    const [createdProject] = await db.insert(projects).values(project).returning() as Project[];
     return createdProject;
   }
   
@@ -272,7 +272,7 @@ export class DatabaseStorage implements IStorage {
       .update(projects)
       .set(project)
       .where(eq(projects.id, id))
-      .returning();
+      .returning() as Project[];
     return updatedProject;
   }
   
