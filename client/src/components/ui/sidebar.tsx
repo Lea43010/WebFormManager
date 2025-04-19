@@ -23,7 +23,7 @@ import { useMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import logoImage from "@/assets/Logo.png";
+import logoImage from "@/assets/Logo.webp";
 
 interface NavItem {
   title: string;
@@ -103,7 +103,14 @@ export function Sidebar() {
     <div className="flex flex-col h-full bg-primary-dark text-black">
       <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
         <div className="flex items-center">
-          <img src={logoImage} alt="Sachverständigenbüro - Justitia" className="h-8 mr-3" />
+          <img 
+            src={logoImage} 
+            alt="Sachverständigenbüro - Justitia" 
+            className="h-8 mr-3" 
+            loading="eager" 
+            width="32" 
+            height="32" 
+          />
           <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Bau - Structura App</span>
         </div>
         {isMobile && (
@@ -119,7 +126,7 @@ export function Sidebar() {
               const isActive = location === item.href;
               // Berechtigungsprüfung: Menüpunkt nur anzeigen, wenn der Benutzer die erforderliche Rolle hat
               // oder wenn keine Rolle erforderlich ist
-              const hasPermission = !item.showFor || (user && item.showFor.includes(user.role));
+              const hasPermission = !item.showFor || (user && user.role && item.showFor.includes(user.role));
               
               if (!hasPermission) return null;
               
