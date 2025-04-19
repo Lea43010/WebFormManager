@@ -478,6 +478,8 @@ export const insertLoginLogSchema = createInsertSchema(loginLogs, {
   failReason: z.string().nullable().optional()
 });
 
+export const insertVerificationCodeSchema = createInsertSchema(verificationCodes);
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -523,3 +525,6 @@ export type MilestoneDetail = typeof milestoneDetails.$inferSelect;
 
 export type InsertLoginLog = z.infer<typeof insertLoginLogSchema>;
 export type LoginLog = typeof loginLogs.$inferSelect;
+
+export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
+export type VerificationCode = typeof verificationCodes.$inferSelect;
