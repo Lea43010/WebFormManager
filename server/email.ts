@@ -28,7 +28,7 @@ export async function sendVerificationCode(
     console.log(`[E-MAIL-VERIFIZIERUNGSCODE] Code: ${code} wird an ${email} gesendet.`);
     
     // Hinweis zur Domain-Verifizierung beim ersten Start
-    const absenderEmail = 'noreply@baustellen-app.de';
+    const absenderEmail = 'noreply@baustructuraapp.de';
     console.log(`WICHTIG: Die Absender-E-Mail "${absenderEmail}" muss in Ihrem Brevo-Konto verifiziert sein.`);
     console.log(`Ansonsten können Sie im Brevo-Dashboard eine verifizierte E-Mail konfigurieren und diese in server/email.ts anpassen.`);
 
@@ -37,7 +37,7 @@ export async function sendVerificationCode(
     const apiUrl = 'https://api.brevo.com/v3/smtp/email';
     
     const emailData = {
-      sender: { name: 'Baustellen App', email: 'noreply@baustellen-app.de' },
+      sender: { name: 'BauStructura App', email: 'noreply@baustructuraapp.de' },
       to: [{ email }],
       subject: resetLink ? 'Passwort zurücksetzen - Baustellen App' : 'Ihr Anmeldecode - Baustellen App',
       htmlContent: resetLink 
