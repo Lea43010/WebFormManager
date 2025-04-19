@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 // Erweiterte Projektschnittstelle mit Kundennamen
 interface ProjectWithCustomerName extends Project {
@@ -81,23 +82,11 @@ export function ProjectGrid({
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="bg-gray-100 h-32"></CardHeader>
-              <CardContent className="pt-4">
-                <div className="h-5 w-3/4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t pt-4">
-                <div className="h-8 w-20 bg-gray-200 rounded"></div>
-                <div className="h-8 w-20 bg-gray-200 rounded"></div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      ) : (
+      <LoadingOverlay 
+        isLoading={isLoading} 
+        text="Projekte werden geladen..." 
+        variant="skeleton"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
@@ -227,7 +216,7 @@ export function ProjectGrid({
             </div>
           )}
         </div>
-      )}
+      </LoadingOverlay>
     </div>
   );
 }

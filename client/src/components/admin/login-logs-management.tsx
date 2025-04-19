@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 // Typen für Login-Logs basierend auf dem Schema
 interface LoginLog {
@@ -170,11 +171,12 @@ export function LoginLogsManagement() {
         </div>
         
         {/* Tabelle */}
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : filteredLogs && filteredLogs.length > 0 ? (
+        <LoadingOverlay 
+          isLoading={isLoading} 
+          text="Login-Protokolle werden geladen..." 
+          variant="overlay"
+        >
+          {filteredLogs && filteredLogs.length > 0 ? (
           <div className="rounded-md border">
             <Table>
               <TableCaption>Liste aller Login-Ereignisse im System</TableCaption>
@@ -223,6 +225,7 @@ export function LoginLogsManagement() {
             Keine Login-Ereignisse gefunden.
           </div>
         )}
+        </LoadingOverlay>
       </CardContent>
     </Card>
   );
