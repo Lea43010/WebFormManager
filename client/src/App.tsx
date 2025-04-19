@@ -19,6 +19,7 @@ import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import AdminPage from "@/pages/admin-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
+import PageTransition from "@/components/ui/page-transition";
 
 function Router() {
   return (
@@ -46,7 +47,9 @@ function Router() {
 function App() {
   return (
     <NetworkStatusProvider>
-      <Router />
+      <PageTransition transitionType="fade" duration={0.2}>
+        <Router />
+      </PageTransition>
       <Toaster />
     </NetworkStatusProvider>
   );
