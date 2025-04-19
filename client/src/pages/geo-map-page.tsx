@@ -628,7 +628,7 @@ export default function GeoMapPage() {
       
       // Fußzeile
       pdf.setFontSize(8);
-      pdf.text('Automatisch erstellt mit der Baustellen App', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+      pdf.text('Automatisch erstellt mit der Bau - Structura App', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
       
       // PDF speichern
       pdf.save(fileName);
