@@ -30,7 +30,8 @@ import {
   Building2,
   Settings,
   MailCheck,
-  Key
+  Key,
+  Terminal
 } from "lucide-react";
 import logoImage from "@/assets/Logo.png";
 import {
@@ -380,10 +381,10 @@ export default function AuthPage() {
                               </DialogTitle>
                               <DialogDescription>
                                 Geben Sie Ihre E-Mail-Adresse ein, um einen Verifizierungscode zum Zurücksetzen Ihres Passworts zu erhalten.
-                                <Alert variant="info" className="mt-2">
-                                  <Terminal className="h-4 w-4" />
-                                  <AlertTitle>Testumgebung</AlertTitle>
-                                  <AlertDescription>
+                                <Alert className="mt-2 bg-blue-50 border-blue-200">
+                                  <Terminal className="h-4 w-4 text-blue-500" />
+                                  <AlertTitle className="text-blue-700">Testumgebung</AlertTitle>
+                                  <AlertDescription className="text-blue-600">
                                     Der Verifizierungscode wird in der Serverkonsole angezeigt.
                                   </AlertDescription>
                                 </Alert>
