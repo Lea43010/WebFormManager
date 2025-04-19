@@ -16,6 +16,9 @@ import EnhancedUploadForm from "@/components/attachment/enhanced-upload-form";
 import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
 import { FileOrganizationSuggestions } from "@/components/attachment/file-organization-suggestions";
 import { Badge } from "@/components/ui/badge";
+import ResponsiveImage from "@/components/ui/responsive-image";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import MobileFriendlyButton from "@/components/ui/mobile-friendly-button";
 import { 
   Select,
   SelectContent,
@@ -165,9 +168,34 @@ export default function AttachmentPage() {
 
           <TabsContent value="all">
             {isLoading ? (
-              <div className="flex justify-center my-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
+              <LoadingOverlay 
+                type="skeleton" 
+                message="Anhänge werden geladen..." 
+                className="my-12"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="overflow-hidden opacity-50">
+                      <CardHeader className="p-4 bg-gray-50 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </CardHeader>
+                      <CardContent className="p-4 flex items-center justify-center h-40">
+                        <div className="text-center animate-pulse">
+                          <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto"></div>
+                          <div className="h-3 bg-gray-200 rounded w-16 mx-auto mt-2"></div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-4 bg-gray-50 animate-pulse">
+                        <div className="flex flex-wrap gap-2">
+                          <div className="h-8 bg-gray-200 rounded w-20"></div>
+                          <div className="h-8 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </LoadingOverlay>
             ) : error ? (
               <Alert variant="destructive" className="mb-6">
                 <AlertDescription>
@@ -190,7 +218,19 @@ export default function AttachmentPage() {
                     </CardHeader>
                     <CardContent className="p-4 flex items-center justify-center">
                       <div className="text-center">
-                        {getFileIcon(attachment.fileType)}
+                        {attachment.fileType === 'image' ? (
+                          <div className="relative w-full h-40 overflow-hidden rounded-md">
+                            <ResponsiveImage
+                              src={`/api/attachments/${attachment.id}/download`}
+                              alt={attachment.fileName}
+                              className="object-cover w-full h-full"
+                              placeholderColor="#f3f4f6"
+                              lazyLoad={true}
+                            />
+                          </div>
+                        ) : (
+                          getFileIcon(attachment.fileType)
+                        )}
                         <p className="mt-2 text-sm text-gray-500">
                           {(attachment.fileSize / 1024).toFixed(2)} KB
                         </p>
@@ -201,25 +241,27 @@ export default function AttachmentPage() {
                     </CardContent>
                     <CardFooter className="p-4 bg-gray-50 flex justify-between">
                       <div className="flex flex-wrap gap-2">
-                        <Button
+                        <MobileFriendlyButton
                           variant="outline"
                           size="sm"
                           className="px-2 py-1 h-8 text-xs"
+                          touchClassName="active:bg-gray-200"
                           onClick={() => openDeleteDialog(attachment)}
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Löschen
-                        </Button>
+                        </MobileFriendlyButton>
                         
-                        <Button
+                        <MobileFriendlyButton
                           variant="outline"
                           size="sm"
                           className="px-2 py-1 h-8 text-xs"
+                          touchClassName="active:bg-gray-200"
                           onClick={() => handleDownload(attachment)}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Download
-                        </Button>
+                        </MobileFriendlyButton>
                         
                         {attachment.fileType === 'image' && (
                           <AsphaltAnalysis attachment={attachment} />
@@ -234,9 +276,40 @@ export default function AttachmentPage() {
 
           <TabsContent value="byProject">
             {isLoading ? (
-              <div className="flex justify-center my-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
+              <LoadingOverlay 
+                type="skeleton" 
+                message="Projektgruppierer werden geladen..." 
+                className="my-12"
+              >
+                <div className="space-y-8">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="border rounded-lg overflow-hidden opacity-50">
+                      <div className="bg-gray-100 p-4 border-b animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/5"></div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                        {[...Array(3)].map((_, j) => (
+                          <Card key={j} className="overflow-hidden animate-pulse">
+                            <CardHeader className="p-3 bg-gray-50">
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </CardHeader>
+                            <CardContent className="p-3 flex items-center justify-center h-32">
+                              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                            </CardContent>
+                            <CardFooter className="p-3 bg-gray-50">
+                              <div className="flex flex-wrap gap-2 w-full">
+                                <div className="h-8 bg-gray-200 rounded w-20"></div>
+                                <div className="h-8 bg-gray-200 rounded w-24"></div>
+                              </div>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </LoadingOverlay>
             ) : error ? (
               <Alert variant="destructive" className="mb-6">
                 <AlertDescription>
@@ -265,7 +338,19 @@ export default function AttachmentPage() {
                           </CardHeader>
                           <CardContent className="p-3 flex items-center justify-center">
                             <div className="text-center">
-                              {getFileIcon(attachment.fileType)}
+                              {attachment.fileType === 'image' ? (
+                                <div className="relative w-full h-32 overflow-hidden rounded-md">
+                                  <ResponsiveImage
+                                    src={`/api/attachments/${attachment.id}/download`}
+                                    alt={attachment.fileName}
+                                    className="object-cover w-full h-full"
+                                    placeholderColor="#f3f4f6"
+                                    lazyLoad={true}
+                                  />
+                                </div>
+                              ) : (
+                                getFileIcon(attachment.fileType)
+                              )}
                               <p className="mt-2 text-xs text-gray-500">
                                 {(attachment.fileSize / 1024).toFixed(2)} KB
                               </p>
@@ -276,25 +361,27 @@ export default function AttachmentPage() {
                           </CardContent>
                           <CardFooter className="p-3 bg-gray-50">
                             <div className="flex flex-wrap gap-2 w-full">
-                              <Button
+                              <MobileFriendlyButton
                                 variant="outline"
                                 size="sm"
                                 className="px-2 py-1 h-8 text-xs"
+                                touchClassName="active:bg-gray-200"
                                 onClick={() => openDeleteDialog(attachment)}
                               >
                                 <Trash2 className="w-3 h-3 mr-1" />
                                 Löschen
-                              </Button>
+                              </MobileFriendlyButton>
                               
-                              <Button
+                              <MobileFriendlyButton
                                 variant="outline"
                                 size="sm"
                                 className="px-2 py-1 h-8 text-xs"
+                                touchClassName="active:bg-gray-200"
                                 onClick={() => handleDownload(attachment)}
                               >
                                 <Download className="w-3 h-3 mr-1" />
                                 Download
-                              </Button>
+                              </MobileFriendlyButton>
                               
                               {attachment.fileType === 'image' && (
                                 <AsphaltAnalysis attachment={attachment} />
