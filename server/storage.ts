@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, gte } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { 
@@ -589,7 +589,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(verificationCodes.isValid, true))
       .where(
         // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
-        verificationCodes.expiresAt.gte(new Date())
+        gte(verificationCodes.expiresAt, new Date())
       );
     return verificationCode;
   }
@@ -602,7 +602,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(verificationCodes.isValid, true))
       .where(
         // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
-        verificationCodes.expiresAt.gte(new Date())
+        gte(verificationCodes.expiresAt, new Date())
       );
   }
 
