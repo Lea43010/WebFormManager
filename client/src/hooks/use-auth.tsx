@@ -49,27 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (response) => {
-      // Prüfen, ob eine Zwei-Faktor-Authentifizierung erforderlich ist
-      if ('requiresVerification' in response && response.requiresVerification) {
-        setRequiresTwoFactor(true);
-        setPendingUserId(response.userId);
-        toast({
-          title: "Verifizierung erforderlich",
-          description: response.message,
-        });
-      } else {
-        // Normaler Login-Erfolg (User-Objekt)
-        const user = response as SelectUser;
-        queryClient.setQueryData(["/api/user"], user);
-        toast({
-          title: "Erfolgreich angemeldet",
-          description: "Willkommen zurück!",
-        });
-        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-        setRequiresTwoFactor(false);
-        setPendingUserId(null);
-        // Die Standardweiterleitung erfolgt in onLoginSubmit in auth-page.tsx
-      }
+      // 2FA temporär deaktiviert - jeder Login wird direkt als normaler Login behandelt
+      const user = response as SelectUser;
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Erfolgreich angemeldet",
+        description: "Willkommen zurück!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setRequiresTwoFactor(false);
+      setPendingUserId(null);
+      // Weiterleitung zur Projektseite
+      navigate("/projects");
     },
     onError: (error: Error) => {
       toast({

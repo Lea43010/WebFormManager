@@ -135,51 +135,16 @@ export function setupAuth(app: Express) {
       }
 
       try {
-        // Prüfen, ob der Benutzer eine E-Mail-Adresse hat (für 2FA)
-        if (!user.email) {
-          // Bei Benutzern ohne E-Mail-Adresse überspringen wir die 2FA
-          req.login(user, (err) => {
-            if (err) {
-              logLoginEvent(req, 'failed_login', user.id, false, String(err));
-              return next(err);
-            }
-            // Erfasse erfolgreichen Login
-            logLoginEvent(req, 'login', user.id);
-            res.status(200).json(user);
-          });
-        } else {
-          // Für Benutzer mit E-Mail-Adresse generieren wir einen Verifizierungscode
-          const code = generateVerificationCode();
-          
-          // Berechne Ablaufzeit (10 Minuten)
-          const expiresAt = new Date();
-          expiresAt.setMinutes(expiresAt.getMinutes() + 10);
-          
-          // Speichere den Code in der Datenbank
-          const verificationData: InsertVerificationCode = {
-            userId: user.id,
-            code,
-            type: 'login',
-            expiresAt,
-            isValid: true
-          };
-          
-          await storage.createVerificationCode(verificationData);
-          
-          // Sende den Code per E-Mail
-          const emailSent = await sendVerificationCode(user.email, code);
-          
-          if (!emailSent) {
-            return res.status(500).json({ message: "Fehler beim Senden des Verifizierungscodes" });
+        // 2FA temporär deaktiviert - direktes Einloggen aller Benutzer ohne Verifizierung
+        req.login(user, (err) => {
+          if (err) {
+            logLoginEvent(req, 'failed_login', user.id, false, String(err));
+            return next(err);
           }
-          
-          // Wir setzen hier den Benutzer noch nicht in die Session, das erfolgt erst nach der Verifizierung
-          res.status(200).json({ 
-            requiresVerification: true, 
-            userId: user.id,
-            message: "Verifizierungscode gesendet. Bitte überprüfen Sie Ihre E-Mails."
-          });
-        }
+          // Erfasse erfolgreichen Login
+          logLoginEvent(req, 'login', user.id);
+          res.status(200).json(user);
+        });
       } catch (error) {
         console.error("Fehler bei der Zwei-Faktor-Authentifizierung:", error);
         logLoginEvent(req, 'failed_login', user.id, false, "Fehler bei der Zwei-Faktor-Authentifizierung");
