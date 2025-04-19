@@ -26,13 +26,18 @@ export async function sendVerificationCode(
 
     // Auch in der Produktionsumgebung den Code loggen, aber mit Hinweis
     console.log(`[E-MAIL-VERIFIZIERUNGSCODE] Code: ${code} wird an ${email} gesendet.`);
+    
+    // Hinweis zur Domain-Verifizierung beim ersten Start
+    const absenderEmail = 'noreply@baustellen-app.de';
+    console.log(`WICHTIG: Die Absender-E-Mail "${absenderEmail}" muss in Ihrem Brevo-Konto verifiziert sein.`);
+    console.log(`Ansonsten können Sie im Brevo-Dashboard eine verifizierte E-Mail konfigurieren und diese in server/email.ts anpassen.`);
 
     // Tatsächlicher E-Mail-Versand über Brevo API
     const API_KEY = process.env.BREVO_API_KEY;
     const apiUrl = 'https://api.brevo.com/v3/smtp/email';
     
     const emailData = {
-      sender: { name: 'Baustellen App', email: 'noreply@baustellenapp.de' },
+      sender: { name: 'Baustellen App', email: 'noreply@baustellen-app.de' },
       to: [{ email }],
       subject: resetLink ? 'Passwort zurücksetzen - Baustellen App' : 'Ihr Anmeldecode - Baustellen App',
       htmlContent: resetLink 
@@ -67,16 +72,33 @@ export async function sendVerificationCode(
       
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`E-Mail-Versand fehlgeschlagen: ${response.statusText} - ${errorText}`);
+        
+        // Spezifischere Fehlerbehandlung für häufige Probleme
+        let fehlergrund = "";
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.code === 'unauthorized') {
+            fehlergrund = "Ungültiger API-Schlüssel";
+          } else if (errorJson.message?.includes('sender email')) {
+            fehlergrund = "Absender-E-Mail nicht verifiziert";
+          } else {
+            fehlergrund = errorJson.message || errorText;
+          }
+        } catch (e) {
+          fehlergrund = errorText;
+        }
+        
+        throw new Error(`E-Mail-Versand fehlgeschlagen: ${response.statusText} - ${fehlergrund}`);
       }
       
-      console.log(`E-Mail erfolgreich an ${email} gesendet.`);
+      console.log(`✅ E-Mail erfolgreich an ${email} gesendet.`);
       return true;
     } catch (apiError) {
-      console.error('API-Fehler beim Senden der E-Mail:', apiError);
+      console.error('⚠️ API-Fehler beim Senden der E-Mail:', apiError);
       
       // Fallback zur simulierten E-Mail wenn die API fehlschlägt
       console.log(`[FALLBACK SIMULIERTER E-MAIL-VERSAND] An: ${email}, Code: ${code}, Reset-Link: ${resetLink || 'N/A'}`);
+      console.log(`ℹ️ Hinweis: Der Benutzer kann trotzdem mit dem obigen Code fortfahren.`);
       return true; // Wir geben trotzdem true zurück, damit der Benutzer fortfahren kann
     }
   } catch (error) {
