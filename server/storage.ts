@@ -1,8 +1,10 @@
 import { db } from "./db";
 import { eq, desc, gte } from "drizzle-orm";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
-import { Store } from "express-session";
+import connectPgSimple from "connect-pg-simple";
+
+// Definieren eines Typs für die SessionStore-Klasse
+const PostgresSessionStore = connectPgSimple(session);
 import { 
   users, type User, type InsertUser,
   companies, type Company, type InsertCompany,
@@ -21,7 +23,7 @@ import {
   verificationCodes, type VerificationCode, type InsertVerificationCode
 } from "@shared/schema";
 
-const PostgresSessionStore = connectPg(session);
+// PostgresSessionStore wurde oben definiert
 
 export interface IStorage {
   // User operations
@@ -133,11 +135,11 @@ export interface IStorage {
   markVerificationCodeAsUsed(id: number): Promise<void>;
   
   // Session store
-  sessionStore: Store;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: Store;
+  sessionStore: session.Store;
   
   constructor() {
     this.sessionStore = new PostgresSessionStore({
