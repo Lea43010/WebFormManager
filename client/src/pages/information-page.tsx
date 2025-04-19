@@ -97,6 +97,7 @@ const belastungsklassen = [
 
 // Definiere die Inhaltsabschnitte für das Seitenmenü
 const sections = [
+  { id: "datenarchitektur", title: "Datenarchitektur" },
   { id: "externe-dienste", title: "Externe Geoportale und Dienste" },
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
   { id: "bauweisen", title: "Bauweisen nach RStO 12" },
@@ -107,7 +108,7 @@ const sections = [
 ];
 
 export default function InformationPage() {
-  const [activeSection, setActiveSection] = useState<string>("externe-dienste");
+  const [activeSection, setActiveSection] = useState<string>("datenarchitektur");
 
   // Funktion zur Beobachtung der sichtbaren Abschnitte beim Scrollen
   useEffect(() => {
@@ -183,6 +184,205 @@ export default function InformationPage() {
         
         {/* Hauptinhalt */}
         <div className="lg:w-3/4 order-1 lg:order-2 space-y-8">
+          {/* Datenarchitektur Sektion */}
+          <div id="datenarchitektur" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Datenarchitektur</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Die Bau - Structura App verwendet eine PostgreSQL-Datenbank mit einem umfassenden Datenbankschema, 
+              das alle Anforderungen für die Verwaltung von Bauprojekten, Kunden, Firmen und zugehörigen Informationen erfüllt.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Kernentitäten</CardTitle>
+                  <CardDescription>
+                    Die Hauptentitäten der Anwendung und ihre Beziehungen zueinander
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Entität</th>
+                          <th className="text-left p-2 font-medium">Tabelle</th>
+                          <th className="text-left p-2 font-medium">Hauptfunktion</th>
+                          <th className="text-left p-2 font-medium">Beziehungen</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Benutzer</td>
+                          <td className="p-2 font-mono text-xs">tbluser</td>
+                          <td className="p-2">Verwaltung der Benutzerkonten mit Berechtigungen</td>
+                          <td className="p-2">Erstellt Projekte, wird protokolliert in Login-Logs</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Projekte</td>
+                          <td className="p-2 font-mono text-xs">tblproject</td>
+                          <td className="p-2">Zentrale Projektdaten und Metainformationen</td>
+                          <td className="p-2">Verbunden mit Kunden, Firmen, Anhängen, Analysen</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Kunden</td>
+                          <td className="p-2 font-mono text-xs">tblcustomer</td>
+                          <td className="p-2">Kundendaten mit Kontaktinformationen</td>
+                          <td className="p-2">Kann mehrere Projekte haben</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Firmen</td>
+                          <td className="p-2 font-mono text-xs">tblcompany</td>
+                          <td className="p-2">Firmendaten für Auftragnehmer/Partner</td>
+                          <td className="p-2">Verbunden mit Projekten und Personen</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Personen</td>
+                          <td className="p-2 font-mono text-xs">tblperson</td>
+                          <td className="p-2">Ansprechpartner für Firmen</td>
+                          <td className="p-2">Gehört zu Firma und/oder Projekt</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Anhänge</td>
+                          <td className="p-2 font-mono text-xs">tblattachment</td>
+                          <td className="p-2">Dokumente und Dateien zu Projekten</td>
+                          <td className="p-2">Gehört zu Projekt</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Spezialfunktionen</CardTitle>
+                  <CardDescription>
+                    Entitäten für erweiterte Funktionalitäten der Anwendung
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Funktion</th>
+                          <th className="text-left p-2 font-medium">Tabelle</th>
+                          <th className="text-left p-2 font-medium">Beschreibung</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Oberflächenanalyse</td>
+                          <td className="p-2 font-mono text-xs">tblsurface_analysis</td>
+                          <td className="p-2">Speichert Analyseergebnisse für Asphalt- und Bodenklassifizierungen mit GPS-Koordinaten</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Bodenreferenzdaten</td>
+                          <td className="p-2 font-mono text-xs">tblsoil_reference_data</td>
+                          <td className="p-2">Referenzdaten zu verschiedenen Bodenarten und deren Eigenschaften</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Meilensteine</td>
+                          <td className="p-2 font-mono text-xs">tblmilestones</td>
+                          <td className="p-2">Projektmeilensteine mit zeitlicher Planung nach Kalenderwochen</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Meilenstein-Details</td>
+                          <td className="p-2 font-mono text-xs">tblmilestonedetails</td>
+                          <td className="p-2">Detailinformationen zu Meilensteinen mit EWB/FÖB Status</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Bedarfs-/Kapazitätsplanung</td>
+                          <td className="p-2 font-mono text-xs">tblBedarfKapa</td>
+                          <td className="p-2">Ressourcenplanung für Projekte nach Kalenderwochen</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Dateiorganisationsvorschläge</td>
+                          <td className="p-2 font-mono text-xs">tblfile_organization_suggestion</td>
+                          <td className="p-2">KI-basierte Vorschläge zur besseren Organisation von Projektdateien</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sicherheits- und Verwaltungsfunktionen</CardTitle>
+                  <CardDescription>
+                    Entitäten für Sicherheit, Authentifizierung und Systemverwaltung
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Funktion</th>
+                          <th className="text-left p-2 font-medium">Tabelle</th>
+                          <th className="text-left p-2 font-medium">Beschreibung</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Login-Protokollierung</td>
+                          <td className="p-2 font-mono text-xs">tbllogin_logs</td>
+                          <td className="p-2">Erfasst alle Anmelde-, Abmelde- und Registrierungsereignisse</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Verifizierungscodes</td>
+                          <td className="p-2 font-mono text-xs">tblverification_codes</td>
+                          <td className="p-2">Temporäre Codes für Zwei-Faktor-Authentifizierung und Passwort-Zurücksetzung</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Benutzerrollen und Berechtigungen</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-primary/10 border-b">
+                          <th className="text-left p-2 font-medium">Rolle</th>
+                          <th className="text-left p-2 font-medium">Berechtigungen</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Administrator</td>
+                          <td className="p-2">Vollständiger Zugriff auf alle Funktionen, Benutzerverwaltung, Datenübertragung</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Manager</td>
+                          <td className="p-2">Projekt-, Kunden- und Firmenverwaltung, Zugriff auf den Admin-Bereich</td>
+                        </tr>
+                        <tr className="hover:bg-gray-50">
+                          <td className="p-2 font-medium">Benutzer</td>
+                          <td className="p-2">Grundlegende Projektansicht und -interaktion, keine Verwaltungsfunktionen</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6 text-sm text-gray-500">
+              <p>
+                <strong>Hinweis:</strong> Die Datenarchitektur wird regelmäßig aktualisiert, um neue Funktionen und Verbesserungen zu unterstützen.
+                Letzte Aktualisierung: {new Date().toLocaleDateString('de-DE')}
+              </p>
+            </div>
+          </div>
+          
           {/* Externe Dienste Sektion */}
           <div id="externe-dienste" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Externe Geoportale und Dienste</h2>
