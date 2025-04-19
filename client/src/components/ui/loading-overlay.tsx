@@ -47,11 +47,26 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     return (
       <div className={cn("relative", className)}>
         {isLoading ? (
-          <div className="space-y-2 animate-pulse">
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-            <div className="h-4 bg-muted rounded"></div>
-            <div className="h-4 bg-muted rounded w-5/6"></div>
-          </div>
+          <>
+            {/* Wenn ein Kind vorhanden ist, verwenden wir dieses als Skeleton */}
+            {React.Children.count(children) > 0 ? (
+              <div className="relative">
+                {children}
+                <div className="absolute top-0 left-0 w-full flex flex-col items-center justify-center py-4">
+                  <div className="flex items-center mb-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+                    <p className="text-sm font-medium">{text}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded"></div>
+                <div className="h-4 bg-muted rounded w-5/6"></div>
+              </div>
+            )}
+          </>
         ) : (
           children
         )}

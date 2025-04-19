@@ -169,8 +169,9 @@ export default function AttachmentPage() {
           <TabsContent value="all">
             {isLoading ? (
               <LoadingOverlay 
-                type="skeleton" 
-                message="Anhänge werden geladen..." 
+                isLoading={true}
+                variant="skeleton" 
+                text="Anhänge werden geladen..." 
                 className="my-12"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -277,8 +278,9 @@ export default function AttachmentPage() {
           <TabsContent value="byProject">
             {isLoading ? (
               <LoadingOverlay 
-                type="skeleton" 
-                message="Projektgruppierer werden geladen..." 
+                isLoading={true}
+                variant="skeleton" 
+                text="Projektgruppierer werden geladen..." 
                 className="my-12"
               >
                 <div className="space-y-8">
