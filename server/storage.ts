@@ -152,17 +152,17 @@ export class DatabaseStorage implements IStorage {
   
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db.select().from(users).where(eq(users.id, id)) as User[];
     return user;
   }
   
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(users).where(eq(users.username, username)) as User[];
     return user;
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await db.insert(users).values(insertUser).returning() as User[];
     return user;
   }
   
@@ -171,7 +171,7 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set(user)
       .where(eq(users.id, id))
-      .returning();
+      .returning() as User[];
     return updatedUser;
   }
   
@@ -189,11 +189,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
+    return await db.select().from(users) as User[];
   }
   
   async getProjectsByUser(userId: number): Promise<Project[]> {
-    return await db.select().from(projects).where(eq(projects.createdBy, userId));
+    return await db.select().from(projects).where(eq(projects.createdBy, userId)) as Project[];
   }
   
   // Company operations
@@ -588,9 +588,9 @@ export class DatabaseStorage implements IStorage {
     const [verificationCode] = await db
       .select()
       .from(verificationCodes)
-      .where(eq(verificationCodes.code, code))
-      .where(eq(verificationCodes.isValid, true))
       .where(
+        eq(verificationCodes.code, code) &&
+        eq(verificationCodes.isValid, true) &&
         // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
         gte(verificationCodes.expiresAt, new Date())
       );
@@ -601,9 +601,9 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(verificationCodes)
-      .where(eq(verificationCodes.userId, userId))
-      .where(eq(verificationCodes.isValid, true))
       .where(
+        eq(verificationCodes.userId, userId) &&
+        eq(verificationCodes.isValid, true) &&
         // Nur Codes, die nach dem aktuellen Zeitpunkt ablaufen
         gte(verificationCodes.expiresAt, new Date())
       );
