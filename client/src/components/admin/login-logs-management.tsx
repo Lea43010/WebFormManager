@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, RefreshCw, Search, X, CheckCircle, XCircle } from 'lucide-react';
+import { RefreshCw, Search, X, CheckCircle, XCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -170,61 +170,61 @@ export function LoginLogsManagement() {
           </div>
         </div>
         
-        {/* Tabelle */}
+        {/* Tabelle mit LoadingOverlay */}
         <LoadingOverlay 
           isLoading={isLoading} 
           text="Login-Protokolle werden geladen..." 
           variant="overlay"
         >
           {filteredLogs && filteredLogs.length > 0 ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableCaption>Liste aller Login-Ereignisse im System</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[180px]">Zeitstempel</TableHead>
-                  <TableHead>Benutzer</TableHead>
-                  <TableHead>Ereignistyp</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>IP-Adresse</TableHead>
-                  <TableHead className="hidden md:table-cell">Fehlergrund</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs">
-                      {formatTimestamp(log.timestamp)}
-                    </TableCell>
-                    <TableCell>{log.username}</TableCell>
-                    <TableCell>{translateEventType(log.eventType)}</TableCell>
-                    <TableCell>
-                      {log.success ? (
-                        <span className="flex items-center text-green-600">
-                          <CheckCircle className="mr-1 h-4 w-4" />
-                          Erfolgreich
-                        </span>
-                      ) : (
-                        <span className="flex items-center text-red-600">
-                          <XCircle className="mr-1 h-4 w-4" />
-                          Fehlgeschlagen
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">{log.ipAddress}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {log.failReason || '-'}
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableCaption>Liste aller Login-Ereignisse im System</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[180px]">Zeitstempel</TableHead>
+                    <TableHead>Benutzer</TableHead>
+                    <TableHead>Ereignistyp</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>IP-Adresse</TableHead>
+                    <TableHead className="hidden md:table-cell">Fehlergrund</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Keine Login-Ereignisse gefunden.
-          </div>
-        )}
+                </TableHeader>
+                <TableBody>
+                  {filteredLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-xs">
+                        {formatTimestamp(log.timestamp)}
+                      </TableCell>
+                      <TableCell>{log.username}</TableCell>
+                      <TableCell>{translateEventType(log.eventType)}</TableCell>
+                      <TableCell>
+                        {log.success ? (
+                          <span className="flex items-center text-green-600">
+                            <CheckCircle className="mr-1 h-4 w-4" />
+                            Erfolgreich
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-red-600">
+                            <XCircle className="mr-1 h-4 w-4" />
+                            Fehlgeschlagen
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{log.ipAddress}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {log.failReason || '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              Keine Login-Ereignisse gefunden.
+            </div>
+          )}
         </LoadingOverlay>
       </CardContent>
     </Card>

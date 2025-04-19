@@ -18,6 +18,7 @@ import GeoMapPage from "@/pages/geo-map-page";
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import AdminPage from "@/pages/admin-page";
+import { NetworkStatusProvider } from "@/hooks/use-network-status";
 
 function Router() {
   return (
@@ -44,10 +45,10 @@ function Router() {
 
 function App() {
   return (
-    <>
+    <NetworkStatusProvider>
       <Router />
       <Toaster />
-    </>
+    </NetworkStatusProvider>
   );
 }
 
