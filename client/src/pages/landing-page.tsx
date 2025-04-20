@@ -13,6 +13,12 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import logoImage from "@/assets/Logo.png";
 
+// Login-Typen direkt hier definieren
+type LoginFormData = {
+  username: string;
+  password: string;
+};
+
 // Login-Schema definieren
 const loginSchema = z.object({
   username: z.string().min(1, "Benutzername ist erforderlich"),
@@ -34,10 +40,11 @@ export default function LandingPage() {
   });
 
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate({
+    const loginData: LoginFormData = {
       username: values.username,
       password: values.password
-    });
+    };
+    loginMutation.mutate(loginData);
   };
 
   // Wenn der Benutzer bereits angemeldet ist, zur Projektübersicht weiterleiten
