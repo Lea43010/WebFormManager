@@ -156,6 +156,19 @@ export const bedarfKapa = pgTable("tblBedarfKapa", {
 // EWB/FÖB Enum für die Meilenstein-Details
 export const ewbFoebEnum = pgEnum('ewb_foeb_type', ['EWB', 'FÖB', 'EWB,FÖB', 'keine']);
 
+// Bauphasen Enum für Meilensteine
+export const bauphaseEnum = pgEnum('bauphase_type', [
+  'Baustart Tiefbau FÖB',
+  'Baustart Tiefbau EWB',
+  'Tiefbau EWB',
+  'Tiefbau FÖB',
+  'Montage NE3 EWB',
+  'Montage NE3 FÖB',
+  'Endmontage NE4 EWB',
+  'Endmontage NE4 FÖB',
+  'Sonstiges'
+]);
+
 // Meilensteine-Tabelle
 export const milestones = pgTable("tblmilestones", {
   id: serial("id").primaryKey(),
@@ -167,6 +180,7 @@ export const milestones = pgTable("tblmilestones", {
   color: varchar("color", { length: 50 }),
   type: varchar("type", { length: 100 }),
   ewbFoeb: ewbFoebEnum("ewb_foeb").default('keine'),
+  bauphase: bauphaseEnum("bauphase").default('Sonstiges'),
   sollMenge: varchar("soll_menge", { length: 20 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
