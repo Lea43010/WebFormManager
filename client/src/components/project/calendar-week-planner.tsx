@@ -53,7 +53,7 @@ const getMonthName = (month: number) => {
 const getBauphaseColor = (bauphase: string | null) => {
   const colors: Record<string, string> = {
     'Baustart Tiefbau FÖB': 'bg-blue-100 border-blue-500 text-blue-700',
-    'Baustart Tiefbau EWB': 'bg-green-100 border-green-500 text-green-700',
+    'Baustart Tiefbau EWB': 'bg-[#e8f3e2] border-[#5c9935] text-[#5c9935]',
     'Tiefbau EWB': 'bg-teal-100 border-teal-500 text-teal-700',
     'Tiefbau FÖB': 'bg-cyan-100 border-cyan-500 text-cyan-700',
     'Montage NE3 EWB': 'bg-amber-100 border-amber-500 text-amber-700',
@@ -297,7 +297,7 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
                             <div className="font-medium">{milestone.name}</div>
                             <div className="text-xs flex items-center gap-1">
                               <span className={`px-1.5 py-0.5 rounded text-xs ${
-                                milestone.ewbFoeb === 'EWB' ? 'bg-green-100 text-green-800' :
+                                milestone.ewbFoeb === 'EWB' ? 'bg-[#e8f3e2] text-[#5c9935]' :
                                 milestone.ewbFoeb === 'FÖB' ? 'bg-blue-100 text-blue-800' :
                                 milestone.ewbFoeb === 'EWB,FÖB' ? 'bg-purple-100 text-purple-800' :
                                 'bg-gray-100 text-gray-800'

@@ -43,7 +43,7 @@ const getBauphaseColor = (bauphase: string | null) => {
     case 'Baustart Tiefbau FÖB':
       return 'bg-blue-100 border-blue-500 text-blue-700';
     case 'Baustart Tiefbau EWB':
-      return 'bg-green-100 border-green-500 text-green-700';
+      return 'bg-[#e8f3e2] border-[#5c9935] text-[#5c9935]';
     case 'Tiefbau EWB':
       return 'bg-teal-100 border-teal-500 text-teal-700';
     case 'Tiefbau FÖB':
