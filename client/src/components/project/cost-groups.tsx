@@ -1,12 +1,66 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
-import { InfoIcon, Building2, Home, Wrench, PaintBucket, Paintbrush, Hammer, Cog, Flame, Radio, CircuitBoard, Wifi, Ruler, Construction, TentTree, LeafyGreen, Shovel } from "lucide-react";
+import { InfoIcon, Building2, Home, Wrench, PaintBucket, Paintbrush, Hammer, Cog, Flame, Radio, CircuitBoard, Wifi, Ruler, Construction, TentTree, LeafyGreen, Shovel, FileText, ExternalLink, BookText, FileCheck, FileBadge, Database, Calculator } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 interface CostGroupsProps {
   projectId: number;
 }
+
+// Links zu Leistungsverzeichnissen und Ressourcen
+const LV_RESOURCES = [
+  {
+    id: 1,
+    title: "STLB-Bau Dynamische BauDaten",
+    description: "Standardleistungsbuch für das Bauwesen mit standardisierten Leistungstexten",
+    icon: <BookText className="h-5 w-5" />,
+    url: "https://www.gaeb.de/produkte/stlb-bau/"
+  },
+  {
+    id: 2,
+    title: "GAEB Datenaustausch",
+    description: "Gemeinsamer Ausschuss Elektronik im Bauwesen - Standards für elektronischen Datenaustausch",
+    icon: <Database className="h-5 w-5" />,
+    url: "https://www.gaeb.de/produkte/gaeb-datenaustausch/"
+  },
+  {
+    id: 3,
+    title: "Vergabe- und Vertragsordnung für Bauleistungen (VOB)",
+    description: "Regelwerk für die Vergabe und Abwicklung von Bauleistungen",
+    icon: <FileCheck className="h-5 w-5" />,
+    url: "https://www.vob-online.de/"
+  },
+  {
+    id: 4,
+    title: "Sirados Baudaten",
+    description: "Umfangreiche Sammlung von Leistungsbeschreibungen und Kalkulationshilfen",
+    icon: <FileBadge className="h-5 w-5" />,
+    url: "https://www.sirados.de/"
+  },
+  {
+    id: 5,
+    title: "BKI Baukosteninformationszentrum",
+    description: "Standardisierte Kostenkennwerte für verschiedene Bauleistungen",
+    icon: <FileText className="h-5 w-5" />,
+    url: "https://www.bki.de/"
+  },
+  {
+    id: 6,
+    title: "Bundesverband Bausoftware (BVBS)",
+    description: "Informationen zum standardisierten Austausch von Baudaten",
+    icon: <Cog className="h-5 w-5" />,
+    url: "https://www.bvbs.de/"
+  },
+  {
+    id: 7,
+    title: "DBD-Kostenplaner",
+    description: "Datenbank für Baupreise und Ausschreibungstexte",
+    icon: <Calculator className="h-5 w-5" />,
+    url: "https://www.dbd.de/"
+  }
+];
 
 // Gewerke für Bauvorhaben
 const TRADES = [
@@ -246,6 +300,7 @@ export function CostGroups({ projectId }: CostGroupsProps) {
                 <TabsTrigger value="overview">Übersicht</TabsTrigger>
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="trades">Gewerke</TabsTrigger>
+                <TabsTrigger value="resources">Leistungsverzeichnisse</TabsTrigger>
               </TabsList>
             </div>
             
@@ -342,6 +397,52 @@ export function CostGroups({ projectId }: CostGroupsProps) {
                 ))}
               </div>
             </TabsContent>
+            
+            <TabsContent value="resources" className="p-0">
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground mb-6">
+                  Die folgenden Links führen zu wichtigen Ressourcen für die Erstellung von Leistungsverzeichnissen im Bauwesen.
+                  Nutzen Sie diese Quellen, um standardisierte Texte und Kostenkennwerte für Ihre Ausschreibungen zu erhalten.
+                </p>
+                
+                <div className="grid gap-4">
+                  {LV_RESOURCES.map((resource) => (
+                    <div key={resource.id} className="border rounded-lg p-4 bg-card">
+                      <div className="flex items-start">
+                        <div className="flex items-center justify-center h-10 w-10 rounded-md bg-[#5c9935] text-white mr-4 shrink-0">
+                          {resource.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-medium mb-1">{resource.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-3">{resource.description}</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center" 
+                            onClick={() => window.open(resource.url, '_blank')}
+                          >
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            Webseite besuchen
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium mb-2 flex items-center">
+                    <InfoIcon className="h-4 w-4 mr-2 text-[#5c9935]" />
+                    Hinweis zur Verwendung
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Die oben verlinkten Ressourcen bieten umfangreiche Unterstützung bei der Erstellung standardisierter
+                    Leistungsverzeichnisse im deutschen Bauwesen. Die Verwendung dieser Standards spart Zeit,
+                    sorgt für rechtliche Sicherheit und erleichtert die Vergleichbarkeit von Angeboten.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -365,6 +466,11 @@ export function CostGroups({ projectId }: CostGroupsProps) {
             Die aufgeführte Gewerkeliste bietet Ihnen einen Überblick über die verschiedenen Gewerke, die bei 
             Hochbauprojekten typischerweise zum Einsatz kommen. Sie können diese Liste als Grundlage für die 
             Planung und Koordination der verschiedenen Arbeitsbereiche sowie für die Angebotseinholung nutzen.
+          </p>
+          <p className="mt-4 text-muted-foreground">
+            Im Tab "Leistungsverzeichnisse" finden Sie wichtige Links zu Ressourcen für die Erstellung standardisierter 
+            Leistungsverzeichnisse nach deutschen Normen. Diese Quellen unterstützen Sie bei der korrekten Formulierung 
+            von Ausschreibungstexten und bei der Kostenkalkulation.
           </p>
         </CardContent>
       </Card>
