@@ -46,7 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UserPlus, Trash2 } from 'lucide-react';
+import { Loader2, UserPlus, Trash2, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 
 export function UserManagement() {
   const { user } = useAuth();
@@ -58,7 +58,8 @@ export function UserManagement() {
     password: '',
     name: '',
     email: '',
-    role: 'benutzer'
+    role: 'benutzer',
+    gdprConsent: true // Automatisch gesetzt, da vom Admin erstellt
   });
 
   // Abfrage der Benutzerliste
@@ -91,7 +92,8 @@ export function UserManagement() {
         password: '',
         name: '',
         email: '',
-        role: 'benutzer'
+        role: 'benutzer',
+        gdprConsent: true
       });
     },
     onError: (error) => {
@@ -175,6 +177,7 @@ export function UserManagement() {
               <DialogTitle>Neuen Benutzer anlegen</DialogTitle>
               <DialogDescription>
                 Erstellen Sie einen neuen Benutzer und weisen Sie ihm eine Rolle zu.
+                Die DSGVO-Zustimmung wird automatisch erteilt, da der Benutzer von einem Administrator erstellt wird.
               </DialogDescription>
             </DialogHeader>
             
@@ -288,6 +291,7 @@ export function UserManagement() {
               <TableHead>Name</TableHead>
               <TableHead>E-Mail</TableHead>
               <TableHead>Rolle</TableHead>
+              <TableHead>DSGVO</TableHead>
               {user.role === 'administrator' && <TableHead className="text-right">Aktionen</TableHead>}
             </TableRow>
           </TableHeader>
@@ -307,6 +311,21 @@ export function UserManagement() {
                   `}>
                     {userData.role}
                   </span>
+                </TableCell>
+                <TableCell>
+                  {userData.gdprConsent === true ? (
+                    <div className="flex items-center text-green-600" title="DSGVO-Zustimmung erteilt">
+                      <CheckCircle className="h-5 w-5" />
+                    </div>
+                  ) : userData.gdprConsent === false ? (
+                    <div className="flex items-center text-red-600" title="Keine DSGVO-Zustimmung">
+                      <XCircle className="h-5 w-5" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-yellow-600" title="DSGVO-Status unbekannt">
+                      <HelpCircle className="h-5 w-5" />
+                    </div>
+                  )}
                 </TableCell>
                 {user.role === 'administrator' && (
                   <TableCell className="text-right">
