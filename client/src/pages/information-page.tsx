@@ -1,11 +1,20 @@
-import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, FileCheck, ShieldCheck } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, RefreshCw, FileCheck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState, useCallback } from "react";
 import { generateCompliancePdf } from "@/utils/pdf-generator";
+import { 
+  fetchUpdateInfo, 
+  getUpdateInfo, 
+  saveUpdateInfo, 
+  formatUpdateDate, 
+  setupUpdateChecker 
+} from "@/utils/update-tracker";
 
 // Belastungsklassen und Bauweisen-Daten für die Tabellen
 const belastungsklassen = [
@@ -111,8 +120,64 @@ const sections = [
 const LAST_UPDATED = "2024-04-20";
 
 export default function InformationPage() {
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState<string>("datenarchitektur");
-  const [lastUpdated, setLastUpdated] = useState(LAST_UPDATED);
+  const [sectionUpdates, setSectionUpdates] = useState<Record<string, string>>({});
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  
+  // Callback für Aktualisierungen
+  const handleSectionUpdate = useCallback((section: string, info: any) => {
+    setSectionUpdates(prev => ({
+      ...prev,
+      [section]: info.timestamp
+    }));
+    
+    toast({
+      title: "Abschnitt aktualisiert",
+      description: `Der Abschnitt "${sections.find(s => s.id === section)?.title}" wurde aktualisiert.`,
+      variant: "default",
+    });
+  }, [toast]);
+  
+  // Aktualisierungen manuell prüfen
+  const checkForUpdates = useCallback(async () => {
+    setIsCheckingUpdates(true);
+    
+    try {
+      // Sammel die IDs aller Abschnitte
+      const sectionIds = sections.map(s => s.id);
+      
+      // Prüfe jeden Abschnitt auf Updates
+      for (const sectionId of sectionIds) {
+        const localInfo = getUpdateInfo(sectionId);
+        const serverInfo = await fetchUpdateInfo(sectionId);
+        
+        // Wenn der Server eine neuere Version hat, aktualisiere
+        if (new Date(serverInfo.timestamp) > new Date(localInfo.timestamp)) {
+          saveUpdateInfo(sectionId, serverInfo);
+          setSectionUpdates(prev => ({
+            ...prev,
+            [sectionId]: serverInfo.timestamp
+          }));
+        }
+      }
+      
+      toast({
+        title: "Aktualisierungsprüfung abgeschlossen",
+        description: "Alle Informationen sind auf dem neuesten Stand.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Fehler bei der Aktualisierungsprüfung:", error);
+      toast({
+        title: "Fehler",
+        description: "Bei der Aktualisierungsprüfung ist ein Fehler aufgetreten.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingUpdates(false);
+    }
+  }, [toast]);
 
   // Funktion zur Beobachtung der sichtbaren Abschnitte beim Scrollen
   useEffect(() => {
@@ -127,35 +192,35 @@ export default function InformationPage() {
       { rootMargin: "-100px 0px -80% 0px" }
     );
 
-    // Hole das letzte Aktualisierungsdatum von der API
-    // (Falls in Zukunft eine API dafür implementiert wird)
-    const checkUpdates = async () => {
-      try {
-        // In Zukunft könnte hier ein API-Aufruf stehen:
-        // const response = await fetch('/api/info/last-updated');
-        // const data = await response.json();
-        // setLastUpdated(data.lastUpdated);
-        
-        // Aktuelle Implementation verwendet das fest codierte Datum
-        setLastUpdated(LAST_UPDATED);
-      } catch (error) {
-        console.error("Fehler beim Abrufen des letzten Aktualisierungsdatums:", error);
-      }
-    };
+    // Lade initial die lokal gespeicherten Zeitstempel
+    const initialSectionUpdates: Record<string, string> = {};
+    sections.forEach(section => {
+      const updateInfo = getUpdateInfo(section.id);
+      initialSectionUpdates[section.id] = updateInfo.timestamp;
+    });
+    setSectionUpdates(initialSectionUpdates);
+    
+    // Setup Aktualisierungsprüfung
+    const cleanup = setupUpdateChecker(
+      sections.map(s => s.id),
+      handleSectionUpdate
+    );
 
-    checkUpdates();
+    // Setup Observer für Scroll-Verhalten
     sections.forEach((section) => {
       const element = document.getElementById(section.id);
       if (element) observer.observe(element);
     });
 
     return () => {
+      // Cleanup für Beobachter und Update-Checker
       sections.forEach((section) => {
         const element = document.getElementById(section.id);
         if (element) observer.unobserve(element);
       });
+      cleanup();
     };
-  }, []);
+  }, [handleSectionUpdate]);
 
   return (
     <div className="container mx-auto py-8">
@@ -396,15 +461,27 @@ export default function InformationPage() {
               </Card>
             </div>
             
-            <div className="mt-6 text-sm text-gray-500">
-              <p>
-                <strong>Hinweis:</strong> Die Datenarchitektur wird regelmäßig aktualisiert, um neue Funktionen und Verbesserungen zu unterstützen.
-                Letzte Aktualisierung: {(() => {
-                  // Konvertiere das Datum in ein deutsches Format (TT.MM.JJJJ)
-                  const date = new Date(lastUpdated);
-                  return date.toLocaleDateString('de-DE');
-                })()}
-              </p>
+            <div className="mt-6 flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                <p>
+                  <strong>Hinweis:</strong> Die Datenarchitektur wird regelmäßig aktualisiert, um neue Funktionen und Verbesserungen zu unterstützen.
+                  <br />
+                  Letzte Aktualisierung: {(() => {
+                    const timestamp = sectionUpdates["datenarchitektur"] || LAST_UPDATED;
+                    return formatUpdateDate(timestamp);
+                  })()}
+                </p>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={checkForUpdates}
+                disabled={isCheckingUpdates}
+                className="flex items-center gap-2 text-xs"
+              >
+                <RefreshCw className={`h-3 w-3 ${isCheckingUpdates ? 'animate-spin' : ''}`} />
+                Aktualisieren
+              </Button>
             </div>
           </div>
           
