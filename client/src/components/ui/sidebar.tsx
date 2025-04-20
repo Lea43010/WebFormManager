@@ -10,7 +10,6 @@ import {
   Settings, 
   Menu, 
   X,
-  LogOut,
   Database,
   Paperclip,
   Map,
@@ -22,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import logoImage from "@/assets/Logo.webp";
 
 interface NavItem {
@@ -86,17 +84,13 @@ const navItems: NavItem[] = [
 ];
 
 export function Sidebar() {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const [location] = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isMobile = useMobile();
 
   const toggleMobileMenu = () => {
     setIsMobileOpen(!isMobileOpen);
-  };
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
   };
 
   const sidebarContent = (
@@ -155,7 +149,7 @@ export function Sidebar() {
       </div>
       {user && (
         <div className="p-4 border-t border-primary-light">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <div className="flex items-center space-x-3">
               <Avatar>
                 <AvatarFallback className="bg-primary">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
@@ -164,24 +158,6 @@ export function Sidebar() {
                 <p className="text-sm font-medium text-black">{user.username}</p>
               </div>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-black" 
-                    onClick={handleLogout}
-                    disabled={logoutMutation.isPending}
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Abmelden</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       )}
