@@ -103,6 +103,19 @@ const milestoneTypes = [
   'Sonstiges'
 ];
 
+// Bauphasen-Optionen für Meilensteine
+const bauphasenOptions = [
+  'Baustart Tiefbau FÖB',
+  'Baustart Tiefbau EWB',
+  'Tiefbau EWB',
+  'Tiefbau FÖB',
+  'Montage NE3 EWB',
+  'Montage NE3 FÖB',
+  'Endmontage NE4 EWB',
+  'Endmontage NE4 FÖB',
+  'Sonstiges'
+];
+
 export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -123,6 +136,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
       color: '#4F46E5',
       type: 'Tiefbau',
       ewbFoeb: 'keine',
+      bauphase: 'Sonstiges',
       sollMenge: undefined
     }
   });
@@ -179,6 +193,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         color: '#4F46E5',
         type: 'Tiefbau',
         ewbFoeb: 'keine',
+        bauphase: 'Sonstiges',
         sollMenge: undefined
       });
     },
@@ -761,6 +776,32 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                               <SelectItem value="EWB">EWB</SelectItem>
                               <SelectItem value="FÖB">FÖB</SelectItem>
                               <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={milestoneForm.control}
+                      name="bauphase"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bauphase</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Bauphase auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bauphasenOptions.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
