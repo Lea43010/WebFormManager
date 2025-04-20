@@ -90,6 +90,7 @@ export const projects = pgTable("tblproject", {
   customerContactId: integer("customer_contact_id"), // Neues Feld für den Kunden-Ansprechpartner
   permission: boolean("permission").default(false),
   permissionName: varchar("permission_name", { length: 100 }),
+  permissionDate: date("permission_date"),
   projectCluster: varchar("project_cluster", { length: 255 }),
   projectName: varchar("project_name", { length: 255 }),
   projectArt: varchar("project_art", { length: 50 }),
