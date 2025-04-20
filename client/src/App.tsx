@@ -17,6 +17,7 @@ import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
+import SimpleLoginPage from "@/pages/simple-login";
 import AdminPage from "@/pages/admin-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
@@ -24,7 +25,8 @@ import PageTransition from "@/components/ui/page-transition";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
+      <Route path="/" component={SimpleLoginPage} />
+      <Route path="/landing" component={LandingPage} />
       <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/companies" component={CompanyPage} />
       <ProtectedRoute path="/customers" component={CustomerPage} />
