@@ -329,7 +329,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
     const weeksArray = createWeeksArray(selectedYear);
     
     // Kopfzeile mit Kalenderwochen erstellen
-    const headers = ['ID', 'Meilenstein', 'Typ', ...weeksArray.map(week => `KW ${week}`)];
+    const headers = ['ID', 'Meilenstein', 'Typ', 'Bauphase', ...weeksArray.map(week => `KW ${week}`)];
     
     // Daten für jede Zeile vorbereiten
     const rows = milestones.map(milestone => {
@@ -337,6 +337,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         milestone.id,
         milestone.name,
         milestone.type || 'Sonstige',
+        milestone.bauphase || 'Sonstiges',
       ];
       
       // Für jede Kalenderwoche prüfen, ob der Meilenstein aktiv ist
@@ -397,7 +398,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
     const weeksArray = createWeeksArray(selectedYear);
     
     // Kopfzeile mit Kalenderwochen
-    const headers = ['ID', 'Meilenstein', 'Typ', ...weeksArray.map(week => `KW ${week}`)];
+    const headers = ['ID', 'Meilenstein', 'Typ', 'Bauphase', ...weeksArray.map(week => `KW ${week}`)];
     
     // Daten für jede Zeile
     const rows = milestones.map(milestone => {
@@ -405,6 +406,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         milestone.id,
         milestone.name,
         milestone.type || 'Sonstige',
+        milestone.bauphase || 'Sonstiges',
       ];
       
       // Für jede Kalenderwoche prüfen, ob der Meilenstein aktiv ist
@@ -441,6 +443,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         0: { cellWidth: 10 }, // ID
         1: { cellWidth: 30 }, // Name
         2: { cellWidth: 20 }, // Typ
+        3: { cellWidth: 20 }, // Bauphase
       }
     });
     
@@ -536,7 +539,8 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     }`}
                   >
                     {isInRange && week === Math.floor((milestone.startKW + milestone.endKW) / 2) && (
-                      <div className="text-xs font-medium text-black overflow-hidden whitespace-nowrap" title={milestone.name}>
+                      <div className="text-xs font-medium text-black overflow-hidden whitespace-nowrap" 
+                           title={`${milestone.name} - Typ: ${milestone.type || 'Sonstiges'} - Bauphase: ${milestone.bauphase || 'Sonstiges'} - EWB/FÖB: ${milestone.ewbFoeb || 'keine'}`}>
                         {milestone.name}
                       </div>
                     )}
@@ -870,6 +874,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Typ</TableHead>
+                  <TableHead>Bauphase</TableHead>
                   <TableHead>Start</TableHead>
                   <TableHead>Ende</TableHead>
                   <TableHead>Jahr</TableHead>
@@ -895,6 +900,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                         </div>
                       </TableCell>
                       <TableCell>{milestone.type || "-"}</TableCell>
+                      <TableCell>{milestone.bauphase || "Sonstiges"}</TableCell>
                       <TableCell>KW {milestone.startKW}</TableCell>
                       <TableCell>KW {milestone.endKW}</TableCell>
                       <TableCell>{milestone.jahr}</TableCell>
@@ -934,7 +940,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center">
+                    <TableCell colSpan={9} className="text-center">
                       Keine Meilensteine vorhanden
                     </TableCell>
                   </TableRow>
@@ -954,6 +960,8 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   </CardTitle>
                   <CardDescription>
                     {milestones?.find(m => m.id === selectedMilestoneId)?.type || 'Kein Typ'}
+                    {' - '}
+                    Bauphase: {milestones?.find(m => m.id === selectedMilestoneId)?.bauphase || 'Sonstiges'}
                     {' - '}
                     KW {milestones?.find(m => m.id === selectedMilestoneId)?.startKW} bis KW {milestones?.find(m => m.id === selectedMilestoneId)?.endKW}, {milestones?.find(m => m.id === selectedMilestoneId)?.jahr}
                     {' - '}
