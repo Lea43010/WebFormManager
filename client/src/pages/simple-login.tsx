@@ -33,12 +33,19 @@ export default function SimpleLoginPage() {
     loginMutation.mutate({
       username: values.username,
       password: values.password
+    }, {
+      onSuccess: () => {
+        // Die Weiterleitung erfolgt jetzt direkt in der Mutation in useAuth.tsx
+        console.log("Login erfolgreich, Weiterleitung erfolgt automatisch...");
+      }
     });
   };
 
   // Wenn der Benutzer bereits angemeldet ist, zur Projektübersicht weiterleiten
   useEffect(() => {
+    // Prüfen, ob der Benutzer bereits angemeldet ist
     if (user) {
+      console.log("Benutzer bereits angemeldet, leite zur Projektübersicht weiter...");
       setLocation("/projects");
     }
   }, [user, setLocation]);

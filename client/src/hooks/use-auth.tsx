@@ -59,8 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setRequiresTwoFactor(false);
       setPendingUserId(null);
-      // Weiterleitung zur Projektseite
-      navigate("/projects");
+      
+      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
+      setTimeout(() => {
+        console.log("Weiterleitung zur Projektübersicht nach Login...");
+        navigate("/projects");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -88,7 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setRequiresTwoFactor(false);
       setPendingUserId(null);
-      navigate("/projects");
+      
+      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
+      setTimeout(() => {
+        console.log("Weiterleitung zur Projektübersicht nach Verifizierung...");
+        navigate("/projects");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -154,7 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Ihr Konto wurde erstellt.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      navigate("/projects");
+      
+      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
+      setTimeout(() => {
+        console.log("Weiterleitung zur Projektübersicht nach Registrierung...");
+        navigate("/projects");
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
