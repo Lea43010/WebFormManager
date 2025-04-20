@@ -202,7 +202,7 @@ export function MilestoneOverview({ projectId }: MilestoneOverviewProps) {
                       >
                         {/* Status-Indikator */}
                         {isActive && (
-                          <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
+                          <div className="absolute top-0 left-0 w-1 h-full bg-[#5c9935]" />
                         )}
                         {isUpcoming && (
                           <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
@@ -233,7 +233,7 @@ export function MilestoneOverview({ projectId }: MilestoneOverviewProps) {
                         {/* Status-Anzeige */}
                         <div className="flex items-center">
                           {isActive && (
-                            <Badge className="bg-green-500">
+                            <Badge className="bg-[#5c9935]">
                               Aktiv
                             </Badge>
                           )}
