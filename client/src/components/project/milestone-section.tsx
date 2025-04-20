@@ -959,6 +959,10 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
           )}
         </TabsContent>
         
+        <TabsContent value="calendar-view" className="space-y-4">
+          <CalendarWeekPlanner projectId={projectId} />
+        </TabsContent>
+        
         <TabsContent value="list-view" className="space-y-4">
           {isLoadingMilestones ? (
             <div className="flex justify-center p-8">
