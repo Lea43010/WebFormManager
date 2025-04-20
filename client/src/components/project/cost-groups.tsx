@@ -117,7 +117,7 @@ export function CostGroups({ projectId }: CostGroupsProps) {
   return (
     <div className="space-y-6">
       <Card className="w-full">
-        <CardHeader className="bg-green-600 text-white">
+        <CardHeader className="bg-[#5c9935] text-white">
           <CardTitle className="text-xl">Kostengruppen nach DIN 276</CardTitle>
           <CardDescription className="text-white/90">
             Standardisierte Kostenstruktur für Hochbauprojekte
