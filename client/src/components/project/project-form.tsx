@@ -52,7 +52,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
     customerContactId: z.number().nullable().optional(),
     permission: z.boolean().default(false),
     permissionName: z.string().optional(),
-    projectCluster: z.string().optional(),
+    permissionDate: z.date().nullable().optional(),
     projectName: z.string().min(1, "Projektname ist erforderlich"),
     projectArt: z.string().min(1, "Projektart ist erforderlich"),
     // Verwenden Sie string für Eingabefelder, aber wandeln Sie sie später in number um
@@ -116,12 +116,9 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
       customerContactId: project?.customerContactId || null,
       permission: project?.permission || false,
       permissionName: project?.permissionName || "",
-      projectCluster: project?.projectCluster || "",
+      permissionDate: project?.permissionDate ? new Date(project.permissionDate) : null,
       projectName: project?.projectName || "",
       projectArt: project?.projectArt || "",
-      projectWidth: project ? (project.projectWidth !== null ? String(project.projectWidth) : '') : '',
-      projectLength: project ? (project.projectLength !== null ? String(project.projectLength) : '') : '',
-      projectHeight: project ? (project.projectHeight !== null ? String(project.projectHeight) : '') : '',
       projectText: project ? (project.projectText !== null ? String(project.projectText) : '') : '',
       speechNotes: "",
       projectStartdate: project?.projectStartdate ? new Date(project.projectStartdate) : null,
@@ -150,9 +147,6 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
       // Convert string values to numbers for numeric fields before submitting
       const transformedData = {
         ...data,
-        projectWidth: data.projectWidth && data.projectWidth.trim() !== '' ? parseFloat(data.projectWidth) : null,
-        projectLength: data.projectLength && data.projectLength.trim() !== '' ? parseFloat(data.projectLength) : null,
-        projectHeight: data.projectHeight && data.projectHeight.trim() !== '' ? parseFloat(data.projectHeight) : null,
         projectText: finalProjectText, // Text als String speichern, nicht als Zahl
       };
       
@@ -620,19 +614,63 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
 
             {form.watch("permission") && (
               <div className="mt-4 pl-6 border-l-2 border-primary/20">
-                <FormField
-                  control={form.control}
-                  name="permissionName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name der Genehmigung</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="permissionName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name der Genehmigung</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="permissionDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Genehmigungsdatum</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd.MM.yyyy")
+                                ) : (
+                                  <span>Datum auswählen</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value || undefined}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date > new Date() || date < new Date("1900-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
           </div>
