@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CapacitySection } from "@/components/project/capacity-section";
 import { MilestoneSection } from "@/components/project/milestone-section";
+import { MilestoneOverview } from "@/components/project/milestone-overview";
 import PermissionSection from "@/components/project/permission-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
@@ -208,25 +209,10 @@ export default function ProjectDetailPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Projektdetails</CardTitle>
+                    <CardTitle>Meilenstein-Übersicht</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="font-medium">Breite:</div>
-                      <div>{project.projectWidth || "Nicht angegeben"}</div>
-                      
-                      <div className="font-medium">Länge:</div>
-                      <div>{project.projectLength || "Nicht angegeben"}</div>
-                      
-                      <div className="font-medium">Höhe:</div>
-                      <div>{project.projectHeight || "Nicht angegeben"}</div>
-                      
-                      <div className="font-medium">Kunde:</div>
-                      <div>{"Nicht angegeben"}</div>
-                      
-                      <div className="font-medium">Unternehmen:</div>
-                      <div>{"Nicht angegeben"}</div>
-                    </div>
+                  <CardContent>
+                    <MilestoneOverview projectId={projectId!} />
                   </CardContent>
                 </Card>
 
