@@ -219,7 +219,7 @@ export function MilestoneOverview({ projectId }: MilestoneOverviewProps) {
                             <Badge 
                               variant="secondary"
                               className={`text-xs ${
-                                milestone.ewbFoeb === 'EWB' ? 'bg-green-100 text-green-800' :
+                                milestone.ewbFoeb === 'EWB' ? 'bg-[#e8f3e2] text-[#5c9935]' :
                                 milestone.ewbFoeb === 'FÖB' ? 'bg-blue-100 text-blue-800' :
                                 milestone.ewbFoeb === 'EWB,FÖB' ? 'bg-purple-100 text-purple-800' :
                                 'bg-gray-100 text-gray-700'
@@ -243,7 +243,7 @@ export function MilestoneOverview({ projectId }: MilestoneOverviewProps) {
                             </Badge>
                           )}
                           {!isActive && !isUpcoming && isInPast(milestone.endKW, milestone.jahr) && (
-                            <Badge variant="outline" className="border-green-500 text-green-700">
+                            <Badge variant="outline" className="border-[#5c9935] text-[#5c9935]">
                               <CheckSquare className="h-3 w-3 mr-1" />
                               Abgeschlossen
                             </Badge>
