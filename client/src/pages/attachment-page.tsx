@@ -501,19 +501,19 @@ export default function AttachmentPage() {
         
         {/* Upload Dialog */}
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-              <DialogTitle>
+          <DialogContent className="sm:max-w-[800px] md:max-w-[900px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-xl">
                 {uploadMode === "camera" ? "Kamerafoto hochladen" : "Dateien hochladen"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm">
                 {uploadMode === "camera" 
                   ? "Nehmen Sie ein Foto mit Ihrer Kamera auf oder wählen Sie ein bestehendes Foto aus."
                   : "Wählen Sie ein Projekt und laden Sie Dateien hoch. Sie können auch Dateien per Drag & Drop hinzufügen."
                 }
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
+            <div className="py-2">
               <EnhancedUploadForm 
                 onUploadSuccess={handleUploadSuccess}
                 mode={uploadMode}

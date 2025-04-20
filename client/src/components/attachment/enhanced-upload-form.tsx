@@ -293,30 +293,32 @@ export default function EnhancedUploadForm({
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
-                  disabled={uploading || selectedFiles.length === 0}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Wird hochgeladen...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      {selectedFiles.length === 1 ? 'Datei hochladen' : `${selectedFiles.length} Dateien hochladen`}
-                    </>
-                  )}
-                </Button>
+                <div className="sticky bottom-0 pt-4 pb-2 bg-white">
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white py-6"
+                    disabled={uploading || selectedFiles.length === 0}
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Wird hochgeladen...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-5 w-5" />
+                        {selectedFiles.length === 1 ? 'Datei hochladen' : `${selectedFiles.length} Dateien hochladen`}
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
           </TabsContent>
           
           <TabsContent value="camera">
             <Form {...form}>
-              <div className="space-y-4">
+              <div className="space-y-4 mb-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -357,6 +359,25 @@ export default function EnhancedUploadForm({
                   projectId={form.watch("projectId") ? parseInt(form.watch("projectId")) : null} 
                   onUploadSuccess={handleCameraUploadSuccess}
                 />
+              </div>
+              
+              <div className="sticky bottom-0 pt-4 pb-2 bg-white">
+                <Button
+                  type="button"
+                  className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white py-6"
+                  onClick={() => {
+                    if (!form.watch("projectId")) {
+                      toast({
+                        title: "Projekt fehlt",
+                        description: "Bitte wählen Sie ein Projekt aus",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  <Camera className="mr-2 h-5 w-5" />
+                  Foto aufnehmen oder auswählen
+                </Button>
               </div>
             </Form>
           </TabsContent>
