@@ -1,0 +1,47 @@
+ Datenschutzerklärung
+Nutzer müssen klar und verständlich darüber informiert werden, welche personenbezogenen Daten (z. B. Name, E-Mail, Standort, IP-Adresse) zu welchen Zwecken und auf welcher Rechtsgrundlage verarbeitet werden.
+
+Die Datenschutzerklärung muss Angaben enthalten zu:
+
+Verantwortlicher Stelle (Name, Kontakt)
+
+Art, Umfang und Zweck der Datenerhebung und -verarbeitung
+
+Kategorien der verarbeiteten Daten
+
+Empfänger oder Kategorien von Empfängern der Daten (z. B. Drittanbieter, Cloud-Provider)
+
+Übermittlung in Drittländer (außerhalb der EU) und ggf. verwendete Schutzmechanismen (z. B. Standardvertragsklauseln)
+
+Dauer der Speicherung bzw. Kriterien für die Festlegung der Speicherdauer
+
+Rechte der Betroffenen (z. B. Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch)
+
+Beschwerderecht bei einer Aufsichtsbehörde
+
+2. Einwilligung zur Datenverarbeitung
+Für alle nicht zwingend zur Vertragserfüllung notwendigen Datenverarbeitungen (z. B. Tracking, Marketing, optionale Funktionen) muss eine ausdrückliche, informierte und freiwillige Einwilligung eingeholt werden, bevor die Verarbeitung beginnt.
+
+Die Einwilligung muss dokumentiert und jederzeit widerrufbar sein.
+
+Bei besonderen Kategorien personenbezogener Daten (z. B. Gesundheitsdaten) ist immer eine ausdrückliche Einwilligung erforderlich.
+
+3. Nutzungsbedingungen
+Nutzer müssen über die allgemeinen Nutzungsbedingungen der App informiert werden, insbesondere über Rechte und Pflichten, Haftung und Vertragslaufzeiten.
+
+4. Informationen zur Datensicherheit
+Es muss beschrieben werden, welche technischen und organisatorischen Maßnahmen zum Schutz der Daten getroffen werden (z. B. Verschlüsselung, Zugriffskontrollen).
+
+5. Datenverarbeitung durch Dritte/Cloud-Anbieter
+Wird ein Cloud-Dienstleister eingesetzt, muss der Nutzer darüber informiert werden, insbesondere über den Serverstandort und die Einhaltung der DSGVO durch den Anbieter.
+
+Bei Übertragung in Drittländer außerhalb der EU müssen zusätzliche Schutzmaßnahmen (z. B. Standardvertragsklauseln) erläutert werden.
+
+Es muss sichergestellt werden, dass der Cloud-Anbieter Daten nur auf Weisung des Verantwortlichen verarbeitet und entsprechende Verträge (Auftragsverarbeitung) bestehen.
+
+6. Rechte der Nutzer (Betroffenenrechte)
+Nutzer müssen aktiv über ihre Rechte informiert werden und die Möglichkeit haben, diese einfach auszuüben:
+
+Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch.
+
+Mechanismen zur Ausübung dieser Rechte müssen bereitgestellt werden (z. B. Kontaktformular, E-Mail-Adresse).

@@ -54,9 +54,13 @@ const loginSchema = insertUserSchema.pick({
 
 const registerSchema = insertUserSchema.extend({
   confirmPassword: z.string(),
+  gdprConsent: z.boolean(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein",
   path: ["confirmPassword"],
+}).refine((data) => data.gdprConsent === true, {
+  message: "Sie müssen den Datenschutzbestimmungen zustimmen, um sich zu registrieren",
+  path: ["gdprConsent"],
 });
 
 // Verifizierungscode Schema
@@ -133,6 +137,7 @@ export default function AuthPage() {
       confirmPassword: "",
       name: "",
       email: "",
+      gdprConsent: false,
     },
   });
   
@@ -528,6 +533,111 @@ export default function AuthPage() {
                               autoComplete="new-password"
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="gdprConsent"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Datenschutzerklärung</FormLabel>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <p className="text-sm text-muted-foreground cursor-pointer hover:underline">
+                                  Ich habe die Datenschutzerklärung gelesen und stimme der Verarbeitung meiner Daten gemäß DSGVO zu.
+                                </p>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Datenschutzerklärung</DialogTitle>
+                                  <DialogDescription>
+                                    Bitte lesen Sie unsere Datenschutzerklärung sorgfältig durch.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4 text-sm">
+                                  <h3 className="text-lg font-semibold">1. Datenschutzerklärung</h3>
+                                  <p>
+                                    Wir informieren Sie darüber, welche personenbezogenen Daten (z.B. Name, E-Mail, Standort, IP-Adresse) 
+                                    zu welchen Zwecken und auf welcher Rechtsgrundlage verarbeitet werden.
+                                  </p>
+                                  
+                                  <h4 className="text-md font-semibold">Verantwortliche Stelle</h4>
+                                  <p>
+                                    Sachverständigenbüro - Justitia<br />
+                                    E-Mail: info@baustructura.de<br />
+                                    Telefon: +49 0123 456789
+                                  </p>
+                                  
+                                  <h4 className="text-md font-semibold">Art, Umfang und Zweck der Datenerhebung</h4>
+                                  <p>
+                                    Wir erheben und verarbeiten folgende personenbezogene Daten:
+                                    <ul className="list-disc pl-5 mt-2">
+                                      <li>Benutzeranmeldedaten (Benutzername, Passwort)</li>
+                                      <li>Kontaktdaten (Name, E-Mail)</li>
+                                      <li>Technische Daten (IP-Adresse, Zugriffszeitpunkte)</li>
+                                      <li>Standortdaten bei Nutzung der Kartenfunktion</li>
+                                    </ul>
+                                  </p>
+                                  
+                                  <h4 className="text-md font-semibold">Zweck der Verarbeitung</h4>
+                                  <p>
+                                    Die Datenverarbeitung erfolgt zu folgenden Zwecken:
+                                    <ul className="list-disc pl-5 mt-2">
+                                      <li>Bereitstellung der Bau-Structura-App und ihrer Funktionen</li>
+                                      <li>Kommunikation mit Nutzern</li>
+                                      <li>Absicherung und Optimierung der App</li>
+                                      <li>Erfüllung gesetzlicher Pflichten</li>
+                                    </ul>
+                                  </p>
+                                  
+                                  <h3 className="text-lg font-semibold mt-6">2. Speicherdauer</h3>
+                                  <p>
+                                    Wir speichern Ihre Daten so lange, wie es für die Erbringung unserer Dienste notwendig ist 
+                                    oder gesetzliche Aufbewahrungspflichten dies erfordern.
+                                  </p>
+                                  
+                                  <h3 className="text-lg font-semibold mt-6">3. Rechte der Nutzer</h3>
+                                  <p>
+                                    Sie haben folgende Rechte bezüglich Ihrer personenbezogenen Daten:
+                                    <ul className="list-disc pl-5 mt-2">
+                                      <li>Recht auf Auskunft</li>
+                                      <li>Recht auf Berichtigung</li>
+                                      <li>Recht auf Löschung</li>
+                                      <li>Recht auf Einschränkung der Verarbeitung</li>
+                                      <li>Recht auf Datenübertragbarkeit</li>
+                                      <li>Widerspruchsrecht</li>
+                                    </ul>
+                                  </p>
+                                  
+                                  <h3 className="text-lg font-semibold mt-6">4. Datensicherheit</h3>
+                                  <p>
+                                    Wir setzen technische und organisatorische Sicherheitsmaßnahmen ein, 
+                                    um Ihre personenbezogenen Daten gegen zufällige oder vorsätzliche Manipulationen, 
+                                    Verlust, Zerstörung oder gegen den Zugriff unberechtigter Personen zu schützen.
+                                  </p>
+                                  
+                                  <h3 className="text-lg font-semibold mt-6">5. Beschwerderecht</h3>
+                                  <p>
+                                    Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung 
+                                    Ihrer personenbezogenen Daten zu beschweren.
+                                  </p>
+                                </div>
+                                <DialogClose asChild>
+                                  <Button>Schließen</Button>
+                                </DialogClose>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
