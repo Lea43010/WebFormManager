@@ -152,6 +152,7 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="overview" className="mt-4">
             <TabsList>
               <TabsTrigger value="overview">Übersicht</TabsTrigger>
+              <TabsTrigger value="permissions">Genehmigungen</TabsTrigger>
               <TabsTrigger value="milestones">Meilensteine</TabsTrigger>
               <TabsTrigger value="capacity">Bedarf/Kapazitäten</TabsTrigger>
               <TabsTrigger value="attachments">Anhänge</TabsTrigger>
@@ -240,6 +241,10 @@ export default function ProjectDetailPage() {
                   </Card>
                 )}
               </div>
+            </TabsContent>
+            
+            <TabsContent value="permissions" className="mt-4">
+              {project.id && <PermissionSection projectId={project.id} />}
             </TabsContent>
             
             <TabsContent value="milestones" className="mt-4">

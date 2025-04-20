@@ -20,7 +20,8 @@ import {
   milestones, type Milestone, type InsertMilestone,
   milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail,
   loginLogs, type LoginLog, type InsertLoginLog,
-  verificationCodes, type VerificationCode, type InsertVerificationCode
+  verificationCodes, type VerificationCode, type InsertVerificationCode,
+  permissions, type Permission, type InsertPermission
 } from "@shared/schema";
 
 // PostgresSessionStore wurde oben definiert
