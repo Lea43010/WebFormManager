@@ -232,21 +232,7 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
               />
             </div>
 
-            <div>
-              <FormField
-                control={form.control}
-                name="projectCluster"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Projektcluster</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+
 
             <div className="md:col-span-3">
               <FormField
@@ -586,73 +572,6 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                 </div>
               </div>
             )}
-          </div>
-          
-          {/* Projektmaße */}
-          <h3 className="text-lg font-medium mb-4"><span className="green-emoji">📏</span> Projektmaße</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div>
-              <FormField
-                control={form.control}
-                name="projectWidth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Breite</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => field.onChange(e.target.value)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div>
-              <FormField
-                control={form.control}
-                name="projectLength"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Länge</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => field.onChange(e.target.value)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div>
-              <FormField
-                control={form.control}
-                name="projectHeight"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Höhe</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => field.onChange(e.target.value)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
           
           {/* Sprachnotizen */}
