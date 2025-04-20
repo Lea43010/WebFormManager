@@ -1055,6 +1055,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Berechtigungen für ein Projekt abrufen
+  app.get("/api/projects/:projectId/permissions", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      console.log(`Fetching permissions for project ID: ${projectId}`);
+      const permissions = await storage.getPermissions(projectId);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      next(error);
+    }
+  });
+
+  // Neue Berechtigung für ein Projekt erstellen
   app.post("/api/projects/:projectId/permissions", async (req, res, next) => {
     try {
       const projectId = parseInt(req.params.projectId);
@@ -1064,7 +1078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId,
         permissionType: req.body.permissionType,
         permissionAuthority: req.body.permissionAuthority,
-        permissionDate: req.body.permissionDate ? new Date(req.body.permissionDate) : null,
+        permissionDate: req.body.permissionDate || null,
         permissionNotes: req.body.permissionNotes || null
       };
 

@@ -307,20 +307,23 @@ export class DatabaseStorage implements IStorage {
   
   // Permission operations
   async getPermissions(projectId: number): Promise<Permission[]> {
-    return await db.select()
-      .from(permissions)
-      .where(eq(permissions.projectId, projectId)) as Permission[];
+    console.log(`Fetching permissions for project ID: ${projectId}`);
+    const result = await db.select().from(permissions).where(eq(permissions.projectId, projectId));
+    console.log(`Found ${result.length} permissions`);
+    return result;
   }
   
   async createPermission(permission: InsertPermission): Promise<Permission> {
-    const [createdPermission] = await db.insert(permissions)
-      .values(permission)
-      .returning() as Permission[];
+    console.log('Creating new permission with data:', permission);
+    const [createdPermission] = await db.insert(permissions).values(permission).returning();
+    console.log('Created permission:', createdPermission);
     return createdPermission;
   }
   
   async deletePermission(id: number): Promise<void> {
+    console.log(`Deleting permission with ID: ${id}`);
     await db.delete(permissions).where(eq(permissions.id, id));
+    console.log(`Permission with ID ${id} deleted`);
   }
   
   // Material operations
@@ -665,26 +668,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(verificationCodes.id, id));
   }
 
-  // Permission operations
-  async getPermissions(projectId: number): Promise<Permission[]> {
-    console.log(`Fetching permissions for project ID: ${projectId}`);
-    const result = await db.select().from(permissions).where(eq(permissions.projectId, projectId));
-    console.log(`Found ${result.length} permissions`);
-    return result;
-  }
 
-  async createPermission(permission: InsertPermission): Promise<Permission> {
-    console.log('Creating new permission with data:', permission);
-    const [createdPermission] = await db.insert(permissions).values(permission).returning();
-    console.log('Created permission:', createdPermission);
-    return createdPermission;
-  }
-
-  async deletePermission(id: number): Promise<void> {
-    console.log(`Deleting permission with ID: ${id}`);
-    await db.delete(permissions).where(eq(permissions.id, id));
-    console.log(`Permission with ID ${id} deleted`);
-  }
 }
 
 export const storage = new DatabaseStorage();
