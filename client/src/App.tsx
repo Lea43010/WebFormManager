@@ -39,6 +39,7 @@ function Router() {
       <ProtectedRoute path="/geo-map" component={GeoMapPage} />
       <ProtectedRoute path="/information" component={InformationPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route component={NotFound} />
     </Switch>
   );

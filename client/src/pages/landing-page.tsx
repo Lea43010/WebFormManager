@@ -1,12 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import logoImage from "@/assets/Logo.png";
+
+// Login-Schema definieren
+const loginSchema = z.object({
+  username: z.string().min(1, "Benutzername ist erforderlich"),
+  password: z.string().min(1, "Passwort ist erforderlich")
+});
 
 export default function LandingPage() {
-  const { user } = useAuth();
+  const { user, loginMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
+  // Login-Formular
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
+    loginMutation.mutate({
+      username: values.username,
+      password: values.password
+    });
+  };
 
   // Wenn der Benutzer bereits angemeldet ist, zur Projektübersicht weiterleiten
   useEffect(() => {
@@ -24,14 +56,88 @@ export default function LandingPage() {
             <h1 className="text-2xl font-bold text-gray-900">Bau - Structura App</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/auth">
-              <Button variant="outline" className="text-[#6a961f] border-[#6a961f] hover:bg-[#6a961f] hover:text-white">
-                Anmelden
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="text-[#6a961f] border-[#6a961f] hover:bg-[#6a961f] hover:text-white"
+              onClick={() => setShowLoginForm(!showLoginForm)}
+            >
+              {showLoginForm ? "Anmeldeformular schließen" : "Anmelden"}
+            </Button>
           </div>
         </div>
       </header>
+
+      {/* Login Form */}
+      {showLoginForm && (
+        <div className="bg-white shadow-md py-6 mb-8">
+          <div className="container mx-auto px-4 max-w-md">
+            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-200">
+              <div className="mb-6 text-center">
+                <h2 className="text-2xl font-bold text-gray-900">Anmelden</h2>
+                <p className="text-gray-600 mt-2">Geben Sie Ihre Zugangsdaten ein</p>
+              </div>
+              
+              <Form {...loginForm}>
+                <form
+                  onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={loginForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Benutzername</FormLabel>
+                        <FormControl>
+                          <Input {...field} autoComplete="username" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Passwort</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            autoComplete="current-password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                    disabled={loginMutation.isPending}
+                  >
+                    {loginMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Anmelden
+                  </Button>
+                  
+                  <div className="text-center mt-4">
+                    <Link href="/auth">
+                      <span className="text-sm text-gray-600 hover:text-[#6a961f] cursor-pointer">
+                        Noch kein Konto? Jetzt registrieren
+                      </span>
+                    </Link>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-[#f0f4e8] to-white py-20">
