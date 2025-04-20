@@ -117,7 +117,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
           
           {/* Kundeninformation */}
           <div className="form-section">
-            <h3 className="form-heading"><span className="green-emoji mr-2">👤</span> Persönliche Daten</h3>
+            <h3 className="form-heading"><span className="green-emoji mr-2">👤</span> Ansprechpartner</h3>
             
             {/* Kundenart */}
             <div className="mb-4">
