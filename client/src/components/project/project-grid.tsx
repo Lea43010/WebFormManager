@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TooltipButton } from "@/components/ui/tooltip-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 // Erweiterte Projektschnittstelle mit Kundennamen
@@ -67,18 +68,24 @@ export function ProjectGrid({
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
         <div className="relative w-full sm:w-64">
-          <Input
-            placeholder="Filtern..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            className="w-full"
-          />
+          <TooltipButton tooltipText="Projekte nach Namen oder anderen Eigenschaften filtern" side="top">
+            <div className="w-full">
+              <Input
+                placeholder="Filtern..."
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          </TooltipButton>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onViewChange}>
-            <List className="mr-2 h-4 w-4" />
-            Listenansicht
-          </Button>
+          <TooltipButton tooltipText="Zur Listenansicht der Projekte wechseln" side="top">
+            <Button variant="outline" onClick={onViewChange}>
+              <List className="mr-2 h-4 w-4" />
+              Listenansicht
+            </Button>
+          </TooltipButton>
         </div>
       </div>
 
