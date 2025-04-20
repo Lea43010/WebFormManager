@@ -431,6 +431,9 @@ export default function ProjectDetailPage() {
               <TabsTrigger value="permissions">Genehmigungen</TabsTrigger>
               <TabsTrigger value="milestones">Meilensteine</TabsTrigger>
               <TabsTrigger value="capacity">Bedarf/Kapazitäten</TabsTrigger>
+              {project.projectArt === "Hochbau" && (
+                <TabsTrigger value="costgroups">Kostengruppen</TabsTrigger>
+              )}
               <TabsTrigger value="attachments">Anhänge</TabsTrigger>
             </TabsList>
 
@@ -515,6 +518,12 @@ export default function ProjectDetailPage() {
             <TabsContent value="capacity" className="mt-4">
               {project.id && <CapacitySection projectId={project.id} />}
             </TabsContent>
+
+            {project.projectArt === "Hochbau" && (
+              <TabsContent value="costgroups" className="mt-4">
+                {project.id && <CostGroups projectId={project.id} />}
+              </TabsContent>
+            )}
 
             <TabsContent value="attachments" className="mt-4">
               {project.id && <AttachmentUpload projectId={project.id} />}
