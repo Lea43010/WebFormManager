@@ -88,9 +88,6 @@ export const projects = pgTable("tblproject", {
   companyId: integer("company_id"),
   personId: integer("person_id"),
   customerContactId: integer("customer_contact_id"), // Neues Feld für den Kunden-Ansprechpartner
-  permission: boolean("permission").default(false),
-  permissionName: varchar("permission_name", { length: 100 }),
-  permissionDate: date("permission_date"),
   projectCluster: varchar("project_cluster", { length: 255 }),
   projectName: varchar("project_name", { length: 255 }),
   projectArt: varchar("project_art", { length: 50 }),
@@ -112,8 +109,10 @@ export const projects = pgTable("tblproject", {
 export const permissions = pgTable("tblpermissions", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  permissionName: varchar("permission_name", { length: 100 }).notNull(),
+  permissionType: varchar("permission_type", { length: 100 }).notNull(),
+  permissionAuthority: varchar("permission_authority", { length: 100 }).notNull(),
   permissionDate: date("permission_date"),
+  permissionNotes: text("permission_notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -564,6 +563,11 @@ export type LoginLog = typeof loginLogs.$inferSelect;
 export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
 export type VerificationCode = typeof verificationCodes.$inferSelect;
 
-export const insertPermissionSchema = createInsertSchema(permissions);
+export const insertPermissionSchema = createInsertSchema(permissions).transform((data) => {
+  return {
+    ...data,
+    projectId: typeof data.projectId === 'string' ? parseInt(data.projectId, 10) : data.projectId,
+  };
+});
 export type InsertPermission = z.infer<typeof insertPermissionSchema>;
 export type Permission = typeof permissions.$inferSelect;
