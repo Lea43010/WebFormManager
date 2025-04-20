@@ -1043,6 +1043,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =================== Permission Routen ===================
+  app.get("/api/projects/:projectId/permissions", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const permissions = await storage.getPermissions(projectId);
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      next(error);
+    }
+  });
+
+  app.post("/api/projects/:projectId/permissions", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      // Daten für die neue Genehmigung vorbereiten
+      const permissionData = {
+        projectId,
+        permissionType: req.body.permissionType,
+        permissionAuthority: req.body.permissionAuthority,
+        permissionDate: req.body.permissionDate,
+        permissionNotes: req.body.permissionNotes || null
+      };
+
+      const newPermission = await storage.createPermission(permissionData);
+      res.status(201).json(newPermission);
+    } catch (error) {
+      console.error("Error creating permission:", error);
+      next(error);
+    }
+  });
+
+  app.delete("/api/permissions/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePermission(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting permission:", error);
+      next(error);
+    }
+  });
+
   // =================== Admin Routen ===================
   // Middleware für Berechtigungsprüfung
   const checkAdminRole = (req, res, next) => {
