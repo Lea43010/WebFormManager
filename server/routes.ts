@@ -1064,10 +1064,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId,
         permissionType: req.body.permissionType,
         permissionAuthority: req.body.permissionAuthority,
-        permissionDate: req.body.permissionDate,
+        permissionDate: req.body.permissionDate ? new Date(req.body.permissionDate) : null,
         permissionNotes: req.body.permissionNotes || null
       };
 
+      console.log("Creating permission with data:", permissionData);
       const newPermission = await storage.createPermission(permissionData);
       res.status(201).json(newPermission);
     } catch (error) {
