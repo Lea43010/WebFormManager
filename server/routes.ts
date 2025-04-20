@@ -15,8 +15,8 @@ import {
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
   insertBedarfKapaSchema, insertPersonSchema, insertMilestoneSchema, insertMilestoneDetailSchema,
-  insertUserSchema,
-  createInsertSchema, companies, customers, projects, persons, milestones, milestoneDetails,
+  insertUserSchema, insertPermissionSchema,
+  createInsertSchema, companies, customers, projects, persons, milestones, milestoneDetails, permissions,
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -289,8 +289,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
-
   
+  // Permission routes
+  app.get("/api/projects/:projectId/permissions", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const permissions = await storage.getPermissions(projectId);
+      res.json(permissions);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.post("/api/projects/:projectId/permissions", async (req, res, next) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      // Format data for insertion
+      const formData = {
+        ...req.body,
+        projectId,
+        permissionDate: req.body.permissionDate ? new Date(req.body.permissionDate) : null
+      };
+      
+      // Create permission
+      const permission = await storage.createPermission(formData);
+      res.status(201).json(permission);
+    } catch (error) {
+      console.error("Permission creation error:", error);
+      next(error);
+    }
+  });
+  
+  app.delete("/api/permissions/:id", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deletePermission(id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Material routes
   app.get("/api/materials", async (req, res, next) => {
