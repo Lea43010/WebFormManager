@@ -107,8 +107,12 @@ const sections = [
   { id: "eu-konformitaet", title: "EU-Konformität" }
 ];
 
+// Das Letzte Aktualisierungsdatum für die Informationsseite
+const LAST_UPDATED = "2024-04-20";
+
 export default function InformationPage() {
   const [activeSection, setActiveSection] = useState<string>("datenarchitektur");
+  const [lastUpdated, setLastUpdated] = useState(LAST_UPDATED);
 
   // Funktion zur Beobachtung der sichtbaren Abschnitte beim Scrollen
   useEffect(() => {
@@ -123,6 +127,23 @@ export default function InformationPage() {
       { rootMargin: "-100px 0px -80% 0px" }
     );
 
+    // Hole das letzte Aktualisierungsdatum von der API
+    // (Falls in Zukunft eine API dafür implementiert wird)
+    const checkUpdates = async () => {
+      try {
+        // In Zukunft könnte hier ein API-Aufruf stehen:
+        // const response = await fetch('/api/info/last-updated');
+        // const data = await response.json();
+        // setLastUpdated(data.lastUpdated);
+        
+        // Aktuelle Implementation verwendet das fest codierte Datum
+        setLastUpdated(LAST_UPDATED);
+      } catch (error) {
+        console.error("Fehler beim Abrufen des letzten Aktualisierungsdatums:", error);
+      }
+    };
+
+    checkUpdates();
     sections.forEach((section) => {
       const element = document.getElementById(section.id);
       if (element) observer.observe(element);
@@ -378,7 +399,11 @@ export default function InformationPage() {
             <div className="mt-6 text-sm text-gray-500">
               <p>
                 <strong>Hinweis:</strong> Die Datenarchitektur wird regelmäßig aktualisiert, um neue Funktionen und Verbesserungen zu unterstützen.
-                Letzte Aktualisierung: {new Date().toLocaleDateString('de-DE')}
+                Letzte Aktualisierung: {(() => {
+                  // Konvertiere das Datum in ein deutsches Format (TT.MM.JJJJ)
+                  const date = new Date(lastUpdated);
+                  return date.toLocaleDateString('de-DE');
+                })()}
               </p>
             </div>
           </div>

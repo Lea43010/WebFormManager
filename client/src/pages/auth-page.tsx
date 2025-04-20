@@ -580,7 +580,8 @@ export default function AuthPage() {
                         <p className="text-gray-600 mb-2">
                           Die Bau - Structura App bietet eine vollständige Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. 
                           Mit einer benutzerfreundlichen Oberfläche können Unternehmen ihre Projekte, Kunden und Materialien 
-                          effizient organisieren.
+                          effizient organisieren. Die App wurde für optimale Leistung und stabilen Betrieb entwickelt und unterstützt
+                          responsive Nutzung auf Tablets und Smartphones.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                           <div className="flex items-start p-3 rounded-lg border">
@@ -649,7 +650,7 @@ export default function AuthPage() {
                       <div>
                         <h3 className="text-lg font-semibold mb-2">Dokumentation & Analyse</h3>
                         <p className="text-gray-600 mb-3">
-                          Umfangreiche Funktionen für die Dokumentverwaltung und Bodenanalyse:
+                          Umfangreiche Funktionen für die Dokumentverwaltung, Bodenanalyse und Meilenstein-Tracking mit EWB/FÖB-Status:
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                           <div className="flex items-start p-3 rounded-lg border">
@@ -664,6 +665,20 @@ export default function AuthPage() {
                             <div>
                               <h4 className="font-medium">Bodenanalyse</h4>
                               <p className="text-sm text-gray-500">KI-gestützte Analyse von Bodenbildern zur Bestimmung von Bodenklassen</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <BarChart3 className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Meilenstein-Tracking</h4>
+                              <p className="text-sm text-gray-500">Visualisierung von Meilensteinen mit EWB/FÖB-Status nach Kalenderwochen</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start p-3 rounded-lg border">
+                            <Users className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Kapazitätsplanung</h4>
+                              <p className="text-sm text-gray-500">Ressourcenplanung für Projekte mit Bedarfs- und Kapazitätsansicht</p>
                             </div>
                           </div>
                         </div>
