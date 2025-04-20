@@ -19,6 +19,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { CalendarWeekPlanner } from './calendar-week-planner';
 
 interface MilestoneSectionProps {
   projectId: number;
@@ -646,6 +647,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="week-view">Kalenderwochenansicht</TabsTrigger>
+            <TabsTrigger value="calendar-view">Zeitlicher Rahmen (KW)</TabsTrigger>
             <TabsTrigger value="list-view">Listenansicht</TabsTrigger>
             {selectedMilestoneId && (
               <TabsTrigger value="detail-view">Detailansicht</TabsTrigger>
