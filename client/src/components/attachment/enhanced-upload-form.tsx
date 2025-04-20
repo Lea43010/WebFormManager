@@ -165,8 +165,8 @@ export default function EnhancedUploadForm({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Dateien hochladen</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Dateien hochladen</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue={mode === "camera" ? "camera" : "regular"}>
@@ -178,51 +178,55 @@ export default function EnhancedUploadForm({
           <TabsContent value="regular">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(uploadFiles)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="projectId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Projekt</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={isLoadingProjects || uploading}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Projekt auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {projects?.map((project) => (
-                            <SelectItem key={project.id} value={project.id.toString()}>
-                              {project.projectName || `Projekt ${project.id}`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-4">
-                  <FormLabel>Datei(en)</FormLabel>
-                  <EnhancedFileUpload 
-                    onFilesSelected={handleFilesSelected}
-                    multiple={true}
-                    uploading={uploading}
-                    value={selectedFiles}
-                    onValueChange={(files) => setSelectedFiles(files || [])}
+                {/* Projekt und Dateiupload nebeneinander */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <FormField
+                    control={form.control}
+                    name="projectId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Projekt</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isLoadingProjects || uploading}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Projekt auswählen" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id.toString()}>
+                                {project.projectName || `Projekt ${project.id}`}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
+
+                  <div>
+                    <FormLabel>Datei(en)</FormLabel>
+                    <EnhancedFileUpload 
+                      onFilesSelected={handleFilesSelected}
+                      multiple={true}
+                      uploading={uploading}
+                      value={selectedFiles}
+                      onValueChange={(files) => setSelectedFiles(files || [])}
+                    />
+                  </div>
                 </div>
 
+                {/* Kategorien */}
                 <FormField
                   control={form.control}
                   name="fileCategory"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-4">
                       <FormLabel>Kategorie</FormLabel>
                       <RadioGroup
                         value={field.value}
@@ -249,41 +253,45 @@ export default function EnhancedUploadForm({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Beschreibung (optional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Beschreibung eingeben..."
-                          {...field}
-                          disabled={uploading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Beschreibung und Tags in zwei Spalten */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Beschreibung (optional)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Beschreibung eingeben..."
+                            {...field}
+                            disabled={uploading}
+                            className="min-h-[60px] max-h-[80px]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags (optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Tags durch Kommas getrennt (z.B. wichtig, dringend, final)"
-                          {...field}
-                          disabled={uploading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags (optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Tags durch Kommas getrennt"
+                            {...field}
+                            disabled={uploading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <Button
                   type="submit"
@@ -308,35 +316,42 @@ export default function EnhancedUploadForm({
           
           <TabsContent value="camera">
             <Form {...form}>
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="projectId"
-                  render={({ field }) => (
-                    <FormItem className="mb-6">
-                      <FormLabel>Projekt</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={isLoadingProjects}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Projekt auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {projects?.map((project) => (
-                            <SelectItem key={project.id} value={project.id.toString()}>
-                              {project.projectName || `Projekt ${project.id}`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="projectId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Projekt</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={isLoadingProjects}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Projekt auswählen" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id.toString()}>
+                                {project.projectName || `Projekt ${project.id}`}
+                              </SelectItem> 
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Leer für das Layout */}
+                  <div className="flex items-end">
+                    <p className="text-sm text-muted-foreground">Bitte wählen Sie ein Projekt und nutzen Sie dann die Kamera.</p>
+                  </div>
+                </div>
                 
                 <CameraUpload 
                   projectId={form.watch("projectId") ? parseInt(form.watch("projectId")) : null} 
