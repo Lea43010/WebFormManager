@@ -201,7 +201,7 @@ export default function PermissionSection({ projectId }: PermissionSectionProps)
               </DialogHeader>
               
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -232,7 +232,7 @@ export default function PermissionSection({ projectId }: PermissionSectionProps)
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <FormField
                       control={form.control}
                       name="permissionDate"
@@ -292,20 +292,22 @@ export default function PermissionSection({ projectId }: PermissionSectionProps)
                   </div>
                   
                   <DialogFooter className="mt-4">
-                    <DialogClose asChild>
-                      <Button type="button" variant="outline">
-                        Abbrechen
+                    <div className="flex gap-3 justify-end w-full">
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                          Abbrechen
+                        </Button>
+                      </DialogClose>
+                      <Button 
+                        type="submit" 
+                        disabled={addPermissionMutation.isPending}
+                      >
+                        {addPermissionMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Genehmigung speichern
                       </Button>
-                    </DialogClose>
-                    <Button 
-                      type="submit" 
-                      disabled={addPermissionMutation.isPending}
-                    >
-                      {addPermissionMutation.isPending && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      Genehmigung speichern
-                    </Button>
+                    </div>
                   </DialogFooter>
                 </form>
               </Form>
