@@ -1,12 +1,128 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from "@/components/ui/table";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Building2, Home, Wrench, PaintBucket, Paintbrush, Hammer, Cog, Flame, Radio, CircuitBoard, Wifi, Ruler, Construction, TentTree, LeafyGreen, Shovel } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface CostGroupsProps {
   projectId: number;
 }
+
+// Gewerke für Bauvorhaben
+const TRADES = [
+  { 
+    id: 1,
+    name: "Planung und Bauleitung",
+    icon: <Construction className="h-5 w-5" />,
+    tasks: [
+      "Architektenleistung",
+      "Statische Planung",
+      "Haustechnikplanung",
+      "Vermessung",
+      "Bauantrag",
+      "Bauleitung",
+      "Bodengutachten"
+    ]
+  },
+  { 
+    id: 2,
+    name: "Erdarbeiten und Grundbau",
+    icon: <Shovel className="h-5 w-5" />,
+    tasks: [
+      "Abrissarbeiten",
+      "Baugrubenaushub",
+      "Erdtransport",
+      "Bodenplatte",
+      "Drainage und Entwässerung",
+      "Abdichtung Keller",
+      "Hinterfüllung"
+    ]
+  },
+  { 
+    id: 3,
+    name: "Rohbau",
+    icon: <Building2 className="h-5 w-5" />,
+    tasks: [
+      "Mauerwerk",
+      "Betonarbeiten",
+      "Fertigteile",
+      "Schornstein",
+      "Dachstuhl",
+      "Rinne und Fallrohr",
+      "Dacheindeckung"
+    ]
+  },
+  { 
+    id: 4,
+    name: "Innenausbau",
+    icon: <Home className="h-5 w-5" />,
+    tasks: [
+      "Fenster und Außentüren",
+      "Innentüren",
+      "Estrich",
+      "Trockenbau",
+      "Fliesenarbeiten",
+      "Bodenbeläge",
+      "Malerarbeiten",
+      "Treppenhaus"
+    ]
+  },
+  { 
+    id: 5,
+    name: "Sanitär-, Heizungs- und Klimatechnik",
+    icon: <Flame className="h-5 w-5" />,
+    tasks: [
+      "Sanitärinstallation",
+      "Heizungsinstallation",
+      "Badezimmereinrichtung",
+      "Wärmeerzeugung",
+      "Solarthermie",
+      "Lüftungsanlage",
+      "Klimaanlage"
+    ]
+  },
+  { 
+    id: 6,
+    name: "Elektroinstallation",
+    icon: <CircuitBoard className="h-5 w-5" />,
+    tasks: [
+      "Elektroinstallation",
+      "Beleuchtungsinstallation",
+      "Photovoltaikanlage",
+      "Smarthome-Technik",
+      "Netzwerk und Internet",
+      "Telefonanlage",
+      "Alarmanlage"
+    ]
+  },
+  { 
+    id: 7,
+    name: "Fassadenarbeiten",
+    icon: <Paintbrush className="h-5 w-5" />,
+    tasks: [
+      "Wärmedämmung",
+      "Fassadenverkleidung",
+      "Putzarbeiten",
+      "Fassadenanstrich",
+      "Balkone und Terrassen",
+      "Außenfensterbänke"
+    ]
+  },
+  { 
+    id: 8,
+    name: "Außenanlagen",
+    icon: <LeafyGreen className="h-5 w-5" />,
+    tasks: [
+      "Pflasterarbeiten",
+      "Gartengestaltung",
+      "Zaunbau",
+      "Carport/Garage",
+      "Müllplatz",
+      "Entwässerung Grundstück",
+      "Erschließung" 
+    ]
+  }
+];
 
 // Kostengruppen nach DIN 276
 const COST_GROUPS = [
@@ -129,6 +245,7 @@ export function CostGroups({ projectId }: CostGroupsProps) {
               <TabsList>
                 <TabsTrigger value="overview">Übersicht</TabsTrigger>
                 <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="trades">Gewerke</TabsTrigger>
               </TabsList>
             </div>
             
@@ -199,6 +316,32 @@ export function CostGroups({ projectId }: CostGroupsProps) {
                 </TableBody>
               </Table>
             </TabsContent>
+            
+            <TabsContent value="trades" className="p-0">
+              <div className="divide-y divide-gray-200">
+                {TRADES.map((trade, index) => (
+                  <div key={trade.id} className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                    <div className="px-6 py-4">
+                      <div className="flex items-center mb-3">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#5c9935] text-white mr-3">
+                          {trade.icon}
+                        </div>
+                        <h3 className="text-lg font-semibold">{trade.name}</h3>
+                      </div>
+                      
+                      <div className="ml-11 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        {trade.tasks.map((task, i) => (
+                          <div key={i} className="flex items-center">
+                            <div className="h-1.5 w-1.5 rounded-full bg-[#5c9935] mr-2"></div>
+                            <span className="text-sm">{task}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -217,6 +360,11 @@ export function CostGroups({ projectId }: CostGroupsProps) {
             Verwenden Sie diese Gliederung für Ihre Kostenschätzungen, Kostenberechnungen und die Ausschreibung 
             von Bauleistungen. Durch die einheitliche Struktur wird die Vergleichbarkeit verschiedener Projekte 
             ermöglicht und die Kommunikation zwischen allen Projektbeteiligten vereinfacht.
+          </p>
+          <p className="mt-4 text-muted-foreground">
+            Die aufgeführte Gewerkeliste bietet Ihnen einen Überblick über die verschiedenen Gewerke, die bei 
+            Hochbauprojekten typischerweise zum Einsatz kommen. Sie können diese Liste als Grundlage für die 
+            Planung und Koordination der verschiedenen Arbeitsbereiche sowie für die Angebotseinholung nutzen.
           </p>
         </CardContent>
       </Card>
