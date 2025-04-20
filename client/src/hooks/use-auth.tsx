@@ -52,19 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 2FA temporär deaktiviert - jeder Login wird direkt als normaler Login behandelt
       const user = response as SelectUser;
       queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Erfolgreich angemeldet",
-        description: "Willkommen zurück!",
-      });
+      
+      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
+      console.log("Login erfolgreich, direkte Weiterleitung zur Projektübersicht...");
+      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      
+      // Toast erst nach der Weiterleitung anzeigen
+      setTimeout(() => {
+        toast({
+          title: "Erfolgreich angemeldet",
+          description: "Willkommen zurück!",
+        });
+      }, 100);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setRequiresTwoFactor(false);
       setPendingUserId(null);
-      
-      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
-      setTimeout(() => {
-        console.log("Weiterleitung zur Projektübersicht nach Login...");
-        navigate("/projects");
-      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -85,19 +88,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Verifizierung erfolgreich",
-        description: "Sie wurden erfolgreich angemeldet.",
-      });
+      
+      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
+      console.log("Verifizierung erfolgreich, direkte Weiterleitung zur Projektübersicht...");
+      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      
+      // Toast erst nach der Weiterleitung anzeigen
+      setTimeout(() => {
+        toast({
+          title: "Verifizierung erfolgreich",
+          description: "Sie wurden erfolgreich angemeldet.",
+        });
+      }, 100);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setRequiresTwoFactor(false);
       setPendingUserId(null);
-      
-      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
-      setTimeout(() => {
-        console.log("Weiterleitung zur Projektübersicht nach Verifizierung...");
-        navigate("/projects");
-      }, 500);
     },
     onError: (error: Error) => {
       toast({
@@ -136,11 +142,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (response: { message: string }) => {
-      toast({
-        title: "Passwort zurückgesetzt",
-        description: response.message,
-      });
-      navigate("/auth"); // Zurück zur Login-Seite
+      // Direkte Weiterleitung zur Anmeldeseite
+      console.log("Passwort zurückgesetzt, direkte Weiterleitung zur Anmeldeseite...");
+      window.location.href = "/"; // Verwende direkte URL-Änderung statt Router Navigation
+      
+      // Toast erst nach der Weiterleitung anzeigen
+      setTimeout(() => {
+        toast({
+          title: "Passwort zurückgesetzt",
+          description: response.message,
+        });
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -158,17 +170,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registrierung erfolgreich",
-        description: "Ihr Konto wurde erstellt.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
-      // Warten, bis die Anfrage vollständig verarbeitet wurde, und dann zur Projektseite weiterleiten
+      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
+      console.log("Registrierung erfolgreich, direkte Weiterleitung zur Projektübersicht...");
+      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      
+      // Toast erst nach der Weiterleitung anzeigen
       setTimeout(() => {
-        console.log("Weiterleitung zur Projektübersicht nach Registrierung...");
-        navigate("/projects");
-      }, 500);
+        toast({
+          title: "Registrierung erfolgreich",
+          description: "Ihr Konto wurde erstellt.",
+        });
+      }, 100);
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
       toast({
@@ -185,11 +200,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
-      toast({
-        title: "Abgemeldet",
-        description: "Sie wurden erfolgreich abgemeldet.",
-      });
-      navigate("/auth");
+      
+      // Direkte Weiterleitung zur Login-Seite
+      console.log("Abmeldung erfolgreich, direkte Weiterleitung zur Anmeldeseite...");
+      window.location.href = "/"; // Verwende direkte URL-Änderung statt Router Navigation
+      
+      // Toast erst nach der Weiterleitung anzeigen
+      setTimeout(() => {
+        toast({
+          title: "Abgemeldet",
+          description: "Sie wurden erfolgreich abgemeldet.",
+        });
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
