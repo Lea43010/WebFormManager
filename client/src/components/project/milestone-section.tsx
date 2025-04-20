@@ -629,14 +629,14 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                       name="type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Typ</FormLabel>
+                          <FormLabel>Meilenstein</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Typ auswählen" />
+                                <SelectValue placeholder="Meilenstein auswählen" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
