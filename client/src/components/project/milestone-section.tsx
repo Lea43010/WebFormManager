@@ -772,7 +772,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Typ auswählen" />
+                                <SelectValue placeholder="EWB/FÖB auswählen" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -873,7 +873,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Typ</TableHead>
+                  <TableHead>Meilenstein</TableHead>
                   <TableHead>Bauphase</TableHead>
                   <TableHead>Start</TableHead>
                   <TableHead>Ende</TableHead>
@@ -959,7 +959,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     {milestones?.find(m => m.id === selectedMilestoneId)?.name || 'Meilenstein'}
                   </CardTitle>
                   <CardDescription>
-                    {milestones?.find(m => m.id === selectedMilestoneId)?.type || 'Kein Typ'}
+                    {milestones?.find(m => m.id === selectedMilestoneId)?.type || 'Kein Meilenstein'}
                     {' - '}
                     Bauphase: {milestones?.find(m => m.id === selectedMilestoneId)?.bauphase || 'Sonstiges'}
                     {' - '}
