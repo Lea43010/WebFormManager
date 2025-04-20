@@ -133,11 +133,15 @@ export default function LandingPage() {
                   </Button>
                   
                   <div className="text-center mt-4">
-                    <Link href="/auth">
-                      <span className="text-sm text-gray-600 hover:text-[#6a961f] cursor-pointer">
-                        Noch kein Konto? Jetzt registrieren
-                      </span>
-                    </Link>
+                    <span 
+                      className="text-sm text-gray-600 hover:text-[#6a961f] cursor-pointer"
+                      onClick={() => {
+                        setShowLoginForm(false);
+                        setLocation("/auth");
+                      }}
+                    >
+                      Noch kein Konto? Jetzt registrieren
+                    </span>
                   </div>
                 </form>
               </Form>
@@ -160,11 +164,12 @@ export default function LandingPage() {
                 entwickelt für die Baubranche.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link href="/auth">
-                  <Button className="bg-[#6a961f] hover:bg-[#5a8418] text-white px-8 py-3 text-lg">
-                    Jetzt starten
-                  </Button>
-                </Link>
+                <Button 
+                  className="bg-[#6a961f] hover:bg-[#5a8418] text-white px-8 py-3 text-lg"
+                  onClick={() => setShowLoginForm(!showLoginForm)}
+                >
+                  Jetzt starten
+                </Button>
               </div>
             </div>
             <div className="lg:w-1/2 flex justify-center">
@@ -315,11 +320,15 @@ export default function LandingPage() {
             Registrieren Sie sich jetzt und erfahren Sie, wie die Bau - Structura App 
             Ihre tägliche Arbeit erleichtern kann.
           </p>
-          <Link href="/auth">
-            <Button className="bg-white text-[#6a961f] hover:bg-gray-100 px-8 py-3 text-lg">
-              Kostenlos starten
-            </Button>
-          </Link>
+          <Button 
+            className="bg-white text-[#6a961f] hover:bg-gray-100 px-8 py-3 text-lg"
+            onClick={() => {
+              setShowLoginForm(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Kostenlos starten
+          </Button>
         </div>
       </section>
 
@@ -339,14 +348,25 @@ export default function LandingPage() {
               <h3 className="text-lg font-semibold mb-4">Schnellzugriff</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/auth">
-                    <span className="text-gray-400 hover:text-white transition cursor-pointer">Anmelden</span>
-                  </Link>
+                  <span 
+                    className="text-gray-400 hover:text-white transition cursor-pointer"
+                    onClick={() => {
+                      setShowLoginForm(true);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    Anmelden
+                  </span>
                 </li>
                 <li>
-                  <Link href="/auth">
-                    <span className="text-gray-400 hover:text-white transition cursor-pointer">Registrieren</span>
-                  </Link>
+                  <span 
+                    className="text-gray-400 hover:text-white transition cursor-pointer"
+                    onClick={() => {
+                      setLocation("/auth");
+                    }}
+                  >
+                    Registrieren
+                  </span>
                 </li>
               </ul>
             </div>
