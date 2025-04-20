@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { TooltipButton } from "@/components/ui/tooltip-button";
 import logoImage from "@/assets/Logo.webp";
 
 interface NavItem {
@@ -28,6 +29,7 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   showFor?: string[]; // Benutzerrollen, für die dieser Menüpunkt angezeigt werden soll
+  tooltip?: string; // Tooltip-Text, der angezeigt wird, wenn über den Menüpunkt gefahren wird
 }
 
 const navItems: NavItem[] = [
@@ -35,38 +37,45 @@ const navItems: NavItem[] = [
     title: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
+    tooltip: "Übersicht und Zusammenfassung aller Aktivitäten",
   },
   {
     title: "Firmendaten",
     href: "/companies",
     icon: Building2,
     showFor: ['administrator', 'manager'],
+    tooltip: "Verwaltung von Firmen und Geschäftspartnern",
   },
   {
     title: "Kundendaten",
     href: "/customers",
     icon: Users,
     showFor: ['administrator', 'manager'],
+    tooltip: "Kunden- und Ansprechpartner verwalten",
   },
   {
     title: "Projektverwaltung",
     href: "/projects",
     icon: Folders,
+    tooltip: "Projekte erstellen, bearbeiten und verwalten",
   },
   {
     title: "Geo-Informationen",
     href: "/geo-map",
     icon: Map,
+    tooltip: "Geografische Informationen und Kartenfunktionen",
   },
   {
     title: "Dokumente",
     href: "/attachments",
     icon: Paperclip,
+    tooltip: "Projektbezogene Dokumente und Anhänge verwalten",
   },
   {
     title: "Hilfe & Info",
     href: "/information",
     icon: Info,
+    tooltip: "Hilfe, Dokumentation und Informationen zur App",
   },
   // Nutzerverwaltung wurde in den Admin-Bereich verschoben
   {
@@ -74,12 +83,14 @@ const navItems: NavItem[] = [
     href: "/admin",
     icon: ShieldAlert,
     showFor: ['administrator', 'manager'],
+    tooltip: "Benutzer- und Systemadministration",
   },
   {
     title: "Datenübertragung",
     href: "/db-migration",
     icon: Database,
     showFor: ['administrator'],
+    tooltip: "Datenaustausch und Datenbankmigration",
   },
 ];
 
@@ -108,9 +119,11 @@ export function Sidebar() {
           <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Bau - Structura App</span>
         </div>
         {isMobile && (
-          <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
-            <X className="h-6 w-6" />
-          </Button>
+          <TooltipButton tooltipText="Menü schließen" side="bottom">
+            <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
+              <X className="h-6 w-6" />
+            </Button>
+          </TooltipButton>
         )}
       </div>
       <div className="flex-1 flex flex-col overflow-y-auto">
@@ -124,23 +137,41 @@ export function Sidebar() {
               
               if (!hasPermission) return null;
               
-              return (
+              const menuItem = (
+                <div
+                  className={cn(
+                    "group flex items-center px-2 py-2 text-base font-medium rounded-md",
+                    isActive
+                      ? "bg-primary-light text-black"
+                      : "text-black hover:bg-primary-light"
+                  )}
+                >
+                  <item.icon className="mr-3 h-6 w-6" />
+                  {item.title}
+                </div>
+              );
+
+              // Wenn ein Tooltip-Text existiert, umschließe das Element mit der Tooltip-Komponente
+              return item.tooltip ? (
+                <TooltipButton 
+                  key={item.href}
+                  tooltipText={item.tooltip}
+                  side="right"
+                >
+                  <Link
+                    href={item.href}
+                    onClick={() => isMobile && setIsMobileOpen(false)}
+                  >
+                    {menuItem}
+                  </Link>
+                </TooltipButton>
+              ) : (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => isMobile && setIsMobileOpen(false)}
                 >
-                  <div
-                    className={cn(
-                      "group flex items-center px-2 py-2 text-base font-medium rounded-md",
-                      isActive
-                        ? "bg-primary-light text-black"
-                        : "text-black hover:bg-primary-light"
-                    )}
-                  >
-                    <item.icon className="mr-3 h-6 w-6" />
-                    {item.title}
-                  </div>
+                  {menuItem}
                 </Link>
               );
             })}
@@ -167,14 +198,16 @@ export function Sidebar() {
   return (
     <>
       {isMobile && (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="fixed top-4 left-4 z-40" 
-          onClick={toggleMobileMenu}
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
+        <TooltipButton tooltipText="Menü öffnen" side="right">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="fixed top-4 left-4 z-40" 
+            onClick={toggleMobileMenu}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </TooltipButton>
       )}
       
       {isMobile ? (
