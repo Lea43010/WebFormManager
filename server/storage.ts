@@ -56,6 +56,11 @@ export interface IStorage {
   updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined>;
   deleteProject(id: number): Promise<void>;
   
+  // Permission operations
+  getPermissions(projectId: number): Promise<Permission[]>;
+  createPermission(permission: InsertPermission): Promise<Permission>;
+  deletePermission(id: number): Promise<void>;
+  
   // Material operations
   getMaterials(): Promise<Material[]>;
   getMaterial(id: number): Promise<Material | undefined>;
@@ -297,6 +302,24 @@ export class DatabaseStorage implements IStorage {
     
     // Dann das Projekt selbst löschen
     await db.delete(projects).where(eq(projects.id, id));
+  }
+  
+  // Permission operations
+  async getPermissions(projectId: number): Promise<Permission[]> {
+    return await db.select()
+      .from(permissions)
+      .where(eq(permissions.projectId, projectId)) as Permission[];
+  }
+  
+  async createPermission(permission: InsertPermission): Promise<Permission> {
+    const [createdPermission] = await db.insert(permissions)
+      .values(permission)
+      .returning() as Permission[];
+    return createdPermission;
+  }
+  
+  async deletePermission(id: number): Promise<void> {
+    await db.delete(permissions).where(eq(permissions.id, id));
   }
   
   // Material operations

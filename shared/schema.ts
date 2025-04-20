@@ -108,6 +108,15 @@ export const projects = pgTable("tblproject", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Permissions table
+export const permissions = pgTable("tblpermissions", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  permissionName: varchar("permission_name", { length: 100 }).notNull(),
+  permissionDate: date("permission_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Materials table
 export const materials = pgTable("tblmaterial", {
   id: serial("id").primaryKey(),
@@ -336,6 +345,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   bedarfKapas: many(bedarfKapa),
   milestones: many(milestones),
   fileOrganizationSuggestions: many(fileOrganizationSuggestions),
+  permissions: many(permissions),
 }));
 
 export const componentsRelations = relations(components, ({ one }) => ({
@@ -367,6 +377,13 @@ export const bedarfKapaRelations = relations(bedarfKapa, ({ one }) => ({
 }));
 
 export const soilReferenceDataRelations = relations(soilReferenceData, ({}) => ({}));
+
+export const permissionsRelations = relations(permissions, ({ one }) => ({
+  project: one(projects, {
+    fields: [permissions.projectId],
+    references: [projects.id],
+  }),
+}));
 
 export const milestonesRelations = relations(milestones, ({ one, many }) => ({
   project: one(projects, {
@@ -546,3 +563,7 @@ export type LoginLog = typeof loginLogs.$inferSelect;
 
 export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
 export type VerificationCode = typeof verificationCodes.$inferSelect;
+
+export const insertPermissionSchema = createInsertSchema(permissions);
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type Permission = typeof permissions.$inferSelect;
