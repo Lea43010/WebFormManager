@@ -109,65 +109,75 @@ export function LoginLogsManagement() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Label htmlFor="text-filter">Textfilter (Benutzername, IP-Adresse)</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="text-filter"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="pl-8"
-                  placeholder="Suchen..."
-                />
-              </div>
+              <TooltipButton tooltipText="Nach Benutzername oder IP-Adresse filtern" side="top">
+                <div className="relative">
+                  <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="text-filter"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="pl-8"
+                    placeholder="Suchen..."
+                  />
+                </div>
+              </TooltipButton>
             </div>
             
             <div className="w-full md:w-72">
               <Label htmlFor="event-type-filter">Ereignistyp</Label>
-              <Select
-                value={eventTypeFilter || ""}
-                onValueChange={(value) => setEventTypeFilter(value || null)}
-              >
-                <SelectTrigger id="event-type-filter">
-                  <SelectValue placeholder="Alle Ereignistypen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle Ereignistypen</SelectItem>
-                  <SelectItem value="login">Anmeldung</SelectItem>
-                  <SelectItem value="logout">Abmeldung</SelectItem>
-                  <SelectItem value="register">Registrierung</SelectItem>
-                  <SelectItem value="failed_login">Fehlgeschlagene Anmeldung</SelectItem>
-                </SelectContent>
-              </Select>
+              <TooltipButton tooltipText="Nach Art des Ereignisses filtern" side="top">
+                <Select
+                  value={eventTypeFilter || ""}
+                  onValueChange={(value) => setEventTypeFilter(value || null)}
+                >
+                  <SelectTrigger id="event-type-filter">
+                    <SelectValue placeholder="Alle Ereignistypen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Ereignistypen</SelectItem>
+                    <SelectItem value="login">Anmeldung</SelectItem>
+                    <SelectItem value="logout">Abmeldung</SelectItem>
+                    <SelectItem value="register">Registrierung</SelectItem>
+                    <SelectItem value="failed_login">Fehlgeschlagene Anmeldung</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TooltipButton>
             </div>
             
             <div className="w-full md:w-60">
               <Label htmlFor="success-filter">Status</Label>
-              <Select
-                value={successFilter || ""}
-                onValueChange={(value) => setSuccessFilter(value || null)}
-              >
-                <SelectTrigger id="success-filter">
-                  <SelectValue placeholder="Alle Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle Status</SelectItem>
-                  <SelectItem value="success">Erfolgreich</SelectItem>
-                  <SelectItem value="fail">Fehlgeschlagen</SelectItem>
-                </SelectContent>
-              </Select>
+              <TooltipButton tooltipText="Nach Erfolgsstatus filtern" side="top">
+                <Select
+                  value={successFilter || ""}
+                  onValueChange={(value) => setSuccessFilter(value || null)}
+                >
+                  <SelectTrigger id="success-filter">
+                    <SelectValue placeholder="Alle Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alle Status</SelectItem>
+                    <SelectItem value="success">Erfolgreich</SelectItem>
+                    <SelectItem value="fail">Fehlgeschlagen</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TooltipButton>
             </div>
           </div>
           
           <div className="flex justify-between">
-            <Button variant="outline" onClick={resetFilters} disabled={!filter && !eventTypeFilter && !successFilter}>
-              <X className="mr-2 h-4 w-4" />
-              Filter zurücksetzen
-            </Button>
+            <TooltipButton tooltipText="Alle angewendeten Filter zurücksetzen" side="top">
+              <Button variant="outline" onClick={resetFilters} disabled={!filter && !eventTypeFilter && !successFilter}>
+                <X className="mr-2 h-4 w-4" />
+                Filter zurücksetzen
+              </Button>
+            </TooltipButton>
             
-            <Button onClick={() => refetch()} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Aktualisieren
-            </Button>
+            <TooltipButton tooltipText="Daten manuell neu laden" side="top">
+              <Button onClick={() => refetch()} variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Aktualisieren
+              </Button>
+            </TooltipButton>
           </div>
         </div>
         
