@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Calendar, Edit, Trash, Save, X, FileText } from "lucide-react";
+import { Loader2, Plus, Calendar, Edit, Trash, Save, X, FileText, Pencil } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -116,9 +116,18 @@ const bauphasenOptions = [
   'Sonstiges'
 ];
 
+// EWB/FÖB Optionen
+const ewbFoebOptions = [
+  'EWB',
+  'FÖB',
+  'EWB,FÖB',
+  'keine'
+];
+
 export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
@@ -126,6 +135,23 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   
   // Formular für neuen Meilenstein
   const milestoneForm = useForm<z.infer<typeof insertMilestoneSchema>>({
+    resolver: zodResolver(insertMilestoneSchema),
+    defaultValues: {
+      projectId,
+      name: '',
+      startKW: getCurrentWeek(),
+      endKW: getCurrentWeek() + 1,
+      jahr: getCurrentYear(),
+      color: '#4F46E5',
+      type: 'Tiefbau',
+      ewbFoeb: 'keine',
+      bauphase: 'Sonstiges',
+      sollMenge: undefined
+    }
+  });
+  
+  // Formular für Bearbeitung eines Meilensteins
+  const editMilestoneForm = useForm<z.infer<typeof insertMilestoneSchema>>({
     resolver: zodResolver(insertMilestoneSchema),
     defaultValues: {
       projectId,
@@ -271,6 +297,34 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
     },
   });
   
+  // Meilenstein bearbeiten
+  const updateMilestoneMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof insertMilestoneSchema> & { id: number }) => {
+      const { id, ...updateData } = data;
+      const response = await apiRequest(
+        'PUT',
+        `/api/projects/${projectId}/milestones/${id}`,
+        updateData
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Meilenstein aktualisiert',
+        description: 'Der Meilenstein wurde erfolgreich aktualisiert.',
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/milestones`] });
+      setIsEditDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Fehler',
+        description: `Fehler beim Aktualisieren des Meilensteins: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+  
   // Meilenstein-Detail löschen
   const deleteDetailMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -300,6 +354,35 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
   // Meilenstein-Formular absenden
   const onMilestoneSubmit = (data: z.infer<typeof insertMilestoneSchema>) => {
     createMilestoneMutation.mutate(data);
+  };
+  
+  // Bearbeitungs-Formular absenden
+  const onEditMilestoneSubmit = (data: z.infer<typeof insertMilestoneSchema>) => {
+    if (selectedMilestoneId) {
+      updateMilestoneMutation.mutate({ ...data, id: selectedMilestoneId });
+    }
+  };
+  
+  // Meilenstein-Bearbeitungsformular initialisieren
+  const initEditForm = () => {
+    if (selectedMilestoneId && milestones) {
+      const milestone = milestones.find(m => m.id === selectedMilestoneId);
+      if (milestone) {
+        editMilestoneForm.reset({
+          projectId,
+          name: milestone.name,
+          startKW: milestone.startKW,
+          endKW: milestone.endKW,
+          jahr: milestone.jahr,
+          color: milestone.color || '#4F46E5',
+          type: milestone.type || 'Tiefbau',
+          ewbFoeb: milestone.ewbFoeb || 'keine',
+          bauphase: milestone.bauphase || 'Sonstiges',
+          sollMenge: milestone.sollMenge
+        });
+        setIsEditDialogOpen(true);
+      }
+    }
   };
   
   // Meilenstein-Detail-Formular absenden
@@ -987,6 +1070,16 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={initEditForm}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Meilenstein bearbeiten
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
                     className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     onClick={() => {
                       if (selectedMilestoneId && confirm('Sind Sie sicher, dass Sie diesen Meilenstein löschen möchten?')) {
@@ -998,6 +1091,279 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     <Trash className="h-4 w-4 mr-2" />
                     Meilenstein löschen
                   </Button>
+                  
+                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent className="sm:max-w-[700px] lg:max-w-[800px]">
+                      <DialogHeader>
+                        <DialogTitle>Meilenstein bearbeiten</DialogTitle>
+                      </DialogHeader>
+                      
+                      <Form {...editMilestoneForm}>
+                        <form onSubmit={editMilestoneForm.handleSubmit(onEditMilestoneSubmit)} className="space-y-4">
+                          <input 
+                            type="hidden" 
+                            {...editMilestoneForm.register('projectId')} 
+                            value={projectId}
+                          />
+                          
+                          {/* Erste Zeile: Name und Bauphase */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Meilensteinname</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="z.B. Bauphase 1" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="bauphase"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Bauphase</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Bauphase auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {bauphasenOptions.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {/* Zweite Zeile: Meilenstein und Jahr */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="type"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Meilenstein</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Meilenstein auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {milestoneTypes.map(type => (
+                                        <SelectItem key={type} value={type}>
+                                          {type}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="jahr"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Jahr</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => field.onChange(parseInt(value))}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Jahr auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {yearOptions().map(year => (
+                                        <SelectItem key={year} value={year.toString()}>
+                                          {year}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {/* Dritte Zeile: Start KW und End KW */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="startKW"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Start (KW)</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => field.onChange(parseInt(value))}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="KW auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {weekOptions.map(week => (
+                                        <SelectItem key={week} value={week.toString()}>
+                                          KW {week}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="endKW"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Ende (KW)</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => field.onChange(parseInt(value))}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="KW auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {weekOptions.map(week => (
+                                        <SelectItem key={week} value={week.toString()}>
+                                          KW {week}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {/* Vierte Zeile: Farbe und EWB/FÖB */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="color"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Farbe</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="color" 
+                                      value={field.value || '#4F46E5'} 
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
+                                      ref={field.ref}
+                                      disabled={field.disabled}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="ewbFoeb"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>EWB/FÖB</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="EWB/FÖB auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {ewbFoebOptions.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {/* Fünfte Zeile: Soll-Menge */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={editMilestoneForm.control}
+                              name="sollMenge"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Soll-Menge</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="z.B. 500" 
+                                      value={field.value !== undefined ? field.value : ''} 
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
+                                      ref={field.ref}
+                                      disabled={field.disabled}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                              Abbrechen
+                            </Button>
+                            <Button type="submit" disabled={updateMilestoneMutation.isPending}>
+                              {updateMilestoneMutation.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              Speichern
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                   
                   <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
                     <DialogTrigger asChild>
