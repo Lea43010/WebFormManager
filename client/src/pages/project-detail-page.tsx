@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Project } from "@shared/schema";
+import { Project, Milestone } from "@shared/schema";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Edit, Save } from "lucide-react";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CapacitySection } from "@/components/project/capacity-section";
 import { MilestoneSection } from "@/components/project/milestone-section";
+import { CostGroups } from "@/components/project/cost-groups";
 import PermissionSection from "@/components/project/permission-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
