@@ -46,8 +46,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
   const formSchema = z.object({
     id: z.number().optional(),
     projectId: z.number().optional(),
-    // Hier ist die Kundennummer als String definiert, wird aber später zu einer Zahl konvertiert
-    customerId: z.string().min(1, "Kundennummer ist erforderlich"),
+    // Kundennummer ist optional, da sie automatisch generiert wird
+    customerId: z.string().optional(),
     customerType: z.enum(["Privatkunde", "Gewerbe"]).default("Privatkunde"),
     firstName: z.string().min(1, "Vorname ist erforderlich"),
     lastName: z.string().min(1, "Nachname ist erforderlich"),
@@ -102,7 +102,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     // Konvertiere die Daten, um den Typen des Schema zu entsprechen
     const transformedData = {
       ...data,
-      customerId: data.customerId ? parseInt(data.customerId.toString(), 10) : null,
+      customerId: data.customerId && data.customerId.toString().trim() !== '' ? parseInt(data.customerId.toString(), 10) : null,
       postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? parseInt(data.postalCode.toString(), 10) : null,
     };
     console.log("Formular abgeschickt mit Daten:", data);
