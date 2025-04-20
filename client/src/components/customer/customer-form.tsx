@@ -46,8 +46,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
   const formSchema = z.object({
     id: z.number().optional(),
     projectId: z.number().optional(),
-    // Hier ist die Kundennummer als String definiert, wird aber später zu einer Zahl konvertiert
-    customerId: z.string().min(1, "Kundennummer ist erforderlich"),
+    // Kundennummer ist optional und wird automatisch vom Server generiert
+    customerId: z.string().optional(),
     customerType: z.enum(["Privatkunde", "Gewerbe"]).default("Privatkunde"),
     firstName: z.string().min(1, "Vorname ist erforderlich"),
     lastName: z.string().min(1, "Nachname ist erforderlich"),
@@ -102,7 +102,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     // Konvertiere die Daten, um den Typen des Schema zu entsprechen
     const transformedData = {
       ...data,
-      customerId: data.customerId ? parseInt(data.customerId.toString(), 10) : null,
+      // Wenn eine Kundennummer eingegeben wurde, konvertiere sie; ansonsten lasse das Feld aus (bei undefined wird automatisch generiert)
+      customerId: data.customerId ? parseInt(data.customerId.toString(), 10) : undefined,
       postalCode: data.postalCode && data.postalCode.toString().trim() !== '' ? parseInt(data.postalCode.toString(), 10) : null,
     };
     console.log("Formular abgeschickt mit Daten:", data);
@@ -217,11 +218,12 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                         {...field} 
                         onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
                         value={field.value || ''} 
-                        disabled={!!customer}
+                        disabled={true} 
                         placeholder="Wird automatisch vergeben"
-                        className="modern-form-input"
+                        className="modern-form-input bg-gray-50"
                       />
                     </FormControl>
+                    <p className="text-xs text-gray-500 mt-1">Die Kundennummer wird automatisch vom System vergeben.</p>
                     <FormMessage />
                   </FormItem>
                 )}
