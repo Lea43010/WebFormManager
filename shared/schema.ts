@@ -27,6 +27,7 @@ export const users = pgTable("tbluser", {
   email: varchar("user_email", { length: 255 }),
   role: userRolesEnum("role").default('benutzer'),
   createdBy: integer("created_by").references(() => users.id),
+  gdprConsent: boolean("gdpr_consent").default(false),
 });
 
 // Companies table
@@ -396,6 +397,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   role: true,
   createdBy: true,
+  gdprConsent: true,
 });
 
 export const insertCompanySchema = createInsertSchema(companies).transform((data) => {
