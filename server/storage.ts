@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, gte } from "drizzle-orm";
+import { eq, desc, gte, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 
@@ -236,8 +236,11 @@ export class DatabaseStorage implements IStorage {
   
   // Funktion zum Ermitteln der nächsten verfügbaren Kundennummer
   async getNextCustomerId(): Promise<number> {
-    const result = await db.select({ maxId: db.fn.max(customers.customerId) }).from(customers);
-    const maxId = result[0]?.maxId || 0;
+    // Verwenden einer SQL-Abfrage mit MAX-Funktion, da db.fn nicht verfügbar ist
+    const result = await db.execute<{maxId: number | null}>(
+      sql`SELECT MAX(customer_id) as "maxId" FROM tblcustomer`
+    );
+    const maxId = result.rows[0]?.maxId || 0;
     return maxId + 1;
   }
   

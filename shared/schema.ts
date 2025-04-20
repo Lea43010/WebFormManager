@@ -424,7 +424,8 @@ export const insertCompanySchema = createInsertSchema(companies).transform((data
 export const insertCustomerSchema = createInsertSchema(customers).transform((data) => {
   return {
     ...data,
-    customerId: typeof data.customerId === 'string' ? parseInt(data.customerId, 10) : data.customerId,
+    // customerId kann weggelassen werden, wird vom Server automatisch generiert
+    customerId: data.customerId !== undefined ? (typeof data.customerId === 'string' ? parseInt(data.customerId, 10) : data.customerId) : undefined,
     postalCode: typeof data.postalCode === 'string' ? parseInt(data.postalCode, 10) : data.postalCode,
     // Telefonnummer wird jetzt als String gespeichert, keine Umwandlung nötig
   };
