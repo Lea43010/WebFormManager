@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CapacitySection } from "@/components/project/capacity-section";
 import { MilestoneSection } from "@/components/project/milestone-section";
+import PermissionSection from "@/components/project/permission-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
 import { useAuth } from "@/hooks/use-auth";
