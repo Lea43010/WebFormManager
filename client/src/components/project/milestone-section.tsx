@@ -603,82 +603,117 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                   Meilenstein hinzufügen
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[700px] lg:max-w-[800px]">
                 <DialogHeader>
                   <DialogTitle>Neuen Meilenstein hinzufügen</DialogTitle>
                 </DialogHeader>
                 
                 <Form {...milestoneForm}>
                   <form onSubmit={milestoneForm.handleSubmit(onMilestoneSubmit)} className="space-y-4">
-                    <FormField
-                      control={milestoneForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Meilensteinname</FormLabel>
-                          <FormControl>
-                            <Input placeholder="z.B. Bauphase 1" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={milestoneForm.control}
-                      name="bauphase"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bauphase</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                    {/* Erste Zeile: Name und Typ */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={milestoneForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Meilensteinname</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Bauphase auswählen" />
-                              </SelectTrigger>
+                              <Input placeholder="z.B. Bauphase 1" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              {bauphasenOptions.map(option => (
-                                <SelectItem key={option} value={option}>{option}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={milestoneForm.control}
+                        name="bauphase"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bauphase</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Bauphase auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {bauphasenOptions.map(option => (
+                                  <SelectItem key={option} value={option}>{option}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     
-                    <FormField
-                      control={milestoneForm.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Meilenstein</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Meilenstein auswählen" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {milestoneTypes.map(type => (
-                                <SelectItem key={type} value={type}>
-                                  {type}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Zweite Zeile: Meilenstein und Jahr */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={milestoneForm.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Meilenstein</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Meilenstein auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {milestoneTypes.map(type => (
+                                  <SelectItem key={type} value={type}>
+                                    {type}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={milestoneForm.control}
+                        name="jahr"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Jahr</FormLabel>
+                            <Select
+                              onValueChange={(value) => field.onChange(parseInt(value))}
+                              defaultValue={field.value.toString()}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Jahr auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {yearOptions().map(year => (
+                                  <SelectItem key={year} value={year.toString()}>
+                                    {year}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Dritte Zeile: Start KW und End KW */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={milestoneForm.control}
                         name="startKW"
@@ -736,83 +771,59 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                       />
                     </div>
                     
-                    <FormField
-                      control={milestoneForm.control}
-                      name="jahr"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Jahr</FormLabel>
-                          <Select
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                            defaultValue={field.value.toString()}
-                          >
+                    {/* Vierte Zeile: Farbe und EWB/FÖB */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={milestoneForm.control}
+                        name="color"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Farbe</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Jahr auswählen" />
-                              </SelectTrigger>
+                              <Input 
+                                type="color" 
+                                value={field.value || '#4F46E5'} 
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                disabled={field.disabled}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              {yearOptions().map(year => (
-                                <SelectItem key={year} value={year.toString()}>
-                                  {year}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={milestoneForm.control}
-                      name="color"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Farbe</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="color" 
-                              value={field.value || '#4F46E5'} 
-                              onChange={field.onChange}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              disabled={field.disabled}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={milestoneForm.control}
-                      name="ewbFoeb"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>EWB/FÖB</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="EWB/FÖB auswählen" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="keine">keine</SelectItem>
-                              <SelectItem value="EWB">EWB</SelectItem>
-                              <SelectItem value="FÖB">FÖB</SelectItem>
-                              <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                      <FormField
+                        control={milestoneForm.control}
+                        name="ewbFoeb"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>EWB/FÖB</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="EWB/FÖB auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="keine">keine</SelectItem>
+                                <SelectItem value="EWB">EWB</SelectItem>
+                                <SelectItem value="FÖB">FÖB</SelectItem>
+                                <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
+                    {/* Fünfte Zeile: Soll-Menge */}
                     <FormField
                       control={milestoneForm.control}
                       name="sollMenge"
@@ -995,7 +1006,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                         Detail hinzufügen
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="sm:max-w-[600px] lg:max-w-[700px]">
                       <DialogHeader>
                         <DialogTitle>Meilenstein-Detail hinzufügen</DialogTitle>
                       </DialogHeader>
@@ -1066,100 +1077,106 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                             />
                           </div>
                           
-                          <FormField
-                            control={detailForm.control}
-                            name="text"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Beschreibung</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Kurze Beschreibung" 
-                                    value={field.value || ''} 
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
-                                    ref={field.ref}
-                                    disabled={field.disabled}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={detailForm.control}
-                            name="supplementaryInfo"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Zusätzliche Informationen</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Weitere Details" 
-                                    value={field.value || ''} 
-                                    onChange={field.onChange}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
-                                    ref={field.ref}
-                                    disabled={field.disabled}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={detailForm.control}
-                            name="ewbFoeb"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>EWB/FÖB</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                          {/* Beschreibungen */}
+                          <div className="space-y-4">
+                            <FormField
+                              control={detailForm.control}
+                              name="text"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Beschreibung</FormLabel>
                                   <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Bitte auswählen" />
-                                    </SelectTrigger>
+                                    <Input 
+                                      placeholder="Kurze Beschreibung" 
+                                      value={field.value || ''} 
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
+                                      ref={field.ref}
+                                      disabled={field.disabled}
+                                    />
                                   </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="keine">Keine</SelectItem>
-                                    <SelectItem value="EWB">EWB</SelectItem>
-                                    <SelectItem value="FÖB">FÖB</SelectItem>
-                                    <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={detailForm.control}
+                              name="supplementaryInfo"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Zusätzliche Informationen</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Weitere Details" 
+                                      value={field.value || ''} 
+                                      onChange={field.onChange}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
+                                      ref={field.ref}
+                                      disabled={field.disabled}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
 
-                          <FormField
-                            control={detailForm.control}
-                            name="sollMenge"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Soll-Menge</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Soll-Menge eingeben" 
-                                    value={field.value?.toString() || ''} 
-                                    onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
-                                    onBlur={field.onBlur}
-                                    name={field.name}
-                                    ref={field.ref}
-                                    disabled={field.disabled}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {/* EWB/FÖB und Soll-Menge */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={detailForm.control}
+                              name="ewbFoeb"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>EWB/FÖB</FormLabel>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Bitte auswählen" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="keine">Keine</SelectItem>
+                                      <SelectItem value="EWB">EWB</SelectItem>
+                                      <SelectItem value="FÖB">FÖB</SelectItem>
+                                      <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={detailForm.control}
+                              name="sollMenge"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Soll-Menge</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="number"
+                                      step="0.01"
+                                      placeholder="Soll-Menge eingeben" 
+                                      value={field.value?.toString() || ''} 
+                                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                                      onBlur={field.onBlur}
+                                      name={field.name}
+                                      ref={field.ref}
+                                      disabled={field.disabled}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           
                           <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
