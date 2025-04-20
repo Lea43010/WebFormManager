@@ -234,7 +234,19 @@ export class DatabaseStorage implements IStorage {
     return customer;
   }
   
+  // Funktion zum Ermitteln der nächsten verfügbaren Kundennummer
+  async getNextCustomerId(): Promise<number> {
+    const result = await db.select({ maxId: db.fn.max(customers.customerId) }).from(customers);
+    const maxId = result[0]?.maxId || 0;
+    return maxId + 1;
+  }
+  
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    // Wenn keine Kundennummer angegeben wurde, automatisch eine generieren
+    if (!customer.customerId) {
+      customer.customerId = await this.getNextCustomerId();
+    }
+    
     const [createdCustomer] = await db.insert(customers).values(customer).returning() as Customer[];
     return createdCustomer;
   }

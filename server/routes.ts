@@ -151,10 +151,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/customers", async (req, res, next) => {
     try {
+      // Wenn keine Kundennummer übergeben wurde oder diese leer ist, 
+      // entfernen wir sie aus dem Request, damit sie automatisch generiert wird
+      if (!req.body.customerId) {
+        delete req.body.customerId;
+      }
+      
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       const formData = {
         ...req.body,
-        customerId: typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId,
+        customerId: req.body.customerId ? (typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId) : undefined,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
         customerPhone: req.body.customerPhone?.toString() || null,
       };

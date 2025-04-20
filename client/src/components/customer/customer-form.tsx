@@ -213,9 +213,12 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                     <FormLabel className="modern-form-label">Kundennummer</FormLabel>
                     <FormControl>
                       <Input 
-                        {...field}
+                        type="number" 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
                         value={field.value || ''} 
-                        placeholder="Kundennummer eingeben"
+                        disabled={!!customer}
+                        placeholder="Wird automatisch vergeben"
                         className="modern-form-input"
                       />
                     </FormControl>
