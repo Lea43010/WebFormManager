@@ -626,6 +626,32 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                     
                     <FormField
                       control={milestoneForm.control}
+                      name="bauphase"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bauphase</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Bauphase auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bauphasenOptions.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={milestoneForm.control}
                       name="type"
                       render={({ field }) => (
                         <FormItem>
@@ -780,32 +806,6 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                               <SelectItem value="EWB">EWB</SelectItem>
                               <SelectItem value="FÖB">FÖB</SelectItem>
                               <SelectItem value="EWB,FÖB">EWB,FÖB</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={milestoneForm.control}
-                      name="bauphase"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bauphase</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Bauphase auswählen" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {bauphasenOptions.map(option => (
-                                <SelectItem key={option} value={option}>{option}</SelectItem>
-                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
