@@ -209,8 +209,16 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`Der Benutzer hat noch folgende Projekte: ${projectNames}. Bitte löschen Sie zuerst diese Projekte oder weisen Sie sie einem anderen Benutzer zu.`);
     }
     
-    // Benutzer löschen
-    await db.delete(users).where(eq(users.id, id));
+    try {
+      // Zuerst alle Login-Logs des Benutzers löschen
+      await db.delete(loginLogs).where(eq(loginLogs.userId, id));
+      
+      // Dann den Benutzer löschen
+      await db.delete(users).where(eq(users.id, id));
+    } catch (error) {
+      console.error("Fehler beim Löschen des Benutzers:", error);
+      throw new Error(`Fehler beim Löschen des Benutzers: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   
   async getAllUsers(): Promise<User[]> {
