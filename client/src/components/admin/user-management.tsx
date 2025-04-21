@@ -138,16 +138,28 @@ export function UserManagement() {
     onError: (error) => {
       // Extrahiere die Projektinformationen aus der Fehlermeldung, falls vorhanden
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const projectInfo = errorMessage.includes("Projekte:") 
-        ? errorMessage 
-        : "Der Benutzer konnte nicht gelöscht werden.";
       
+      // Verschiedene Typen von Fehlermeldungen analysieren
+      let alertTitle = "Fehler beim Löschen des Benutzers";
+      let alertDescription = "Der Benutzer konnte nicht gelöscht werden.";
+      
+      if (errorMessage.includes("Projekte:")) {
+        // Fehler wegen verknüpfter Projekte
+        alertDescription = errorMessage;
+      } else if (errorMessage.includes("Bautagebücher")) {
+        // Fehler wegen verknüpfter Bautagebücher
+        alertDescription = errorMessage;
+      }
+      
+      // Toast-Meldung mit angepasster Beschreibung
       toast({
-        title: "Fehler beim Löschen des Benutzers",
-        description: projectInfo,
+        title: alertTitle,
+        description: "Benutzer hat abhängige Daten und kann nicht gelöscht werden.",
         variant: "destructive",
       });
-      // Der detaillierte Fehler wird im Dialog angezeigt
+      
+      // Detaillierte Fehlermeldung im Dialog anzeigen
+      setDeleteError(alertDescription);
     }
   });
 
@@ -393,6 +405,19 @@ export function UserManagement() {
                                 <div className="mt-4 p-4 border border-red-300 bg-red-50 rounded-md text-red-800">
                                   <h4 className="font-semibold mb-2">Fehler beim Löschen:</h4>
                                   <p className="text-sm whitespace-pre-wrap">{deleteError}</p>
+                                  
+                                  {/* Zusätzliche Erklärung basierend auf dem Fehlertyp */}
+                                  {deleteError.includes("Projekte:") && (
+                                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+                                      <strong>Tipp:</strong> Die verknüpften Projekte müssen zuerst gelöscht oder einem anderen Benutzer zugewiesen werden.
+                                    </div>
+                                  )}
+                                  
+                                  {deleteError.includes("Bautagebücher") && (
+                                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+                                      <strong>Tipp:</strong> Die Bautagebücher müssen zuerst einem anderen Benutzer zugewiesen werden.
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </AlertDialogDescription>

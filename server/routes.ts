@@ -12,6 +12,7 @@ import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./services/surface-analysis-api";
 import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { setupBackupRoutes } from "./backup";
+import { setupStripeRoutes } from "./stripe-routes";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { generateDataQualityReport, getAllDataQualityIssues } from "./data-quality";
 import { ZodError, z } from "zod";
@@ -35,6 +36,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Backup-Routen einrichten
   setupBackupRoutes(app);
+  
+  // Stripe-Zahlungsrouten einrichten
+  setupStripeRoutes(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {

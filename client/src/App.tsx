@@ -20,6 +20,7 @@ import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import SimpleLoginPage from "@/pages/simple-login";
 import AdminPage from "@/pages/admin-page";
+import SubscriptionPage from "@/pages/subscription-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 
@@ -42,6 +43,7 @@ function Router() {
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
       <ProtectedRoute path="/geo-map" component={GeoMapPage} />
       <ProtectedRoute path="/information" component={InformationPage} />
+      <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route component={NotFound} />

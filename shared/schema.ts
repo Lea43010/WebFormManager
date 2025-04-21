@@ -29,6 +29,12 @@ export const users = pgTable("tbluser", {
   role: userRolesEnum("role").default('benutzer'),
   createdBy: integer("created_by").references(() => users.id),
   gdprConsent: boolean("gdpr_consent").default(false),
+  // Neue Felder für das Abonnement-System
+  trialEndDate: timestamp("trial_end_date"),
+  subscriptionStatus: varchar("subscription_status", { length: 50 }).default('trial'),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  lastPaymentDate: timestamp("last_payment_date"),
 });
 
 // Companies table
@@ -484,14 +490,16 @@ export const constructionDiaryEmployeesRelations = relations(constructionDiaryEm
 }));
 
 // Create insert schemas
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  name: true,
-  email: true,
-  role: true,
-  createdBy: true,
-  gdprConsent: true,
+export const insertUserSchema = createInsertSchema(users).transform(data => {
+  // Setze das Ende der Testphase automatisch auf 4 Wochen ab jetzt
+  const fourWeeksFromNow = new Date();
+  fourWeeksFromNow.setDate(fourWeeksFromNow.getDate() + 28);
+  
+  return {
+    ...data,
+    trialEndDate: data.trialEndDate || fourWeeksFromNow,
+    subscriptionStatus: data.subscriptionStatus || 'trial',
+  };
 });
 
 export const insertCompanySchema = createInsertSchema(companies).transform((data) => {

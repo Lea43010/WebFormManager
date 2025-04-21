@@ -57,24 +57,7 @@ export default function HomePage() {
               Bitte stellen Sie sicher, dass diese Daten vorhanden sind, bevor Sie ein Projekt erstellen.
             </p>
           </CardContent>
-          <CardFooter className="flex flex-wrap gap-2 pt-0">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="text-amber-800 border-amber-300 hover:bg-amber-100"
-              onClick={() => navigate("/companies")}
-            >
-              <Building2 className="h-4 w-4 mr-1" /> Unternehmen
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="text-amber-800 border-amber-300 hover:bg-amber-100"
-              onClick={() => navigate("/customers")}
-            >
-              <Users className="h-4 w-4 mr-1" /> Kunden
-            </Button>
-          </CardFooter>
+          {/* CardFooter mit Buttons entfernt, da diese bereits in den Hauptkarten vorhanden sind */}
         </Card>
         
         {/* Hauptbereich - Schnellzugriff auf die wichtigsten Module */}

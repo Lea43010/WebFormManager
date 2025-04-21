@@ -15,7 +15,8 @@ import {
   Map,
   Info,
   UserCircle,
-  ShieldAlert
+  ShieldAlert,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -68,6 +69,12 @@ const navItems: NavItem[] = [
     href: "/attachments",
     icon: Paperclip,
     tooltip: "Projektbezogene Dokumente und Anhänge verwalten",
+  },
+  {
+    title: "Abonnement",
+    href: "/subscription",
+    icon: CreditCard,
+    tooltip: "Abonnement verwalten und Zahlungsinformationen",
   },
   {
     title: "Hilfe & Info",

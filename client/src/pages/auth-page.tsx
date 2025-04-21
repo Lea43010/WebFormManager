@@ -47,12 +47,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { insertUserSchema } from "@shared/schema";
 
-const loginSchema = insertUserSchema.pick({
-  username: true,
-  password: true,
+// Da insertUserSchema jetzt eine transform-Methode verwendet, 
+// müssen wir die Basis-Validierung direkt definieren
+const loginSchema = z.object({
+  username: z.string().min(1, "Benutzername ist erforderlich"),
+  password: z.string().min(1, "Passwort ist erforderlich"),
 });
 
-const registerSchema = insertUserSchema.extend({
+const registerSchema = z.object({
+  username: z.string().min(1, "Benutzername ist erforderlich"),
+  password: z.string().min(1, "Passwort ist erforderlich"),
+  name: z.string().optional(),
+  email: z.string().email("Ungültige E-Mail-Adresse").optional(),
+  role: z.enum(["administrator", "manager", "benutzer"]).optional(),
   confirmPassword: z.string(),
   gdprConsent: z.boolean(),
 }).refine((data) => data.password === data.confirmPassword, {
