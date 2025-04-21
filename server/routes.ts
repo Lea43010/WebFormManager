@@ -6,6 +6,7 @@ import fs from "fs-extra";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupDownloadRoutes } from "./download";
+import { setupHealthRoutes } from "./health";
 import { setupImageAnalysisRoutes } from "./services/image-analysis-routes";
 import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./services/surface-analysis-api";
