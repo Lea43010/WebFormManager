@@ -2,6 +2,7 @@ import { Express, Request, Response } from "express";
 import { db, sql, drizzleSql, executeWithRetry } from "./db";
 import * as os from "os";
 import config from "../config";
+import { healthLogger } from "./logger";
 
 /**
  * Health-Check-Modul
@@ -44,6 +45,7 @@ async function checkDatabaseConnection(): Promise<{ connected: boolean; response
   let reconnectAttempts = 0;
   
   try {
+    healthLogger.debug('Führe Datenbank-Health-Check durch...');
     // Einfache Abfrage mit Retry-Logik und kürzerem Timeout für den Health-Check
     await executeWithRetry(
       async () => {
@@ -54,13 +56,16 @@ async function checkDatabaseConnection(): Promise<{ connected: boolean; response
       2000 // 2 Sekunden Timeout
     );
 
+    const responseTime = Date.now() - startTime;
+    healthLogger.debug(`Datenbank-Health-Check erfolgreich (${responseTime}ms)`);
+    
     return {
       connected: true,
-      responseTime: Date.now() - startTime,
+      responseTime,
       reconnectAttempts: reconnectAttempts > 1 ? reconnectAttempts : undefined
     };
   } catch (error) {
-    console.error("Fehler bei der Datenbankverbindung:", error);
+    healthLogger.error(`Fehler bei der Datenbankverbindung: ${error instanceof Error ? error.message : String(error)}`);
     return {
       connected: false,
       error: error instanceof Error ? error.message : "Unbekannter Datenbankfehler",
@@ -148,8 +153,13 @@ export function setupHealthRoutes(app: Express) {
 
   // Öffentlicher Health-Check-Endpunkt mit umgebungsabhängigem Rate-Limiting
   const healthEndpointLimit = config.security.rateLimits.healthCheck || 30;
+  healthLogger.info(`Health-Check-Endpunkt eingerichtet mit Rate-Limit: ${healthEndpointLimit} Anfragen/Minute`);
+  
   app.get("/health", rateLimit(healthEndpointLimit, 60 * 1000), async (req: Request, res: Response) => {
     const startTime = Date.now();
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    
+    healthLogger.debug(`Health-Check-Anfrage von ${clientIp}`);
     
     // Überprüfe die Datenbankverbindung
     const databaseStatus = await checkDatabaseConnection();
