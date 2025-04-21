@@ -12,6 +12,9 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export function SubscriptionInfo() {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Rolle des Benutzers direkt aus den Benutzerdaten
+  const isAdmin = user?.role === 'administrator';
 
   // Abfrage des Abonnementstatus
   const { data: subscriptionData, isLoading: isLoadingSubscription, refetch } = useQuery({
@@ -21,7 +24,15 @@ export function SubscriptionInfo() {
       if (!res.ok) {
         throw new Error("Fehler beim Laden des Abonnementstatus");
       }
-      return res.json();
+      
+      const data = await res.json();
+      
+      // Für Administratoren überschreiben wir den Status manuell
+      if (isAdmin) {
+        data.status = 'admin';
+      }
+      
+      return data;
     },
     enabled: !!user, // Nur ausführen, wenn ein Benutzer eingeloggt ist
     // Regelmäßig aktualisieren, um den aktuellen Status zu erhalten

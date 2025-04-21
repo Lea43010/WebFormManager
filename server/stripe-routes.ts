@@ -22,6 +22,16 @@ export function setupStripeRoutes(app: Express) {
       // Für Administratoren ist der Status immer aktiv
       const isActive = isAdmin ? true : await hasActiveSubscription(req.user.id);
       
+      console.log("Benutzerrolle:", req.user.role);
+      console.log("Ist Administrator:", isAdmin);
+      
+      // Debug-Ausgabe
+      console.log("Status API Response:", {
+        active: isActive,
+        status: isAdmin ? 'admin' : (req.user.subscriptionStatus || 'trial'),
+        isAdmin: isAdmin
+      });
+      
       res.json({ 
         active: isActive,
         status: isAdmin ? 'admin' : (req.user.subscriptionStatus || 'trial'), // Spezieller Status für Administratoren
