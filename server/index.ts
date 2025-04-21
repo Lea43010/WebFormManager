@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler, notFoundHandler } from "./error-handler";
 import { setupHealthRoutes } from "./health";
+import { setupApiDocs } from "./api-docs";
 import config from "../config";
 import { logger } from "./logger";
 
@@ -43,6 +44,9 @@ app.use((req, res, next) => {
 (async () => {
   // Health-Check-Endpunkte vor der Hauptroutenkonfiguration einrichten
   setupHealthRoutes(app);
+  
+  // API-Dokumentation einrichten (nur in Entwicklungsumgebung)
+  setupApiDocs(app);
   
   // Alle API-Routen registrieren
   const server = await registerRoutes(app);
