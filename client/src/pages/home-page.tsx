@@ -1,12 +1,27 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Database, Download, Info } from "lucide-react";
+import { 
+  Database, 
+  Download, 
+  Info, 
+  FileText, 
+  Building2, 
+  Users, 
+  BarChart3, 
+  Map, 
+  CalendarDays, 
+  BookOpen
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [showMigration, setShowMigration] = useState(false);
 
   const downloadFile = (filename: string) => {
@@ -27,159 +42,203 @@ export default function HomePage() {
 
   return (
     <DashboardLayout title="Dashboard" tabs={[]}>
-      <div className="flex flex-col gap-6">
-        {/* Hinweis-Card */}
+      <div className="flex flex-col gap-4">
+        {/* Hinweis-Card - kompakt für alle Geräte */}
         <Card className="bg-amber-50 border-amber-300">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-amber-800">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="flex items-center gap-2 text-amber-800 text-base sm:text-lg">
               <Info className="h-5 w-5" />
               Wichtiger Hinweis zur Reihenfolge der Dateneingabe
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-amber-800">
+          <CardContent className="pb-2 sm:pb-3">
+            <p className="text-amber-800 text-sm sm:text-base">
               Um ein neues Projekt anzulegen, müssen Sie zuerst <strong>Unternehmen</strong> und <strong>Kunden</strong> eintragen. 
-              Bitte stellen Sie sicher, dass die erforderlichen Firmen- und Kundendaten vorhanden sind, bevor Sie mit der Projekterstellung beginnen.
+              Bitte stellen Sie sicher, dass diese Daten vorhanden sind, bevor Sie ein Projekt erstellen.
             </p>
           </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
+          <CardFooter className="flex flex-wrap gap-2 pt-0">
             <Button 
               variant="outline" 
+              size="sm"
               className="text-amber-800 border-amber-300 hover:bg-amber-100"
-              onClick={() => window.location.href = "/companies"}
+              onClick={() => navigate("/companies")}
             >
-              Unternehmen anlegen
+              <Building2 className="h-4 w-4 mr-1" /> Unternehmen
             </Button>
             <Button 
               variant="outline" 
+              size="sm"
               className="text-amber-800 border-amber-300 hover:bg-amber-100"
-              onClick={() => window.location.href = "/customers"}
+              onClick={() => navigate("/customers")}
             >
-              Kunden anlegen
+              <Users className="h-4 w-4 mr-1" /> Kunden
             </Button>
           </CardFooter>
         </Card>
         
-        {/* Kacheln für die verschiedenen Bereich */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Projekte</CardTitle>
-              <CardDescription>Übersicht aller Projekte</CardDescription>
+        {/* Hauptbereich - Schnellzugriff auf die wichtigsten Module */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-green-800 text-base flex items-center gap-2">
+                <FileText className="h-5 w-5 text-green-700" />
+                Projekte
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p>Verwalten Sie Ihre Projekte und deren Anhänge.</p>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => window.location.href = "/projects"}>
-                Zu den Projekten
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-green-600 hover:bg-green-700" 
+                      onClick={() => navigate("/projects")}>
+                Öffnen
               </Button>
             </CardFooter>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Unternehmen</CardTitle>
-              <CardDescription>Übersicht aller Unternehmen</CardDescription>
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-blue-800 text-base flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-blue-700" />
+                Unternehmen
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p>Verwalten Sie Ihre Unternehmensdaten.</p>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => window.location.href = "/companies"}>
-                Zu den Unternehmen
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-blue-600 hover:bg-blue-700" 
+                      onClick={() => navigate("/companies")}>
+                Öffnen
               </Button>
             </CardFooter>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Kunden</CardTitle>
-              <CardDescription>Übersicht aller Kunden</CardDescription>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-purple-800 text-base flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-700" />
+                Kunden
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p>Verwalten Sie Ihre Kundendaten.</p>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full" onClick={() => window.location.href = "/customers"}>
-                Zu den Kunden
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-purple-600 hover:bg-purple-700" 
+                      onClick={() => navigate("/customers")}>
+                Öffnen
               </Button>
             </CardFooter>
           </Card>
 
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-indigo-800 text-base flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-indigo-700" />
+                Bautagebuch
+              </CardTitle>
+            </CardHeader>
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-indigo-600 hover:bg-indigo-700" 
+                      onClick={() => navigate("/attachments")}>
+                Öffnen
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-yellow-800 text-base flex items-center gap-2">
+                <Map className="h-5 w-5 text-yellow-700" />
+                Geo-Map
+              </CardTitle>
+            </CardHeader>
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-yellow-600 hover:bg-yellow-700" 
+                      onClick={() => navigate("/geo-map")}>
+                Öffnen
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-md transition-shadow">
+            <CardHeader className="p-3">
+              <CardTitle className="text-red-800 text-base flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-red-700" />
+                Hilfe & Info
+              </CardTitle>
+            </CardHeader>
+            <CardFooter className="p-3 pt-0">
+              <Button variant="default" className="w-full text-sm bg-red-600 hover:bg-red-700" 
+                      onClick={() => navigate("/information")}>
+                Öffnen
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {user?.role === 'administrator' && (
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-3">
+                <CardTitle className="text-slate-800 text-base flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-slate-700" />
+                  Admin
+                </CardTitle>
+              </CardHeader>
+              <CardFooter className="p-3 pt-0">
+                <Button variant="default" className="w-full text-sm bg-slate-600 hover:bg-slate-700" 
+                      onClick={() => navigate("/admin")}>
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+        </div>
+        
+        {/* Datenbank-Migration Card - nur für Administratoren */}
+        {user?.role === 'administrator' && (
+          <Card className="mt-2">
+            <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0">
               <div>
-                <CardTitle className="text-sm font-medium">Datenbank-Migration</CardTitle>
+                <CardTitle className="text-sm font-medium flex items-center">
+                  <Database className="h-4 w-4 mr-2 text-primary" />
+                  Datenbank-Migration
+                </CardTitle>
                 <CardDescription>Migration zu Supabase</CardDescription>
               </div>
-              <Button variant="ghost" onClick={() => setShowMigration(!showMigration)}>
+              <Button variant="ghost" size="sm" onClick={() => setShowMigration(!showMigration)}>
                 {showMigration ? "Ausblenden" : "Anzeigen"}
               </Button>
             </CardHeader>
             {showMigration && (
               <>
-                <CardContent>
-                  <div className="mb-4">
-                    <p className="text-gray-600">
-                      Hier können Sie die für die Migration zu Supabase notwendigen SQL-Dateien herunterladen.
-                      Diese Dateien enthalten das Datenbankschema und die vorhandenen Daten.
-                    </p>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Database className="h-5 w-5 text-primary" />
-                        <h3 className="font-medium">Datenbankschema</h3>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Diese Datei enthält die Struktur der Datenbank (Tabellen, Indizes, etc.) ohne Daten.
-                        Sie müssen diese zuerst in Supabase ausführen.
-                      </p>
-                      <Button 
-                        onClick={() => downloadFile('migration_schema.sql')}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Download className="h-4 w-4 mr-2" /> Schema herunterladen
-                      </Button>
-                    </div>
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Database className="h-5 w-5 text-primary" />
-                        <h3 className="font-medium">Datenbankdaten</h3>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Diese Datei enthält nur die Daten der Tabellen. Laden Sie diese Datei nach dem Anlegen
-                        der Datenbankstruktur in Supabase hoch.
-                      </p>
-                      <Button 
-                        onClick={() => downloadFile('data_inserts.sql')}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Download className="h-4 w-4 mr-2" /> Daten herunterladen
-                      </Button>
-                    </div>
+                <CardContent className="py-2">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <Button 
+                      onClick={() => downloadFile('migration_schema.sql')}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4 mr-2" /> Schema herunterladen
+                    </Button>
+                    <Button 
+                      onClick={() => downloadFile('data_inserts.sql')}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Download className="h-4 w-4 mr-2" /> Daten herunterladen
+                    </Button>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <div className="bg-gray-50 p-4 rounded-lg w-full">
-                    <h3 className="text-sm font-bold mb-2">Anleitung zur Migration</h3>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Erstellen Sie ein neues Projekt in Supabase mit einer leeren Postgres-Datenbank</li>
-                      <li>Gehen Sie zum SQL-Editor in Ihrem Supabase-Dashboard</li>
-                      <li>Laden Sie zuerst die Datei <code className="bg-gray-200 px-1 rounded">migration_schema.sql</code> hoch und führen Sie diese aus</li>
-                      <li>Laden Sie dann die Datei <code className="bg-gray-200 px-1 rounded">data_inserts.sql</code> hoch und führen Sie diese aus</li>
-                      <li>Notieren Sie sich die Verbindungsdaten Ihrer Supabase-Datenbank</li>
-                      <li>Aktualisieren Sie die Umgebungsvariablen in Ihrer Replit-Umgebung mit den Supabase-Verbindungsdaten</li>
+                  <div className="bg-gray-50 p-3 rounded-lg w-full">
+                    <h3 className="text-xs font-bold mb-1">Anleitung zur Migration</h3>
+                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                      <li>Erstellen Sie ein Supabase-Projekt mit leerer Postgres-Datenbank</li>
+                      <li>Führen Sie zuerst <code className="bg-gray-200 px-1 rounded">migration_schema.sql</code> aus</li>
+                      <li>Führen Sie dann <code className="bg-gray-200 px-1 rounded">data_inserts.sql</code> aus</li>
+                      <li>Aktualisieren Sie die Umgebungsvariablen mit den Supabase-Daten</li>
                     </ol>
                   </div>
                 </CardFooter>
               </>
             )}
           </Card>
-        </div>
+        )}
       </div>
     </DashboardLayout>
   );

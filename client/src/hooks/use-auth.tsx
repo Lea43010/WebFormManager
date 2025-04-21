@@ -53,9 +53,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = response as SelectUser;
       queryClient.setQueryData(["/api/user"], user);
       
-      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
-      console.log("Login erfolgreich, direkte Weiterleitung zur Projektübersicht...");
-      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      // Weiterleitung direkt zum Dashboard ohne Zwischenschritte
+      console.log("Login erfolgreich, direkte Weiterleitung zum Dashboard...");
+      window.location.href = "/dashboard"; // Verwende direkte URL-Änderung statt Router Navigation
       
       // Toast erst nach der Weiterleitung anzeigen
       setTimeout(() => {
@@ -89,9 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
       
-      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
-      console.log("Verifizierung erfolgreich, direkte Weiterleitung zur Projektübersicht...");
-      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      // Weiterleitung direkt zum Dashboard ohne Zwischenschritte
+      console.log("Verifizierung erfolgreich, direkte Weiterleitung zum Dashboard...");
+      window.location.href = "/dashboard"; // Verwende direkte URL-Änderung statt Router Navigation
       
       // Toast erst nach der Weiterleitung anzeigen
       setTimeout(() => {
@@ -171,9 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
       
-      // Weiterleitung direkt zur Projektseite ohne Zwischenschritte
-      console.log("Registrierung erfolgreich, direkte Weiterleitung zur Projektübersicht...");
-      window.location.href = "/projects"; // Verwende direkte URL-Änderung statt Router Navigation
+      // Weiterleitung direkt zum Dashboard ohne Zwischenschritte
+      console.log("Registrierung erfolgreich, direkte Weiterleitung zum Dashboard...");
+      window.location.href = "/dashboard"; // Verwende direkte URL-Änderung statt Router Navigation
       
       // Toast erst nach der Weiterleitung anzeigen
       setTimeout(() => {

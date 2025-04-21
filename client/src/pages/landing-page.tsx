@@ -47,10 +47,10 @@ export default function LandingPage() {
     loginMutation.mutate(loginData);
   };
 
-  // Wenn der Benutzer bereits angemeldet ist, zur Projektübersicht weiterleiten
+  // Wenn der Benutzer bereits angemeldet ist, zum Dashboard weiterleiten
   useEffect(() => {
     if (user) {
-      setLocation("/projects");
+      setLocation("/dashboard");
     }
   }, [user, setLocation]);
 

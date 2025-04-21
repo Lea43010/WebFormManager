@@ -41,12 +41,12 @@ export default function SimpleLoginPage() {
     });
   };
 
-  // Wenn der Benutzer bereits angemeldet ist, zur Projektübersicht weiterleiten
+  // Wenn der Benutzer bereits angemeldet ist, zum Dashboard weiterleiten
   useEffect(() => {
     // Prüfen, ob der Benutzer bereits angemeldet ist
     if (user) {
-      console.log("Benutzer bereits angemeldet, leite zur Projektübersicht weiter...");
-      setLocation("/projects");
+      console.log("Benutzer bereits angemeldet, leite zum Dashboard weiter...");
+      setLocation("/dashboard");
     }
   }, [user, setLocation]);
 
