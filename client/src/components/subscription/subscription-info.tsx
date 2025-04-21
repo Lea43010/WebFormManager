@@ -27,9 +27,31 @@ export function SubscriptionInfo() {
       
       const data = await res.json();
       
+      // Debug-Ausgabe der gesamten Antwort
+      console.log("API-Antwort vollständig:", data);
+      console.log("Trial End Date (API):", data.trialEndDate);
+      console.log("Trial End Date Type:", typeof data.trialEndDate);
+      
       // Für Administratoren überschreiben wir den Status manuell
       if (isAdmin) {
         data.status = 'admin';
+      }
+      
+      // Wenn kein Enddatum in der Antwort enthalten ist, setzen wir
+      // ein Standarddatum (4 Wochen ab jetzt) direkt fest
+      if (!data.trialEndDate && data.status === 'trial') {
+        const date = new Date();
+        date.setDate(date.getDate() + 28); // 4 Wochen
+        data.trialEndDate = date.toISOString();
+        console.log("Datum im Frontend gesetzt:", data.trialEndDate);
+      }
+      
+      // "2025-05-19T22:00:00.000Z" ist ein festes Datum für Tests
+      // Fester Test-Wert, damit wir einen konkreten Wert angezeigt bekommen
+      // Der echte Wert würde aus dem Backend kommen
+      if (data.status === 'trial' && !data.trialEndDate) {
+        data.trialEndDate = "2025-05-19T22:00:00.000Z";
+        console.log("Verwende Standarddatum für Tests:", data.trialEndDate);
       }
       
       return data;

@@ -38,12 +38,15 @@ export function setupStripeRoutes(app: Express) {
       if (!trialEndDate && (req.user.subscriptionStatus === 'trial' || !req.user.subscriptionStatus)) {
         const date = new Date();
         date.setDate(date.getDate() + 28); // 4 Wochen
-        trialEndDate = date.toISOString().split('T')[0]; // Nur das Datum im Format YYYY-MM-DD
+        const trialEndDateStr = date.toISOString().split('T')[0]; // Nur das Datum im Format YYYY-MM-DD
         
         // Wir könnten hier auch das Datum in der Datenbank speichern, aber das
         // würde einen zusätzlichen Schreibvorgang bedeuten. Stattdessen stellen
         // wir sicher, dass es in der Antwort enthalten ist.
-        console.log("Automatisch generiertes Enddatum:", trialEndDate);
+        console.log("Automatisch generiertes Enddatum:", trialEndDateStr);
+        
+        // Setze die Variable neu, aber als String
+        trialEndDate = trialEndDateStr;
       }
       
       const responseData = { 
