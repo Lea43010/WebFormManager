@@ -433,8 +433,12 @@ if (backupConfig.autoBackupEnabled) {
     backupLogger.info(`Automatisches Backup aktiviert, Zeitplan: ${backupConfig.cronSchedule}`);
     
     // Berechne das nächste geplante Backup basierend auf dem Cron-Ausdruck
-    const nextBackupDate = cron.schedule(backupConfig.cronSchedule).nextDate();
-    backupLogger.info(`Nächstes geplantes Backup: ${nextBackupDate.toLocaleString('de-DE')}`);
+    const task = cron.schedule(backupConfig.cronSchedule, () => {});
+    const nextRunDate = new Date();
+    nextRunDate.setDate(nextRunDate.getDate() + (nextRunDate.getDay() === 0 ? 14 : 14 - nextRunDate.getDay() + 7));
+    nextRunDate.setHours(1, 0, 0, 0);
+    backupLogger.info(`Nächstes geplantes Backup: ${nextRunDate.toLocaleString('de-DE')}`);
+    task.stop();
     
     // Registriere Cron-Job für automatische Backups
     cron.schedule(backupConfig.cronSchedule, () => {
