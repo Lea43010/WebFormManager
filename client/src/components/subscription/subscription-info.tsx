@@ -81,25 +81,52 @@ export function SubscriptionInfo() {
   });
 
   // Funktion zum Formatieren des Datums
-  const formatDate = (dateString: string | null | undefined) => {
+  const formatDate = (dateValue: string | Date | null | undefined) => {
     // Wenn kein Datum vorhanden ist, zeigen wir eine Standardnachricht
-    if (!dateString) {
+    if (!dateValue) {
+      console.log("Kein Datum vorhanden:", dateValue);
       return "Kein Datum verfügbar";
     }
     
     // Für Debugging-Zwecke
-    console.log("Zu formatierendes Datum:", dateString);
+    console.log("Zu formatierendes Datum:", dateValue, "Typ:", typeof dateValue);
     
     try {
-      // Prüfen, ob das Datum im ISO-Format vorliegt (YYYY-MM-DD)
-      const date = new Date(dateString);
+      // Unterschiedliche Datumsformate verarbeiten
+      let date: Date;
       
-      // Prüfen, ob das Datum gültig ist (nicht Unix Epoch Start und kein Invalid Date)
-      if (isNaN(date.getTime()) || date.getFullYear() < 2000) {
-        console.log("Ungültiges Datum erkannt:", dateString);
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } else if (typeof dateValue === 'string') {
+        // Falls es ein Datumsstring ist, konvertieren
+        if (dateValue.includes('T')) {
+          // ISO-Format mit Zeitangabe (z.B. "2025-05-21T00:00:00.000Z")
+          date = new Date(dateValue);
+        } else {
+          // Einfaches Datumsformat (z.B. "2025-05-21")
+          const parts = dateValue.split('-');
+          if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // Monate sind 0-basiert
+            const day = parseInt(parts[2], 10);
+            date = new Date(year, month, day);
+          } else {
+            date = new Date(dateValue);
+          }
+        }
+      } else {
+        // Falldaten für einen anderen Typ (unwahrscheinlich)
+        console.error("Unerwarteter Datumstyp:", typeof dateValue);
         return "Kein gültiges Datum verfügbar";
       }
       
+      // Prüfen, ob das Datum gültig ist
+      if (isNaN(date.getTime()) || date.getFullYear() < 2000) {
+        console.log("Ungültiges Datum nach Konvertierung:", date);
+        return "Kein gültiges Datum verfügbar";
+      }
+      
+      // Deutsche Datumsformatierung
       return format(date, "dd. MMMM yyyy", { locale: de });
     } catch (error) {
       console.error("Fehler beim Formatieren des Datums:", error);

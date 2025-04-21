@@ -25,22 +25,40 @@ export function setupStripeRoutes(app: Express) {
       console.log("Benutzerrolle:", req.user.role);
       console.log("Ist Administrator:", isAdmin);
       
-      // Debug-Ausgabe
-      console.log("Status API Response:", {
-        active: isActive,
-        status: isAdmin ? 'admin' : (req.user.subscriptionStatus || 'trial'),
-        isAdmin: isAdmin
-      });
+      // Debug-Ausgabe für das Trial-Enddatum
+      console.log("Trial end date (raw):", req.user.trialEndDate);
+      console.log("Trial end date (typeof):", typeof req.user.trialEndDate);
       
-      res.json({ 
+      // Debug-Ausgabe für die Antwort
+      // Formatiere das Datum als ISO-String, falls es ein Date-Objekt ist
+      let trialEndDate = req.user.trialEndDate;
+      
+      // Wenn der Benutzer in der Testphase ist, aber kein Enddatum hat,
+      // setzen wir ein Standarddatum (4 Wochen ab jetzt)
+      if (!trialEndDate && (req.user.subscriptionStatus === 'trial' || !req.user.subscriptionStatus)) {
+        const date = new Date();
+        date.setDate(date.getDate() + 28); // 4 Wochen
+        trialEndDate = date.toISOString().split('T')[0]; // Nur das Datum im Format YYYY-MM-DD
+        
+        // Wir könnten hier auch das Datum in der Datenbank speichern, aber das
+        // würde einen zusätzlichen Schreibvorgang bedeuten. Stattdessen stellen
+        // wir sicher, dass es in der Antwort enthalten ist.
+        console.log("Automatisch generiertes Enddatum:", trialEndDate);
+      }
+      
+      const responseData = { 
         active: isActive,
         status: isAdmin ? 'admin' : (req.user.subscriptionStatus || 'trial'), // Spezieller Status für Administratoren
-        trialEndDate: req.user.trialEndDate,
+        trialEndDate: trialEndDate, // Das möglicherweise geänderte Datum
         lastPaymentDate: req.user.lastPaymentDate,
         stripeCustomerId: req.user.stripeCustomerId,
         stripeSubscriptionId: req.user.stripeSubscriptionId,
         isAdmin // Zusätzliches Flag für das Frontend
-      });
+      };
+      
+      console.log("Status API Response:", responseData);
+      
+      res.json(responseData);
     } catch (error) {
       next(error);
     }
