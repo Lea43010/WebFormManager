@@ -59,6 +59,7 @@ export interface IStorage {
   
   // Permission operations
   getPermissions(projectId: number): Promise<Permission[]>;
+  getPermission(id: number): Promise<Permission | undefined>;
   createPermission(permission: InsertPermission): Promise<Permission>;
   deletePermission(id: number): Promise<void>;
   
@@ -311,6 +312,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(permissions).where(eq(permissions.projectId, projectId));
     console.log(`Found ${result.length} permissions`);
     return result;
+  }
+  
+  async getPermission(id: number): Promise<Permission | undefined> {
+    console.log(`Fetching permission with ID: ${id}`);
+    const [permission] = await db.select().from(permissions).where(eq(permissions.id, id));
+    return permission;
   }
   
   async createPermission(permission: InsertPermission): Promise<Permission> {

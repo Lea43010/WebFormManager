@@ -296,7 +296,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/projects/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingProject = await storage.getProject(id);
+      
+      if (!existingProject) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer das Projekt bearbeiten darf
+      // Nur Administratoren, Manager oder der Ersteller dürfen das Projekt bearbeiten
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && existingProject.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Projekts" });
+      }
       
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
       const formData = {
@@ -310,9 +325,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Aktualisiere die Daten direkt, ohne komplexe Schema-Manipulation
       const validatedData = formData;
       const project = await storage.updateProject(id, validatedData);
-      if (!project) {
-        return res.status(404).json({ message: "Projekt nicht gefunden" });
-      }
       res.json(project);
     } catch (error) {
       console.error("Project update error:", error);
@@ -322,10 +334,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/projects/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingProject = await storage.getProject(id);
+      
+      if (!existingProject) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer das Projekt löschen darf
+      // Nur Administratoren, Manager oder der Ersteller dürfen das Projekt löschen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && existingProject.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für das Löschen dieses Projekts" });
+      }
+      
       await storage.deleteProject(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Project delete error:", error);
       next(error);
     }
   });
@@ -333,17 +362,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Permission routes
   app.get("/api/projects/:projectId/permissions", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Berechtigungen für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um die Berechtigungen dieses Projekts zu sehen" });
+      }
+      
       const permissions = await storage.getPermissions(projectId);
       res.json(permissions);
     } catch (error) {
+      console.error("Error fetching permissions:", error);
       next(error);
     }
   });
   
   app.post("/api/projects/:projectId/permissions", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Berechtigungen für dieses Projekt erstellen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Berechtigungen für dieses Projekt zu erstellen" });
+      }
       
       // Format data for insertion
       const formData = {
@@ -363,10 +422,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.delete("/api/permissions/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const permission = await storage.getPermission(id);
+      
+      if (!permission) {
+        return res.status(404).json({ message: "Berechtigung nicht gefunden" });
+      }
+      
+      // Hole das zugehörige Projekt, um den Ersteller zu überprüfen
+      const project = await storage.getProject(permission.projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer die Berechtigung löschen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung zum Löschen dieser Berechtigung" });
+      }
+      
       await storage.deletePermission(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Permission deletion error:", error);
       next(error);
     }
   });
