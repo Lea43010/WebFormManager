@@ -53,7 +53,8 @@ export function DataQualityManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [report, setReport] = useState<DataQualityReport | null>(null);
   const [issues, setIssues] = useState<DataQualityIssue[]>([]);
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useState("dashboard");
+  const [issueFilter, setIssueFilter] = useState<string | null>(null);
 
   // Mock-Daten für Entwicklungszwecke
   const mockReport: DataQualityReport = {
@@ -321,7 +322,7 @@ export function DataQualityManagement() {
           <CardContent>
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
               <TabsList className="mb-4">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
+                <TabsTrigger value="dashboard" className="flex items-center gap-2">
                   <BarChart className="h-4 w-4" />
                   Übersicht
                 </TabsTrigger>
@@ -335,7 +336,7 @@ export function DataQualityManagement() {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="overview">
+              <TabsContent value="dashboard">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card>
                     <CardHeader>
@@ -361,7 +362,17 @@ export function DataQualityManagement() {
                               </Badge>
                             </div>
                             <div>
-                              <Button variant="ghost" size="sm">Details</Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  // Wechseln zum Issues-Tab und nach Typ filtern
+                                  setSelectedTab("issues");
+                                  setIssueFilter(issue.type);
+                                }}
+                              >
+                                Details
+                              </Button>
                             </div>
                           </div>
                         ))}
@@ -389,14 +400,46 @@ export function DataQualityManagement() {
               <TabsContent value="issues">
                 <div className="space-y-4">
                   <div className="flex gap-2 mb-4">
-                    <Badge variant="outline" className="cursor-pointer">Alle</Badge>
-                    <Badge variant="destructive" className="cursor-pointer">Hoch</Badge>
-                    <Badge variant="default" className="cursor-pointer">Mittel</Badge>
-                    <Badge variant="outline" className="cursor-pointer">Niedrig</Badge>
-                    <Badge variant="outline" className="cursor-pointer">Gelöst</Badge>
+                    <Badge 
+                      variant={!issueFilter ? "secondary" : "outline"} 
+                      className="cursor-pointer"
+                      onClick={() => setIssueFilter(null)}
+                    >
+                      Alle
+                    </Badge>
+                    <Badge 
+                      variant={issueFilter === "email" ? "secondary" : "outline"} 
+                      className="cursor-pointer"
+                      onClick={() => setIssueFilter("email")}
+                    >
+                      E-Mails
+                    </Badge>
+                    <Badge 
+                      variant={issueFilter === "phone" ? "secondary" : "outline"} 
+                      className="cursor-pointer"
+                      onClick={() => setIssueFilter("phone")}
+                    >
+                      Telefonnummern
+                    </Badge>
+                    <Badge 
+                      variant={issueFilter === "duplicate" ? "secondary" : "outline"} 
+                      className="cursor-pointer"
+                      onClick={() => setIssueFilter("duplicate")}
+                    >
+                      Duplikate
+                    </Badge>
+                    <Badge 
+                      variant={issueFilter === "missing" ? "secondary" : "outline"} 
+                      className="cursor-pointer"
+                      onClick={() => setIssueFilter("missing")}
+                    >
+                      Fehlende Felder
+                    </Badge>
                   </div>
                   
-                  {issues.map(issue => (
+                  {issues
+                    .filter(issue => !issueFilter || issue.issueType === issueFilter)
+                    .map(issue => (
                     <Card key={issue.id} className={issue.resolved ? "opacity-70" : ""}>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between">
