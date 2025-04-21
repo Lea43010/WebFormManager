@@ -204,7 +204,9 @@ export class DatabaseStorage implements IStorage {
     
     // Wenn der Benutzer noch Projekte hat, können wir ihn nicht löschen
     if (userProjects.length > 0) {
-      throw new Error("Der Benutzer hat noch Projekte. Bitte löschen Sie zuerst diese Projekte oder weisen Sie sie einem anderen Benutzer zu.");
+      // Eine detaillierte Fehlermeldung erstellen, die die Projektnamen enthält
+      const projectNames = userProjects.map(project => `"${project.projectName}" (ID: ${project.id})`).join(", ");
+      throw new Error(`Der Benutzer hat noch folgende Projekte: ${projectNames}. Bitte löschen Sie zuerst diese Projekte oder weisen Sie sie einem anderen Benutzer zu.`);
     }
     
     // Benutzer löschen

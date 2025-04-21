@@ -105,15 +105,27 @@ export function UserManagement() {
     }
   });
   
+  // State für detaillierte Fehlermeldungen
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  
   // Mutation zum Löschen eines Benutzers (nur für Administratoren)
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await apiRequest('DELETE', `/api/admin/users/${userId}`);
-      return response.json();
+      try {
+        const response = await apiRequest('DELETE', `/api/admin/users/${userId}`);
+        return response.json();
+      } catch (error) {
+        // Speichere die Fehlermeldung im State
+        if (error instanceof Error) {
+          setDeleteError(error.message);
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       setUserToDelete(null);
+      setDeleteError(null); // Zurücksetzen des Fehlers
       toast({
         title: "Benutzer gelöscht",
         description: "Der Benutzer wurde erfolgreich gelöscht.",
@@ -122,9 +134,10 @@ export function UserManagement() {
     onError: (error) => {
       toast({
         title: "Fehler beim Löschen des Benutzers",
-        description: error.message,
+        description: "Der Benutzer konnte nicht gelöscht werden. Details finden Sie im Dialog.",
         variant: "destructive",
       });
+      // Der detaillierte Fehler wird im Dialog angezeigt
     }
   });
 
@@ -345,20 +358,30 @@ export function UserManagement() {
                               <br /><br />
                               Dies kann nicht rückgängig gemacht werden. Der Benutzer kann nur gelöscht werden, 
                               wenn er keine Projekte mehr besitzt.
+                              
+                              {/* Fehlermeldung anzeigen, wenn vorhanden */}
+                              {deleteError && (
+                                <div className="mt-4 p-4 border border-red-300 bg-red-50 rounded-md text-red-800">
+                                  <h4 className="font-semibold mb-2">Fehler beim Löschen:</h4>
+                                  <p className="text-sm whitespace-pre-wrap">{deleteError}</p>
+                                </div>
+                              )}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteUserMutation.mutate(userData.id)}
-                              className="bg-red-500 hover:bg-red-700"
-                              disabled={deleteUserMutation.isPending}
-                            >
-                              {deleteUserMutation.isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              )}
-                              Löschen
-                            </AlertDialogAction>
+                            <AlertDialogCancel onClick={() => setDeleteError(null)}>Schließen</AlertDialogCancel>
+                            {!deleteError && (
+                              <AlertDialogAction
+                                onClick={() => deleteUserMutation.mutate(userData.id)}
+                                className="bg-red-500 hover:bg-red-700"
+                                disabled={deleteUserMutation.isPending}
+                              >
+                                {deleteUserMutation.isPending && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Löschen
+                              </AlertDialogAction>
+                            )}
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
