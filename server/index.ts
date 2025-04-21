@@ -1,6 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { errorHandler, notFoundHandler } from "./error-handler";
+import { setupHealthRoutes } from "./health";
+import config from "../config";
+import { logger } from "./logger";
 
 const app = express();
 app.use(express.json());

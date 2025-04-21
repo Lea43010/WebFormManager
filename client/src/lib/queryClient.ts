@@ -1,8 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import env from './environment';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    
+    // In der Entwicklungsumgebung ausführlichere Fehlerinformationen anzeigen
+    if (env.isDevelopment) {
+      console.error(`API-Fehler (${res.status})`, { 
+        url: res.url, 
+        status: res.status, 
+        statusText: res.statusText, 
+        body: text 
+      });
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -12,15 +24,39 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  // URL mit Basis-URL-Präfix versehen, wenn konfiguriert
+  const apiUrl = env.apiBaseUrl ? `${env.apiBaseUrl}${url}` : url;
+  
+  // In der Entwicklungsumgebung API-Anfragen protokollieren
+  if (env.isDevelopment) {
+    console.debug(`[API] ${method} ${apiUrl}`, data ? { body: data } : '');
+  }
+  
+  // Request-Timeout basierend auf der Umgebung setzen
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), env.timeouts.apiRequest);
+  
+  try {
+    const res = await fetch(apiUrl, {
+      method,
+      headers: data ? { "Content-Type": "application/json" } : {},
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+      signal: controller.signal
+    });
+    
+    // Timeout-Fehlerbehandlung entfernen
+    clearTimeout(timeoutId);
+    
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    // Spezielle Behandlung von Timeout-Fehlern
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(`API-Anfrage-Timeout (> ${env.timeouts.apiRequest / 1000}s): ${method} ${apiUrl}`);
+    }
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -29,16 +65,40 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    // URL-Präfix hinzufügen, wenn konfiguriert
+    const path = queryKey[0] as string;
+    const url = env.apiBaseUrl ? `${env.apiBaseUrl}${path}` : path;
+    
+    // In der Entwicklungsumgebung API-Anfragen protokollieren
+    if (env.isDevelopment) {
+      console.debug(`[API] GET ${url}`);
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
+    
+    // Request-Timeout basierend auf der Umgebung setzen
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), env.timeouts.apiRequest);
+    
+    try {
+      const res = await fetch(url, {
+        credentials: "include",
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+      
+      await throwIfResNotOk(res);
+      return await res.json();
+    } catch (error) {
+      // Spezielle Behandlung von Timeout-Fehlern
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error(`API-Anfrage-Timeout (> ${env.timeouts.apiRequest / 1000}s): GET ${url}`);
+      }
+      throw error;
+    }
   };
 
 /**
@@ -55,20 +115,29 @@ const cacheConfig = {
  * Erstellt einen verbesserten QueryClient mit optimierten Cache-Einstellungen
  * und intelligentem Netzwerkstatus-Handling
  */
+/**
+ * Stellt Caching- und Netzwerk-Strategie basierend auf Umgebung und Datentyp bereit
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: import.meta.env.PROD, // Nur in Produktionsumgebung bei Fokuswechsel aktualisieren
-      staleTime: 1000 * 60 * 5, // 5 Minuten Standardwert
-      retry: 1, // Ein Wiederholungsversuch bei Netzwerkproblemen
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponentiell mit max. 30 Sekunden
-      // Fehler innerhalb der Komponenten behandeln
+      // Nur in Produktionsumgebung bei Fokuswechsel aktualisieren
+      refetchOnWindowFocus: env.isProduction,
+      // Standard-Stale-Time aus dem Cache-Config (5 Minuten)
+      staleTime: cacheConfig.frequentlyChangingData.staleTime,
+      // Wiederholungsversuche basierend auf Umgebung 
+      retry: env.isDevelopment ? 1 : 2,
+      // Exponentielles Backoff für Wiederholungsversuche
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // In der Produktion längeres Timeout als in Entwicklung
+      // Eigene Fehlerbehandlung in den Hooks um benutzerdefinierte Fehlermeldungen anzuzeigen
     },
     mutations: {
-      retry: 1, // Ein Wiederholungsversuch bei Netzwerkproblemen
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponentiell mit max. 30 Sekunden
+      // Ähnliche Konfiguration für Mutations
+      retry: env.isDevelopment ? 0 : 1,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 });

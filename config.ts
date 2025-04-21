@@ -54,6 +54,8 @@ const logging = {
 const errorHandling = {
   showStackTraces: !isProduction,
   detailedErrors: !isProduction,
+  showRequestBody: !isProduction,    // Request-Body in Fehlermeldungen anzeigen
+  showRequestHeaders: !isProduction, // Request-Header in Fehlermeldungen anzeigen
 };
 
 // Dateispeicher-Konfiguration
