@@ -16,14 +16,20 @@ export function setupStripeRoutes(app: Express) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      const isActive = await hasActiveSubscription(req.user.id);
+      // Administrator benötigt kein Abonnement
+      const isAdmin = req.user.role === 'administrator';
+      
+      // Für Administratoren ist der Status immer aktiv
+      const isActive = isAdmin ? true : await hasActiveSubscription(req.user.id);
+      
       res.json({ 
         active: isActive,
-        status: req.user.subscriptionStatus || 'trial',
+        status: isAdmin ? 'admin' : (req.user.subscriptionStatus || 'trial'), // Spezieller Status für Administratoren
         trialEndDate: req.user.trialEndDate,
         lastPaymentDate: req.user.lastPaymentDate,
         stripeCustomerId: req.user.stripeCustomerId,
-        stripeSubscriptionId: req.user.stripeSubscriptionId
+        stripeSubscriptionId: req.user.stripeSubscriptionId,
+        isAdmin // Zusätzliches Flag für das Frontend
       });
     } catch (error) {
       next(error);

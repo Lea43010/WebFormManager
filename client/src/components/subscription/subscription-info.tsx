@@ -97,6 +97,12 @@ export function SubscriptionInfo() {
           Gekündigt
         </Badge>
       );
+    } else if (subscriptionData.status === "admin") {
+      return (
+        <Badge variant="outline" className="bg-purple-50 text-purple-700 hover:bg-purple-50">
+          Administrator
+        </Badge>
+      );
     }
 
     return null;
@@ -173,9 +179,21 @@ export function SubscriptionInfo() {
             </p>
           </div>
         )}
+        
+        {subscriptionData?.status === "admin" && (
+          <div className="space-y-4">
+            <p>
+              Sie sind als <strong>Administrator</strong> angemeldet und haben <strong>uneingeschränkten Zugriff</strong> auf alle Funktionen der Bau-Structura App.
+            </p>
+            <p>
+              Als Administrator benötigen Sie kein aktives Abonnement, um die Anwendung zu nutzen.
+            </p>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
-        {subscriptionData?.status !== "active" && (
+        {/* Abonnement-Button nur anzeigen, wenn kein Administrator und kein aktives Abonnement */}
+        {subscriptionData?.status !== "active" && subscriptionData?.status !== "admin" && (
           <Button 
             onClick={() => checkoutMutation.mutate()} 
             disabled={checkoutMutation.isPending}
@@ -186,6 +204,8 @@ export function SubscriptionInfo() {
             Abonnement abschließen
           </Button>
         )}
+        
+        {/* Kündigen-Button nur anzeigen, wenn aktives Abonnement und kein Administrator */}
         {subscriptionData?.status === "active" && (
           <Button 
             variant="outline" 
