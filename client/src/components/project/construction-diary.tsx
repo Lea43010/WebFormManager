@@ -853,6 +853,99 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                 )}
               />
               
+              {/* Mitarbeiterliste und Verwaltung */}
+              <div className="border rounded p-4 my-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-medium">Beteiligte Mitarbeiter</h3>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowEmployeeForm(!showEmployeeForm)}
+                  >
+                    <UserPlus className="mr-1 h-4 w-4" />
+                    Mitarbeiter hinzufügen
+                  </Button>
+                </div>
+                
+                {/* Liste der aktuellen Mitarbeiter */}
+                {diaryEmployees.length > 0 ? (
+                  <div className="space-y-2">
+                    {diaryEmployees.map((employee) => (
+                      <div key={employee.id} className="flex justify-between items-center p-2 bg-muted/50 rounded">
+                        <div>
+                          <span className="font-medium">{employee.firstName} {employee.lastName}</span>
+                          {employee.position && (
+                            <span className="text-sm text-muted-foreground ml-2">({employee.position})</span>
+                          )}
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeEmployee(employee.id)}
+                        >
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm py-2">Keine Mitarbeiter hinzugefügt</p>
+                )}
+                
+                {/* Formular zum Hinzufügen neuer Mitarbeiter */}
+                {showEmployeeForm && (
+                  <div className="mt-3 border-t pt-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Vorname</label>
+                        <Input 
+                          value={newEmployee.firstName} 
+                          onChange={(e) => setNewEmployee({...newEmployee, firstName: e.target.value})}
+                          placeholder="Vorname" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Nachname</label>
+                        <Input 
+                          value={newEmployee.lastName} 
+                          onChange={(e) => setNewEmployee({...newEmployee, lastName: e.target.value})}
+                          placeholder="Nachname" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Position</label>
+                        <Input 
+                          value={newEmployee.position} 
+                          onChange={(e) => setNewEmployee({...newEmployee, position: e.target.value})}
+                          placeholder="Position/Rolle (optional)" 
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-3">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowEmployeeForm(false)}
+                        className="mr-2"
+                      >
+                        Abbrechen
+                      </Button>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        onClick={addEmployee}
+                        disabled={!newEmployee.firstName || !newEmployee.lastName}
+                      >
+                        Hinzufügen
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <input type="hidden" {...editForm.register("id")} />
               
               <DialogFooter className="mt-4">
@@ -897,7 +990,25 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                   <TableCell>
                     {format(new Date(entry.date), "dd.MM.yyyy", { locale: de })}
                   </TableCell>
-                  <TableCell>{entry.employee}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <span className="mr-1">{entry.employee}</span>
+                      {/* Wenn es mehrere Mitarbeiter gibt, zeigen wir ein Badge mit der Anzahl an */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fetchDiaryEmployees(entry.id);
+                          setSelectedEntry(entry);
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>{entry.activity}</TableCell>
                   <TableCell>
                     {entry.startTime} - {entry.endTime} Uhr
