@@ -101,11 +101,13 @@ export function setupHealthRoutes(app: Express) {
     ipRequests: new Map<string, { count: number; resetTime: number }>(),
     cleanupInterval: setInterval(() => {
       const now = Date.now();
-      for (const [ip, data] of rateLimitCache.ipRequests.entries()) {
-        if (data.resetTime <= now) {
+      // Verwende Array.from für die Iteration, um TypeScript-Kompatibilität zu gewährleisten
+      Array.from(rateLimitCache.ipRequests.keys()).forEach(ip => {
+        const data = rateLimitCache.ipRequests.get(ip);
+        if (data && data.resetTime <= now) {
           rateLimitCache.ipRequests.delete(ip);
         }
-      }
+      });
     }, 60000) // Cleanup jede Minute
   };
 
