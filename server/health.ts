@@ -1,6 +1,7 @@
 import { Express, Request, Response } from "express";
 import { db, sql, drizzleSql, executeWithRetry } from "./db";
 import * as os from "os";
+import config from "../config";
 
 /**
  * Health-Check-Modul
@@ -145,8 +146,9 @@ export function setupHealthRoutes(app: Express) {
     };
   };
 
-  // Öffentlicher Health-Check-Endpunkt mit Rate-Limiting (max. 30 Anfragen pro Minute)
-  app.get("/health", rateLimit(30, 60 * 1000), async (req: Request, res: Response) => {
+  // Öffentlicher Health-Check-Endpunkt mit umgebungsabhängigem Rate-Limiting
+  const healthEndpointLimit = config.security.rateLimits.healthCheck || 30;
+  app.get("/health", rateLimit(healthEndpointLimit, 60 * 1000), async (req: Request, res: Response) => {
     const startTime = Date.now();
     
     // Überprüfe die Datenbankverbindung
@@ -171,8 +173,22 @@ export function setupHealthRoutes(app: Express) {
       timestamp: new Date().toISOString(),
       databaseStatus,
       systemInfo,
-      version: process.env.npm_package_version || "1.0.0"
+      version: process.env.npm_package_version || "1.0.0",
     };
+    
+    // In Entwicklungsumgebung oder wenn DEBUG=true, füge mehr Debugging-Informationen hinzu
+    if (config.isDevelopment) {
+      Object.assign(healthResponse, {
+        environment: config.env,
+        debugInfo: {
+          nodeVersion: process.version,
+          platform: process.platform,
+          architecture: process.arch,
+          isDevelopment: config.isDevelopment,
+          pid: process.pid
+        }
+      });
+    }
     
     // Setze den HTTP-Statuscode basierend auf dem Gesundheitszustand
     const httpStatus = status === "ok" ? 200 : status === "degraded" ? 200 : 503;
@@ -191,6 +207,7 @@ export function setupHealthRoutes(app: Express) {
   
   // Einfache Ping-Route für grundlegende Verfügbarkeitsprüfungen mit höherem Rate-Limit
   app.get("/ping", rateLimit(60, 60 * 1000), (req: Request, res: Response) => {
-    res.status(200).send("pong");
+    const environment = config.isDevelopment ? ' (Dev)' : '';
+    res.status(200).send(`pong${environment}`);
   });
 }
