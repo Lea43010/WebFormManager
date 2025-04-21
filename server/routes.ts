@@ -717,22 +717,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Person routes (Ansprechpartner)
   app.get("/api/persons", async (req, res, next) => {
     try {
-      const persons = await storage.getPersons();
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können alle Ansprechpartner sehen
+      if (req.user.role === 'administrator') {
+        const persons = await storage.getPersons();
+        return res.json(persons);
+      }
+      
+      // Für andere Benutzer: Nur Ansprechpartner für zugehörige Projekte, Kunden und Firmen
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      
+      // Wenn keine Projekte, leeres Array zurückgeben
+      if (userProjects.length === 0) {
+        return res.json([]);
+      }
+      
+      // Relevante Projektids, Kundenids und Firmenids sammeln
+      const projectIds = userProjects.map(project => project.id);
+      const customerIds = userProjects.map(project => project.customerId).filter(id => id !== null);
+      const companyIds = userProjects.map(project => project.companyId).filter(id => id !== null);
+      
+      // Alle Ansprechpartner holen
+      const allPersons = await storage.getPersons();
+      
+      // Filtern für Ansprechpartner, die mit Projekten, Kunden oder Firmen des Benutzers verbunden sind
+      const persons = allPersons.filter(person => 
+        (person.projectId !== null && projectIds.includes(person.projectId)) ||
+        (person.customerId !== null && customerIds.includes(person.customerId)) || 
+        (person.companyId !== null && companyIds.includes(person.companyId))
+      );
+      
       res.json(persons);
     } catch (error) {
+      console.error("Error fetching persons:", error);
       next(error);
     }
   });
 
   app.get("/api/persons/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const person = await storage.getPerson(id);
+      
       if (!person) {
         return res.status(404).json({ message: "Ansprechpartner nicht gefunden" });
       }
-      res.json(person);
+      
+      // Administratoren können alle Ansprechpartner sehen
+      if (req.user.role === 'administrator') {
+        return res.json(person);
+      }
+      
+      // Bei anderen Benutzern: Erst prüfen, ob der Ansprechpartner zu einem ihrer Projekte, Kunden oder Firmen gehört
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      
+      // Wenn keine Projekte, keine Berechtigung
+      if (userProjects.length === 0) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Ansprechpartner" });
+      }
+      
+      // Relevante Projektids, Kundenids und Firmenids sammeln
+      const projectIds = userProjects.map(project => project.id);
+      const customerIds = userProjects.map(project => project.customerId).filter(id => id !== null);
+      const companyIds = userProjects.map(project => project.companyId).filter(id => id !== null);
+      
+      // Prüfen, ob der Ansprechpartner zu einem dieser Projekte, Kunden oder Firmen gehört
+      const hasAccess = 
+        (person.projectId !== null && projectIds.includes(person.projectId)) ||
+        (person.customerId !== null && customerIds.includes(person.customerId)) || 
+        (person.companyId !== null && companyIds.includes(person.companyId));
+      
+      if (hasAccess) {
+        return res.json(person);
+      }
+      
+      // Keine Berechtigung
+      return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Ansprechpartner" });
     } catch (error) {
+      console.error("Error fetching person:", error);
       next(error);
     }
   });
