@@ -6,7 +6,8 @@ import { z } from "zod";
 import {
   ConstructionDiary,
   insertConstructionDiarySchema,
-  BedarfKapa
+  BedarfKapa,
+  incidentTypeEnum
 } from "@shared/schema";
 import { Loader2, Plus, FileText, Download, Trash, PenTool } from "lucide-react";
 import {
@@ -70,6 +71,7 @@ const constructionDiaryFormSchema = z.object({
   workHours: z.string().min(1, { message: "Bitte geben Sie die Arbeitsstunden ein" }),
   materialUsage: z.string().optional(),
   remarks: z.string().optional(),
+  incidentType: z.enum(['Arbeitsunfälle', 'Sicherheitsvorkommnisse', 'Schäden', 'Verluste', 'Beschwerden', 'Sonstiges']).optional(),
 });
 
 type ConstructionDiaryFormValues = z.infer<typeof constructionDiaryFormSchema>;
@@ -499,6 +501,38 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                   
                   <FormField
                     control={newEntryForm.control}
+                    name="incidentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sonstige Vorkommnisse</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Art des Vorkommnisses auswählen (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Arbeitsunfälle">Arbeitsunfälle</SelectItem>
+                            <SelectItem value="Sicherheitsvorkommnisse">Sicherheitsvorkommnisse</SelectItem>
+                            <SelectItem value="Schäden">Schäden / Verluste</SelectItem>
+                            <SelectItem value="Verluste">Verluste</SelectItem>
+                            <SelectItem value="Beschwerden">Beschwerden (Anlieger, Kunde)</SelectItem>
+                            <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Wählen Sie die Art des Vorkommnisses, wenn eines aufgetreten ist
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={newEntryForm.control}
                     name="remarks"
                     render={({ field }) => (
                       <FormItem>
@@ -674,6 +708,38 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                     <FormControl>
                       <Input placeholder="Verwendete Materialien und Mengen" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="incidentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sonstige Vorkommnisse</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Art des Vorkommnisses auswählen (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Arbeitsunfälle">Arbeitsunfälle</SelectItem>
+                        <SelectItem value="Sicherheitsvorkommnisse">Sicherheitsvorkommnisse</SelectItem>
+                        <SelectItem value="Schäden">Schäden / Verluste</SelectItem>
+                        <SelectItem value="Verluste">Verluste</SelectItem>
+                        <SelectItem value="Beschwerden">Beschwerden (Anlieger, Kunde)</SelectItem>
+                        <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Wählen Sie die Art des Vorkommnisses, wenn eines aufgetreten ist
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
