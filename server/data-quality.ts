@@ -52,7 +52,7 @@ export function validateEmail(email: string): { isValid: boolean; reason?: strin
   }
 
   // Prüfung auf bekannte Tippfehler in Domains
-  const commonMistyped = {
+  const commonMistyped: Record<string, string> = {
     "gmial.com": "gmail.com",
     "gmail.de": "gmail.com",
     "gmal.com": "gmail.com",
@@ -65,7 +65,7 @@ export function validateEmail(email: string): { isValid: boolean; reason?: strin
   };
 
   const domain = email.split("@")[1].toLowerCase();
-  if (commonMistyped[domain]) {
+  if (domain in commonMistyped) {
     return { 
       isValid: false, 
       reason: `Domain-Tippfehler: ${domain} (meinten Sie ${commonMistyped[domain]}?)` 
@@ -183,10 +183,17 @@ function calculateJaccardSimilarity(str1: string, str2: string): number {
   const set1 = new Set(str1.split(''));
   const set2 = new Set(str2.split(''));
   
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
+  // Array.from zur Konvertierung von Set zu Array für TypeScript-Kompatibilität
+  const set1Array = Array.from(set1);
+  const set2Array = Array.from(set2);
   
-  return intersection.size / union.size;
+  // Berechne Schnittmenge durch Filterung
+  const intersection = set1Array.filter(x => set2.has(x));
+  
+  // Vereinigungsmenge durch Zusammenführen der Arrays und Entfernen von Duplikaten
+  const unionArray = [...new Set([...set1Array, ...set2Array])];
+  
+  return intersection.length / unionArray.length;
 }
 
 /**

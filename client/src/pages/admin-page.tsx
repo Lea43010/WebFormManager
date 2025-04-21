@@ -2,8 +2,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/user-management";
 import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import BackupManagement from "@/components/admin/backup-management";
+import { DataQualityManagement } from "@/components/admin/data-quality-management";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock, Database } from 'lucide-react';
+import { ShieldAlert, Users, Clock, Database, BarChart } from 'lucide-react';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -36,6 +37,11 @@ export default function AdminPage() {
                 <Database className="h-4 w-4 mr-2" />
                 Datensicherung
               </TabsTrigger>
+              
+              <TabsTrigger value="dataquality" className="flex items-center">
+                <BarChart className="h-4 w-4 mr-2" />
+                Datenqualität
+              </TabsTrigger>
             </>
           )}
         </TabsList>
@@ -52,6 +58,10 @@ export default function AdminPage() {
 
             <TabsContent value="backups" className="space-y-4">
               <BackupManagement />
+            </TabsContent>
+            
+            <TabsContent value="dataquality" className="space-y-4">
+              <DataQualityManagement />
             </TabsContent>
           </>
         )}

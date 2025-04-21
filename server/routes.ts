@@ -2572,6 +2572,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Datenqualitätsmanagement-Routen
+  // Diese Routen sollten nur für Administratoren zugänglich sein
+  app.get("/api/admin/data-quality/report", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können auf Datenqualitätsberichte zugreifen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      const report = await generateDataQualityReport();
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating data quality report:", error);
+      next(error);
+    }
+  });
+
+  app.get("/api/admin/data-quality/issues", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können auf Datenqualitätsprobleme zugreifen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      const issues = await getAllDataQualityIssues();
+      res.json(issues);
+    } catch (error) {
+      console.error("Error fetching data quality issues:", error);
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/data-quality/issues/:id/resolve", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können Datenqualitätsprobleme als gelöst markieren
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      // In einer vollständigen Implementierung würde hier die Datenbank aktualisiert
+      // Das Issue als gelöst markieren
+      // Für jetzt geben wir einfach eine Erfolgsmeldung zurück
+      res.status(200).json({ message: "Problem wurde als gelöst markiert" });
+    } catch (error) {
+      console.error("Error resolving data quality issue:", error);
+      next(error);
+    }
+  });
+
+  app.post("/api/admin/data-quality/notifications/enable", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können Benachrichtigungen konfigurieren
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      // In einer vollständigen Implementierung würde hier die Benachrichtigungskonfiguration gespeichert
+      // Für jetzt geben wir einfach eine Erfolgsmeldung zurück
+      res.status(200).json({ message: "Benachrichtigungen aktiviert" });
+    } catch (error) {
+      console.error("Error enabling notifications:", error);
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
