@@ -207,11 +207,43 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
     }
   };
   
+  // Prüft, ob ähnliche Mitarbeiter existieren
+  const checkSimilarEmployees = async (firstName: string, lastName: string): Promise<ConstructionDiaryEmployee[]> => {
+    if (!selectedEntry || !firstName || !lastName) return [];
+    
+    try {
+      const response = await apiRequest(
+        "POST",
+        `/api/construction-diary/${selectedEntry.id}/employees/find-similar`,
+        { firstName, lastName }
+      );
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Fehler beim Prüfen auf ähnliche Mitarbeiter:", error);
+      return [];
+    }
+  };
+  
   // Hinzufügen eines neuen Mitarbeiters
   const addEmployee = async () => {
     if (!selectedEntry) return;
     
     try {
+      // Prüfen auf ähnliche Mitarbeiter
+      const similarEmployees = await checkSimilarEmployees(newEmployee.firstName, newEmployee.lastName);
+      
+      // Wenn ähnliche Mitarbeiter gefunden wurden, zeige eine Warnung an
+      if (similarEmployees.length > 0) {
+        const confirmAdd = window.confirm(
+          `Es wurden ähnliche Mitarbeiter gefunden:\n\n${similarEmployees.map(emp => `- ${emp.firstName} ${emp.lastName}${emp.position ? ` (${emp.position})` : ''}`).join('\n')}\n\nMöchten Sie trotzdem einen neuen Mitarbeiter hinzufügen?`
+        );
+        
+        if (!confirmAdd) {
+          return;
+        }
+      }
+      
       const response = await apiRequest(
         "POST",
         `/api/construction-diary/${selectedEntry.id}/employees`,
@@ -230,7 +262,7 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
       console.error("Fehler beim Hinzufügen des Mitarbeiters:", error);
       toast({
         title: "Fehler",
-        description: "Der Mitarbeiter konnte nicht hinzugefügt werden.",
+        description: error instanceof Error ? error.message : "Der Mitarbeiter konnte nicht hinzugefügt werden.",
         variant: "destructive",
       });
     }

@@ -2527,6 +2527,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Ähnliche Mitarbeiter suchen (für Deduplizierung)
+  app.post("/api/construction-diary/:diaryId/employees/find-similar", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const diaryId = parseInt(req.params.diaryId, 10);
+      const { firstName, lastName } = req.body;
+      
+      if (!firstName || !lastName) {
+        return res.status(400).json({ message: "Vorname und Nachname sind erforderlich" });
+      }
+      
+      // Holen des Bautagebuch-Eintrags, um Projekt-ID zu ermitteln
+      const diaryEntry = await storage.getConstructionDiary(diaryId);
+      if (!diaryEntry) {
+        return res.status(404).json({ message: "Bautagebuch-Eintrag nicht gefunden" });
+      }
+      
+      const project = await storage.getProject(diaryEntry.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
+      }
+      
+      const similarEmployees = await storage.findSimilarEmployees({
+        firstName,
+        lastName,
+        constructionDiaryId: diaryId
+      });
+      
+      res.json(similarEmployees);
+    } catch (error) {
+      console.error("Error finding similar employees:", error);
+      next(error);
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
