@@ -27,6 +27,41 @@ export default function HomePage() {
 
   return (
     <DashboardLayout title="Dashboard" tabs={[]}>
+      <Card className="md:col-span-2 lg:col-span-3 bg-amber-50 border-amber-300 mb-2">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-amber-800">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-info text-amber-600">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Wichtiger Hinweis zur Reihenfolge der Dateneingabe
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-amber-800">
+            Um ein neues Projekt anzulegen, müssen Sie zuerst <strong>Unternehmen</strong> und <strong>Kunden</strong> eintragen. 
+            Bitte stellen Sie sicher, dass die erforderlichen Firmen- und Kundendaten vorhanden sind, bevor Sie mit der Projekterstellung beginnen.
+          </p>
+        </CardContent>
+        <CardFooter className="pt-0 flex gap-2">
+          <Button 
+            variant="outline" 
+            className="text-amber-800 border-amber-300 hover:bg-amber-100"
+            onClick={() => window.location.href = "/companies"}
+          >
+            Unternehmen anlegen
+          </Button>
+          <Button 
+            variant="outline" 
+            className="text-amber-800 border-amber-300 hover:bg-amber-100"
+            onClick={() => window.location.href = "/customers"}
+          >
+            Kunden anlegen
+          </Button>
+        </CardFooter>
+      </Card>
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
