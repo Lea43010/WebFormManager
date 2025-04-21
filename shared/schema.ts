@@ -646,6 +646,28 @@ export type Permission = typeof permissions.$inferSelect;
 export type InsertConstructionDiary = z.infer<typeof insertConstructionDiarySchema>;
 export type ConstructionDiary = typeof constructionDiaries.$inferSelect;
 
-export const insertConstructionDiaryEmployeeSchema = createInsertSchema(constructionDiaryEmployees);
+// Erweitertes Zod-Schema für Bautagebuch-Mitarbeiter mit verbesserten Validierungsregeln
+export const insertConstructionDiaryEmployeeSchema = createInsertSchema(constructionDiaryEmployees)
+  .extend({
+    firstName: z.string()
+      .min(2, { message: 'Vorname muss mindestens 2 Zeichen lang sein' })
+      .max(255, { message: 'Vorname darf maximal 255 Zeichen lang sein' })
+      .trim()
+      .refine(name => /^[A-Za-zÄäÖöÜüß\s\-']+$/.test(name), { 
+        message: 'Vorname enthält ungültige Zeichen. Erlaubt sind nur Buchstaben, Leerzeichen, Bindestriche und Apostrophe.'
+      }),
+    lastName: z.string()
+      .min(2, { message: 'Nachname muss mindestens 2 Zeichen lang sein' })
+      .max(255, { message: 'Nachname darf maximal 255 Zeichen lang sein' })
+      .trim()
+      .refine(name => /^[A-Za-zÄäÖöÜüß\s\-']+$/.test(name), { 
+        message: 'Nachname enthält ungültige Zeichen. Erlaubt sind nur Buchstaben, Leerzeichen, Bindestriche und Apostrophe.'
+      }),
+    position: z.string()
+      .max(255, { message: 'Position darf maximal 255 Zeichen lang sein' })
+      .optional()
+      .transform(val => val === '' ? undefined : val)
+  });
+
 export type InsertConstructionDiaryEmployee = z.infer<typeof insertConstructionDiaryEmployeeSchema>;
 export type ConstructionDiaryEmployee = typeof constructionDiaryEmployees.$inferSelect;

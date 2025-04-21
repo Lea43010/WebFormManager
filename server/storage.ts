@@ -739,7 +739,60 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(constructionDiaryEmployees.lastName));
   }
 
+  // Hilfsfunktion, um mögliche Duplikate zu finden basierend auf Namen
+  async findSimilarEmployees(employee: {
+    firstName: string;
+    lastName: string;
+    constructionDiaryId: number;
+  }): Promise<ConstructionDiaryEmployee[]> {
+    const { firstName, lastName, constructionDiaryId } = employee;
+    
+    // Normalisiere Namen für den Vergleich
+    const normalizedFirstName = firstName.trim().toLowerCase();
+    const normalizedLastName = lastName.trim().toLowerCase();
+    
+    // Hole alle Mitarbeiter für diesen Bautagebuch-Eintrag
+    const allEmployees = await this.getConstructionDiaryEmployees(constructionDiaryId);
+    
+    // Filtere nach ähnlichen Namen
+    return allEmployees.filter(emp => {
+      const empFirstName = emp.firstName.trim().toLowerCase();
+      const empLastName = emp.lastName.trim().toLowerCase();
+      
+      // Exakte Übereinstimmung (normalisiert)
+      if (empFirstName === normalizedFirstName && empLastName === normalizedLastName) {
+        return true;
+      }
+      
+      // Levenshtein-Ähnlichkeit (vereinfachte Version)
+      // Prüft, ob die Namen sehr ähnlich sind (z.B. Tippfehler)
+      return (
+        (empFirstName.includes(normalizedFirstName) || normalizedFirstName.includes(empFirstName)) &&
+        (empLastName.includes(normalizedLastName) || normalizedLastName.includes(empLastName))
+      );
+    });
+  }
+
   async createConstructionDiaryEmployee(employee: InsertConstructionDiaryEmployee): Promise<ConstructionDiaryEmployee> {
+    // Prüfe auf mögliche Duplikate vor dem Erstellen
+    const similarEmployees = await this.findSimilarEmployees({
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      constructionDiaryId: employee.constructionDiaryId
+    });
+    
+    // Wenn exakte Duplikate gefunden wurden, gib das erste zurück anstatt ein neues zu erstellen
+    const exactDuplicate = similarEmployees.find(emp => 
+      emp.firstName.trim().toLowerCase() === employee.firstName.trim().toLowerCase() &&
+      emp.lastName.trim().toLowerCase() === employee.lastName.trim().toLowerCase()
+    );
+    
+    if (exactDuplicate) {
+      console.log(`Verhinderte Duplikat-Erstellung: ${employee.firstName} ${employee.lastName}`);
+      return exactDuplicate;
+    }
+    
+    // Wenn kein exaktes Duplikat gefunden wurde, erstelle einen neuen Eintrag
     const [createdEmployee] = await db
       .insert(constructionDiaryEmployees)
       .values(employee)
@@ -748,6 +801,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateConstructionDiaryEmployee(id: number, employee: Partial<InsertConstructionDiaryEmployee>): Promise<ConstructionDiaryEmployee | undefined> {
+    // Wenn der Name aktualisiert wird, prüfe auf mögliche Duplikate
+    if (employee.firstName && employee.lastName && employee.constructionDiaryId) {
+      const similarEmployees = await this.findSimilarEmployees({
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        constructionDiaryId: employee.constructionDiaryId
+      });
+      
+      // Wenn exakte Duplikate gefunden wurden, die nicht dieser Mitarbeiter sind
+      const exactDuplicate = similarEmployees.find(emp => 
+        emp.id !== id &&
+        emp.firstName.trim().toLowerCase() === employee.firstName!.trim().toLowerCase() &&
+        emp.lastName.trim().toLowerCase() === employee.lastName!.trim().toLowerCase()
+      );
+      
+      if (exactDuplicate) {
+        console.log(`Verhinderte Duplikat-Aktualisierung: ${employee.firstName} ${employee.lastName}`);
+        throw new Error(`Es existiert bereits ein Mitarbeiter mit dem Namen ${employee.firstName} ${employee.lastName} in diesem Bautagebuch-Eintrag.`);
+      }
+    }
+    
+    // Wenn kein Duplikat gefunden wurde, aktualisiere den Eintrag
     const [updatedEmployee] = await db
       .update(constructionDiaryEmployees)
       .set(employee)
