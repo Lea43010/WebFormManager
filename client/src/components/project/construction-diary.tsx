@@ -20,6 +20,7 @@ import {
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -194,6 +195,7 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
       workHours: "8",
       materialUsage: "",
       remarks: "",
+      incidentType: undefined,
     },
   });
 
@@ -210,6 +212,7 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
       workHours: "",
       materialUsage: "",
       remarks: "",
+      incidentType: undefined,
     },
   });
 
@@ -266,6 +269,7 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
       workHours: entry.workHours.toString(),
       materialUsage: entry.materialUsage || "",
       remarks: entry.remarks || "",
+      incidentType: entry.incidentType || undefined,
     });
     setIsEditDialogOpen(true);
   };
@@ -797,6 +801,7 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                 <TableHead>Arbeitszeit</TableHead>
                 <TableHead>Stunden</TableHead>
                 <TableHead>Materialien</TableHead>
+                <TableHead>Vorkommnisse</TableHead>
                 <TableHead className="w-[100px]">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
@@ -813,6 +818,15 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                   </TableCell>
                   <TableCell>{entry.workHours}</TableCell>
                   <TableCell>{entry.materialUsage || "-"}</TableCell>
+                  <TableCell>
+                    {entry.incidentType ? (
+                      <Badge variant="outline" className="bg-amber-50 text-amber-900 border-amber-300">
+                        {entry.incidentType}
+                      </Badge>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-1">
                       <Button
