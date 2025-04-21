@@ -1275,25 +1275,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // WICHTIG: Das direkte Servieren von statischen Dateien über /uploads ist aus Sicherheitsgründen deaktiviert.
-  // Alle Dateizugriffe müssen über die token-gesicherten API-Endpunkte erfolgen.
-  // Dieser Code bleibt als Hinweis auf den vorherigen Ansatz erhalten.
-  /*
-  app.use("/uploads", (req, res, next) => {
-    // Authentifizierungsprüfung
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Nicht autorisiert" });
+  // Proxy-Route für Bilder, die Authentifizierung erfordert
+  app.get("/secure-image/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      // Projekt des Anhangs abrufen, um die Berechtigung zu prüfen
+      const project = await storage.getProject(attachment.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer diesen Anhang ansehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang anzusehen" });
+      }
+      
+      // Prüfen, ob die Datei existiert
+      if (!await fs.pathExists(attachment.filePath)) {
+        return res.status(404).json({ message: "Datei nicht gefunden" });
+      }
+      
+      // Bild direkt senden (ohne Download-Header)
+      res.sendFile(path.resolve(attachment.filePath));
+    } catch (error) {
+      console.error("Error serving image:", error);
+      next(error);
     }
-    next();
-  }, express.static(path.join(process.cwd(), "uploads"), {
-    // Deaktiviere Cache für Uploads - damit immer die aktuellste Version geladen wird
-    etag: false,
-    lastModified: false,
-    setHeaders: (res) => {
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    }
-  }));
-  */
+  });
   
   // Serve static RStO visualizations
   app.use("/static/rsto_visualizations", express.static(path.join(process.cwd(), "public/static/rsto_visualizations")));

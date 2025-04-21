@@ -73,7 +73,7 @@ export default function AttachmentPage() {
   // Token-basierter Download mit Fehlerbehandlung
   const handleDownload = async (attachment: Attachment) => {
     try {
-      // Token anfordern
+      // Token anfordern (für den Download-Endpunkt, nicht für die Anzeige)
       const response = await fetch(`/api/attachments/${attachment.id}/token`);
       
       if (!response.ok) {
@@ -82,8 +82,13 @@ export default function AttachmentPage() {
       
       const data = await response.json();
       
-      // Mit Token die Datei herunterladen
-      window.open(`/api/attachments/${attachment.id}/download?token=${data.token}`, "_blank");
+      // Erzeugt einen temporären Link zum Herunterladen
+      const link = document.createElement('a');
+      link.href = `/api/attachments/${attachment.id}/download?token=${data.token}`;
+      link.setAttribute('download', attachment.fileName || 'download');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       toast({
         title: "Download-Fehler",
@@ -241,12 +246,11 @@ export default function AttachmentPage() {
                         {attachment.fileType === 'image' ? (
                           <div className="relative w-full h-40 overflow-hidden rounded-md">
                             <ResponsiveImage
-                              src={`/api/attachments/${attachment.id}/download`}
+                              src={`/secure-image/${attachment.id}`}
                               alt={attachment.fileName}
                               className="object-cover w-full h-full"
                               placeholderColor="#f3f4f6"
                               lazyLoad={true}
-                              requiresToken={true}
                             />
                           </div>
                         ) : (
@@ -363,12 +367,11 @@ export default function AttachmentPage() {
                               {attachment.fileType === 'image' ? (
                                 <div className="relative w-full h-32 overflow-hidden rounded-md">
                                   <ResponsiveImage
-                                    src={`/api/attachments/${attachment.id}/download`}
+                                    src={`/secure-image/${attachment.id}`}
                                     alt={attachment.fileName}
                                     className="object-cover w-full h-full"
                                     placeholderColor="#f3f4f6"
                                     lazyLoad={true}
-                                    requiresToken={true}
                                   />
                                 </div>
                               ) : (
