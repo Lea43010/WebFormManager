@@ -5,9 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   ConstructionDiary,
-  insertConstructionDiarySchema
+  insertConstructionDiarySchema,
+  BedarfKapa
 } from "@shared/schema";
 import { Loader2, Plus, FileText, Download, Trash, PenTool } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -164,6 +172,12 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
         variant: "destructive",
       });
     },
+  });
+
+  // Abrufen der verfügbaren Mitarbeiter aus BedarfKapa
+  const { data: bedarfKapaEntries } = useQuery<BedarfKapa[]>({
+    queryKey: [`/api/projects/${projectId}/bedarfkapa`],
+    enabled: !!projectId,
   });
 
   // Formular für neue Einträge
@@ -373,9 +387,35 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Mitarbeiter</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Name des Mitarbeiters" {...field} />
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Mitarbeiter auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bedarfKapaEntries && bedarfKapaEntries.length > 0 ? (
+                                <>
+                                  {/* Einzigartige Mitarbeitertypen extrahieren */}
+                                  {Array.from(new Set(bedarfKapaEntries.map(entry => entry.bedarfKapaName))).map((employeeType) => (
+                                    <SelectItem key={employeeType} value={employeeType}>
+                                      {employeeType}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              ) : (
+                                <SelectItem value="Keine Mitarbeiter" disabled>
+                                  Keine Mitarbeiter verfügbar
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Wählen Sie aus den in Bedarf/Kapazität definierten Mitarbeitertypen
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -529,9 +569,35 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Mitarbeiter</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Name des Mitarbeiters" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Mitarbeiter auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {bedarfKapaEntries && bedarfKapaEntries.length > 0 ? (
+                            <>
+                              {/* Einzigartige Mitarbeitertypen extrahieren */}
+                              {Array.from(new Set(bedarfKapaEntries.map(entry => entry.bedarfKapaName))).map((employeeType) => (
+                                <SelectItem key={employeeType} value={employeeType}>
+                                  {employeeType}
+                                </SelectItem>
+                              ))}
+                            </>
+                          ) : (
+                            <SelectItem value="Keine Mitarbeiter" disabled>
+                              Keine Mitarbeiter verfügbar
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Wählen Sie aus den in Bedarf/Kapazität definierten Mitarbeitertypen
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
