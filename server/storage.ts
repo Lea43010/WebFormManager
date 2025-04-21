@@ -152,6 +152,7 @@ export interface IStorage {
   
   // Construction Diary Employees operations
   getConstructionDiaryEmployees(diaryId: number): Promise<ConstructionDiaryEmployee[]>;
+  findSimilarEmployees(params: { firstName: string, lastName: string, constructionDiaryId: number }): Promise<ConstructionDiaryEmployee[]>;
   createConstructionDiaryEmployee(employee: InsertConstructionDiaryEmployee): Promise<ConstructionDiaryEmployee>;
   updateConstructionDiaryEmployee(id: number, employee: Partial<InsertConstructionDiaryEmployee>): Promise<ConstructionDiaryEmployee | undefined>;
   deleteConstructionDiaryEmployee(id: number): Promise<void>;
