@@ -46,7 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UserPlus, Trash2, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { Loader2, UserPlus, Trash2, CheckCircle, XCircle, HelpCircle, RefreshCw } from 'lucide-react';
 
 export function UserManagement() {
   const { user } = useAuth();
@@ -63,7 +63,7 @@ export function UserManagement() {
   });
 
   // Abfrage der Benutzerliste
-  const { data: users, isLoading } = useQuery<User[]>({
+  const { data: users, isLoading, refetch } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
@@ -71,6 +71,10 @@ export function UserManagement() {
     },
     // Nur für Administratoren und Manager sichtbar
     enabled: user && (user.role === 'administrator' || user.role === 'manager'),
+    // Stets aktuelle Daten abrufen, um Caching-Probleme zu vermeiden
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Mutation zum Erstellen eines neuen Benutzers
@@ -178,10 +182,29 @@ export function UserManagement() {
     });
   };
 
+  // Manuelles Neuladen der Benutzerliste
+  const handleRefresh = () => {
+    refetch();
+    toast({
+      title: "Benutzerliste aktualisiert",
+      description: "Die Benutzerliste wurde neu geladen.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h2>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={handleRefresh} 
+            title="Benutzerliste aktualisieren"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
