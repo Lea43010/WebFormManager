@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/user-management";
 import { LoginLogsManagement } from "@/components/admin/login-logs-management";
+import BackupManagement from "@/components/admin/backup-management";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock } from 'lucide-react';
+import { ShieldAlert, Users, Clock, Database } from 'lucide-react';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -25,10 +26,17 @@ export default function AdminPage() {
           </TabsTrigger>
           
           {isAdmin && (
-            <TabsTrigger value="loginlogs" className="flex items-center">
-              <Clock className="h-4 w-4 mr-2" />
-              Login-Protokoll
-            </TabsTrigger>
+            <>
+              <TabsTrigger value="loginlogs" className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                Login-Protokoll
+              </TabsTrigger>
+              
+              <TabsTrigger value="backups" className="flex items-center">
+                <Database className="h-4 w-4 mr-2" />
+                Datensicherung
+              </TabsTrigger>
+            </>
           )}
         </TabsList>
         
@@ -37,9 +45,15 @@ export default function AdminPage() {
         </TabsContent>
         
         {isAdmin && (
-          <TabsContent value="loginlogs" className="space-y-4">
-            <LoginLogsManagement />
-          </TabsContent>
+          <>
+            <TabsContent value="loginlogs" className="space-y-4">
+              <LoginLogsManagement />
+            </TabsContent>
+
+            <TabsContent value="backups" className="space-y-4">
+              <BackupManagement />
+            </TabsContent>
+          </>
         )}
       </Tabs>
     </div>
