@@ -5,11 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   ConstructionDiary,
+  ConstructionDiaryEmployee,
   insertConstructionDiarySchema,
+  insertConstructionDiaryEmployeeSchema,
   BedarfKapa,
   incidentTypeEnum
 } from "@shared/schema";
-import { Loader2, Plus, FileText, Download, Trash, PenTool } from "lucide-react";
+import { Loader2, Plus, FileText, Download, Trash, PenTool, Users, UserPlus, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -85,6 +87,9 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
   const [isNewEntryDialogOpen, setIsNewEntryDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<ConstructionDiary | null>(null);
+  const [diaryEmployees, setDiaryEmployees] = useState<ConstructionDiaryEmployee[]>([]);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({ firstName: "", lastName: "", position: "" });
   const queryClient = useQueryClient();
 
   // Abrufen der Bautagebuch-Einträge
@@ -182,6 +187,80 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
     queryKey: [`/api/projects/${projectId}/bedarfkapa`],
     enabled: !!projectId,
   });
+  
+  // Abrufen der Mitarbeiter eines Bautagebuch-Eintrags
+  const fetchDiaryEmployees = async (diaryId: number) => {
+    try {
+      const response = await apiRequest(
+        "GET",
+        `/api/construction-diary/${diaryId}/employees`
+      );
+      const employees = await response.json();
+      setDiaryEmployees(employees);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Mitarbeiter:", error);
+      toast({
+        title: "Fehler",
+        description: "Die Mitarbeiter konnten nicht abgerufen werden.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Hinzufügen eines neuen Mitarbeiters
+  const addEmployee = async () => {
+    if (!selectedEntry) return;
+    
+    try {
+      const response = await apiRequest(
+        "POST",
+        `/api/construction-diary/${selectedEntry.id}/employees`,
+        newEmployee
+      );
+      const createdEmployee = await response.json();
+      setDiaryEmployees([...diaryEmployees, createdEmployee]);
+      setNewEmployee({ firstName: "", lastName: "", position: "" });
+      setShowEmployeeForm(false);
+      
+      toast({
+        title: "Mitarbeiter hinzugefügt",
+        description: "Der Mitarbeiter wurde erfolgreich zum Bautagebuch-Eintrag hinzugefügt."
+      });
+    } catch (error) {
+      console.error("Fehler beim Hinzufügen des Mitarbeiters:", error);
+      toast({
+        title: "Fehler",
+        description: "Der Mitarbeiter konnte nicht hinzugefügt werden.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Löschen eines Mitarbeiters
+  const removeEmployee = async (employeeId: number) => {
+    if (!selectedEntry) return;
+    
+    try {
+      await apiRequest(
+        "DELETE",
+        `/api/construction-diary/${selectedEntry.id}/employees/${employeeId}`
+      );
+      
+      setDiaryEmployees(diaryEmployees.filter(emp => emp.id !== employeeId));
+      
+      toast({
+        title: "Mitarbeiter entfernt",
+        description: "Der Mitarbeiter wurde erfolgreich aus dem Bautagebuch-Eintrag entfernt."
+      });
+    } catch (error) {
+      console.error("Fehler beim Entfernen des Mitarbeiters:", error);
+      toast({
+        title: "Fehler",
+        description: "Der Mitarbeiter konnte nicht entfernt werden.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Formular für neue Einträge
   const newEntryForm = useForm<ConstructionDiaryFormValues>({
@@ -257,8 +336,10 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
   };
 
   // Handler für das Öffnen des Bearbeitungsdialogs
-  const handleEditEntry = (entry: ConstructionDiary) => {
+  const handleEditEntry = async (entry: ConstructionDiary) => {
     setSelectedEntry(entry);
+    
+    // Daten für das Formular setzen
     editForm.reset({
       id: entry.id,
       date: format(new Date(entry.date), "yyyy-MM-dd"),
@@ -271,6 +352,11 @@ export function ConstructionDiarySection({ projectId }: ConstructionDiaryProps) 
       remarks: entry.remarks || "",
       incidentType: entry.incidentType || undefined,
     });
+    
+    // Mitarbeiter für diesen Eintrag abrufen
+    await fetchDiaryEmployees(entry.id);
+    
+    // Dialog öffnen
     setIsEditDialogOpen(true);
   };
 
