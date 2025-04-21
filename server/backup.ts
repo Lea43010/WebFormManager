@@ -2,8 +2,8 @@
  * Backup-Modul für die Datenbank
  * 
  * Bietet Funktionen zum regelmäßigen Backup der Datenbank und zur Wiederherstellung.
- * Die Backups werden in einem konfigurierbaren Verzeichnis gespeichert und können 
- * automatisch in einen externen Speicher (S3, FTP, etc.) hochgeladen werden.
+ * Die Backups werden in einem konfigurierbaren Verzeichnis gespeichert.
+ * Enthält auch eine Implementierung für automatische Backups mit node-cron.
  */
 
 import { Express, Request, Response } from 'express';
@@ -14,6 +14,8 @@ import * as util from 'util';
 import config from '../config';
 import { db } from './db';
 import { logger } from './logger';
+// Import node-cron für geplante Backups
+import * as cron from 'node-cron';
 
 // Spezifischer Logger für Backups
 const backupLogger = logger.createLogger('backup');
@@ -40,8 +42,10 @@ const backupConfig = {
   // Wenn ENABLE_BACKUP auf "true" gesetzt ist, werden automatische Backups aktiviert
   autoBackupEnabled: process.env.ENABLE_BACKUP === 'true',
   
-  // CronJob-Zeitplan für automatische Backups (default: 0 0 * * * - täglich um Mitternacht)
-  cronSchedule: process.env.BACKUP_CRON || '0 0 * * *',
+  // CronJob-Zeitplan für automatische Backups 
+  // Standardeinstellung: Alle 2 Wochen am Sonntag um 01:00 Uhr
+  // Cron-Format: Minute Stunde Tag Monat Wochentag
+  cronSchedule: process.env.BACKUP_CRON || '0 1 */14 * 0',
 };
 
 /**
@@ -423,16 +427,33 @@ export {
 };
 
 // Wenn automatische Backups aktiviert sind, registriere den Cron-Job
-// Hinweis: In Produktionsumgebung sollte dies über einen externen Scheduler (z.B. cron) erfolgen
 if (backupConfig.autoBackupEnabled) {
-  backupLogger.info(`Automatisches Backup aktiviert, Zeitplan: ${backupConfig.cronSchedule}`);
-  
-  // In einer vollständigen Implementierung würde hier ein Cron-Job eingerichtet werden
-  // Zum Beispiel mit node-cron:
-  // import * as cron from 'node-cron';
-  // cron.schedule(backupConfig.cronSchedule, () => {
-  //   performBackup().catch(err => {
-  //     backupLogger.error(`Fehler beim automatischen Backup: ${err.message}`);
-  //   });
-  // });
+  // Prüfe, ob der Cron-Ausdruck gültig ist
+  if (cron.validate(backupConfig.cronSchedule)) {
+    backupLogger.info(`Automatisches Backup aktiviert, Zeitplan: ${backupConfig.cronSchedule}`);
+    
+    // Berechne das nächste geplante Backup basierend auf dem Cron-Ausdruck
+    const nextBackupDate = cron.schedule(backupConfig.cronSchedule).nextDate();
+    backupLogger.info(`Nächstes geplantes Backup: ${nextBackupDate.toLocaleString('de-DE')}`);
+    
+    // Registriere Cron-Job für automatische Backups
+    cron.schedule(backupConfig.cronSchedule, () => {
+      backupLogger.info('Starte geplantes automatisches Backup...');
+      performBackup()
+        .then(backupInfo => {
+          if (backupInfo) {
+            backupLogger.info(`Automatisches Backup erfolgreich: ${backupInfo.filename} (${formatFileSize(backupInfo.size)})`);
+          } else {
+            backupLogger.error('Automatisches Backup fehlgeschlagen');
+          }
+        })
+        .catch(err => {
+          backupLogger.error(`Fehler beim automatischen Backup: ${err instanceof Error ? err.message : String(err)}`);
+        });
+    });
+    
+    backupLogger.info('Automatischer Backup-Zeitplan erfolgreich registriert');
+  } else {
+    backupLogger.error(`Ungültiger Cron-Ausdruck für automatische Backups: ${backupConfig.cronSchedule}`);
+  }
 }
