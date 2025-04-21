@@ -14,9 +14,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-03-26", // Aktuelle Version zum Zeitpunkt der Entwicklung
 });
 
-// Preisplan-ID für das Abonnement (Muss im Stripe-Dashboard erstellt werden)
-// Für Testzwecke verwenden wir vorerst einen festen Wert
-const SUBSCRIPTION_PRICE_ID = "price_xx"; // TODO: Durch tatsächliche Preis-ID ersetzen
+// Preisplan-ID für das Abonnement
+// In einer Produktionsumgebung sollte dies aus einer Umgebungsvariable gelesen werden
+// z.B.: const SUBSCRIPTION_PRICE_ID = process.env.STRIPE_PRICE_ID;
+// Für Testzwecke verwenden wir einen Standard-Testpreis von Stripe
+const SUBSCRIPTION_PRICE_ID = "price_1PFQCTGlHQ70ZJQwdw7BqhCi"; // Testpreis für monatliches Abonnement
 
 /**
  * Erstellt oder aktualisiert einen Stripe-Kunden für einen Benutzer
@@ -68,8 +70,8 @@ export async function createCheckoutSession(userId: number): Promise<string> {
       },
     ],
     mode: 'subscription',
-    success_url: `${process.env.APP_URL || 'http://localhost:3000'}/abonnement/erfolg?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.APP_URL || 'http://localhost:3000'}/abonnement/abgebrochen`,
+    success_url: `${process.env.APP_URL || 'http://localhost:3000'}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.APP_URL || 'http://localhost:3000'}/subscription?canceled=true`,
   });
   
   return session.url || '';

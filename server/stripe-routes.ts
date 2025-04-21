@@ -19,8 +19,11 @@ export function setupStripeRoutes(app: Express) {
       const isActive = await hasActiveSubscription(req.user.id);
       res.json({ 
         active: isActive,
-        status: req.user.subscriptionStatus,
-        trialEndDate: req.user.trialEndDate
+        status: req.user.subscriptionStatus || 'trial',
+        trialEndDate: req.user.trialEndDate,
+        lastPaymentDate: req.user.lastPaymentDate,
+        stripeCustomerId: req.user.stripeCustomerId,
+        stripeSubscriptionId: req.user.stripeSubscriptionId
       });
     } catch (error) {
       next(error);
@@ -86,7 +89,7 @@ export function setupStripeRoutes(app: Express) {
     
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2025-03-31.basil",
+        apiVersion: "2024-03-26", // Aktuelle Version zum Zeitpunkt der Entwicklung
       });
       
       event = stripe.webhooks.constructEvent(
