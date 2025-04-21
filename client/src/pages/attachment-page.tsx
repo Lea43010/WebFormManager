@@ -17,6 +17,7 @@ import AsphaltAnalysis from "@/components/attachment/asphalt-analysis";
 import { FileOrganizationSuggestions } from "@/components/attachment/file-organization-suggestions";
 import { Badge } from "@/components/ui/badge";
 import ResponsiveImage from "@/components/ui/responsive-image";
+import Base64Image from "@/components/ui/base64-image";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import MobileFriendlyButton from "@/components/ui/mobile-friendly-button";
 import { 
@@ -245,8 +246,8 @@ export default function AttachmentPage() {
                       <div className="text-center">
                         {attachment.fileType === 'image' ? (
                           <div className="relative w-full h-40 overflow-hidden rounded-md">
-                            <ResponsiveImage
-                              src={`/secure-image/${attachment.id}`}
+                            <Base64Image
+                              attachmentId={attachment.id}
                               alt={attachment.fileName}
                               className="object-cover w-full h-full"
                               placeholderColor="#f3f4f6"
@@ -366,8 +367,8 @@ export default function AttachmentPage() {
                             <div className="text-center">
                               {attachment.fileType === 'image' ? (
                                 <div className="relative w-full h-32 overflow-hidden rounded-md">
-                                  <ResponsiveImage
-                                    src={`/secure-image/${attachment.id}`}
+                                  <Base64Image
+                                    attachmentId={attachment.id}
                                     alt={attachment.fileName}
                                     className="object-cover w-full h-full"
                                     placeholderColor="#f3f4f6"

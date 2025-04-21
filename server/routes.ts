@@ -1275,7 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Proxy-Route für Bilder, die Authentifizierung erfordert
+  // Proxy-Route für Bilder, die Authentifizierung erfordert - Base64-kodierte Antwort
   app.get("/secure-image/:id", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
@@ -1305,8 +1305,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Datei nicht gefunden" });
       }
       
-      // Bild direkt senden (ohne Download-Header)
-      res.sendFile(path.resolve(attachment.filePath));
+      // Datei als Base64 kodieren und zurückgeben
+      const imageBuffer = await fs.readFile(attachment.filePath);
+      const base64Image = imageBuffer.toString('base64');
+      
+      // MIME-Typ ermitteln
+      let contentType = 'application/octet-stream'; // Standardtyp
+      if (attachment.fileType === 'image') {
+        // Bestimme den spezifischen Bildtyp basierend auf der Dateiendung
+        const ext = path.extname(attachment.fileName).toLowerCase();
+        if (ext === '.jpg' || ext === '.jpeg') {
+          contentType = 'image/jpeg';
+        } else if (ext === '.png') {
+          contentType = 'image/png';
+        } else if (ext === '.gif') {
+          contentType = 'image/gif';
+        } else if (ext === '.webp') {
+          contentType = 'image/webp';
+        }
+      }
+      
+      // Base64-kodiertes Bild mit MIME-Typ zurückgeben
+      res.json({
+        contentType,
+        base64Data: base64Image
+      });
     } catch (error) {
       console.error("Error serving image:", error);
       next(error);
