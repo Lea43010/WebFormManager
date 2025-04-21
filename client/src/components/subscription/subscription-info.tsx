@@ -87,13 +87,24 @@ export function SubscriptionInfo() {
       return "Kein Datum verfügbar";
     }
     
-    // Prüfen, ob das Datum gültig ist (nicht Unix Epoch Start)
-    const date = new Date(dateString);
-    if (date.getFullYear() < 2000) {
+    // Für Debugging-Zwecke
+    console.log("Zu formatierendes Datum:", dateString);
+    
+    try {
+      // Prüfen, ob das Datum im ISO-Format vorliegt (YYYY-MM-DD)
+      const date = new Date(dateString);
+      
+      // Prüfen, ob das Datum gültig ist (nicht Unix Epoch Start und kein Invalid Date)
+      if (isNaN(date.getTime()) || date.getFullYear() < 2000) {
+        console.log("Ungültiges Datum erkannt:", dateString);
+        return "Kein gültiges Datum verfügbar";
+      }
+      
+      return format(date, "dd. MMMM yyyy", { locale: de });
+    } catch (error) {
+      console.error("Fehler beim Formatieren des Datums:", error);
       return "Kein gültiges Datum verfügbar";
     }
-    
-    return format(date, "dd. MMMM yyyy", { locale: de });
   };
 
   // Status-Badge anzeigen
