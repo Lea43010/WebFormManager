@@ -242,7 +242,27 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => window.open(`/api/attachments/${attachment.id}/download`, '_blank')}
+                      onClick={async () => {
+                        try {
+                          // Token anfordern
+                          const response = await fetch(`/api/attachments/${attachment.id}/token`);
+                          
+                          if (!response.ok) {
+                            throw new Error("Fehler beim Anfordern des Download-Tokens");
+                          }
+                          
+                          const data = await response.json();
+                          
+                          // Mit Token die Datei herunterladen
+                          window.open(`/api/attachments/${attachment.id}/download?token=${data.token}`, "_blank");
+                        } catch (error) {
+                          toast({
+                            title: "Download-Fehler",
+                            description: error instanceof Error ? error.message : "Unbekannter Fehler beim Download",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
                     >
                       <Download className="h-4 w-4 text-green-600" />
                     </Button>

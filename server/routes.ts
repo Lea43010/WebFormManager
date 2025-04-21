@@ -1275,7 +1275,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Serve static files from the uploads directory
+  // WICHTIG: Das direkte Servieren von statischen Dateien über /uploads ist aus Sicherheitsgründen deaktiviert.
+  // Alle Dateizugriffe müssen über die token-gesicherten API-Endpunkte erfolgen.
+  // Dieser Code bleibt als Hinweis auf den vorherigen Ansatz erhalten.
+  /*
   app.use("/uploads", (req, res, next) => {
     // Authentifizierungsprüfung
     if (!req.isAuthenticated()) {
@@ -1290,6 +1293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     }
   }));
+  */
   
   // Serve static RStO visualizations
   app.use("/static/rsto_visualizations", express.static(path.join(process.cwd(), "public/static/rsto_visualizations")));
