@@ -1,5 +1,5 @@
 import { Express, Request, Response } from "express";
-import { db, sql, drizzleSql } from "./db";
+import { db, sql, drizzleSql, executeWithRetry } from "./db";
 import * as os from "os";
 
 /**
@@ -27,6 +27,7 @@ interface HealthResponse {
     connected: boolean;
     responseTime?: number;
     error?: string;
+    reconnectAttempts?: number;
   };
   systemInfo: SystemInfo;
   version: string;
@@ -37,22 +38,32 @@ interface HealthResponse {
  * 
  * @returns Object mit Status und ggf. Fehlermeldung
  */
-async function checkDatabaseConnection(): Promise<{ connected: boolean; responseTime?: number; error?: string }> {
+async function checkDatabaseConnection(): Promise<{ connected: boolean; responseTime?: number; error?: string; reconnectAttempts?: number }> {
   const startTime = Date.now();
+  let reconnectAttempts = 0;
+  
   try {
-    // Einfache Abfrage, um die Datenbankverbindung zu testen
-    // Verwende direkt die sql-Verbindung mit SELECT 1
-    await sql`SELECT 1 AS health_check`;
+    // Einfache Abfrage mit Retry-Logik und kürzerem Timeout für den Health-Check
+    await executeWithRetry(
+      async () => {
+        reconnectAttempts++;
+        return await sql`SELECT 1 AS health_check`;
+      },
+      2, // Maximal 2 Versuche für Health-Check
+      2000 // 2 Sekunden Timeout
+    );
 
     return {
       connected: true,
-      responseTime: Date.now() - startTime
+      responseTime: Date.now() - startTime,
+      reconnectAttempts: reconnectAttempts > 1 ? reconnectAttempts : undefined
     };
   } catch (error) {
     console.error("Fehler bei der Datenbankverbindung:", error);
     return {
       connected: false,
-      error: error instanceof Error ? error.message : "Unbekannter Datenbankfehler"
+      error: error instanceof Error ? error.message : "Unbekannter Datenbankfehler",
+      reconnectAttempts: reconnectAttempts
     };
   }
 }
@@ -85,8 +96,55 @@ function getSystemInfo(): SystemInfo {
  * @param app Express-Anwendungsinstanz
  */
 export function setupHealthRoutes(app: Express) {
-  // Öffentlicher Health-Check-Endpunkt
-  app.get("/health", async (req: Request, res: Response) => {
+  // Einfacher In-Memory-Cache für Rate-Limiting
+  const rateLimitCache = {
+    ipRequests: new Map<string, { count: number; resetTime: number }>(),
+    cleanupInterval: setInterval(() => {
+      const now = Date.now();
+      for (const [ip, data] of rateLimitCache.ipRequests.entries()) {
+        if (data.resetTime <= now) {
+          rateLimitCache.ipRequests.delete(ip);
+        }
+      }
+    }, 60000) // Cleanup jede Minute
+  };
+
+  // Rate-Limiting-Middleware
+  const rateLimit = (maxRequests: number, windowMs: number) => {
+    return (req: Request, res: Response, next: () => void) => {
+      const ip = req.ip || req.connection.remoteAddress || 'unknown';
+      const now = Date.now();
+      
+      // Initialisiere oder hole den Cache-Eintrag für diese IP
+      let ipData = rateLimitCache.ipRequests.get(ip);
+      if (!ipData || ipData.resetTime <= now) {
+        ipData = { count: 0, resetTime: now + windowMs };
+        rateLimitCache.ipRequests.set(ip, ipData);
+      }
+      
+      // Prüfe, ob das Limit überschritten wurde
+      if (ipData.count >= maxRequests) {
+        return res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.',
+          retryAfter: Math.ceil((ipData.resetTime - now) / 1000)
+        });
+      }
+      
+      // Erhöhe den Zähler
+      ipData.count++;
+      
+      // Setze Rate-Limit-Header
+      res.setHeader('X-RateLimit-Limit', maxRequests.toString());
+      res.setHeader('X-RateLimit-Remaining', (maxRequests - ipData.count).toString());
+      res.setHeader('X-RateLimit-Reset', Math.ceil(ipData.resetTime / 1000).toString());
+      
+      next();
+    };
+  };
+
+  // Öffentlicher Health-Check-Endpunkt mit Rate-Limiting (max. 30 Anfragen pro Minute)
+  app.get("/health", rateLimit(30, 60 * 1000), async (req: Request, res: Response) => {
     const startTime = Date.now();
     
     // Überprüfe die Datenbankverbindung
@@ -129,8 +187,8 @@ export function setupHealthRoutes(app: Express) {
     res.status(httpStatus).json(healthResponse);
   });
   
-  // Einfache Ping-Route für grundlegende Verfügbarkeitsprüfungen
-  app.get("/ping", (req: Request, res: Response) => {
+  // Einfache Ping-Route für grundlegende Verfügbarkeitsprüfungen mit höherem Rate-Limit
+  app.get("/ping", rateLimit(60, 60 * 1000), (req: Request, res: Response) => {
     res.status(200).send("pong");
   });
 }
