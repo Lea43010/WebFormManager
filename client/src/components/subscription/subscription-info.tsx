@@ -81,8 +81,18 @@ export function SubscriptionInfo() {
   });
 
   // Funktion zum Formatieren des Datums
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    // Wenn kein Datum vorhanden ist, zeigen wir eine Standardnachricht
+    if (!dateString) {
+      return "Kein Datum verfügbar";
+    }
+    
+    // Prüfen, ob das Datum gültig ist (nicht Unix Epoch Start)
     const date = new Date(dateString);
+    if (date.getFullYear() < 2000) {
+      return "Kein gültiges Datum verfügbar";
+    }
+    
     return format(date, "dd. MMMM yyyy", { locale: de });
   };
 

@@ -103,9 +103,14 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Benutzername existiert bereits" });
       }
 
+      // Ablaufdatum der Testphase auf 4 Wochen nach Registrierung setzen
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 28); // 4 Wochen (28 Tage)
+      
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
+        trialEndDate, // Ablaufdatum der Testphase hinzufügen
       });
 
       req.login(user, (err) => {
