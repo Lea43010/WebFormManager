@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler, notFoundHandler } from "./error-handler";
 import { setupHealthRoutes } from "./health";
 import { setupApiDocs } from "./api-docs";
+import { setupApiTests } from "./api-test";
+import { setupBackupRoutes } from "./backup";
 import config from "../config";
 import { logger } from "./logger";
 
@@ -46,7 +48,18 @@ app.use((req, res, next) => {
   setupHealthRoutes(app);
   
   // API-Dokumentation einrichten (nur in Entwicklungsumgebung)
-  setupApiDocs(app);
+  try {
+    setupApiDocs(app);
+  } catch (error) {
+    logger.error('Fehler beim Einrichten der API-Dokumentation:', error);
+  }
+  
+  // API-Tests einrichten (nur in Entwicklungsumgebung)
+  try {
+    setupApiTests(app);
+  } catch (error) {
+    logger.error('Fehler beim Einrichten der API-Tests:', error);
+  }
   
   // Alle API-Routen registrieren
   const server = await registerRoutes(app);

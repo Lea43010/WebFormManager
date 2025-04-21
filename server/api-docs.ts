@@ -9,7 +9,8 @@ import { Express } from 'express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import config from '../config';
-import { version } from '../package.json';
+// Version aus config nutzen, da package.json-Import Probleme verursachen kann
+const appVersion = '1.0.0';
 import { logger } from './logger';
 
 // Verwende spezifischen Logger für API-Dokumentation
@@ -23,7 +24,7 @@ const swaggerOptions = {
     openapi: '3.0.0',
     info: {
       title: 'Bau - Structura API',
-      version,
+      version: appVersion,
       description: 'API-Dokumentation für die Bau-Structura-Anwendung',
       contact: {
         name: 'Support',
