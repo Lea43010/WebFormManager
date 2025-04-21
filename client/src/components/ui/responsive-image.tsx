@@ -61,10 +61,13 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Wenn Token benötigt wird, eines vom Server anfordern
+  // Automatisch Token anfordern, wenn die Bildquelle eine Attachment-URL ist
   useEffect(() => {
     const fetchToken = async () => {
-      if (!requiresToken || !src.includes('/api/attachments/')) {
+      // Automatisch Token-Anforderung aktivieren, wenn die URL ein Attachment ist
+      const needsToken = requiresToken || src.includes('/api/attachments/');
+      
+      if (!needsToken) {
         setTokenizedSrc(src);
         return;
       }
@@ -180,7 +183,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
       {/* Bild-Element */}
       <img
         ref={imgRef}
-        src={currentSrc || src} 
+        src={currentSrc || tokenizedSrc} 
         alt={alt}
         className={imageClasses}
         width={typeof width === 'number' ? width : undefined}
