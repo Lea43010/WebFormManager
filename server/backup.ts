@@ -100,13 +100,13 @@ async function performBackup(): Promise<BackupInfo | null> {
     // Extrahiere die Verbindungsinformationen aus der DATABASE_URL
     const dbUrl = new URL(config.database.url || '');
     const host = dbUrl.hostname;
-    const port = dbUrl.port;
+    const port = dbUrl.port || process.env.PGPORT || '5432'; // Standardport, falls nicht angegeben
     const database = dbUrl.pathname.substring(1); // Entferne den führenden "/"
     const username = dbUrl.username;
     const password = dbUrl.password;
     
     // Führe pg_dump aus
-    const pgDumpCmd = `PGPASSWORD="${password}" pg_dump -h ${host} -p ${port} -U ${username} -d ${database} -F p -f "${backupPath}"`;
+    const pgDumpCmd = `PGPASSWORD="${password}" pg_dump -h ${host} -p${port} -U ${username} -d ${database} -F p -f "${backupPath}"`;
     
     const { stdout, stderr } = await exec(pgDumpCmd);
     
@@ -259,13 +259,13 @@ async function restoreBackup(backupPath: string): Promise<boolean> {
     // Extrahiere die Verbindungsinformationen aus der DATABASE_URL
     const dbUrl = new URL(config.database.url || '');
     const host = dbUrl.hostname;
-    const port = dbUrl.port;
+    const port = dbUrl.port || process.env.PGPORT || '5432'; // Standardport, falls nicht angegeben
     const database = dbUrl.pathname.substring(1);
     const username = dbUrl.username;
     const password = dbUrl.password;
     
     // Wiederherstellung mit psql
-    const psqlCmd = `PGPASSWORD="${password}" psql -h ${host} -p ${port} -U ${username} -d ${database} -f "${backupPath}"`;
+    const psqlCmd = `PGPASSWORD="${password}" psql -h ${host} -p${port} -U ${username} -d ${database} -f "${backupPath}"`;
     
     const { stdout, stderr } = await exec(psqlCmd);
     
