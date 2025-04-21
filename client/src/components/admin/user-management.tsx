@@ -132,9 +132,15 @@ export function UserManagement() {
       });
     },
     onError: (error) => {
+      // Extrahiere die Projektinformationen aus der Fehlermeldung, falls vorhanden
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const projectInfo = errorMessage.includes("Projekte:") 
+        ? errorMessage 
+        : "Der Benutzer konnte nicht gelöscht werden.";
+      
       toast({
         title: "Fehler beim Löschen des Benutzers",
-        description: "Der Benutzer konnte nicht gelöscht werden. Details finden Sie im Dialog.",
+        description: projectInfo,
         variant: "destructive",
       });
       // Der detaillierte Fehler wird im Dialog angezeigt
