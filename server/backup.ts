@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as child_process from 'child_process';
 import * as util from 'util';
 import config from '../config';
-import { db, sql } from './db';
+import { db } from './db';
 import { logger } from './logger';
 
 // Spezifischer Logger für Backups
@@ -295,7 +295,7 @@ export function setupBackupRoutes(app: Express) {
     // Endpunkt für die Auflistung aller Backups
     app.get('/api/admin/backups', async (req: Request, res: Response) => {
       // Prüfen, ob der Benutzer ein Administrator ist
-      if (!req.isAuthenticated() || (req.user && req.user.role !== 'admin')) {
+      if (!req.isAuthenticated() || (req.user && req.user.role !== 'administrator')) {
         return res.status(403).json({ error: 'Zugriff verweigert' });
       }
       
@@ -317,7 +317,7 @@ export function setupBackupRoutes(app: Express) {
     // Endpunkt zum Erstellen eines Backups
     app.post('/api/admin/backups', async (req: Request, res: Response) => {
       // Prüfen, ob der Benutzer ein Administrator ist
-      if (!req.isAuthenticated() || (req.user && req.user.role !== 'admin')) {
+      if (!req.isAuthenticated() || (req.user && req.user.role !== 'administrator')) {
         return res.status(403).json({ error: 'Zugriff verweigert' });
       }
       
@@ -340,7 +340,7 @@ export function setupBackupRoutes(app: Express) {
     // Endpunkt zum Herunterladen eines Backups
     app.get('/api/admin/backups/:filename', (req: Request, res: Response) => {
       // Prüfen, ob der Benutzer ein Administrator ist
-      if (!req.isAuthenticated() || (req.user && req.user.role !== 'admin')) {
+      if (!req.isAuthenticated() || (req.user && req.user.role !== 'administrator')) {
         return res.status(403).json({ error: 'Zugriff verweigert' });
       }
       
@@ -358,7 +358,7 @@ export function setupBackupRoutes(app: Express) {
     // Endpunkt zum Löschen eines Backups
     app.delete('/api/admin/backups/:filename', (req: Request, res: Response) => {
       // Prüfen, ob der Benutzer ein Administrator ist
-      if (!req.isAuthenticated() || (req.user && req.user.role !== 'admin')) {
+      if (!req.isAuthenticated() || (req.user && req.user.role !== 'administrator')) {
         return res.status(403).json({ error: 'Zugriff verweigert' });
       }
       
@@ -382,7 +382,7 @@ export function setupBackupRoutes(app: Express) {
     // Endpunkt zum Wiederherstellen eines Backups
     app.post('/api/admin/backups/:filename/restore', async (req: Request, res: Response) => {
       // Prüfen, ob der Benutzer ein Administrator ist
-      if (!req.isAuthenticated() || (req.user && req.user.role !== 'admin')) {
+      if (!req.isAuthenticated() || (req.user && req.user.role !== 'administrator')) {
         return res.status(403).json({ error: 'Zugriff verweigert' });
       }
       
