@@ -1147,7 +1147,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/attachments/:id/download", async (req, res, next) => {
+  // Erstellt ein Token für den Download einer Datei
+  app.get("/api/attachments/:id/token", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
@@ -1171,10 +1172,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang herunterzuladen" });
       }
       
+      // Token generieren
+      const token = generateDownloadToken(id, req.user);
+      
+      // Token zurückgeben
+      res.json({ token });
+    } catch (error) {
+      console.error("Error generating download token:", error);
+      next(error);
+    }
+  });
+  
+  // Download einer Datei mit Token
+  app.get("/api/attachments/:id/download", async (req, res, next) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      
+      // Wenn kein Token angegeben, Benutzer zur Token-Anforderung umleiten
+      if (!token) {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Nicht authentifiziert" });
+        }
+        
+        // Umleitung zur Token-Anforderung
+        return res.status(403).json({ 
+          message: "Token erforderlich für den Dateizugriff", 
+          tokenUrl: `/api/attachments/${id}/token` 
+        });
+      }
+      
+      // Prüfen, ob der Benutzer authentifiziert ist (für die Token-Validierung)
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Token validieren
+      if (!verifyDownloadToken(token, id, req.user.id)) {
+        return res.status(403).json({ message: "Ungültiges oder abgelaufenes Token" });
+      }
+      
+      const attachment = await storage.getAttachment(id);
+      
+      if (!attachment) {
+        return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
       // Prüfen, ob die Datei existiert
       if (!await fs.pathExists(attachment.filePath)) {
         return res.status(404).json({ message: "Datei nicht gefunden" });
       }
+      
+      // Nach erfolgreicher Validierung das Token invalidieren
+      invalidateToken(token);
       
       const fileName = encodeURIComponent(attachment.fileName);
       res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);

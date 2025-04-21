@@ -70,8 +70,27 @@ export default function AttachmentPage() {
     },
   });
 
-  const handleDownload = (attachment: Attachment) => {
-    window.open(`/api/attachments/${attachment.id}/download`, "_blank");
+  // Token-basierter Download mit Fehlerbehandlung
+  const handleDownload = async (attachment: Attachment) => {
+    try {
+      // Token anfordern
+      const response = await fetch(`/api/attachments/${attachment.id}/token`);
+      
+      if (!response.ok) {
+        throw new Error("Fehler beim Anfordern des Download-Tokens");
+      }
+      
+      const data = await response.json();
+      
+      // Mit Token die Datei herunterladen
+      window.open(`/api/attachments/${attachment.id}/download?token=${data.token}`, "_blank");
+    } catch (error) {
+      toast({
+        title: "Download-Fehler",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Download",
+        variant: "destructive",
+      });
+    }
   };
 
   const openDeleteDialog = (attachment: Attachment) => {
