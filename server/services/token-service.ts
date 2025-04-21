@@ -108,11 +108,12 @@ export function verifyDownloadToken(token: string, fileId: number, userId: numbe
 function cleanupExpiredTokens(): void {
   const now = new Date();
   
-  for (const [token, entry] of tokenConfig.tokenCache.entries()) {
+  // Verwende Array.from, um Iterator-Probleme zu vermeiden
+  Array.from(tokenConfig.tokenCache.entries()).forEach(([token, entry]) => {
     if (entry.expiry < now) {
       tokenConfig.tokenCache.delete(token);
     }
-  }
+  });
 }
 
 /**
