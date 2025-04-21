@@ -43,14 +43,12 @@ const navItems: NavItem[] = [
     title: "Firmendaten",
     href: "/companies",
     icon: Building2,
-    showFor: ['administrator', 'manager'],
     tooltip: "Verwaltung von Firmen und Geschäftspartnern",
   },
   {
     title: "Kundendaten",
     href: "/customers",
     icon: Users,
-    showFor: ['administrator', 'manager'],
     tooltip: "Kunden- und Ansprechpartner verwalten",
   },
   {

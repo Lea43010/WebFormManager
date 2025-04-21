@@ -138,7 +138,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/companies/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingCompany = await storage.getCompany(id);
+      
+      if (!existingCompany) {
+        return res.status(404).json({ message: "Unternehmen nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung für nicht-Administratoren
+      if (req.user.role !== 'administrator') {
+        // Prüfen, ob die Firma mit einem Projekt des Benutzers verbunden ist
+        const userProjects = await storage.getProjectsByUser(req.user.id);
+        const hasAccess = userProjects.some(project => project.companyId === existingCompany.id);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieser Firma" });
+        }
+      }
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       // Telefonnummer muss explizit als String formatiert werden
@@ -166,10 +186,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/companies/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingCompany = await storage.getCompany(id);
+      
+      if (!existingCompany) {
+        return res.status(404).json({ message: "Unternehmen nicht gefunden" });
+      }
+      
+      // Nur Administrator darf Firmen löschen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung zum Löschen von Firmen. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
       await storage.deleteCompany(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Company delete error:", error);
       next(error);
     }
   });
