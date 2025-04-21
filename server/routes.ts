@@ -743,10 +743,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Alle Ansprechpartner holen
       const allPersons = await storage.getPersons();
       
-      // Filtern für Ansprechpartner, die mit Projekten, Kunden oder Firmen des Benutzers verbunden sind
+      // Filtern für Ansprechpartner, die mit Projekten oder Firmen des Benutzers verbunden sind
       const persons = allPersons.filter(person => 
         (person.projectId !== null && projectIds.includes(person.projectId)) ||
-        (person.customerId !== null && customerIds.includes(person.customerId)) || 
         (person.companyId !== null && companyIds.includes(person.companyId))
       );
       
@@ -788,10 +787,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customerIds = userProjects.map(project => project.customerId).filter(id => id !== null);
       const companyIds = userProjects.map(project => project.companyId).filter(id => id !== null);
       
-      // Prüfen, ob der Ansprechpartner zu einem dieser Projekte, Kunden oder Firmen gehört
+      // Prüfen, ob der Ansprechpartner zu einem dieser Projekte oder Firmen gehört
       const hasAccess = 
         (person.projectId !== null && projectIds.includes(person.projectId)) ||
-        (person.customerId !== null && customerIds.includes(person.customerId)) || 
         (person.companyId !== null && companyIds.includes(person.companyId));
       
       if (hasAccess) {
@@ -808,6 +806,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/persons", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       // Numerische Felder konvertieren
       const formData = {
         ...req.body,
@@ -816,6 +818,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyId: typeof req.body.companyId === 'string' ? parseInt(req.body.companyId, 10) : req.body.companyId,
         professionalName: typeof req.body.professionalName === 'string' ? parseInt(req.body.professionalName, 10) : req.body.professionalName,
       };
+      
+      // Berechtigungsprüfung: Administrator kann immer Ansprechpartner erstellen
+      if (req.user.role !== 'administrator') {
+        // Für Projekte und Firmen: Prüfen, ob der Benutzer Zugriff auf diese hat
+        if (formData.projectId) {
+          const project = await storage.getProject(formData.projectId);
+          if (!project || (project.createdBy !== req.user.id && req.user.role !== 'manager')) {
+            return res.status(403).json({ message: "Keine Berechtigung für dieses Projekt" });
+          }
+        }
+        
+        if (formData.companyId) {
+          // Prüfen, ob der Benutzer Zugriff auf diese Firma hat
+          const userProjects = await storage.getProjectsByUser(req.user.id);
+          const companyIds = userProjects.map(p => p.companyId).filter(id => id !== null);
+          
+          if (!companyIds.includes(formData.companyId)) {
+            return res.status(403).json({ message: "Keine Berechtigung für diese Firma" });
+          }
+        }
+      }
       
       const validatedData = insertPersonSchema.parse(formData);
       const person = await storage.createPerson(validatedData);
@@ -828,7 +851,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/persons/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      
+      // Den existierenden Ansprechpartner abrufen
+      const existingPerson = await storage.getPerson(id);
+      if (!existingPerson) {
+        return res.status(404).json({ message: "Ansprechpartner nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator') {
+        // Bei Nicht-Administratoren: Prüfen, ob Zugriff auf den Ansprechpartner erlaubt ist
+        const userProjects = await storage.getProjectsByUser(req.user.id);
+        
+        if (userProjects.length === 0) {
+          return res.status(403).json({ message: "Keine Berechtigung, um diesen Ansprechpartner zu bearbeiten" });
+        }
+        
+        const projectIds = userProjects.map(project => project.id);
+        const companyIds = userProjects.map(project => project.companyId).filter(id => id !== null);
+        
+        const hasAccess = 
+          (existingPerson.projectId !== null && projectIds.includes(existingPerson.projectId)) ||
+          (existingPerson.companyId !== null && companyIds.includes(existingPerson.companyId));
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Keine Berechtigung, um diesen Ansprechpartner zu bearbeiten" });
+        }
+        
+        // Wenn Projekt oder Firma geändert werden, prüfen, ob der Benutzer Zugriff auf die neue Zuordnung hat
+        if (req.body.projectId && req.body.projectId !== existingPerson.projectId) {
+          const project = await storage.getProject(parseInt(req.body.projectId));
+          if (!project || (project.createdBy !== req.user.id && req.user.role !== 'manager')) {
+            return res.status(403).json({ message: "Keine Berechtigung für das angegebene Projekt" });
+          }
+        }
+        
+        if (req.body.companyId && req.body.companyId !== existingPerson.companyId) {
+          const newCompanyId = parseInt(req.body.companyId);
+          if (!companyIds.includes(newCompanyId)) {
+            return res.status(403).json({ message: "Keine Berechtigung für die angegebene Firma" });
+          }
+        }
+      }
       
       // Numerische Felder konvertieren
       const formData = {
@@ -856,10 +925,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/persons/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      
+      // Den existierenden Ansprechpartner abrufen
+      const existingPerson = await storage.getPerson(id);
+      if (!existingPerson) {
+        return res.status(404).json({ message: "Ansprechpartner nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator') {
+        // Bei Nicht-Administratoren: Prüfen, ob Zugriff auf den Ansprechpartner erlaubt ist
+        const userProjects = await storage.getProjectsByUser(req.user.id);
+        
+        if (userProjects.length === 0) {
+          return res.status(403).json({ message: "Keine Berechtigung, um diesen Ansprechpartner zu löschen" });
+        }
+        
+        const projectIds = userProjects.map(project => project.id);
+        const companyIds = userProjects.map(project => project.companyId).filter(id => id !== null);
+        
+        const hasAccess = 
+          (existingPerson.projectId !== null && projectIds.includes(existingPerson.projectId)) ||
+          (existingPerson.companyId !== null && companyIds.includes(existingPerson.companyId));
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Keine Berechtigung, um diesen Ansprechpartner zu löschen" });
+        }
+      }
+      
+      // Ansprechpartner löschen, wenn alle Berechtigungen vorhanden sind
       await storage.deletePerson(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting person:", error);
       next(error);
     }
   });
