@@ -61,13 +61,6 @@ app.use((req, res, next) => {
     logger.error('Fehler beim Einrichten der API-Tests:', error);
   }
   
-  // Backup-Routen einrichten
-  try {
-    setupBackupRoutes(app);
-  } catch (error) {
-    logger.error('Fehler beim Einrichten der Backup-Routen:', error);
-  }
-  
   // Alle API-Routen registrieren
   const server = await registerRoutes(app);
   

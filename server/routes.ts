@@ -11,6 +11,7 @@ import { setupImageAnalysisRoutes } from "./services/image-analysis-routes";
 import { setupSurfaceAnalysisRoutes } from "./services/surface-analysis-routes";
 import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./services/surface-analysis-api";
 import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
+import { setupBackupRoutes } from "./backup";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
@@ -29,6 +30,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up health check routes
   setupHealthRoutes(app);
+  
+  // Backup-Routen einrichten
+  setupBackupRoutes(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
