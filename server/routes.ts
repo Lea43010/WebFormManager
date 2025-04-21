@@ -49,22 +49,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Company routes
   app.get("/api/companies", async (req, res, next) => {
     try {
-      const companies = await storage.getCompanies();
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können alle Firmen sehen
+      if (req.user.role === 'administrator') {
+        const companies = await storage.getCompanies();
+        return res.json(companies);
+      }
+      
+      // Manager und normale Benutzer können nur Firmen sehen, die mit ihren Projekten verbunden sind
+      // Holen der Projekte des Benutzers
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      
+      // Wenn keine Projekte, leeres Array zurückgeben
+      if (userProjects.length === 0) {
+        return res.json([]);
+      }
+      
+      // Alle Firmen holen
+      const allCompanies = await storage.getCompanies();
+      
+      // Firmen filtern, die mit Projekten des Benutzers verbunden sind
+      const companies = allCompanies.filter(company => 
+        userProjects.some(project => project.companyId === company.id)
+      );
+      
       res.json(companies);
     } catch (error) {
+      console.error("Error fetching companies:", error);
       next(error);
     }
   });
 
   app.get("/api/companies/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const company = await storage.getCompany(id);
+      
       if (!company) {
         return res.status(404).json({ message: "Unternehmen nicht gefunden" });
       }
-      res.json(company);
+      
+      // Administratoren können alle Firmen sehen
+      if (req.user.role === 'administrator') {
+        return res.json(company);
+      }
+      
+      // Für andere Benutzer: Prüfen, ob die Firma mit einem ihrer Projekte verbunden ist
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      const hasAccess = userProjects.some(project => project.companyId === company.id);
+      
+      if (hasAccess) {
+        return res.json(company);
+      }
+      
+      // Keine Berechtigung
+      return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diese Firma" });
     } catch (error) {
+      console.error("Error fetching company:", error);
       next(error);
     }
   });
@@ -129,28 +177,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer routes
   app.get("/api/customers", async (req, res, next) => {
     try {
-      const customers = await storage.getCustomers();
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können alle Kunden sehen
+      if (req.user.role === 'administrator') {
+        const customers = await storage.getCustomers();
+        return res.json(customers);
+      }
+      
+      // Manager und normale Benutzer können nur Kunden sehen, die mit ihren Projekten verbunden sind
+      // Holen der Projekte des Benutzers
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      
+      // Wenn keine Projekte, leeres Array zurückgeben
+      if (userProjects.length === 0) {
+        return res.json([]);
+      }
+      
+      // Alle Kunden holen
+      const allCustomers = await storage.getCustomers();
+      
+      // Kunden filtern, die mit Projekten des Benutzers verbunden sind
+      const customers = allCustomers.filter(customer => 
+        userProjects.some(project => project.customerId === customer.id)
+      );
+      
       res.json(customers);
     } catch (error) {
+      console.error("Error fetching customers:", error);
       next(error);
     }
   });
 
   app.get("/api/customers/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
+      
       if (!customer) {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
-      res.json(customer);
+      
+      // Administratoren können alle Kunden sehen
+      if (req.user.role === 'administrator') {
+        return res.json(customer);
+      }
+      
+      // Für andere Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      const hasAccess = userProjects.some(project => project.customerId === customer.id);
+      
+      if (hasAccess) {
+        return res.json(customer);
+      }
+      
+      // Keine Berechtigung
+      return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Kunden" });
     } catch (error) {
+      console.error("Error fetching customer:", error);
       next(error);
     }
   });
 
   app.post("/api/customers", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager dürfen neue Kunden erstellen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung zum Erstellen von Kunden. Diese Operation erfordert Administrator- oder Manager-Rechte." });
+      }
+      
       // Wenn keine Kundennummer übergeben wurde oder diese leer ist, 
       // entfernen wir sie aus dem Request, damit sie automatisch generiert wird
       if (!req.body.customerId) {
@@ -169,13 +274,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customer = await storage.createCustomer(validatedData);
       res.status(201).json(customer);
     } catch (error) {
+      console.error("Customer creation error:", error);
       next(error);
     }
   });
 
   app.put("/api/customers/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingCustomer = await storage.getCustomer(id);
+      
+      if (!existingCustomer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      // Administratoren können jeden Kunden bearbeiten
+      if (req.user.role !== 'administrator') {
+        // Für andere Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist
+        const userProjects = await storage.getProjectsByUser(req.user.id);
+        const hasAccess = userProjects.some(project => project.customerId === existingCustomer.id);
+        
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden" });
+        }
+      }
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       const formData = {
@@ -190,21 +317,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = baseSchema.partial().parse(formData);
       
       const customer = await storage.updateCustomer(id, validatedData);
-      if (!customer) {
-        return res.status(404).json({ message: "Kunde nicht gefunden" });
-      }
       res.json(customer);
     } catch (error) {
+      console.error("Customer update error:", error);
       next(error);
     }
   });
 
   app.delete("/api/customers/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
+      const existingCustomer = await storage.getCustomer(id);
+      
+      if (!existingCustomer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      // Nur Administratoren dürfen Kunden löschen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung zum Löschen von Kunden. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
       await storage.deleteCustomer(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Customer deletion error:", error);
       next(error);
     }
   });
@@ -274,6 +416,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
       // Da Zod die Konversion erwartet, schicken wir die Daten als Strings
       const formData = {
@@ -282,6 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectLength: req.body.projectLength?.toString() || null,
         projectHeight: req.body.projectHeight?.toString() || null,
         projectText: req.body.projectText?.toString() || null,
+        createdBy: req.user.id, // Speichern des Erstellers (aktuelle Benutzer-ID)
       };
       
       // Schema übernimmt die Konversion zu Zahlen
