@@ -13,6 +13,7 @@ import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./s
 import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { setupBackupRoutes } from "./backup";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
+import { generateDataQualityReport, getAllDataQualityIssues } from "./data-quality";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
