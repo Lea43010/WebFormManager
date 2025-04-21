@@ -216,13 +216,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Nur Administratoren oder Manager können alle Projekte sehen
-      if (req.user.role === 'administrator' || req.user.role === 'manager') {
+      // Nur Administratoren können alle Projekte sehen
+      if (req.user.role === 'administrator') {
         const projects = await storage.getProjects();
         return res.json(projects);
       }
       
-      // Normale Benutzer können nur ihre eigenen Projekte sehen
+      // Manager und normale Benutzer können nur ihre eigenen Projekte sehen
       const projects = await storage.getProjectsByUser(req.user.id);
       res.json(projects);
     } catch (error) {
@@ -260,8 +260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Projekt nicht gefunden" });
       }
       
-      // Nur Administratoren, Manager oder der Ersteller können das Projekt sehen
-      if (req.user.role === 'administrator' || req.user.role === 'manager' || project.createdBy === req.user.id) {
+      // Nur Administratoren oder der Ersteller können das Projekt sehen
+      if (req.user.role === 'administrator' || project.createdBy === req.user.id) {
         return res.json(project);
       }
       
@@ -308,8 +308,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Benutzer das Projekt bearbeiten darf
-      // Nur Administratoren, Manager oder der Ersteller dürfen das Projekt bearbeiten
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && existingProject.createdBy !== req.user.id) {
+      // Nur Administratoren oder der Ersteller dürfen das Projekt bearbeiten
+      if (req.user.role !== 'administrator' && existingProject.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Projekts" });
       }
       
@@ -346,8 +346,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Benutzer das Projekt löschen darf
-      // Nur Administratoren, Manager oder der Ersteller dürfen das Projekt löschen
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && existingProject.createdBy !== req.user.id) {
+      // Nur Administratoren oder der Ersteller dürfen das Projekt löschen
+      if (req.user.role !== 'administrator' && existingProject.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Keine Berechtigung für das Löschen dieses Projekts" });
       }
       
@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Benutzer Berechtigungen für dieses Projekt sehen darf
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Keine Berechtigung, um die Berechtigungen dieses Projekts zu sehen" });
       }
       
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Benutzer Berechtigungen für dieses Projekt erstellen darf
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Keine Berechtigung, um Berechtigungen für dieses Projekt zu erstellen" });
       }
       
@@ -441,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Benutzer die Berechtigung löschen darf
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
         return res.status(403).json({ message: "Keine Berechtigung zum Löschen dieser Berechtigung" });
       }
       
@@ -651,20 +651,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Attachment routes
   app.get("/api/projects/:projectId/attachments", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Anhänge für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Anhänge dieses Projekts zu sehen" });
+      }
+      
       const attachments = await storage.getProjectAttachments(projectId);
       res.json(attachments);
     } catch (error) {
+      console.error("Error fetching project attachments:", error);
       next(error);
     }
   });
   
-  // Neue Route für alle Anhänge
+  // Route für alle Anhänge (nur für Administratoren und Manager)
   app.get("/api/attachments", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager dürfen alle Anhänge sehen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung, um alle Anhänge zu sehen" });
+      }
+      
       const attachments = await storage.getAllAttachments();
       res.json(attachments);
     } catch (error) {
+      console.error("Error fetching all attachments:", error);
       next(error);
     }
   });
@@ -676,6 +702,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cleanupOnError,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Nicht authentifiziert" });
+        }
+        
         if (!req.file) {
           return res.status(400).json({ message: "Keine Datei hochgeladen." });
         }
@@ -687,6 +717,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Lösche die Datei, da das Projekt nicht existiert
           await fs.remove(req.file.path);
           return res.status(404).json({ message: "Projekt nicht gefunden" });
+        }
+        
+        // Prüfen, ob der Benutzer berechtigt ist, Anhänge zu diesem Projekt hinzuzufügen
+        if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+          // Lösche die Datei, da der Benutzer nicht berechtigt ist
+          await fs.remove(req.file.path);
+          return res.status(403).json({ message: "Keine Berechtigung, um Anhänge zu diesem Projekt hinzuzufügen" });
         }
         
         const attachmentData = {
@@ -717,6 +754,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/attachments/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const attachment = await storage.getAttachment(id);
       
@@ -724,19 +765,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Anhang nicht gefunden" });
       }
       
+      // Projekt des Anhangs abrufen, um die Berechtigung zu prüfen
+      const project = await storage.getProject(attachment.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer diesen Anhang sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang zu sehen" });
+      }
+      
       res.json(attachment);
     } catch (error) {
+      console.error("Error getting attachment:", error);
       next(error);
     }
   });
   
   app.get("/api/attachments/:id/download", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const attachment = await storage.getAttachment(id);
       
       if (!attachment) {
         return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      // Projekt des Anhangs abrufen, um die Berechtigung zu prüfen
+      const project = await storage.getProject(attachment.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer diesen Anhang herunterladen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang herunterzuladen" });
       }
       
       // Prüfen, ob die Datei existiert
@@ -748,17 +816,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
       res.sendFile(path.resolve(attachment.filePath));
     } catch (error) {
+      console.error("Error downloading attachment:", error);
       next(error);
     }
   });
   
   app.delete("/api/attachments/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const attachment = await storage.getAttachment(id);
       
       if (!attachment) {
         return res.status(404).json({ message: "Anhang nicht gefunden" });
+      }
+      
+      // Projekt des Anhangs abrufen, um die Berechtigung zu prüfen
+      const project = await storage.getProject(attachment.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer diesen Anhang löschen darf
+      // Nur der Projektersteller, Administratoren und Manager dürfen Anhänge löschen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang zu löschen" });
       }
       
       // Lösche die Datei vom Dateisystem
@@ -771,6 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting attachment:", error);
       next(error);
     }
   });
@@ -807,6 +893,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     cleanupOnError,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Nicht authentifiziert" });
+        }
+        
         if (!req.file) {
           return res.status(400).json({ message: "Keine Datei hochgeladen." });
         }
@@ -824,6 +914,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Lösche die Datei, da das Projekt nicht existiert
           await fs.remove(req.file.path);
           return res.status(404).json({ message: "Projekt nicht gefunden" });
+        }
+        
+        // Prüfen, ob der Benutzer berechtigt ist, Anhänge zu diesem Projekt hinzuzufügen
+        if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+          // Lösche die Datei, da der Benutzer nicht berechtigt ist
+          await fs.remove(req.file.path);
+          return res.status(403).json({ message: "Keine Berechtigung, um Anhänge zu diesem Projekt hinzuzufügen" });
         }
         
         const attachmentData = {
@@ -937,17 +1034,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // BedarfKapa routes
   app.get("/api/projects/:projectId/bedarfkapa", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer BedarfKapa für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Bedarf/Kapazität dieses Projekts zu sehen" });
+      }
+      
       const bedarfKapas = await storage.getBedarfKapas(projectId);
       res.json(bedarfKapas);
     } catch (error) {
+      console.error("Error fetching bedarfKapas:", error);
       next(error);
     }
   });
   
   app.post("/api/projects/:projectId/bedarfkapa", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer BedarfKapa für dieses Projekt erstellen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Bedarf/Kapazität zu diesem Projekt hinzuzufügen" });
+      }
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       const formData = {
@@ -968,23 +1095,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/projects/:projectId/bedarfkapa/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer BedarfKapa für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Bedarf/Kapazität dieses Projekts zu sehen" });
+      }
+      
       const id = parseInt(req.params.id);
       const bedarfKapa = await storage.getBedarfKapa(id);
       if (!bedarfKapa) {
         return res.status(404).json({ message: "Bedarf/Kapazität nicht gefunden" });
       }
+      
+      // Prüfen, ob der BedarfKapa tatsächlich zu diesem Projekt gehört
+      if (bedarfKapa.projectId !== projectId) {
+        return res.status(403).json({ message: "Dieser Bedarf/Kapazität gehört nicht zum angegebenen Projekt" });
+      }
+      
       res.json(bedarfKapa);
     } catch (error) {
+      console.error("Error fetching bedarfKapa:", error);
       next(error);
     }
   });
   
   app.delete("/api/projects/:projectId/bedarfkapa/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer BedarfKapa für dieses Projekt löschen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Bedarf/Kapazität dieses Projekts zu löschen" });
+      }
+      
       const id = parseInt(req.params.id);
+      const bedarfKapa = await storage.getBedarfKapa(id);
+      
+      if (!bedarfKapa) {
+        return res.status(404).json({ message: "Bedarf/Kapazität nicht gefunden" });
+      }
+      
+      // Prüfen, ob der BedarfKapa tatsächlich zu diesem Projekt gehört
+      if (bedarfKapa.projectId !== projectId) {
+        return res.status(403).json({ message: "Dieser Bedarf/Kapazität gehört nicht zum angegebenen Projekt" });
+      }
+      
       await storage.deleteBedarfKapa(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting bedarfKapa:", error);
       next(error);
     }
   });
@@ -992,7 +1170,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Milestone routes
   app.get("/api/projects/:projectId/milestones", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Meilensteine für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Meilensteine dieses Projekts zu sehen" });
+      }
+      
       const milestones = await storage.getMilestones(projectId);
       res.json(milestones);
     } catch (error) {
@@ -1003,20 +1196,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Meilensteine für dieses Projekt sehen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Meilensteine dieses Projekts zu sehen" });
+      }
+      
       const id = parseInt(req.params.id);
       const milestone = await storage.getMilestone(id);
+      
       if (!milestone) {
         return res.status(404).json({ message: "Meilenstein nicht gefunden" });
       }
+      
+      // Prüfen, ob der Meilenstein tatsächlich zu diesem Projekt gehört
+      if (milestone.projectId !== projectId) {
+        return res.status(403).json({ message: "Dieser Meilenstein gehört nicht zum angegebenen Projekt" });
+      }
+      
       res.json(milestone);
     } catch (error) {
+      console.error("Error fetching milestone:", error);
       next(error);
     }
   });
 
   app.post("/api/projects/:projectId/milestones", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Meilensteine für dieses Projekt erstellen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Meilensteine zu diesem Projekt hinzuzufügen" });
+      }
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       const formData = {
@@ -1039,8 +1270,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Meilensteine für dieses Projekt bearbeiten darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Meilensteine dieses Projekts zu bearbeiten" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const existingMilestone = await storage.getMilestone(id);
+      
+      if (!existingMilestone) {
+        return res.status(404).json({ message: "Meilenstein nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Meilenstein tatsächlich zu diesem Projekt gehört
+      if (existingMilestone.projectId !== projectId) {
+        return res.status(403).json({ message: "Dieser Meilenstein gehört nicht zum angegebenen Projekt" });
+      }
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       const formData = {
@@ -1068,10 +1324,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/projects/:projectId/milestones/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Benutzer Meilensteine für dieses Projekt löschen darf
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung, um Meilensteine dieses Projekts zu löschen" });
+      }
+      
       const id = parseInt(req.params.id);
+      const milestone = await storage.getMilestone(id);
+      
+      if (!milestone) {
+        return res.status(404).json({ message: "Meilenstein nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Meilenstein tatsächlich zu diesem Projekt gehört
+      if (milestone.projectId !== projectId) {
+        return res.status(403).json({ message: "Dieser Meilenstein gehört nicht zum angegebenen Projekt" });
+      }
+      
       await storage.deleteMilestone(id);
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting milestone:", error);
       next(error);
     }
   });

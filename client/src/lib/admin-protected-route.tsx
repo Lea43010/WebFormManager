@@ -32,7 +32,7 @@ export function AdminProtectedRoute({
   }
   
   // Benutzer ist eingeloggt, aber nicht Administrator
-  if (user.role !== 'administrator' && user.role !== 'manager') {
+  if (user.role !== 'administrator') {
     return (
       <Route path={path}>
         <div className="container mx-auto py-10">
@@ -42,7 +42,7 @@ export function AdminProtectedRoute({
               <div>
                 <CardTitle>Keine Berechtigung</CardTitle>
                 <CardDescription>
-                  Sie haben keine Berechtigung, diese Seite zu sehen.
+                  Sie haben keine Berechtigung, diese Seite zu sehen. Nur Administratoren haben Zugriff auf diesen Bereich.
                 </CardDescription>
               </div>
             </CardHeader>
