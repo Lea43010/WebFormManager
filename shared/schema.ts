@@ -17,6 +17,7 @@ export const fileCategoryEnum = pgEnum('file_categories', ['Verträge', 'Rechnun
 export const userRolesEnum = pgEnum('user_roles', ['administrator', 'manager', 'benutzer']);
 export const loginEventTypesEnum = pgEnum('login_event_types', ['login', 'logout', 'register', 'failed_login']);
 export const verificationTypeEnum = pgEnum('verification_types', ['login', 'password_reset']);
+export const incidentTypeEnum = pgEnum('incident_types', ['Arbeitsunfälle', 'Sicherheitsvorkommnisse', 'Schäden', 'Verluste', 'Beschwerden', 'Sonstiges']);
 
 // Users table
 export const users = pgTable("tbluser", {
@@ -275,6 +276,7 @@ export const constructionDiaries = pgTable("tblconstruction_diary", {
   workHours: numeric("work_hours", { precision: 5, scale: 2 }).notNull(),
   materialUsage: varchar("material_usage", { length: 500 }),
   remarks: text("remarks"),
+  incidentType: incidentTypeEnum("incident_type"),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: integer("created_by").references(() => users.id),
 }, (table) => {
