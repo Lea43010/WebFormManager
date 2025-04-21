@@ -210,8 +210,24 @@ export class DatabaseStorage implements IStorage {
     }
     
     try {
-      // Zuerst alle Login-Logs des Benutzers löschen
-      await db.delete(loginLogs).where(eq(loginLogs.userId, id));
+      // Abhängigkeiten prüfen
+      const dependencies = await this.getUserDependencies(id);
+      
+      // Zuerst alle abhängigen Einträge löschen
+      // Login-Logs löschen
+      if (dependencies.loginLogs > 0) {
+        await db.delete(loginLogs).where(eq(loginLogs.userId, id));
+      }
+      
+      // Verification Codes löschen
+      if (dependencies.verificationCodes > 0) {
+        await db.delete(verificationCodes).where(eq(verificationCodes.userId, id));
+      }
+      
+      // Construction Diaries können nicht automatisch gelöscht werden, da sie wichtige Geschäftsdaten enthalten
+      if (dependencies.constructionDiaries > 0) {
+        throw new Error(`Der Benutzer hat noch ${dependencies.constructionDiaries} Bautagebücher. Bitte weisen Sie diese einem anderen Benutzer zu, bevor Sie diesen Benutzer löschen.`);
+      }
       
       // Dann den Benutzer löschen
       await db.delete(users).where(eq(users.id, id));
@@ -226,7 +242,39 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getProjectsByUser(userId: number): Promise<Project[]> {
+    // Projekte finden, bei denen der Benutzer der Ersteller ist
     return await db.select().from(projects).where(eq(projects.createdBy, userId)) as Project[];
+  }
+  
+  // Prüft, ob noch Verknüpfungen zu einem Benutzer bestehen
+  async getUserDependencies(userId: number): Promise<{
+    loginLogs: number;
+    verificationCodes: number;
+    constructionDiaries: number;
+  }> {
+    // Login-Logs zählen
+    const loginLogsCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(loginLogs)
+      .where(eq(loginLogs.userId, userId));
+      
+    // Verification Codes zählen
+    const verificationCodesCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(verificationCodes)
+      .where(eq(verificationCodes.userId, userId));
+      
+    // Construction Diaries zählen
+    const constructionDiariesCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(constructionDiaries)
+      .where(eq(constructionDiaries.createdBy, userId));
+      
+    return {
+      loginLogs: Number(loginLogsCount[0]?.count || 0),
+      verificationCodes: Number(verificationCodesCount[0]?.count || 0),
+      constructionDiaries: Number(constructionDiariesCount[0]?.count || 0)
+    };
   }
   
   // Company operations
