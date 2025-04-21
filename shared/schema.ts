@@ -287,6 +287,21 @@ export const constructionDiaries = pgTable("tblconstruction_diary", {
   };
 });
 
+// Bautagebuch-Mitarbeiter table
+export const constructionDiaryEmployees = pgTable("tblconstruction_diary_employees", {
+  id: serial("id").primaryKey(),
+  constructionDiaryId: integer("construction_diary_id").notNull().references(() => constructionDiaries.id, { onDelete: 'cascade' }),
+  firstName: varchar("first_name", { length: 255 }).notNull(),
+  lastName: varchar("last_name", { length: 255 }).notNull(),
+  position: varchar("position", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+}, (table) => {
+  return {
+    diaryIdIdx: index("idx_construction_diary_employees_diary_id").on(table.constructionDiaryId),
+  };
+});
+
 // Login-Logs table - Für die Nachverfolgung aller Anmeldungen und Registrierungen
 export const loginLogs = pgTable("tbllogin_logs", {
   id: serial("id").primaryKey(),
@@ -445,7 +460,7 @@ export const verificationCodesRelations = relations(verificationCodes, ({ one })
   }),
 }));
 
-export const constructionDiariesRelations = relations(constructionDiaries, ({ one }) => ({
+export const constructionDiariesRelations = relations(constructionDiaries, ({ one, many }) => ({
   project: one(projects, {
     fields: [constructionDiaries.projectId],
     references: [projects.id],
@@ -454,6 +469,18 @@ export const constructionDiariesRelations = relations(constructionDiaries, ({ on
     fields: [constructionDiaries.createdBy],
     references: [users.id],
   }),
+  employees: many(constructionDiaryEmployees)
+}));
+
+export const constructionDiaryEmployeesRelations = relations(constructionDiaryEmployees, ({ one }) => ({
+  constructionDiary: one(constructionDiaries, {
+    fields: [constructionDiaryEmployees.constructionDiaryId],
+    references: [constructionDiaries.id],
+  }),
+  creator: one(users, {
+    fields: [constructionDiaryEmployees.createdBy],
+    references: [users.id],
+  })
 }));
 
 // Create insert schemas
@@ -618,3 +645,7 @@ export type Permission = typeof permissions.$inferSelect;
 
 export type InsertConstructionDiary = z.infer<typeof insertConstructionDiarySchema>;
 export type ConstructionDiary = typeof constructionDiaries.$inferSelect;
+
+export const insertConstructionDiaryEmployeeSchema = createInsertSchema(constructionDiaryEmployees);
+export type InsertConstructionDiaryEmployee = z.infer<typeof insertConstructionDiaryEmployeeSchema>;
+export type ConstructionDiaryEmployee = typeof constructionDiaryEmployees.$inferSelect;

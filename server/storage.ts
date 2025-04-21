@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, gte, sql } from "drizzle-orm";
+import { eq, desc, gte, sql, asc } from "drizzle-orm";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 
@@ -22,7 +22,8 @@ import {
   loginLogs, type LoginLog, type InsertLoginLog,
   verificationCodes, type VerificationCode, type InsertVerificationCode,
   permissions, type Permission, type InsertPermission,
-  constructionDiaries, type ConstructionDiary, type InsertConstructionDiary
+  constructionDiaries, type ConstructionDiary, type InsertConstructionDiary,
+  constructionDiaryEmployees, type ConstructionDiaryEmployee, type InsertConstructionDiaryEmployee
 } from "@shared/schema";
 
 // PostgresSessionStore wurde oben definiert
@@ -148,6 +149,12 @@ export interface IStorage {
   createConstructionDiary(diary: InsertConstructionDiary): Promise<ConstructionDiary>;
   updateConstructionDiary(id: number, diary: Partial<InsertConstructionDiary>): Promise<ConstructionDiary | undefined>;
   deleteConstructionDiary(id: number): Promise<void>;
+  
+  // Construction Diary Employees operations
+  getConstructionDiaryEmployees(diaryId: number): Promise<ConstructionDiaryEmployee[]>;
+  createConstructionDiaryEmployee(employee: InsertConstructionDiaryEmployee): Promise<ConstructionDiaryEmployee>;
+  updateConstructionDiaryEmployee(id: number, employee: Partial<InsertConstructionDiaryEmployee>): Promise<ConstructionDiaryEmployee | undefined>;
+  deleteConstructionDiaryEmployee(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.Store;
@@ -721,6 +728,38 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(constructionDiaries)
       .where(eq(constructionDiaries.id, id));
+  }
+
+  // Construction Diary Employees operations
+  async getConstructionDiaryEmployees(diaryId: number): Promise<ConstructionDiaryEmployee[]> {
+    return await db
+      .select()
+      .from(constructionDiaryEmployees)
+      .where(eq(constructionDiaryEmployees.constructionDiaryId, diaryId))
+      .orderBy(asc(constructionDiaryEmployees.lastName));
+  }
+
+  async createConstructionDiaryEmployee(employee: InsertConstructionDiaryEmployee): Promise<ConstructionDiaryEmployee> {
+    const [createdEmployee] = await db
+      .insert(constructionDiaryEmployees)
+      .values(employee)
+      .returning();
+    return createdEmployee;
+  }
+
+  async updateConstructionDiaryEmployee(id: number, employee: Partial<InsertConstructionDiaryEmployee>): Promise<ConstructionDiaryEmployee | undefined> {
+    const [updatedEmployee] = await db
+      .update(constructionDiaryEmployees)
+      .set(employee)
+      .where(eq(constructionDiaryEmployees.id, id))
+      .returning();
+    return updatedEmployee;
+  }
+
+  async deleteConstructionDiaryEmployee(id: number): Promise<void> {
+    await db
+      .delete(constructionDiaryEmployees)
+      .where(eq(constructionDiaryEmployees.id, id));
   }
 }
 
