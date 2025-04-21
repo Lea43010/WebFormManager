@@ -246,6 +246,7 @@ export default function AttachmentPage() {
                               className="object-cover w-full h-full"
                               placeholderColor="#f3f4f6"
                               lazyLoad={true}
+                              requiresToken={true}
                             />
                           </div>
                         ) : (
@@ -367,6 +368,7 @@ export default function AttachmentPage() {
                                     className="object-cover w-full h-full"
                                     placeholderColor="#f3f4f6"
                                     lazyLoad={true}
+                                    requiresToken={true}
                                   />
                                 </div>
                               ) : (

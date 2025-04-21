@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResponsiveImageProps {
   src: string;
@@ -12,6 +13,11 @@ interface ResponsiveImageProps {
   lazyLoad?: boolean;
   onLoad?: () => void;
   onError?: () => void;
+  /**
+   * Gibt an, ob die Bildquelle einen Token für den Download benötigt.
+   * Bei Wert 'true' wird automatisch ein Token angefordert und an die URL angehängt.
+   */
+  requiresToken?: boolean;
 }
 
 /**
@@ -45,21 +51,65 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   lazyLoad = true,
   onLoad,
   onError,
+  requiresToken = false
 }) => {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string>(lowQualitySrc || '');
+  const [tokenizedSrc, setTokenizedSrc] = useState<string>(src);
   const imgRef = useRef<HTMLImageElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // Wenn Token benötigt wird, eines vom Server anfordern
+  useEffect(() => {
+    const fetchToken = async () => {
+      if (!requiresToken || !src.includes('/api/attachments/')) {
+        setTokenizedSrc(src);
+        return;
+      }
+
+      try {
+        // Extrahiere die Attachment-ID aus der URL
+        const match = src.match(/\/api\/attachments\/(\d+)\/download/);
+        if (!match) {
+          setTokenizedSrc(src);
+          return;
+        }
+
+        const attachmentId = match[1];
+        const response = await fetch(`/api/attachments/${attachmentId}/token`);
+        
+        if (!response.ok) {
+          throw new Error("Fehler beim Anfordern des Tokens");
+        }
+        
+        const data = await response.json();
+        setTokenizedSrc(`${src}?token=${data.token}`);
+      } catch (error) {
+        console.error("Fehler beim Abrufen des Tokens:", error);
+        setHasError(true);
+        toast({
+          title: "Bildladefehler",
+          description: "Das Bild konnte nicht geladen werden. Sicherheitstoken konnte nicht abgerufen werden.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchToken();
+  }, [src, requiresToken, toast]);
+
   // Bild laden, wenn es im Viewport sichtbar wird oder sofort, wenn lazyLoad = false
   useEffect(() => {
+    if (!tokenizedSrc) return; // Warte auf Tokenisierung (falls nötig)
+
     const loadImage = () => {
       const img = new Image();
-      img.src = src;
+      img.src = tokenizedSrc;
       
       img.onload = () => {
-        setCurrentSrc(src);
+        setCurrentSrc(tokenizedSrc);
         setIsLoading(false);
         onLoad?.();
       };
@@ -94,7 +144,7 @@ export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         observerRef.current.disconnect();
       }
     };
-  }, [src, lazyLoad, onLoad, onError]);
+  }, [tokenizedSrc, lazyLoad, onLoad, onError]);
 
   // Stil-Klassen basierend auf dem Zustand
   const imageClasses = cn(
