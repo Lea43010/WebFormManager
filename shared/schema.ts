@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, varchar, date, numeric, timestamp, foreignKey, pgEnum, uniqueIndex, doublePrecision, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, varchar, date, numeric, timestamp, foreignKey, pgEnum, uniqueIndex, doublePrecision, jsonb, time, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -263,6 +263,28 @@ export const fileOrganizationSuggestions = pgTable("tblfile_organization_suggest
   appliedAt: timestamp("applied_at"),
 });
 
+// Bautagebuch (Konstruktionstagebuch) table
+export const constructionDiaries = pgTable("tblconstruction_diary", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  date: date("date").notNull(),
+  employee: varchar("employee", { length: 255 }).notNull(),
+  activity: varchar("activity", { length: 500 }).notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  workHours: numeric("work_hours", { precision: 5, scale: 2 }).notNull(),
+  materialUsage: varchar("material_usage", { length: 500 }),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: integer("created_by").references(() => users.id),
+}, (table) => {
+  return {
+    projectIdIdx: index("construction_diary_project_id_idx").on(table.projectId),
+    dateIdx: index("construction_diary_date_idx").on(table.date),
+    employeeIdx: index("construction_diary_employee_idx").on(table.employee),
+  };
+});
+
 // Login-Logs table - Für die Nachverfolgung aller Anmeldungen und Registrierungen
 export const loginLogs = pgTable("tbllogin_logs", {
   id: serial("id").primaryKey(),
@@ -345,6 +367,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   milestones: many(milestones),
   fileOrganizationSuggestions: many(fileOrganizationSuggestions),
   permissions: many(permissions),
+  constructionDiaries: many(constructionDiaries),
 }));
 
 export const componentsRelations = relations(components, ({ one }) => ({
@@ -416,6 +439,17 @@ export const loginLogsRelations = relations(loginLogs, ({ one }) => ({
 export const verificationCodesRelations = relations(verificationCodes, ({ one }) => ({
   user: one(users, {
     fields: [verificationCodes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const constructionDiariesRelations = relations(constructionDiaries, ({ one }) => ({
+  project: one(projects, {
+    fields: [constructionDiaries.projectId],
+    references: [projects.id],
+  }),
+  creator: one(users, {
+    fields: [constructionDiaries.createdBy],
     references: [users.id],
   }),
 }));
@@ -514,6 +548,14 @@ export const insertLoginLogSchema = createInsertSchema(loginLogs, {
 
 export const insertVerificationCodeSchema = createInsertSchema(verificationCodes);
 
+export const insertConstructionDiarySchema = createInsertSchema(constructionDiaries).transform((data) => {
+  return {
+    ...data,
+    workHours: typeof data.workHours === 'string' ? parseFloat(data.workHours) : data.workHours,
+    projectId: typeof data.projectId === 'string' ? parseInt(data.projectId, 10) : data.projectId,
+  };
+});
+
 // Create types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -571,3 +613,6 @@ export const insertPermissionSchema = createInsertSchema(permissions).transform(
 });
 export type InsertPermission = z.infer<typeof insertPermissionSchema>;
 export type Permission = typeof permissions.$inferSelect;
+
+export type InsertConstructionDiary = z.infer<typeof insertConstructionDiarySchema>;
+export type ConstructionDiary = typeof constructionDiaries.$inferSelect;

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { CapacitySection } from "@/components/project/capacity-section";
 import { MilestoneSection } from "@/components/project/milestone-section";
 import { CostGroups } from "@/components/project/cost-groups";
+import { ConstructionDiarySection } from "@/components/project/construction-diary";
 import PermissionSection from "@/components/project/permission-section";
 import ProjectForm from "@/components/project/project-form";
 import AttachmentUpload from "@/components/project/attachment-upload";
@@ -431,6 +432,7 @@ export default function ProjectDetailPage() {
               <TabsTrigger value="permissions">Genehmigungen</TabsTrigger>
               <TabsTrigger value="milestones">Meilensteine</TabsTrigger>
               <TabsTrigger value="capacity">Bedarf/Kapazitäten</TabsTrigger>
+              <TabsTrigger value="diary">Bautagebuch</TabsTrigger>
               {project.projectArt === "Hochbau" && (
                 <TabsTrigger value="costgroups">Kostengruppen</TabsTrigger>
               )}
@@ -524,6 +526,10 @@ export default function ProjectDetailPage() {
                 {project.id && <CostGroups projectId={project.id} />}
               </TabsContent>
             )}
+
+            <TabsContent value="diary" className="mt-4">
+              {project.id && <ConstructionDiarySection projectId={project.id} />}
+            </TabsContent>
 
             <TabsContent value="attachments" className="mt-4">
               {project.id && <AttachmentUpload projectId={project.id} />}

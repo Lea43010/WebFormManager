@@ -18,7 +18,7 @@ import {
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
   insertBedarfKapaSchema, insertPersonSchema, insertMilestoneSchema, insertMilestoneDetailSchema,
-  insertUserSchema, insertPermissionSchema,
+  insertUserSchema, insertPermissionSchema, insertConstructionDiarySchema,
   createInsertSchema, companies, customers, projects, persons, milestones, milestoneDetails, permissions,
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
@@ -2168,6 +2168,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logs);
     } catch (error) {
       console.error("Error fetching user login logs:", error);
+      next(error);
+    }
+  });
+  
+  // Construction Diary Routes (Bautagebuch)
+  
+  // Alle Bautagebuch-Einträge für ein Projekt abrufen
+  app.get("/api/projects/:projectId/construction-diary", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId, 10);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung - nur Administratoren oder der Ersteller des Projekts haben Zugriff
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
+      }
+      
+      const diaryEntries = await storage.getConstructionDiaries(projectId);
+      res.json(diaryEntries);
+    } catch (error) {
+      console.error("Error fetching construction diary entries:", error);
+      next(error);
+    }
+  });
+  
+  // Einen einzelnen Bautagebuch-Eintrag abrufen
+  app.get("/api/projects/:projectId/construction-diary/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId, 10);
+      const diaryId = parseInt(req.params.id, 10);
+      
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
+      }
+      
+      const diaryEntry = await storage.getConstructionDiary(diaryId);
+      if (!diaryEntry) {
+        return res.status(404).json({ message: "Bautagebuch-Eintrag nicht gefunden" });
+      }
+      
+      if (diaryEntry.projectId !== projectId) {
+        return res.status(403).json({ message: "Der Bautagebuch-Eintrag gehört nicht zum angegebenen Projekt" });
+      }
+      
+      res.json(diaryEntry);
+    } catch (error) {
+      console.error("Error fetching construction diary entry:", error);
+      next(error);
+    }
+  });
+  
+  // Einen neuen Bautagebuch-Eintrag erstellen
+  app.post("/api/projects/:projectId/construction-diary", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId, 10);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für das Hinzufügen eines Eintrags zu diesem Projekt" });
+      }
+      
+      // Numerische Felder als Strings übergeben für Zod-Validierung
+      const formData = {
+        ...req.body,
+        projectId,
+        workHours: req.body.workHours?.toString() || "0",
+        createdBy: req.user.id
+      };
+      
+      // Daten validieren
+      const validatedData = insertConstructionDiarySchema.parse(formData);
+      const createdDiary = await storage.createConstructionDiary(validatedData);
+      
+      res.status(201).json(createdDiary);
+    } catch (error) {
+      console.error("Error creating construction diary entry:", error);
+      next(error);
+    }
+  });
+  
+  // Einen Bautagebuch-Eintrag aktualisieren
+  app.put("/api/projects/:projectId/construction-diary/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId, 10);
+      const diaryId = parseInt(req.params.id, 10);
+      
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
+      }
+      
+      const diaryEntry = await storage.getConstructionDiary(diaryId);
+      if (!diaryEntry) {
+        return res.status(404).json({ message: "Bautagebuch-Eintrag nicht gefunden" });
+      }
+      
+      if (diaryEntry.projectId !== projectId) {
+        return res.status(403).json({ message: "Der Bautagebuch-Eintrag gehört nicht zum angegebenen Projekt" });
+      }
+      
+      // Numerische Felder als Strings für Zod-Validierung
+      const formData = {
+        ...req.body,
+        projectId, // Stellen sicher, dass das Projekt nicht geändert wird
+        workHours: req.body.workHours?.toString() || diaryEntry.workHours.toString()
+      };
+      
+      // Daten validieren und aktualisieren
+      const validatedData = insertConstructionDiarySchema.partial().parse(formData);
+      const updatedDiary = await storage.updateConstructionDiary(diaryId, validatedData);
+      
+      res.json(updatedDiary);
+    } catch (error) {
+      console.error("Error updating construction diary entry:", error);
+      next(error);
+    }
+  });
+  
+  // Einen Bautagebuch-Eintrag löschen
+  app.delete("/api/projects/:projectId/construction-diary/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const projectId = parseInt(req.params.projectId, 10);
+      const diaryId = parseInt(req.params.id, 10);
+      
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Projekt nicht gefunden" });
+      }
+      
+      // Berechtigungsprüfung
+      if (req.user.role !== 'administrator' && project.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
+      }
+      
+      const diaryEntry = await storage.getConstructionDiary(diaryId);
+      if (!diaryEntry) {
+        return res.status(404).json({ message: "Bautagebuch-Eintrag nicht gefunden" });
+      }
+      
+      if (diaryEntry.projectId !== projectId) {
+        return res.status(403).json({ message: "Der Bautagebuch-Eintrag gehört nicht zum angegebenen Projekt" });
+      }
+      
+      await storage.deleteConstructionDiary(diaryId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting construction diary entry:", error);
       next(error);
     }
   });

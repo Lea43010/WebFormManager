@@ -21,7 +21,8 @@ import {
   milestoneDetails, type MilestoneDetail, type InsertMilestoneDetail,
   loginLogs, type LoginLog, type InsertLoginLog,
   verificationCodes, type VerificationCode, type InsertVerificationCode,
-  permissions, type Permission, type InsertPermission
+  permissions, type Permission, type InsertPermission,
+  constructionDiaries, type ConstructionDiary, type InsertConstructionDiary
 } from "@shared/schema";
 
 // PostgresSessionStore wurde oben definiert
@@ -140,6 +141,13 @@ export interface IStorage {
   getActiveVerificationCodesByUser(userId: number): Promise<VerificationCode[]>;
   invalidateVerificationCode(id: number): Promise<void>;
   markVerificationCodeAsUsed(id: number): Promise<void>;
+  
+  // Construction Diary operations
+  getConstructionDiaries(projectId: number): Promise<ConstructionDiary[]>;
+  getConstructionDiary(id: number): Promise<ConstructionDiary | undefined>;
+  createConstructionDiary(diary: InsertConstructionDiary): Promise<ConstructionDiary>;
+  updateConstructionDiary(id: number, diary: Partial<InsertConstructionDiary>): Promise<ConstructionDiary | undefined>;
+  deleteConstructionDiary(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.Store;
@@ -675,7 +683,45 @@ export class DatabaseStorage implements IStorage {
       .where(eq(verificationCodes.id, id));
   }
 
+  // Construction Diary operations
+  async getConstructionDiaries(projectId: number): Promise<ConstructionDiary[]> {
+    return await db
+      .select()
+      .from(constructionDiaries)
+      .where(eq(constructionDiaries.projectId, projectId))
+      .orderBy(desc(constructionDiaries.date));
+  }
 
+  async getConstructionDiary(id: number): Promise<ConstructionDiary | undefined> {
+    const [diary] = await db
+      .select()
+      .from(constructionDiaries)
+      .where(eq(constructionDiaries.id, id));
+    return diary;
+  }
+
+  async createConstructionDiary(diary: InsertConstructionDiary): Promise<ConstructionDiary> {
+    const [createdDiary] = await db
+      .insert(constructionDiaries)
+      .values(diary)
+      .returning();
+    return createdDiary;
+  }
+
+  async updateConstructionDiary(id: number, diary: Partial<InsertConstructionDiary>): Promise<ConstructionDiary | undefined> {
+    const [updatedDiary] = await db
+      .update(constructionDiaries)
+      .set(diary)
+      .where(eq(constructionDiaries.id, id))
+      .returning();
+    return updatedDiary;
+  }
+
+  async deleteConstructionDiary(id: number): Promise<void> {
+    await db
+      .delete(constructionDiaries)
+      .where(eq(constructionDiaries.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();
