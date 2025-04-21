@@ -1,6 +1,5 @@
 import { Express, Request, Response } from "express";
-import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { db, sql } from "./db";
 import * as os from "os";
 
 /**
@@ -42,7 +41,8 @@ async function checkDatabaseConnection(): Promise<{ connected: boolean; response
   const startTime = Date.now();
   try {
     // Einfache Abfrage, um die Datenbankverbindung zu testen
-    await db.execute(sql`SELECT 1`);
+    // Verwende direkt die sql-Verbindung statt der Drizzle-ORM-Instanz
+    await sql`SELECT 1 AS health_check`;
     return {
       connected: true,
       responseTime: Date.now() - startTime

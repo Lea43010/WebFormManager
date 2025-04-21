@@ -27,6 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
   
+  // Set up health check routes
+  setupHealthRoutes(app);
+  
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

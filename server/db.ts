@@ -11,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Create the database connection
-const sql = neon(process.env.DATABASE_URL);
+export const sql = neon(process.env.DATABASE_URL);
 
 // Create the drizzle database instance
 export const db = drizzle(sql, { schema });
