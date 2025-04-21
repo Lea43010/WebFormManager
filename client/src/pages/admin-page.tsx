@@ -2,30 +2,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/user-management";
 import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, Clock, ShieldAlert } from 'lucide-react';
+import { ShieldAlert, Users, Clock } from 'lucide-react';
 
 export default function AdminPage() {
   const { user } = useAuth();
 
-  // Berechtigungsprüfung
-  if (!user || (user.role !== 'administrator' && user.role !== 'manager')) {
-    return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Keine Berechtigung</CardTitle>
-            <CardDescription>
-              Sie haben keine Berechtigung, diese Seite zu sehen.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
   // Nur Administratoren können Login-Logs sehen
-  const isAdmin = user.role === 'administrator';
+  const isAdmin = user?.role === 'administrator';
 
   return (
     <div className="container mx-auto py-10">

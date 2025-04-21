@@ -5,6 +5,7 @@ import HomeSimple from "@/pages/home-simple";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "./lib/protected-route";
+import { AdminProtectedRoute } from "./lib/admin-protected-route";
 import CompanyPage from "@/pages/company-page";
 import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
@@ -33,8 +34,9 @@ function Router() {
       <ProtectedRoute path="/projects" component={ProjectPage} />
       <ProtectedRoute path="/projects/:id" component={ProjectDetailPage} />
       
-      {/* UserPage-Route wurde in den Admin-Bereich integriert */}
-      <ProtectedRoute path="/admin" component={AdminPage} />
+      {/* Admin-Bereich mit spezieller Zugriffsbeschränkung */}
+      <AdminProtectedRoute path="/admin" component={AdminPage} />
+      
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
       <ProtectedRoute path="/attachments" component={AttachmentPage} />

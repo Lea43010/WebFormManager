@@ -212,21 +212,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Project routes
   app.get("/api/projects", async (req, res, next) => {
     try {
-      const projects = await storage.getProjects();
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren oder Manager können alle Projekte sehen
+      if (req.user.role === 'administrator' || req.user.role === 'manager') {
+        const projects = await storage.getProjects();
+        return res.json(projects);
+      }
+      
+      // Normale Benutzer können nur ihre eigenen Projekte sehen
+      const projects = await storage.getProjectsByUser(req.user.id);
       res.json(projects);
     } catch (error) {
+      console.error("Error fetching projects:", error);
+      next(error);
+    }
+  });
+  
+  // Endpunkt speziell für Projekte des aktuellen Benutzers
+  app.get("/api/user/projects", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Projekte des aktuellen Benutzers abrufen
+      const projects = await storage.getProjectsByUser(req.user.id);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching user projects:", error);
       next(error);
     }
   });
 
   app.get("/api/projects/:id", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       const id = parseInt(req.params.id);
       const project = await storage.getProject(id);
+      
       if (!project) {
         return res.status(404).json({ message: "Projekt nicht gefunden" });
       }
-      res.json(project);
+      
+      // Nur Administratoren, Manager oder der Ersteller können das Projekt sehen
+      if (req.user.role === 'administrator' || req.user.role === 'manager' || project.createdBy === req.user.id) {
+        return res.json(project);
+      }
+      
+      // Anderen Benutzern wird der Zugriff verweigert
+      res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Projekt" });
     } catch (error) {
       next(error);
     }
