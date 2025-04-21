@@ -55,7 +55,10 @@ export function setupStripeRoutes(app: Express) {
       }
       
       await handleSuccessfulPayment(session_id);
-      res.redirect('/abonnement/erfolgreich');
+      
+      // Anstatt einer Weiterleitung senden wir eine JSON-Antwort zurück,
+      // da die Anfrage vom Frontend über Fetch-API erfolgt
+      res.json({ success: true });
     } catch (error) {
       console.error("Fehler bei der Zahlungsverarbeitung:", error);
       next(error);

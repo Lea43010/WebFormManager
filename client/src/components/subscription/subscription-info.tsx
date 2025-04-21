@@ -14,7 +14,7 @@ export function SubscriptionInfo() {
   const { toast } = useToast();
 
   // Abfrage des Abonnementstatus
-  const { data: subscriptionData, isLoading: isLoadingSubscription } = useQuery({
+  const { data: subscriptionData, isLoading: isLoadingSubscription, refetch } = useQuery({
     queryKey: ["/api/subscription/status"],
     queryFn: async () => {
       const res = await fetch("/api/subscription/status");
@@ -24,6 +24,9 @@ export function SubscriptionInfo() {
       return res.json();
     },
     enabled: !!user, // Nur ausführen, wenn ein Benutzer eingeloggt ist
+    // Regelmäßig aktualisieren, um den aktuellen Status zu erhalten
+    refetchInterval: 60000, // Alle 60 Sekunden aktualisieren
+    refetchOnWindowFocus: true, // Bei Fokuswechsel aktualisieren
   });
 
   // Mutation zum Starten des Checkout-Prozesses
