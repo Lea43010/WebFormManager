@@ -68,7 +68,9 @@ class ApiTestClient {
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || (config.isDevelopment 
       ? `http://localhost:${config.server.port}` 
-      : 'https://api.baustructura.de');
+      : (config.isStaging 
+          ? 'https://staging.baustructura.de'
+          : 'https://api.baustructura.de'));
   }
   
   /**
@@ -420,8 +422,8 @@ async function runTestSuite(
  * Testendpunkt im Express einrichten
  */
 export function setupApiTests(app: Express) {
-  // API-Tests nur in Entwicklungsumgebung verfügbar machen
-  if (!config.isDevelopment && !process.env.ENABLE_API_TESTS) {
+  // API-Tests nur in Entwicklungs- und Staging-Umgebung verfügbar machen
+  if (!config.isDevelopment && !config.isStaging && !process.env.ENABLE_API_TESTS) {
     return;
   }
   

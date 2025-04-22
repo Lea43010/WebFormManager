@@ -10,7 +10,7 @@ neonConfig.fetchConnectionCache = true;
 // Konfigurierbare Timeouts über die zentrale Konfiguration
 const DB_QUERY_TIMEOUT = config.database.connectionTimeout || 5000; 
 const DB_HEALTH_CHECK_TIMEOUT = 2000; // Immer schnelles Timeout für Health-Checks
-const MAX_RETRIES = config.isProduction ? 5 : 3; // Mehr Wiederholungsversuche in Produktion
+const MAX_RETRIES = config.isProduction ? 5 : (config.isStaging ? 4 : 3); // Abgestufte Wiederholungsversuche je nach Umgebung
 
 // Sichere Validierung der Datenbank-URL
 const dbUrl = config.database.url || process.env.DATABASE_URL;
@@ -18,8 +18,8 @@ if (!dbUrl) {
   throw new Error('Keine Datenbankverbindung konfiguriert. Bitte DATABASE_URL in .env definieren.');
 }
 
-// Protokollierung der Datenbankverbindung in Entwicklungsumgebungen
-if (config.isDevelopment) {
+// Protokollierung der Datenbankverbindung in Entwicklungs- und Staging-Umgebungen
+if (config.isDevelopment || config.isStaging) {
   // Sicherer Log der Datenbankverbindung (ohne Passwort)
   const safeDbUrl = dbUrl.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
   console.log(`[DB] Verbindung zu ${safeDbUrl} (${config.env})`);
@@ -76,12 +76,19 @@ export async function executeWithRetry<T>(
 export { drizzleSql };
 
 // Erstelle die Drizzle-Datenbankinstanz mit schema
-// In Entwicklungsumgebungen fügen wir Debug-Logs für SQL-Abfragen hinzu
+// In Entwicklungs- und Staging-Umgebungen fügen wir Debug-Logs für SQL-Abfragen hinzu
 export const db = drizzle(sql, { 
   schema,
-  logger: config.isDevelopment ? {
+  logger: (config.isDevelopment || config.isStaging) ? {
     logQuery: (query, params) => {
-      console.log(`[SQL] ${query} - Params: ${JSON.stringify(params)}`);
+      // In Staging nur Fehler und Warnungen loggen
+      if (config.isStaging && !query.toLowerCase().includes('select')) {
+        console.log(`[SQL] ${query} - Params: ${JSON.stringify(params)}`);
+      } 
+      // In Development alle Queries loggen
+      else if (config.isDevelopment) {
+        console.log(`[SQL] ${query} - Params: ${JSON.stringify(params)}`);
+      }
     }
   } : undefined
 });

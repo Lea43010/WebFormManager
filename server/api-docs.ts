@@ -38,8 +38,14 @@ const swaggerOptions = {
       {
         url: config.isDevelopment 
           ? `http://localhost:${config.server.port}` 
-          : 'https://api.baustructura.de',
-        description: config.isDevelopment ? 'Entwicklungsserver' : 'Produktionsserver',
+          : (config.isStaging 
+              ? 'https://staging.baustructura.de'
+              : 'https://api.baustructura.de'),
+        description: config.isDevelopment 
+          ? 'Entwicklungsserver' 
+          : (config.isStaging 
+              ? 'Staging-Server'
+              : 'Produktionsserver'),
       },
     ],
     components: {
@@ -410,8 +416,8 @@ const swaggerUiOptions = {
  * Registriere die Swagger-Dokumentationsrouten in der Express-Anwendung
  */
 export function setupApiDocs(app: Express) {
-  // Nur in Entwicklungsumgebung oder explizit für Docs freigeschaltete Umgebungen aktivieren
-  if (!config.isDevelopment && !process.env.ENABLE_API_DOCS) {
+  // Nur in Entwicklungs-/Staging-Umgebung oder explizit für Docs freigeschaltete Umgebungen aktivieren
+  if (!config.isDevelopment && !config.isStaging && !process.env.ENABLE_API_DOCS) {
     docsLogger.info('API-Dokumentation in Produktionsumgebung deaktiviert');
     return;
   }
