@@ -472,19 +472,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
       // Da Zod die Konversion erwartet, schicken wir die Daten als Strings
+      // Verbesserter Fehler-Handler für null/undefined/leere Werte
       const formData = {
         ...req.body,
-        projectWidth: req.body.projectWidth?.toString() || null,
-        projectLength: req.body.projectLength?.toString() || null,
-        projectHeight: req.body.projectHeight?.toString() || null,
-        projectText: req.body.projectText?.toString() || null,
+        projectWidth: req.body.projectWidth ? req.body.projectWidth.toString() : null,
+        projectLength: req.body.projectLength ? req.body.projectLength.toString() : null,
+        projectHeight: req.body.projectHeight ? req.body.projectHeight.toString() : null,
+        projectText: req.body.projectText ? req.body.projectText.toString() : null,
         createdBy: req.user.id, // Speichern des Erstellers (aktuelle Benutzer-ID)
       };
       
-      // Schema übernimmt die Konversion zu Zahlen
-      const validatedData = insertProjectSchema.parse(formData);
-      const project = await storage.createProject(validatedData);
-      res.status(201).json(project);
+      console.log("Projekt-Daten vor der Validierung:", formData);
+      
+      try {
+        // Schema übernimmt die Konversion zu Zahlen
+        const validatedData = insertProjectSchema.parse(formData);
+        const project = await storage.createProject(validatedData);
+        res.status(201).json(project);
+      } catch (validationError) {
+        console.error("Validierungsfehler:", validationError);
+        return res.status(400).json({ 
+          message: "Fehler bei der Projektvalidierung", 
+          details: validationError.errors 
+        });
+      }
     } catch (error) {
       console.error("Project creation error:", error);
       next(error);
@@ -511,18 +522,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
+      // Verbesserte Fehlerbehandlung für null/undefined/leere Werte
       const formData = {
         ...req.body,
-        projectWidth: req.body.projectWidth?.toString() || null,
-        projectLength: req.body.projectLength?.toString() || null,
-        projectHeight: req.body.projectHeight?.toString() || null,
-        projectText: req.body.projectText?.toString() || null
+        projectWidth: req.body.projectWidth ? req.body.projectWidth.toString() : null,
+        projectLength: req.body.projectLength ? req.body.projectLength.toString() : null,
+        projectHeight: req.body.projectHeight ? req.body.projectHeight.toString() : null,
+        projectText: req.body.projectText ? req.body.projectText.toString() : null
       };
       
-      // Aktualisiere die Daten direkt, ohne komplexe Schema-Manipulation
-      const validatedData = formData;
-      const project = await storage.updateProject(id, validatedData);
-      res.json(project);
+      console.log("Projekt-Update-Daten:", formData);
+      
+      try {
+        // Aktualisiere die Daten direkt, ohne komplexe Schema-Manipulation
+        const validatedData = formData;
+        const project = await storage.updateProject(id, validatedData);
+        res.json(project);
+      } catch (updateError) {
+        console.error("Fehler beim Aktualisieren des Projekts:", updateError);
+        return res.status(400).json({ 
+          message: "Fehler beim Aktualisieren des Projekts", 
+          details: updateError.message 
+        });
+      }
     } catch (error) {
       console.error("Project update error:", error);
       next(error);
