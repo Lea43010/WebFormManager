@@ -1,37 +1,42 @@
 /**
  * Skript zum Zurücksetzen des Passworts eines Benutzers
  * 
- * Dieses Skript setzt das Passwort eines existierenden Benutzers zurück und
- * generiert ein neues temporäres Passwort.
+ * Dieses Skript setzt das Passwort eines existierenden Benutzers zurück,
+ * generiert ein neues temporäres Passwort und sendet eine E-Mail mit den
+ * Zugangsdaten über das robuste E-Mail-System.
  * 
  * Verwendung:
- * npx tsx scripts/reset-password.ts --username [username]
+ * npx tsx scripts/reset-password.ts --username [username] [--temp-password [password]]
  */
 
 import { scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { sql } from '../server/db';
+import { emailService } from '../server/email-service';
+import config from '../config';
 
 // Kommandozeilenargumente parsen
 const args = process.argv.slice(2);
 let username = '';
+let providedPassword = '';
 
 for (let i = 0; i < args.length; i += 2) {
   const arg = args[i];
   const value = args[i + 1];
   
   if (arg === '--username') username = value;
+  if (arg === '--temp-password') providedPassword = value;
 }
 
 // Prüfen, ob erforderliche Parameter vorhanden sind
 if (!username) {
   console.error('Fehler: Benutzername ist erforderlich!');
-  console.log('Verwendung: npx tsx scripts/reset-password.ts --username [username]');
+  console.log('Verwendung: npx tsx scripts/reset-password.ts --username [username] [--temp-password [password]]');
   process.exit(1);
 }
 
-// Zufälliges Passwort generieren
-const temporaryPassword = randomBytes(10).toString('hex');
+// Zufälliges Passwort generieren oder das übergebene verwenden
+const temporaryPassword = providedPassword || randomBytes(10).toString('hex');
 
 const scryptAsync = promisify(scrypt);
 
@@ -39,6 +44,72 @@ async function hashPassword(password: string) {
   const salt = randomBytes(16).toString('hex');
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString('hex')}.${salt}`;
+}
+
+/**
+ * Sendet eine E-Mail mit dem zurückgesetzten Passwort
+ */
+async function sendPasswordResetEmail(userEmail: string, userName: string, userUsername: string, tempPassword: string) {
+  try {
+    // HTML-E-Mail-Inhalt erstellen
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://bau-structura.de/logo.png" alt="Bau-Structura Logo" style="max-width: 150px;">
+        </div>
+        <h2 style="color: #333;">Ihr Passwort wurde zurückgesetzt</h2>
+        <p>Hallo ${userName},</p>
+        <p>Ihr Passwort für die Bau-Structura App wurde zurückgesetzt. Sie können sich mit den folgenden Zugangsdaten anmelden:</p>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p><strong>Benutzername:</strong> ${userUsername}</p>
+          <p><strong>Temporäres Passwort:</strong> ${tempPassword}</p>
+        </div>
+        <p>Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.</p>
+        <p style="margin-top: 30px;">
+          <a href="https://bau-structura.de" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            Zur Anmeldung
+          </a>
+        </p>
+        <p style="margin-top: 30px; font-size: 12px; color: #777;">
+          Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht auf diese Nachricht.
+        </p>
+      </div>
+    `;
+
+    // Text-Version für E-Mail-Clients, die kein HTML unterstützen
+    const text = `
+Ihr Passwort wurde zurückgesetzt
+      
+Hallo ${userName},
+
+Ihr Passwort für die Bau-Structura App wurde zurückgesetzt. Sie können sich mit den folgenden Zugangsdaten anmelden:
+
+Benutzername: ${userUsername}
+Temporäres Passwort: ${tempPassword}
+
+Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.
+
+Anmelde-URL: https://bau-structura.de
+    `;
+
+    // E-Mail senden mit hoher Priorität
+    const success = await emailService.sendEmail({
+      to: userEmail,
+      subject: 'Bau-Structura: Ihr Passwort wurde zurückgesetzt',
+      html,
+      text,
+      highPriority: true
+    });
+
+    if (success) {
+      console.log(`✅ E-Mail mit den Zugangsdaten an ${userEmail} gesendet`);
+    } else {
+      console.error(`⚠️ E-Mail konnte nicht gesendet werden. Bitte teilen Sie dem Benutzer die Zugangsdaten manuell mit.`);
+    }
+  } catch (error) {
+    console.error('Fehler beim Senden der E-Mail:', error);
+    console.log(`⚠️ Bitte teilen Sie dem Benutzer die Zugangsdaten manuell mit.`);
+  }
 }
 
 async function resetPassword() {
@@ -71,6 +142,15 @@ async function resetPassword() {
     console.log(`Name: ${user.user_name}`);
     console.log(`E-Mail: ${user.user_email}`);
     console.log(`\nNeues temporäres Passwort: ${temporaryPassword}`);
+    
+    // E-Mail mit Zugangsdaten senden
+    await sendPasswordResetEmail(
+      user.user_email, 
+      user.user_name, 
+      user.username, 
+      temporaryPassword
+    );
+
     console.log(`\nBitte fordern Sie den Benutzer auf, das Passwort nach der ersten Anmeldung zu ändern.`);
     
   } catch (error) {
@@ -79,8 +159,12 @@ async function resetPassword() {
   }
 }
 
-// Skript ausführen
-resetPassword().catch(console.error).finally(() => {
-  // Verbindung beenden
-  process.exit(0);
-});
+// Skript ausführen und dann 5 Sekunden warten, damit E-Mails verarbeitet werden können
+resetPassword()
+  .catch(console.error)
+  .finally(() => {
+    console.log('Warte auf E-Mail-Verarbeitung...');
+    setTimeout(() => {
+      process.exit(0);
+    }, 5000);
+  });
