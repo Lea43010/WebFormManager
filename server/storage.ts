@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, desc, gte, sql, asc } from "drizzle-orm";
+import { eq, desc, gte, sql, asc, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 
@@ -89,6 +89,7 @@ export interface IStorage {
   // Attachment operations
   getProjectAttachments(projectId: number): Promise<Attachment[]>;
   getAllAttachments(): Promise<Attachment[]>;
+  getAttachmentsByProjects(projectIds: number[]): Promise<Attachment[]>;
   getAttachment(id: number): Promise<Attachment | undefined>;
   createAttachment(attachment: InsertAttachment): Promise<Attachment>;
   deleteAttachment(id: number): Promise<void>;
@@ -502,6 +503,14 @@ export class DatabaseStorage implements IStorage {
   
   async getAllAttachments(): Promise<Attachment[]> {
     return await db.select().from(attachments);
+  }
+  
+  // Anhänge für mehrere Projekte abrufen
+  async getAttachmentsByProjects(projectIds: number[]): Promise<Attachment[]> {
+    if (projectIds.length === 0) {
+      return [];
+    }
+    return await db.select().from(attachments).where(inArray(attachments.projectId, projectIds));
   }
   
   async getAttachment(id: number): Promise<Attachment | undefined> {

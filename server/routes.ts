@@ -1122,22 +1122,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Route für alle Anhänge (nur für Administratoren und Manager)
+  // Route für alle Anhänge 
   app.get("/api/attachments", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Nur Administratoren und Manager dürfen alle Anhänge sehen
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
-        return res.status(403).json({ message: "Keine Berechtigung, um alle Anhänge zu sehen" });
+      // Administrator sieht alle Anhänge
+      if (req.user.role === 'administrator') {
+        const attachments = await storage.getAllAttachments();
+        return res.json(attachments);
       }
       
-      const attachments = await storage.getAllAttachments();
-      res.json(attachments);
+      // Manager sieht nur Anhänge der eigenen Projekte
+      if (req.user.role === 'manager') {
+        // Projekte des Managers laden
+        const userProjects = await storage.getProjectsByUser(req.user.id);
+        
+        // Wenn keine Projekte vorhanden, leere Liste zurückgeben
+        if (userProjects.length === 0) {
+          return res.json([]);
+        }
+        
+        // Projekt-IDs extrahieren
+        const projectIds = userProjects.map(project => project.id);
+        
+        // Anhänge für diese Projekte abrufen
+        const attachments = await storage.getAttachmentsByProjects(projectIds);
+        return res.json(attachments);
+      }
+      
+      // Benutzer mit normaler Rolle bekommen eine leere Liste
+      return res.json([]);
     } catch (error) {
-      console.error("Error fetching all attachments:", error);
+      console.error("Error fetching attachments:", error);
       next(error);
     }
   });
