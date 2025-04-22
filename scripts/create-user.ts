@@ -10,9 +10,7 @@
 
 import { scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
-import { db } from '../server/db';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { sql, drizzleSql } from '../server/db';
 
 // Parameter für den neuen Benutzer
 const NEW_USER = {
@@ -38,9 +36,11 @@ async function createUser() {
     console.log(`Erstelle Benutzer ${NEW_USER.username}...`);
     
     // Prüfen, ob der Benutzer bereits existiert
-    const existingUser = await db.select().from(users).where(eq(users.username, NEW_USER.username));
+    const checkResult = await sql`
+      SELECT username FROM tbluser WHERE username = ${NEW_USER.username}
+    `;
     
-    if (existingUser.length > 0) {
+    if (checkResult.length > 0) {
       console.error(`Fehler: Benutzer "${NEW_USER.username}" existiert bereits!`);
       process.exit(1);
     }
@@ -48,25 +48,38 @@ async function createUser() {
     // Passwort hashen
     const hashedPassword = await hashPassword(NEW_USER.password);
     
-    // Aktuelle Zeit für Registrierungsdatum
-    const now = new Date();
-    
     // Ablaufdatum der Testphase (4 Wochen ab heute)
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 28);
     
     // Benutzer einfügen
-    const [newUser] = await db.insert(users).values({
-      username: NEW_USER.username,
-      password: hashedPassword,
-      user_name: NEW_USER.user_name,
-      user_email: NEW_USER.user_email,
-      role: NEW_USER.role,
-      created_by: NEW_USER.created_by,
-      gdpr_consent: NEW_USER.gdpr_consent,
-      trial_end_date: trialEndDate,
-      subscription_status: 'trial' // Testphase
-    }).returning();
+    const result = await sql`
+      INSERT INTO tbluser (
+        username, 
+        password, 
+        user_name, 
+        user_email, 
+        role, 
+        created_by, 
+        gdpr_consent, 
+        trial_end_date,
+        subscription_status
+      ) 
+      VALUES (
+        ${NEW_USER.username}, 
+        ${hashedPassword}, 
+        ${NEW_USER.user_name}, 
+        ${NEW_USER.user_email}, 
+        ${NEW_USER.role}, 
+        ${NEW_USER.created_by}, 
+        ${NEW_USER.gdpr_consent}, 
+        ${trialEndDate}, 
+        'trial'
+      )
+      RETURNING id, username, user_name, user_email, role, trial_end_date
+    `;
+    
+    const newUser = result[0];
     
     console.log(`✅ Benutzer erfolgreich erstellt:`);
     console.log(`Username: ${newUser.username}`);
