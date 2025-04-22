@@ -8,6 +8,7 @@
 // Prüfe, ob die Umgebung korrekt gesetzt ist
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isDevelopment = nodeEnv === 'development';
+const isStaging = nodeEnv === 'staging';
 const isProduction = nodeEnv === 'production';
 
 // Datenbankspezifische Konfiguration
@@ -115,6 +116,7 @@ const externalServices = {
 const config = {
   env: nodeEnv,
   isDevelopment,
+  isStaging,
   isProduction,
   database,
   server,
