@@ -16,7 +16,9 @@ import {
   Info,
   UserCircle,
   ShieldAlert,
-  CreditCard
+  CreditCard,
+  BarChart2, 
+  FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -69,6 +71,13 @@ const navItems: NavItem[] = [
     href: "/attachments",
     icon: Paperclip,
     tooltip: "Projektbezogene Dokumente und Anhänge verwalten",
+  },
+  {
+    title: "Datenqualität",
+    href: "/data-quality",
+    icon: FileCheck,
+    showFor: ['administrator', 'manager'],
+    tooltip: "Datenqualität überwachen und verbessern",
   },
   {
     title: "Abonnement",

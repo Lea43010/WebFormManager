@@ -2754,6 +2754,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Datenqualitätsmanagement-Routen
+  app.get("/api/data-quality/metrics", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager können auf Datenqualitätsmetriken zugreifen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung für Datenqualitätsmanagement" });
+      }
+      
+      // Handler aufrufen
+      await getDataQualityMetricsHandler(req, res);
+    } catch (error) {
+      console.error("Error fetching data quality metrics:", error);
+      next(error);
+    }
+  });
+  
+  app.post("/api/data-quality/check", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager können Datenqualitätsprüfungen durchführen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung für Datenqualitätsmanagement" });
+      }
+      
+      // Handler aufrufen
+      await runDataQualityCheckHandler(req, res);
+    } catch (error) {
+      console.error("Error running data quality check:", error);
+      next(error);
+    }
+  });
+  
+  app.post("/api/data-quality/resolve-issue", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager können Datenqualitätsprobleme lösen
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung für Datenqualitätsmanagement" });
+      }
+      
+      // Handler aufrufen
+      await resolveIssueHandler(req, res);
+    } catch (error) {
+      console.error("Error resolving data quality issue:", error);
+      next(error);
+    }
+  });
+  
+  app.post("/api/data-quality/toggle-rule", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren und Manager können Datenqualitätsregeln verwalten
+      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Keine Berechtigung für Datenqualitätsmanagement" });
+      }
+      
+      // Handler aufrufen
+      await toggleRuleActiveHandler(req, res);
+    } catch (error) {
+      console.error("Error toggling data quality rule:", error);
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

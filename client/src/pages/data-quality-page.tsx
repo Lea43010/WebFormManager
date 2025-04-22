@@ -121,7 +121,7 @@ export default function DataQualityPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedEntity, setSelectedEntity] = useState<EntityType>("customers");
+  const [selectedEntity, setSelectedEntity] = useState<EntityType | undefined>("customers");
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
   // Mock Data für die Demonstration
@@ -234,7 +234,7 @@ export default function DataQualityPage() {
 
   // Filter issues by selected entity and severity
   const filteredIssues = issues.filter(issue => {
-    if (selectedEntity !== "all" && issue.entityType !== selectedEntity) {
+    if (selectedEntity && issue.entityType !== selectedEntity) {
       return false;
     }
     if (filterSeverity !== "all" && issue.severity !== filterSeverity) {
