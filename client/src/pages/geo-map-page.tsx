@@ -1111,18 +1111,18 @@ export default function GeoMapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Card className="h-[calc(100vh-120px)] flex flex-col">
-            {/* Belastungsklasse-Auswahl als separater großer Button über der Karte */}
-            <div className="p-2 mx-4 mt-4 bg-primary/10 rounded-md border border-primary/30 flex items-center justify-between">
+            {/* Belastungsklasse-Auswahl als separater Button über der Karte */}
+            <div className="p-2 mx-4 mt-4 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-between">
               <div className="font-medium flex items-center gap-2">
-                <Asterisk className="h-5 w-5 text-primary" /> 
-                <span>WICHTIG: Belastungsklasse auswählen:</span>
+                <MapPin className="h-5 w-5 text-gray-500" /> 
+                <span>Belastungsklasse (optional):</span>
               </div>
               <Select 
                 value={selectedBelastungsklasse}
                 onValueChange={setSelectedBelastungsklasse}
               >
-                <SelectTrigger className="h-9 border-primary/50 bg-white w-72 font-medium">
-                  <SelectValue placeholder="Bitte Belastungsklasse wählen..." />
+                <SelectTrigger className="h-9 border-gray-300 bg-white w-72">
+                  <SelectValue placeholder="Optional: Belastungsklasse wählen..." />
                 </SelectTrigger>
                 <SelectContent className="z-[9999]">
                   <SelectItem value="none">Keine Klassifizierung</SelectItem>
