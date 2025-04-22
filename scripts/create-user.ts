@@ -5,20 +5,47 @@
  * und hasht dabei das Passwort sicher.
  * 
  * Verwendung:
- * npx tsx scripts/create-user.ts
+ * npx tsx scripts/create-user.ts --username [username] --name [name] --email [email] --role [role]
  */
 
 import { scrypt, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { sql, drizzleSql } from '../server/db';
 
+// Kommandozeilenargumente parsen
+const args = process.argv.slice(2);
+let username = '';
+let user_name = '';
+let user_email = '';
+let role = 'user';
+
+for (let i = 0; i < args.length; i += 2) {
+  const arg = args[i];
+  const value = args[i + 1];
+  
+  if (arg === '--username') username = value;
+  if (arg === '--name') user_name = value;
+  if (arg === '--email') user_email = value;
+  if (arg === '--role') role = value;
+}
+
+// Prüfen, ob erforderliche Parameter vorhanden sind
+if (!username || !user_name || !user_email) {
+  console.error('Fehler: Erforderliche Parameter fehlen!');
+  console.log('Verwendung: npx tsx scripts/create-user.ts --username [username] --name [name] --email [email] --role [role]');
+  process.exit(1);
+}
+
+// Zufälliges Passwort generieren
+const temporaryPassword = randomBytes(10).toString('hex');
+
 // Parameter für den neuen Benutzer
 const NEW_USER = {
-  username: 'rkuisle',
-  password: '4bc979e3495b7c93aa70', // Temporäres Passwort
-  user_name: 'René Kuisle',
-  user_email: 'Rene.Kuisle@netz-germany.de',
-  role: 'benutzer',
+  username,
+  password: temporaryPassword,
+  user_name,
+  user_email,
+  role,
   created_by: 1, // Admin-Benutzer
   gdpr_consent: true
 };
