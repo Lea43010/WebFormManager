@@ -111,7 +111,11 @@ const sections = [
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
   { id: "bauweisen", title: "Bauweisen nach RStO 12" },
   { id: "hilfreiche-links", title: "Hilfreiche Links" },
-  { id: "geo-anleitung", title: "Anleitung Geo-Informationen" },
+  { id: "geo-anleitung", title: "Geo-Informationen" },
+  { id: "gps-tracking", title: "GPS-Tracking" },
+  { id: "flaechenmessung", title: "Strecken- & Flächenmessung" },
+  { id: "geofencing", title: "GeoFencing" },
+  { id: "strassenbau-module", title: "Straßenbau-Module" },
   { id: "nutzungshinweise", title: "Nutzungshinweise" },
   { id: "eu-konformitaet", title: "EU-Konformität" }
 ];
@@ -743,8 +747,8 @@ export default function InformationPage() {
           <div id="geo-anleitung" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Anleitung Geo-Informationen</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              Die Geo-Informationen-Seite bietet umfangreiche Funktionen zur Standortmarkierung, Streckenanalyse, Materialberechnung 
-              und Baumaschinenempfehlung für Straßenbauprojekte.
+              Die Geo-Informationen-Seite bietet umfangreiche Funktionen zur Standortmarkierung, Streckenanalyse, Materialberechnung, 
+              GPS-Tracking, Flächen-/Streckenmessung sowie GeoFencing für Bauprojekte und mobile Teams.
             </p>
             
             <div className="space-y-8">
@@ -847,6 +851,30 @@ export default function InformationPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>4. Weitere Geo-Funktionen</CardTitle>
+                  <CardDescription>
+                    Überblick über die erweiterten Geo-Funktionalitäten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Integrierte Spezialfunktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Geo-Informationsseite bietet umfangreiche Zusatzfunktionen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>GPS-Tracking für Teams und Ausrüstung</li>
+                        <li>Strecken- und Flächenmessung</li>
+                        <li>GeoFencing mit automatischen Benachrichtigungen</li>
+                        <li>Spezialmodule für Straßenbau und -instandhaltung</li>
+                      </ul>
+                      Detaillierte Beschreibungen zu den einzelnen Funktionen finden Sie in den entsprechenden Abschnitten dieser Hilfeseite.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
             
             <div className="mt-6">
@@ -854,6 +882,569 @@ export default function InformationPage() {
                 <Link to="/geo-map">
                   <Map className="h-4 w-4" />
                   Zur Geo-Informationsseite
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* GPS-Tracking */}
+          <div id="gps-tracking" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">GPS-Tracking für Mobile-Teams und Ausrüstung</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Mit dem integrierten GPS-Tracking-System können Sie mobile Teams und wertvolle Ausrüstungsgegenstände in Echtzeit verfolgen, 
+              die Arbeitsfortschritte kontrollieren und Ihre Ressourcen optimal einsetzen.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Live-Tracking aktivieren</CardTitle>
+                  <CardDescription>
+                    Echtzeit-Verfolgung von Teams und Geräten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Grundfunktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Aktivieren Sie das GPS-Tracking über das Menü "Team-Tracking" in der oberen Navigationsleiste.
+                      Nach der Aktivierung werden mobile Geräte und Baumaschinen mit GPS-Sendern in Echtzeit auf der Karte angezeigt.
+                      Die Position wird alle 30 Sekunden aktualisiert, wenn eine aktive Internetverbindung besteht.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Datensparsamkeit</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Das Tracking-System verwendet eine intelligente Datenübertragung, die den Datenverbrauch minimiert:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Bei Stillstand werden Positionsdaten seltener übertragen</li>
+                        <li>Bei schneller Bewegung erfolgt eine häufigere Aktualisierung</li>
+                        <li>Bei Offline-Betrieb werden Daten zwischengespeichert und später synchronisiert</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team-Verwaltung</CardTitle>
+                  <CardDescription>
+                    Koordination und Überwachung von Baustellenteams
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Teams anlegen und verwalten</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Im Bereich "Mobile Teams" können Sie Teams erstellen und Mitarbeiter zuweisen. Jedem Team wird
+                      auf der Karte eine eigene Farbe zugeordnet. Klicken Sie auf ein Team-Symbol, um Details wie
+                      aktuelle Tätigkeit, Arbeitsfortschritt und geschätzte Fertigstellungszeit zu sehen.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Aufgabenzuweisung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Weisen Sie Teams direkt aus der Kartenansicht Aufgaben zu:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Klicken Sie auf ein Team und wählen Sie "Neue Aufgabe"</li>
+                        <li>Definieren Sie die Aufgabendetails mit Priorität und Zeitvorgabe</li>
+                        <li>Fügen Sie bei Bedarf Fotos oder Dokumente hinzu</li>
+                        <li>Die Teammitglieder erhalten sofort eine Benachrichtigung</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Ausrüstungs-Tracking</CardTitle>
+                  <CardDescription>
+                    Verfolgung und Schutz wertvoller Baumaschinen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Geräte registrieren</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Wertvolle Baumaschinen und Ausrüstungsgegenstände können separat verfolgt werden. Fügen Sie
+                      im Bereich "Ausrüstung" die GPS-ID des Trackers sowie eine Beschreibung der Maschine hinzu.
+                      Die App überwacht dann deren Position und kann bei unerwarteten Bewegungen außerhalb der Arbeitszeit
+                      automatisch Warnmeldungen senden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Diebstahlschutz</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Der integrierte Diebstahlschutz bietet mehrere Sicherheitsfunktionen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Alarmauslösung bei unerlaubter Bewegung</li>
+                        <li>Automatische SMS- oder E-Mail-Benachrichtigung an definierte Kontakte</li>
+                        <li>Lokale Alarmsignale können ferngesteuert aktiviert werden</li>
+                        <li>Export des Bewegungsprotokolls für Versicherungszwecke</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bewegungsprotokolle</CardTitle>
+                  <CardDescription>
+                    Dokumentation und Analyse aller Bewegungsdaten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Automatische Protokollierung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Alle Bewegungen werden automatisch protokolliert und können unter "Tracking-Protokolle" eingesehen werden.
+                      Diese Daten sind nützlich für die Dokumentation von Arbeitsstunden, Routenoptimierung und können
+                      bei Bedarf als CSV- oder PDF-Datei exportiert werden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Statistische Auswertung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Das System bietet umfangreiche Analysetools:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Fahrwege und Standzeiten pro Maschine/Mitarbeiter</li>
+                        <li>Durchschnittliche Verweildauer an Baustellen</li>
+                        <li>Anfahrtszeiten und Routeneffizienz</li>
+                        <li>Vergleichsanalysen zwischen Teams und Projekten</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/tracking">
+                  <Map className="h-4 w-4" />
+                  Zum GPS-Tracking
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Strecken- & Flächenmessung */}
+          <div id="flaechenmessung" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Strecken- und Flächenmessung</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Die integrierte Vermessungsfunktion ermöglicht präzise Messungen direkt in der Anwendung, ohne zusätzliche Geräte 
+              oder Software zu benötigen. Ideal für Planungs-, Kalkulationszwecke und Baustellendokumentation.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Streckenmessung</CardTitle>
+                  <CardDescription>
+                    Präzise Vermessung von Strecken und Entfernungen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Grundfunktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Aktivieren Sie die Streckenmessung über den Button "Strecke messen" in der Kartenwerkzeugleiste.
+                      Klicken Sie dann nacheinander auf mehrere Punkte, um einen Streckenverlauf zu markieren.
+                      Die Gesamtlänge sowie die Teilstrecken werden automatisch berechnet und angezeigt.
+                      Für präzisere Messungen können Sie in die Karte hineinzoomen.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Erweiterte Funktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Streckenmessung bietet zusätzliche Optionen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Automatische Routenberechnung zwischen Punkten (Straßen, Feldwege, etc.)</li>
+                        <li>Höhenprofildarstellung bei Verfügbarkeit von Höhendaten</li>
+                        <li>Steigungsanalyse mit prozentualer und Winkelangabe</li>
+                        <li>Wegpunkte mit Notizen und Fotos versehen</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Flächenmessung</CardTitle>
+                  <CardDescription>
+                    Vermessung und Berechnung von Flächen aller Art
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Grundfunktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Für die Vermessung von Flächen nutzen Sie den Button "Fläche messen". Markieren Sie dann 
+                      mindestens drei Punkte auf der Karte, um ein Polygon zu erzeugen. Die eingeschlossene Fläche
+                      wird in Quadratmetern und Hektar angegeben. Komplexe Formen können durch das Setzen
+                      zusätzlicher Punkte genauer umrissen werden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Erweiterte Funktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Flächenmessung bietet nützliche Zusatzfunktionen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Automatische Erkennung von Grundstücksgrenzen (wo verfügbar)</li>
+                        <li>Volumenberechnung bei Eingabe einer Höhe/Tiefe</li>
+                        <li>Unterflächenaufteilung in Teilbereiche</li>
+                        <li>Materialbedarf basierend auf Flächengröße und gewähltem Material</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Speichern und Teilen</CardTitle>
+                  <CardDescription>
+                    Dokumentation und Weitergabe der Messergebnisse
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Projektbezogene Speicherung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Gemessene Strecken und Flächen können mit einem Klick auf "Messung speichern" dem aktuellen 
+                      Projekt zugeordnet werden. Gespeicherte Messungen erscheinen in der Projektansicht und können
+                      als Grundlage für Materialberechnungen, Ausschreibungen oder zur Dokumentation verwendet werden.
+                      Über die Teilen-Funktion können Messungen auch als Link oder Screenshot an Projektbeteiligte 
+                      weitergegeben werden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Exportmöglichkeiten</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Messergebnisse können in verschiedenen Formaten exportiert werden:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>PDF-Bericht mit Kartenansicht, Maßen und Notizen</li>
+                        <li>GeoJSON-Export für die Verwendung in GIS-Anwendungen</li>
+                        <li>KML-Format für Google Earth und andere Kartendienste</li>
+                        <li>Excel-Tabelle mit detaillierten Messwerten</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/geo-map">
+                  <Map className="h-4 w-4" />
+                  Zur Vermessungsfunktion
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* GeoFencing */}
+          <div id="geofencing" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">GeoFencing: Automatische Benachrichtigungen</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              GeoFencing ermöglicht die Einrichtung virtueller Grenzen auf der Karte, um automatische Aktionen und 
+              Benachrichtigungen auszulösen, wenn diese Grenzen von Personen oder Geräten überschritten werden.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>GeoFencing einrichten</CardTitle>
+                  <CardDescription>
+                    Erstellung und Konfiguration virtueller Zäune
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Grundfunktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Im Bereich "GeoFencing" können Sie virtuelle Zäune um bestimmte Bereiche ziehen.
+                      Klicken Sie auf "Neuer Zaun", geben Sie einen Namen ein und zeichnen Sie dann
+                      die Begrenzung auf der Karte. Für jeden GeoFence können Sie festlegen, ob beim Betreten,
+                      beim Verlassen oder bei beidem eine Benachrichtigung ausgelöst werden soll.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Zaun-Typen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Es stehen verschiedene Zaun-Typen zur Verfügung:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Kreis-Zaun: Definiert durch Mittelpunkt und Radius</li>
+                        <li>Polygon-Zaun: Flexibel mit beliebig vielen Punkten</li>
+                        <li>Korridor-Zaun: Entlang einer Route mit definierter Breite</li>
+                        <li>Zeit-Zaun: Nur zu bestimmten Zeiten aktiv</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Einsatzmöglichkeiten</CardTitle>
+                  <CardDescription>
+                    Praktische Anwendungsfälle für GeoFencing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Baustellen-Management</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      GeoFences bieten vielfältige Anwendungen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Automatische Zeiterfassung beim Betreten/Verlassen der Baustelle</li>
+                        <li>Diebstahlschutz durch Alarme bei unerlaubter Bewegung von Maschinen</li>
+                        <li>Sicherheitsbenachrichtigungen beim Betreten gefährlicher Bereiche</li>
+                        <li>Automatische Materialbestellung beim Erreichen eines Lagers</li>
+                        <li>Fortschrittsdokumentation beim Erreichen bestimmter Bauabschnitte</li>
+                      </ul>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Personalmanagement</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Optimieren Sie die Teamkoordination:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Automatische Meldung wenn Teams bestimmte Arbeitsbereiche erreichen</li>
+                        <li>Berechnung der effektiven Arbeitszeit pro Bereich</li>
+                        <li>Einhaltung von Pausenzeiten überwachen</li>
+                        <li>Notfallmeldungen bei unerwarteten Bewegungsmustern</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Benachrichtigungsoptionen</CardTitle>
+                  <CardDescription>
+                    Konfiguration von Meldungen und automatischen Aktionen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Benachrichtigungskanäle</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Legen Sie fest, wie Sie über GeoFence-Ereignisse informiert werden möchten:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Push-Benachrichtigungen auf mobilen Endgeräten</li>
+                        <li>E-Mail-Benachrichtigungen an definierte Empfänger</li>
+                        <li>SMS-Benachrichtigungen für besonders wichtige Ereignisse</li>
+                        <li>Automatische Einträge im Bautagebuch</li>
+                      </ul>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Automatisierte Aktionen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      GeoFence-Ereignisse können automatische Aktionen auslösen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Status-Änderungen in Projekten oder Aufgaben</li>
+                        <li>Automatisches Ein-/Auschecken zur Zeiterfassung</li>
+                        <li>Dokumente zum Unterschreiben bereitstellen</li>
+                        <li>Checklisten für bestimmte Baustellen/Bereiche öffnen</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/geofencing">
+                  <Map className="h-4 w-4" />
+                  Zum GeoFencing
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Straßenbau-Module */}
+          <div id="strassenbau-module" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Spezialmodule für Straßenbau</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Die Spezialmodule für Straßenbau bieten umfassende Werkzeuge zur Erfassung, Analyse und Planung 
+              von Straßenbauprojekten gemäß aktueller Normen und Richtlinien.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Straßenzustandserfassung</CardTitle>
+                  <CardDescription>
+                    Systematische Dokumentation und Analyse von Straßenschäden
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Erfassungsmethoden</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die App ermöglicht die systematische Erfassung von Straßenzuständen durch:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Foto-Upload mit automatischer GPS-Verortung</li>
+                        <li>KI-gestützte Schadensanalyse mit Erkennung von Rissen, Schlaglöchern etc.</li>
+                        <li>Manuelle Bewertungsskala (1-5) mit strukturierten Eingabefeldern</li>
+                        <li>Spracherkennung für schnelle Schadensbeschreibungen</li>
+                      </ul>
+                      Alle Erfassungen werden automatisch auf der Karte visualisiert und können
+                      nach Schadenstyp, Schweregrad oder Erfassungsdatum gefiltert werden.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Mobile Datenerfassung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Für die Arbeit vor Ort bietet die mobile Version:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Offline-Funktionalität für Gebiete ohne Mobilfunkabdeckung</li>
+                        <li>Schnellerfassung per Kamera mit automatischer Positionierung</li>
+                        <li>Vorausfüllung von Metadaten basierend auf der Position</li>
+                        <li>Sprachsteuerung für freihändige Bedienung</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Standardisierte Klassifikation</CardTitle>
+                  <CardDescription>
+                    Normgerechte Bewertung und Dokumentation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Klassifikationssystem</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die erfassten Daten werden gemäß aktueller Normen wie ZTV BEA-StB oder ZTV Asphalt-StB
+                      klassifiziert. Dies umfasst:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Systematische Erfassung von Oberflächenschäden nach Typ und Ausmaß</li>
+                        <li>Berechnung standardisierter Zustandsindizes</li>
+                        <li>Einstufung in Zustandsklassen von 1 (sehr gut) bis 5 (sehr schlecht)</li>
+                        <li>Normgerechte Dokumentation für behördliche Anforderungen</li>
+                      </ul>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Schadenstypen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Das System unterscheidet zwischen verschiedenen Schadenstypen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Risse (Netzrisse, Längsrisse, Querrisse)</li>
+                        <li>Verformungen (Spurrinnen, Aufwölbungen, Setzungen)</li>
+                        <li>Substanzverlust (Ausbrüche, Schlaglöcher)</li>
+                        <li>Oberflächenschäden (Kornausbruch, Bindemittelverlust)</li>
+                        <li>Flickstellen und Aufgrabungen</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Maßnahmenplanung</CardTitle>
+                  <CardDescription>
+                    Automatische Instandsetzungsvorschläge und Kostenprognosen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Automatische Empfehlungen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Basierend auf der Zustandserfassung generiert die App automatisch Instandsetzungsvorschläge:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Angepasste Sanierungsempfehlungen je nach Schadenstyp und -ausmaß</li>
+                        <li>Kostenprognosen für verschiedene Sanierungsvarianten</li>
+                        <li>Priorisierungsvorschläge basierend auf Schadensrelevanz und Verkehrsbelastung</li>
+                        <li>Exportmöglichkeit für Ausschreibungsunterlagen</li>
+                      </ul>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Maßnahmentypen</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die App unterscheidet zwischen verschiedenen Maßnahmentypen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Oberflächenbehandlung (Versiegelung, dünne Schichten)</li>
+                        <li>Deckenerneuerung (Fräsen und Neuasphaltierung der obersten Schicht)</li>
+                        <li>Vollausbau (kompletter Austausch des Straßenaufbaus)</li>
+                        <li>Lokale Reparatur (punktuelle Instandsetzung)</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Historischer Vergleich</CardTitle>
+                  <CardDescription>
+                    Zeitreihenanalyse und Prognosemodelle
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Zeitliche Entwicklung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Besonders wertvoll ist die Möglichkeit, Straßenzustände über Zeit zu verfolgen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Zeitreihenanalyse mit grafischer Darstellung der Zustandsentwicklung</li>
+                        <li>Vergleichsansicht "vorher/nachher" mit Bildmaterial</li>
+                        <li>Prognosemodelle zur Abschätzung der weiteren Zustandsentwicklung</li>
+                        <li>Langzeitdokumentation für Gewährleistungsfragen</li>
+                      </ul>
+                      Dies ermöglicht eine vorausschauende Erhaltungsplanung und optimierte Budgetallokation.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Lebenszyklus-Management</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die App unterstützt das Management des gesamten Lebenszyklus:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Erfassung der ursprünglichen Bauart und Baujahr</li>
+                        <li>Dokumentation aller Instandsetzungsmaßnahmen</li>
+                        <li>Berechnung der Restnutzungsdauer</li>
+                        <li>Optimaler Zeitpunkt für präventive Instandhaltung</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/street-modules">
+                  <Map className="h-4 w-4" />
+                  Zu den Straßenbau-Modulen
                 </Link>
               </Button>
             </div>
@@ -966,6 +1557,10 @@ export default function InformationPage() {
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Klicken Sie auf "Geo-Informationen" in der Seitenleiste</li>
                   <li>Wählen Sie ein Projekt aus dem Dropdown-Menü</li>
+                  <li>Nutzen Sie GPS-Tracking zur Überwachung von Teams und Ausrüstung</li>
+                  <li>Verwenden Sie Strecken- und Flächenmessung für präzise Planungen</li>
+                  <li>Richten Sie GeoFences für automatische Benachrichtigungen ein</li>
+                  <li>Nutzen Sie Spezialmodule zur Straßenzustandserfassung</li>
                   <li>Markieren Sie Standorte durch direktes Klicken auf die Karte</li>
                   <li>Wählen Sie für jeden Standort die entsprechende Boden- und Lastklasse</li>
                   <li>Verbinden Sie Standorte für Routenberechnung und Materialbedarfsanalyse</li>
