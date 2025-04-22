@@ -24,6 +24,18 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Pastellige Grüntöne für eine harmonische Palette
+          50: "#f2f8e8",
+          100: "#e5f0d1",
+          200: "#d1e4aa",
+          300: "#b9d47e",
+          400: "#a2c456",
+          500: "#6a961f", // Unser Hauptgrün
+          600: "#5e8519",
+          700: "#4c6b14",
+          800: "#3e560f",
+          900: "#30420c",
+          950: "#1c260a",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -60,6 +72,14 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        // Natürliche grüne Farbpalette für Elemente im Dashboard
+        greenPalette: {
+          light: "#edf5e1",
+          pastel: "#d1e8bf",
+          medium: "#9ccd62",
+          main: "#6a961f",
+          dark: "#4c6b18",
         },
       },
       keyframes: {
