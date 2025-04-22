@@ -111,15 +111,15 @@ export function Sidebar() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white text-gray-800 border-r border-gray-200">
-      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary-dark">
+      <div className="flex items-center h-20 flex-shrink-0 px-4 bg-primary-dark">
         <div className="flex items-center">
           <img 
             src={logoImage} 
             alt="Bau - Structura Logo" 
-            className="h-8 mr-3" 
+            className="h-16 mr-3" 
             loading="eager" 
-            width="32" 
-            height="32" 
+            width="64" 
+            height="64" 
           />
           <span className="text-xl font-medium text-white">Bau - Structura</span>
         </div>
