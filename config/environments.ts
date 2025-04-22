@@ -1,107 +1,154 @@
-// Umgebungskonfigurationen für Development, Staging und Production
-import dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
+/**
+ * Umgebungskonfigurationen für die Anwendung
+ */
+import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
-// Umgebungstypen
 export type Environment = 'development' | 'staging' | 'production';
 
-// Umgebungskonfiguration Interface
-export interface EnvironmentConfig {
-  name: Environment;
-  databaseUrl: string;
-  apiBaseUrl: string;
-  logLevel: 'debug' | 'info' | 'warn' | 'error';
-  enableCache: boolean;
-  enableAnalytics: boolean;
-  sessionSecret: string;
-  corsOrigins: string[];
-  port: number;
-  assetsCDN?: string;
+// Umgebungsspezifische Konstanten
+export const ENV_CONFIG_FILES: Record<Environment, string> = {
+  development: '.env.development',
+  staging: '.env.staging',
+  production: '.env.production'
+};
+
+// Schutzbedürftige Umgebungsvariablen, die bei einem Klonen nicht überschrieben werden sollten
+export const PROTECTED_ENV_VARS = [
+  'NODE_ENV',
+  'DATABASE_URL',
+  'PORT',
+  'HOST',
+  'SESSION_SECRET',
+  'STRIPE_WEBHOOK_SECRET'
+];
+
+/**
+ * Lädt eine spezifische Umgebungskonfigurationsdatei
+ * @param env Die zu ladende Umgebung
+ * @returns Ein Objekt mit allen Umgebungsvariablen aus der Konfigurationsdatei
+ */
+export function loadEnvironmentConfig(env: Environment): Record<string, string> {
+  const envFilePath = path.resolve(process.cwd(), ENV_CONFIG_FILES[env]);
+  
+  // Prüfen, ob die Datei existiert
+  if (!fs.existsSync(envFilePath)) {
+    throw new Error(`Umgebungskonfigurationsdatei nicht gefunden: ${envFilePath}`);
+  }
+  
+  // Datei parsen
+  const envConfig = dotenv.parse(fs.readFileSync(envFilePath));
+  return envConfig;
 }
 
-// Lade Umgebungsspezifische .env-Datei, falls vorhanden
-function loadEnvFile(environment: Environment): void {
-  const envFile = `.env.${environment}`;
+/**
+ * Speichert die Umgebungskonfiguration in der entsprechenden Datei
+ * @param env Die Zielumgebung
+ * @param config Die Konfigurationsvariablen als Schlüssel-Wert-Paare
+ */
+export function saveEnvironmentConfig(env: Environment, config: Record<string, string>): void {
+  const envFilePath = path.resolve(process.cwd(), ENV_CONFIG_FILES[env]);
   
-  if (fs.existsSync(envFile)) {
-    dotenv.config({ path: envFile });
-    console.log(`Umgebungsvariablen aus ${envFile} geladen.`);
-  } else {
-    // Fallback zur Standard-.env-Datei
-    dotenv.config();
-    console.log('Standard .env-Datei geladen (spezifische Umgebungsdatei nicht gefunden).');
+  // Konfiguration in eine String-Darstellung umwandeln
+  let envContent = '';
+  for (const [key, value] of Object.entries(config)) {
+    envContent += `${key}=${value}\n`;
+  }
+  
+  // In Datei schreiben
+  fs.writeFileSync(envFilePath, envContent);
+}
+
+/**
+ * Erstellt eine neue Umgebungskonfigurationsdatei, wenn diese noch nicht existiert
+ * @param env Die zu erstellende Umgebung
+ */
+export function createEnvironmentFileIfNotExists(env: Environment): void {
+  const envFilePath = path.resolve(process.cwd(), ENV_CONFIG_FILES[env]);
+  
+  if (!fs.existsSync(envFilePath)) {
+    // Template für neue Umgebungen erstellen
+    let template = '';
+    
+    if (env === 'development') {
+      template = `
+# Entwicklungsumgebung Konfiguration
+NODE_ENV=development
+PORT=5000
+HOST=0.0.0.0
+# Fügen Sie hier weitere Umgebungsvariablen hinzu
+`;
+    } else if (env === 'staging') {
+      template = `
+# Staging-Umgebung Konfiguration
+NODE_ENV=staging
+PORT=5000
+HOST=0.0.0.0
+# Fügen Sie hier weitere Umgebungsvariablen hinzu
+`;
+    } else if (env === 'production') {
+      template = `
+# Produktionsumgebung Konfiguration
+NODE_ENV=production
+PORT=80
+HOST=0.0.0.0
+# Fügen Sie hier weitere Umgebungsvariablen hinzu
+`;
+    }
+    
+    fs.writeFileSync(envFilePath, template.trim());
+    console.log(`Neue Umgebungskonfigurationsdatei erstellt: ${envFilePath}`);
   }
 }
 
-// Basis-Konfiguration für alle Umgebungen
-const baseConfig: Partial<EnvironmentConfig> = {
-  port: parseInt(process.env.PORT || '3000', 10),
-  sessionSecret: process.env.SESSION_SECRET || 'default-secret-change-in-production',
-  logLevel: 'info',
-};
-
-// Development-Umgebungskonfiguration
-const developmentConfig: EnvironmentConfig = {
-  ...baseConfig as EnvironmentConfig,
-  name: 'development',
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/app_development',
-  apiBaseUrl: 'http://localhost:3000',
-  logLevel: 'debug',
-  enableCache: false,
-  enableAnalytics: false,
-  corsOrigins: ['http://localhost:3000', 'http://localhost:3001'],
-  port: parseInt(process.env.PORT || '3000', 10),
-};
-
-// Staging-Umgebungskonfiguration
-const stagingConfig: EnvironmentConfig = {
-  ...baseConfig as EnvironmentConfig,
-  name: 'staging',
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/app_staging',
-  apiBaseUrl: 'https://staging.app.example.com',
-  logLevel: 'info',
-  enableCache: true,
-  enableAnalytics: true,
-  corsOrigins: ['https://staging.app.example.com'],
-  port: parseInt(process.env.PORT || '3000', 10),
-  assetsCDN: 'https://staging-cdn.example.com',
-};
-
-// Production-Umgebungskonfiguration
-const productionConfig: EnvironmentConfig = {
-  ...baseConfig as EnvironmentConfig,
-  name: 'production',
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/app_production',
-  apiBaseUrl: 'https://app.example.com',
-  logLevel: 'warn',
-  enableCache: true,
-  enableAnalytics: true,
-  corsOrigins: ['https://app.example.com'],
-  port: parseInt(process.env.PORT || '3000', 10),
-  assetsCDN: 'https://cdn.example.com',
-};
-
-// Konfigurationen für alle Umgebungen
-const configs: Record<Environment, EnvironmentConfig> = {
-  development: developmentConfig,
-  staging: stagingConfig,
-  production: productionConfig,
-};
-
-// Aktuelle Umgebung bestimmen
-export function getCurrentEnvironment(): Environment {
-  const env = (process.env.NODE_ENV || 'development') as Environment;
-  return env;
+/**
+ * Klont die Konfiguration von einer Umgebung zu einer anderen
+ * Dabei werden schutzbedürftige Variablen der Zielumgebung beibehalten
+ * @param sourceEnv Quellumgebung 
+ * @param targetEnv Zielumgebung
+ * @returns Ein Objekt mit der neuen Zielkonfiguration
+ */
+export function cloneEnvironmentConfig(sourceEnv: Environment, targetEnv: Environment): Record<string, string> {
+  // Beide Konfigurationen laden
+  const sourceConfig = loadEnvironmentConfig(sourceEnv);
+  let targetConfig: Record<string, string> = {};
+  
+  try {
+    // Wenn die Zielkonfiguration existiert, wird sie geladen
+    targetConfig = loadEnvironmentConfig(targetEnv);
+  } catch (error) {
+    // Falls die Zielkonfiguration nicht existiert, wird eine neue erstellt
+    createEnvironmentFileIfNotExists(targetEnv);
+    targetConfig = loadEnvironmentConfig(targetEnv);
+  }
+  
+  // Neue Konfiguration erstellen, schutzbedürftige Variablen der Zielumgebung beibehalten
+  const newConfig: Record<string, string> = { ...sourceConfig };
+  
+  // Schutzbedürftige Variablen aus der Zielumgebung beibehalten, falls vorhanden
+  for (const protectedVar of PROTECTED_ENV_VARS) {
+    if (targetConfig[protectedVar]) {
+      newConfig[protectedVar] = targetConfig[protectedVar];
+    }
+  }
+  
+  // Sicherstellen, dass NODE_ENV korrekt gesetzt ist
+  newConfig['NODE_ENV'] = targetEnv;
+  
+  // Neue Konfiguration speichern und zurückgeben
+  saveEnvironmentConfig(targetEnv, newConfig);
+  return newConfig;
 }
 
-// Konfiguration für aktuelle Umgebung laden
-export function loadEnvironmentConfig(): EnvironmentConfig {
-  const currentEnv = getCurrentEnvironment();
-  loadEnvFile(currentEnv);
-  return configs[currentEnv];
+/**
+ * Aktualisiert eine einzelne Umgebungsvariable in einer Umgebung
+ * @param env Die Zielumgebung
+ * @param key Der Schlüssel der Umgebungsvariable
+ * @param value Der neue Wert
+ */
+export function updateEnvironmentVariable(env: Environment, key: string, value: string): void {
+  const config = loadEnvironmentConfig(env);
+  config[key] = value;
+  saveEnvironmentConfig(env, config);
 }
-
-// Exportiere die Konfiguration für die aktuelle Umgebung
-export const environmentConfig = loadEnvironmentConfig();
-export default environmentConfig;

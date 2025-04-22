@@ -18,6 +18,18 @@ fi
 
 echo "🚀 Umgebung $ENVIRONMENT wird eingerichtet..."
 
+# Besondere Warnung bei Einrichtung der Production-Umgebung
+if [ "$ENVIRONMENT" = "production" ]; then
+  echo "⚠️ WARNUNG: Sie sind dabei, die Produktionsumgebung einzurichten!"
+  echo "Dieser Vorgang sollte nur in einer kontrollierten Umgebung durchgeführt werden."
+  read -p "Möchten Sie fortfahren? (ja/nein): " CONFIRM
+  
+  if [[ "$CONFIRM" != "ja" && "$CONFIRM" != "yes" && "$CONFIRM" != "y" ]]; then
+    echo "Vorgang abgebrochen."
+    exit 1
+  fi
+fi
+
 # TypeScript-Skript ausführen
 npx tsx scripts/setup-environment.ts $ENVIRONMENT
 
