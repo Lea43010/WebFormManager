@@ -1,0 +1,63 @@
+Date: Tue Apr 22 2025 08:16:02 GMT+0000 (Coordinated Universal Time)
+From: BauStructura (DEV) <dev-test@baustructura.de>
+To: alexandereisenmann@sachverstandigenburojustiti.onmicrosoft.com
+Subject: Willkommen bei Bau - Structura App - Ihre Zugangsdaten
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+        .container { padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        h1 { color: #2563eb; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .highlight { background-color: #f4f4f4; padding: 10px; border-radius: 4px; margin: 15px 0; }
+        .credentials { font-family: Consolas, monospace; font-weight: bold; }
+        .note { font-size: 0.9em; background-color: #fdf6e3; padding: 10px; border-left: 4px solid #e5c07b; margin: 15px 0; }
+        .footer { margin-top: 30px; font-size: 0.9em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Willkommen bei Bau - Structura App</h1>
+        
+        <p>Sehr geehrter Herr Alexander Eisenmann,</p>
+        
+        <p>wir freuen uns, Sie als neuen Benutzer der Bau - Structura App begrüßen zu dürfen. Ihr Konto wurde erfolgreich eingerichtet und ist ab sofort einsatzbereit.</p>
+        
+        <div class="highlight">
+          <h3>Ihre Zugangsdaten:</h3>
+          <p><strong>Benutzername:</strong> <span class="credentials">aeisenmann</span></p>
+          <p><strong>Temporäres Passwort:</strong> <span class="credentials">a7f681da9824f3dc6b43</span></p>
+          <p><strong>Login-URL:</strong> <a href="http://localhost:5000">http://localhost:5000</a></p>
+        </div>
+        
+        <div class="note">
+          <p><strong>Wichtig:</strong> Bitte ändern Sie aus Sicherheitsgründen Ihr Passwort nach der ersten Anmeldung.</p>
+        </div>
+        
+        <h3>Die wichtigsten Funktionen im Überblick:</h3>
+        <ul>
+          <li>Projektübersicht und -verwaltung</li>
+          <li>Bautagebuch mit automatischer Speicherung</li>
+          <li>Meilensteinkontrolle und Terminplanung</li>
+          <li>Filemanagement und Dokumentenablage</li>
+          <li>Oberflächenanalyse mit KI-Unterstützung</li>
+          <li>Bedarfs- und Kapazitätsplanung</li>
+        </ul>
+        
+        <p>Sollten Sie Fragen zur Nutzung der Anwendung haben oder auf Probleme stoßen, steht Ihnen unser Support-Team gerne zur Verfügung.</p>
+        
+        <p>Wir wünschen Ihnen viel Erfolg bei der Nutzung der Bau - Structura App!</p>
+        
+        <p>Mit freundlichen Grüßen,<br>
+        Ihr Bau - Structura App Team</p>
+        
+        <div class="footer">
+          <p>Diese E-Mail wurde am 22.04.2025 automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+    

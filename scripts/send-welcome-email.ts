@@ -5,19 +5,52 @@
  * mit seinen Zugangsdaten und wichtigen Informationen zur Anwendung.
  * 
  * Verwendung:
- * npx tsx scripts/send-welcome-email.ts
+ * npx tsx scripts/send-welcome-email.ts --username [username] --name [name] --email [email] --password [password]
  */
 
 import { emailService } from '../server/email-service';
 import { db } from '../server/db';
 import config from '../config';
 
+// Kommandozeilenargumente parsen
+const args = process.argv.slice(2);
+let username = '';
+let user_name = '';
+let user_email = '';
+let password = '';
+
+for (let i = 0; i < args.length; i += 2) {
+  const arg = args[i];
+  const value = args[i + 1];
+  
+  if (arg === '--username') username = value;
+  if (arg === '--name') user_name = value;
+  if (arg === '--email') user_email = value;
+  if (arg === '--password') password = value;
+}
+
+// Wenn keine Parameter angegeben wurden, Standard-Werte verwenden
+// (letzte gesendete E-Mail)
+if (!username && !user_name && !user_email && !password) {
+  username = 'aeisenmann';
+  user_name = 'Alexander Eisenmann';
+  user_email = 'alexandereisenmann@sachverstandigenburojustiti.onmicrosoft.com';
+  password = 'a7f681da9824f3dc6b43';
+}
+
+// Prüfen, ob erforderliche Parameter vorhanden sind
+if (!username || !user_name || !user_email || !password) {
+  console.error('Fehler: Erforderliche Parameter fehlen!');
+  console.log('Verwendung: npx tsx scripts/send-welcome-email.ts --username [username] --name [name] --email [email] --password [password]');
+  process.exit(1);
+}
+
 // Parameter für den Benutzer
 const USER_INFO = {
-  username: 'rkuisle',
-  user_name: 'René Kuisle',
-  user_email: 'Rene.Kuisle@netz-germany.de',
-  password: '4bc979e3495b7c93aa70', // Temporäres Passwort
+  username,
+  user_name,
+  user_email,
+  password,
 };
 
 async function sendWelcomeEmail() {
