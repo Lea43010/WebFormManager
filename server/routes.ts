@@ -1135,21 +1135,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(attachments);
       }
       
-      // Manager sieht nur Anhänge der eigenen Projekte
+      // Manager sieht alle Projekte und deren Anhänge
       if (req.user.role === 'manager') {
-        // Projekte des Managers laden
-        const userProjects = await storage.getProjectsByUser(req.user.id);
-        
-        // Wenn keine Projekte vorhanden, leere Liste zurückgeben
-        if (userProjects.length === 0) {
-          return res.json([]);
-        }
-        
-        // Projekt-IDs extrahieren
-        const projectIds = userProjects.map(project => project.id);
-        
-        // Anhänge für diese Projekte abrufen
-        const attachments = await storage.getAttachmentsByProjects(projectIds);
+        // Für Manager geben wir alle Anhänge zurück
+        // Dies ist Teil der Umstellung auf das vereinfachte Rollenmodell
+        const attachments = await storage.getAllAttachments();
         return res.json(attachments);
       }
       
