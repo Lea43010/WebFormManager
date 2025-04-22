@@ -6,7 +6,7 @@
  * Verwendung:
  * npx tsx scripts/update-user-role.ts --username [username] --role [role]
  * 
- * Gültige Rollen: administrator, manager, benutzer
+ * Gültige Rollen: administrator, manager
  */
 
 import { sql } from '../server/db';
@@ -33,7 +33,7 @@ if (!username || !role) {
 }
 
 // Gültige Rollen definieren
-const validRoles = ['administrator', 'manager', 'benutzer'];
+const validRoles = ['administrator', 'manager'];
 if (!validRoles.includes(role)) {
   console.error(`Fehler: "${role}" ist keine gültige Rolle!`);
   console.log('Gültige Rollen: administrator, manager, benutzer');

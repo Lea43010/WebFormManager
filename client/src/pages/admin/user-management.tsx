@@ -401,10 +401,10 @@ const USER_INFO = {
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-emerald-600">Benutzer</h3>
+                  <h3 className="text-lg font-semibold text-emerald-600">Manager</h3>
                   <div className="border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 rounded-md p-4">
                     <ul className="list-disc pl-5 text-sm space-y-2">
-                      <li>Zugriff auf zugewiesene Projekte</li>
+                      <li>Zugriff auf selbst erstellte Projekte</li>
                       <li>Kann eigene Projekte erstellen und verwalten</li>
                       <li>Kann Bautagebuch-Einträge hinzufügen und bearbeiten</li>
                       <li>Kann Meilensteine verwalten und tracken</li>

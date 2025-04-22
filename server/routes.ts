@@ -1153,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(attachments);
       }
       
-      // Benutzer mit normaler Rolle bekommen eine leere Liste
+      // Fallback, sollte eigentlich nie erreicht werden, da wir nur zwei Rollenarten haben
       return res.json([]);
     } catch (error) {
       console.error("Error fetching attachments:", error);
