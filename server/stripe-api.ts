@@ -10,9 +10,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 // Initialisiere Stripe mit dem geheimen Schlüssel
-// @ts-ignore - Wir ignorieren den Typfehler für die API-Version, da Stripe in 2025 neue Versionen haben wird
+// In der Fehleranzeige sehen wir, dass Stripe die Version 2025-03-31.basil erwartet
+// Wir verwenden diese Version, die in der aktuellen Umgebung verfügbar ist
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16", // Kompatible Version, die zum Zeitpunkt der Entwicklung aktuell ist
+  apiVersion: "2025-03-31.basil",
 });
 
 // Preisplan-ID für das Abonnement

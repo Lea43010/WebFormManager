@@ -7,6 +7,9 @@ import {
   cancelSubscription,
   handleStripeWebhookEvent
 } from "./stripe-api";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { users } from "@shared/schema";
 
 export function setupStripeRoutes(app: Express) {
   // Überprüfen, ob ein Benutzer ein aktives Abonnement hat
@@ -35,18 +38,28 @@ export function setupStripeRoutes(app: Express) {
       
       // Wenn der Benutzer in der Testphase ist, aber kein Enddatum hat,
       // setzen wir ein Standarddatum (4 Wochen ab jetzt)
-      if (!trialEndDate && (req.user.subscriptionStatus === 'trial' || !req.user.subscriptionStatus)) {
+      const hasValidTrialEndDate = trialEndDate && 
+                                   new Date(trialEndDate).toString() !== 'Invalid Date';
+      
+      if (!hasValidTrialEndDate && 
+          (req.user.subscriptionStatus === 'trial' || !req.user.subscriptionStatus)) {
         const date = new Date();
         date.setDate(date.getDate() + 28); // 4 Wochen
-        const trialEndDateStr = date.toISOString().split('T')[0]; // Nur das Datum im Format YYYY-MM-DD
         
-        // Wir könnten hier auch das Datum in der Datenbank speichern, aber das
-        // würde einen zusätzlichen Schreibvorgang bedeuten. Stattdessen stellen
-        // wir sicher, dass es in der Antwort enthalten ist.
-        console.log("Automatisch generiertes Enddatum:", trialEndDateStr);
-        
-        // Setze die Variable neu, aber als String
-        trialEndDate = trialEndDateStr;
+        // Aktualisiere das Enddatum in der Datenbank für diesen Benutzer
+        // Dies ist wichtig, damit das Datum dauerhaft gespeichert wird
+        try {
+          await db.update(users)
+            .set({ trialEndDate: date })
+            .where(eq(users.id, req.user.id));
+          
+          console.log("Trial-Enddatum in der Datenbank aktualisiert:", date);
+          trialEndDate = date;
+        } catch (error) {
+          console.error("Fehler beim Aktualisieren des Trial-Enddatums:", error);
+          // Fallback: Verwende das Datum nur für die Antwort
+          trialEndDate = date;
+        }
       }
       
       const responseData = { 
@@ -128,9 +141,9 @@ export function setupStripeRoutes(app: Express) {
     let event: Stripe.Event;
     
     try {
-      // @ts-ignore - Wir ignorieren den Typfehler für die API-Version
+      // Verwenden der aktuellen API-Version, wie in der Fehlermeldung angegeben
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2023-10-16", // Kompatible Version
+        apiVersion: "2025-03-31.basil",
       });
       
       event = stripe.webhooks.constructEvent(
