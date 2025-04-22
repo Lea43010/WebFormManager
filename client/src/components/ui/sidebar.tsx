@@ -110,22 +110,22 @@ export function Sidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-primary-600/95 text-white">
-      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary-700">
+    <div className="flex flex-col h-full bg-primary-dark text-black">
+      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
         <div className="flex items-center">
           <img 
             src={logoImage} 
-            alt="Bau - Structura Logo" 
+            alt="Sachverständigenbüro - Justitia" 
             className="h-8 mr-3" 
             loading="eager" 
             width="32" 
             height="32" 
           />
-          <span className="text-xl font-medium text-white">Bau - Structura App</span>
+          <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Bau - Structura App</span>
         </div>
         {isMobile && (
           <TooltipButton tooltipText="Menü schließen" side="bottom">
-            <Button variant="ghost" className="ml-auto text-white hover:bg-primary-800" onClick={toggleMobileMenu}>
+            <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
               <X className="h-6 w-6" />
             </Button>
           </TooltipButton>
@@ -145,13 +145,13 @@ export function Sidebar() {
               const menuItem = (
                 <div
                   className={cn(
-                    "group flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors duration-150",
+                    "group flex items-center px-2 py-2 text-base font-medium rounded-md",
                     isActive
-                      ? "bg-primary-500 text-white shadow-sm"
-                      : "text-primary-100 hover:bg-primary-500/70 hover:text-white"
+                      ? "bg-primary-light text-black"
+                      : "text-black hover:bg-primary-light"
                   )}
                 >
-                  <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary-100" : "text-primary-200")} />
+                  <item.icon className="mr-3 h-6 w-6" />
                   {item.title}
                 </div>
               );
@@ -184,15 +184,14 @@ export function Sidebar() {
         </nav>
       </div>
       {user && (
-        <div className="p-4 border-t border-primary-500/50">
+        <div className="p-4 border-t border-primary-light">
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
-              <Avatar className="border-2 border-primary-200">
-                <AvatarFallback className="bg-primary-800 text-white">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+              <Avatar>
+                <AvatarFallback className="bg-primary">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium text-white">{user.username}</p>
-                <p className="text-xs text-primary-200 mt-1">Angemeldet</p>
+                <p className="text-sm font-medium text-black">{user.username}</p>
               </div>
             </div>
           </div>
