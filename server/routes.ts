@@ -301,10 +301,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Nur Administratoren und Manager dürfen neue Kunden erstellen
-      if (req.user.role !== 'administrator' && req.user.role !== 'manager') {
-        return res.status(403).json({ message: "Keine Berechtigung zum Erstellen von Kunden. Diese Operation erfordert Administrator- oder Manager-Rechte." });
-      }
+      // Alle authentifizierten Benutzer dürfen neue Kunden erstellen
+      // Die Beschränkung auf Administratoren und Manager wurde entfernt,
+      // sodass jeder Benutzer Kunden erstellen kann
       
       // Wenn keine Kundennummer übergeben wurde oder diese leer ist, 
       // entfernen wir sie aus dem Request, damit sie automatisch generiert wird
