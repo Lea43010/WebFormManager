@@ -4,7 +4,8 @@ import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import BackupManagement from "@/components/admin/backup-management";
 import { DataQualityManagement } from "@/components/admin/data-quality-management";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock, Database, BarChart } from 'lucide-react';
+import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode } from 'lucide-react';
+import { Link } from "wouter";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -14,9 +15,20 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex items-center mb-6">
-        <ShieldAlert className="h-8 w-8 mr-2 text-primary" />
-        <h1 className="text-4xl font-bold">Administration</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <ShieldAlert className="h-8 w-8 mr-2 text-primary" />
+          <h1 className="text-4xl font-bold">Administration</h1>
+        </div>
+        
+        {isAdmin && (
+          <Link href="/admin/deployment-docs">
+            <a className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
+              <Settings className="h-4 w-4 mr-2" />
+              <span>Deployment Dokumentation</span>
+            </a>
+          </Link>
+        )}
       </div>
       
       <Tabs defaultValue="users" className="space-y-4">
@@ -41,6 +53,13 @@ export default function AdminPage() {
               <TabsTrigger value="dataquality" className="flex items-center">
                 <BarChart className="h-4 w-4 mr-2" />
                 Datenqualität
+              </TabsTrigger>
+
+              <TabsTrigger value="deployment" className="flex items-center" asChild>
+                <Link href="/admin/deployment-docs">
+                  <FileCode className="h-4 w-4 mr-2" />
+                  Deployment
+                </Link>
               </TabsTrigger>
             </>
           )}
