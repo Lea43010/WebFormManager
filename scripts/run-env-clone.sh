@@ -1,15 +1,21 @@
 #!/bin/bash
-# Skript zum Klonen einer Umgebung
+# Skript zum Klonen einer Umgebung in eine andere
 
 # Überprüfung der Argumente
-if [ $# -ne 2 ]; then
-  echo "Verwendung: $0 <source-environment> <target-environment>"
+if [ $# -lt 2 ]; then
+  echo "Verwendung: $0 <source-environment> <target-environment> [--force]"
   echo "Beispiel: $0 development staging"
   exit 1
 fi
 
 SOURCE_ENV=$1
 TARGET_ENV=$2
+FORCE=""
+
+# Prüfen, ob --force als drittes Argument angegeben wurde
+if [ $# -eq 3 ] && [ "$3" == "--force" ]; then
+  FORCE="--force"
+fi
 
 # Gültige Umgebungen überprüfen
 if [[ "$SOURCE_ENV" != "development" && "$SOURCE_ENV" != "staging" && "$SOURCE_ENV" != "production" ]]; then
@@ -27,21 +33,20 @@ if [ "$SOURCE_ENV" = "$TARGET_ENV" ]; then
   exit 1
 fi
 
-echo "🚀 Umgebung wird von $SOURCE_ENV nach $TARGET_ENV geklont..."
-
-# Besondere Warnung bei Klonen nach Production
-if [ "$TARGET_ENV" = "production" ]; then
-  echo "⚠️ WARNUNG: Sie sind dabei, in die Produktionsumgebung zu klonen!"
-  echo "Dieser Vorgang sollte nur in einer kontrollierten Umgebung durchgeführt werden."
-  read -p "Möchten Sie fortfahren? (ja/nein): " CONFIRM
-  
-  if [[ "$CONFIRM" != "ja" && "$CONFIRM" != "yes" && "$CONFIRM" != "y" ]]; then
-    echo "Vorgang abgebrochen."
-    exit 1
-  fi
-fi
+echo "🔄 Starte Umgebungsklonen von $SOURCE_ENV nach $TARGET_ENV..."
 
 # TypeScript-Skript ausführen
-npx tsx scripts/clone-environment.ts $SOURCE_ENV $TARGET_ENV
+if [ -n "$FORCE" ]; then
+  npx tsx scripts/clone-environment.ts $SOURCE_ENV $TARGET_ENV --force
+else
+  npx tsx scripts/clone-environment.ts $SOURCE_ENV $TARGET_ENV
+fi
 
-echo "✅ Skript zum Umgebungsklonen wurde ausgeführt."
+# Exitcode des TypeScript-Skripts überprüfen
+RESULT=$?
+if [ $RESULT -eq 0 ]; then
+  echo "✅ Umgebung erfolgreich geklont."
+else
+  echo "❌ Fehler beim Klonen der Umgebung."
+  exit $RESULT
+fi

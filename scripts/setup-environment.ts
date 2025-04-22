@@ -1,170 +1,177 @@
 /**
- * Skript zum Einrichten einer Umgebung
+ * Skript zum Einrichten einer neuen Umgebungskonfiguration
  * 
  * Verwendung:
- * npx tsx scripts/setup-environment.ts <environment>
+ * npx tsx scripts/setup-environment.ts <environment> [--force]
  * 
  * Beispiel:
  * npx tsx scripts/setup-environment.ts development
  */
 
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { 
-  Environment, 
+import * as readline from 'readline';
+import {
+  Environment,
   ENV_CONFIG_FILES,
-  createEnvironmentFileIfNotExists,
-  loadEnvironmentConfig,
-  updateEnvironmentVariable
+  PROTECTED_ENV_VARS,
+  createEnvironmentConfig,
+  saveEnvironmentConfig,
+  loadEnvironmentConfig
 } from '../config/environments';
-import * as dotenv from 'dotenv';
+
+// Farben für die Konsolenausgabe
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
+  red: '\x1b[31m',
+};
+
+// Readline-Interface für Benutzereingaben
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 // Überprüfen der Befehlszeilenargumente
 const args = process.argv.slice(2);
-if (args.length !== 1) {
-  console.error('Verwendung: npx tsx scripts/setup-environment.ts <environment>');
+const forceFlag = args.includes('--force');
+
+// Die Argumente ohne Flags extrahieren
+const envArgs = args.filter(arg => !arg.startsWith('--'));
+
+if (envArgs.length !== 1) {
+  console.error('Verwendung: npx tsx scripts/setup-environment.ts <environment> [--force]');
   process.exit(1);
 }
 
-const env = args[0] as Environment;
+const targetEnv = envArgs[0] as Environment;
 
-// Überprüfen des Umgebungsnamens
+// Überprüfen der Umgebungsnamen
 const validEnvironments: Environment[] = ['development', 'staging', 'production'];
-if (!validEnvironments.includes(env)) {
-  console.error('Ungültige Umgebung. Gültige Werte: development, staging, production');
+if (!validEnvironments.includes(targetEnv)) {
+  console.error(`${colors.red}Ungültige Umgebung. Gültige Werte: development, staging, production${colors.reset}`);
   process.exit(1);
 }
 
-// Hauptfunktion zum Einrichten der Umgebung
-async function setupEnvironment() {
-  try {
-    console.log(`🛠️  Einrichten der Umgebung "${env}"...`);
-    
-    // 1. Umgebungskonfigurationsdatei erstellen/überprüfen
-    createEnvironmentFileIfNotExists(env);
-    console.log(`✅ Umgebungskonfigurationsdatei überprüft: ${ENV_CONFIG_FILES[env]}`);
-    
-    // Konfiguration laden
-    const config = loadEnvironmentConfig(env);
-    
-    // 2. NODE_ENV setzen
-    updateEnvironmentVariable(env, 'NODE_ENV', env);
-    console.log(`✅ NODE_ENV auf "${env}" gesetzt`);
-    
-    // 3. Überprüfen, ob eine Datenbank-URL vorhanden ist
-    if (!config.DATABASE_URL) {
-      console.warn('⚠️ Keine Datenbank-URL gefunden. Bitte fügen Sie eine DATABASE_URL zur Umgebungskonfiguration hinzu.');
-    } else {
-      // Datenbankverbindung testen
-      await testDatabaseConnection(config.DATABASE_URL);
-      
-      // 4. Datenbank-Schema initialisieren
-      console.log('🔄 Datenbank-Schema wird initialisiert...');
-      
-      try {
-        // Drizzle verwenden, um das Schema zu aktualisieren
-        console.log('🔄 Führe Drizzle-Schema-Push aus...');
-        
-        // Wir verwenden NODE_ENV, um sicherzustellen, dass die richtige Konfiguration verwendet wird
-        execSync(`NODE_ENV=${env} npm run db:push`, { stdio: 'inherit' });
-        console.log('✅ Datenbank-Schema wurde erfolgreich initialisiert!');
-        
-        // 5. Seed-Daten laden (nur für Development und Staging)
-        if (env !== 'production') {
-          await seedDatabase();
-        }
-        
-      } catch (error) {
-        console.error(`❌ Fehler beim Initialisieren des Datenbank-Schemas: ${error.message}`);
-      }
+/**
+ * Erstellt ein Backup der Zielumgebungskonfiguration
+ */
+function backupTargetConfig(targetEnv: Environment): void {
+  const targetConfigPath = path.resolve(process.cwd(), ENV_CONFIG_FILES[targetEnv]);
+  
+  if (fs.existsSync(targetConfigPath)) {
+    const backupPath = `${targetConfigPath}.backup`;
+    fs.copyFileSync(targetConfigPath, backupPath);
+    console.log(`${colors.blue}Backup der Zielkonfiguration erstellt: ${backupPath}${colors.reset}`);
+  }
+}
+
+/**
+ * Fragt den Benutzer nach einem Wert mit einer Vorgabe
+ */
+function promptUser(question: string, defaultValue: string = ''): Promise<string> {
+  const defaultText = defaultValue ? ` (Standard: ${defaultValue})` : '';
+  
+  return new Promise((resolve) => {
+    rl.question(`${question}${defaultText}: `, (answer) => {
+      resolve(answer || defaultValue);
+    });
+  });
+}
+
+/**
+ * Fragt den Benutzer nach sensiblen Umgebungsvariablen
+ */
+async function promptForSensitiveVars(config: Record<string, string>): Promise<Record<string, string>> {
+  const newConfig = { ...config };
+  
+  console.log(`\n${colors.bright}Bitte geben Sie die folgenden sensiblen Umgebungsvariablen ein:${colors.reset}`);
+  console.log(`(Drücken Sie Enter, um einen Wert zu überspringen oder den Standardwert zu verwenden)\n`);
+  
+  // Datenbank-URL
+  if (!newConfig.DATABASE_URL) {
+    newConfig.DATABASE_URL = await promptUser(`${colors.bright}DATABASE_URL${colors.reset} (Postgres-Verbindungsstring)`, 'postgresql://user:password@localhost:5432/baustructura');
+  }
+  
+  // SESSION_SECRET
+  if (!newConfig.SESSION_SECRET) {
+    newConfig.SESSION_SECRET = await promptUser(`${colors.bright}SESSION_SECRET${colors.reset}`, Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+  }
+  
+  // API-Schlüssel
+  for (const key of ['BREVO_API_KEY', 'OPENAI_API_KEY', 'DEEPAI_API_KEY', 'MAPBOX_ACCESS_TOKEN', 'STRIPE_SECRET_KEY', 'VITE_STRIPE_PUBLIC_KEY']) {
+    if (!newConfig[key]) {
+      newConfig[key] = await promptUser(`${colors.bright}${key}${colors.reset}`);
     }
-    
-    console.log(`\n✅ Umgebung "${env}" wurde erfolgreich eingerichtet!`);
-    
-    // Hinweise ausgeben
-    console.log('\nUm die Umgebung zu starten:');
-    console.log(`NODE_ENV=${env} npm run ${env === 'production' ? 'start' : 'dev'}`);
-    
-  } catch (error) {
-    console.error(`❌ Fehler beim Einrichten der Umgebung: ${error.message}`);
+  }
+  
+  return newConfig;
+}
+
+/**
+ * Richtet eine neue Umgebungskonfiguration ein
+ */
+async function setupEnvironment(): Promise<void> {
+  console.log(`\n${colors.bright}Bau-Structura App - Umgebungs-Setup${colors.reset}\n`);
+  console.log(`${colors.bright}Richte ${colors.green}${targetEnv}${colors.reset} ${colors.bright}Umgebung ein${colors.reset}\n`);
+  
+  // 1. Prüfen, ob die Zielumgebungskonfiguration bereits existiert
+  const targetConfigPath = path.resolve(process.cwd(), ENV_CONFIG_FILES[targetEnv]);
+  const targetExists = fs.existsSync(targetConfigPath);
+  
+  if (targetExists && !forceFlag) {
+    console.log(`${colors.yellow}Die Konfiguration ${ENV_CONFIG_FILES[targetEnv]} existiert bereits.${colors.reset}`);
+    console.log(`Um sie zu überschreiben, führen Sie den Befehl mit --force aus.`);
+    console.log(`${colors.bright}./scripts/run-env-setup.sh ${targetEnv} --force${colors.reset}\n`);
+    rl.close();
     process.exit(1);
   }
-}
-
-// Datenbankverbindung testen
-async function testDatabaseConnection(dbUrl: string) {
-  try {
-    console.log('🔄 Datenbankverbindung wird getestet...');
-    
-    // Einfachen Test mit pg-Client durchführen
-    // In einer realen Anwendung würden wir hier den vorhandenen Datenbankpool verwenden
-    const { Pool } = require('pg');
-    const pool = new Pool({ connectionString: dbUrl });
-    
-    // Verbindung testen
-    const client = await pool.connect();
-    const result = await client.query('SELECT version()');
-    client.release();
-    
-    // Verbindung schließen
-    await pool.end();
-    
-    console.log(`✅ Datenbankverbindung erfolgreich getestet. Datenbankversion: ${result.rows[0].version.split(' ')[0]}`);
-    return true;
-    
-  } catch (error) {
-    console.error(`❌ Fehler beim Testen der Datenbankverbindung: ${error.message}`);
-    throw error;
+  
+  // 2. Backup der Zielumgebungskonfiguration erstellen
+  if (targetExists) {
+    backupTargetConfig(targetEnv);
   }
-}
-
-// Seed-Daten in die Datenbank laden
-async function seedDatabase() {
+  
   try {
-    console.log('🔄 Seed-Daten werden geladen...');
+    // 3. Neue Konfiguration erstellen oder bestehende laden
+    let config: Record<string, string>;
     
-    // Überprüfen, ob Seed-Skripte existieren
-    const seedsDir = path.resolve(process.cwd(), 'seeds');
-    if (!fs.existsSync(seedsDir)) {
-      console.warn('⚠️ Kein Seeds-Verzeichnis gefunden. Seeds werden übersprungen.');
-      return;
+    if (targetExists) {
+      console.log(`Lade bestehende Konfiguration für ${targetEnv}...`);
+      config = loadEnvironmentConfig(targetEnv);
+    } else {
+      console.log(`Erstelle neue Konfiguration für ${targetEnv}...`);
+      config = createEnvironmentConfig(targetEnv);
     }
     
-    // Alle .ts-Dateien im Seeds-Verzeichnis ausführen
-    const seedFiles = fs.readdirSync(seedsDir)
-      .filter(file => file.endsWith('.ts'))
-      .sort(); // Sortieren, um Reihenfolge sicherzustellen
+    // 4. Benutzer nach sensiblen Variablen fragen
+    config = await promptForSensitiveVars(config);
     
-    if (seedFiles.length === 0) {
-      console.warn('⚠️ Keine Seed-Dateien gefunden. Seeds werden übersprungen.');
-      return;
-    }
+    // 5. Konfiguration speichern
+    saveEnvironmentConfig(targetEnv, config);
+    console.log(`\n${colors.green}✓ Konfiguration erfolgreich in ${ENV_CONFIG_FILES[targetEnv]} gespeichert.${colors.reset}`);
     
-    for (const seedFile of seedFiles) {
-      const seedPath = path.join(seedsDir, seedFile);
-      console.log(`🌱 Führe Seed aus: ${seedFile}...`);
-      
-      try {
-        // We're using npx tsx here to run the seed file directly
-        execSync(`NODE_ENV=${env} npx tsx ${seedPath}`, { stdio: 'inherit' });
-        console.log(`✅ Seed ${seedFile} erfolgreich ausgeführt`);
-      } catch (error) {
-        console.error(`❌ Fehler beim Ausführen des Seeds ${seedFile}: ${error.message}`);
-        // Wenn ein Seed fehlschlägt, fahren wir trotzdem fort
-      }
-    }
+    console.log(`\n${colors.bright}Die ${targetEnv}-Umgebung wurde erfolgreich eingerichtet.${colors.reset}`);
+    console.log(`\nSie können die Anwendung jetzt in der ${targetEnv}-Umgebung starten mit:`);
+    console.log(`${colors.bright}./scripts/env-tools.sh start ${targetEnv}${colors.reset}\n`);
     
-    console.log('✅ Alle Seed-Daten wurden erfolgreich geladen!');
-    
+    rl.close();
   } catch (error) {
-    console.error(`❌ Fehler beim Laden der Seed-Daten: ${error.message}`);
-    throw error;
+    console.error(`\n${colors.red}Fehler beim Einrichten der Umgebung: ${error.message}${colors.reset}`);
+    rl.close();
+    process.exit(1);
   }
 }
 
 // Skript ausführen
 setupEnvironment().catch(error => {
-  console.error(`❌ Unbehandelter Fehler: ${error.message}`);
+  console.error(`${colors.red}Unbehandelter Fehler: ${error.message}${colors.reset}`);
+  rl.close();
   process.exit(1);
 });

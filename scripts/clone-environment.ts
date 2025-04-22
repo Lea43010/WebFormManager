@@ -1,161 +1,136 @@
 /**
- * Skript zum Klonen einer Umgebung in eine andere
+ * Skript zum Klonen einer Umgebungskonfiguration in eine andere
  * 
  * Verwendung:
- * npx tsx scripts/clone-environment.ts <source-environment> <target-environment>
+ * npx tsx scripts/clone-environment.ts <source-environment> <target-environment> [--force]
  * 
  * Beispiel:
  * npx tsx scripts/clone-environment.ts development staging
  */
 
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { 
-  Environment, 
-  cloneEnvironmentConfig 
+import { execSync } from 'child_process';
+import {
+  Environment,
+  ENV_CONFIG_FILES,
+  PROTECTED_ENV_VARS,
+  cloneEnvironmentConfig,
+  saveEnvironmentConfig
 } from '../config/environments';
-import * as dotenv from 'dotenv';
+
+// Farben für die Konsolenausgabe
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
+  red: '\x1b[31m',
+};
 
 // Überprüfen der Befehlszeilenargumente
 const args = process.argv.slice(2);
-if (args.length !== 2) {
-  console.error('Verwendung: npx tsx scripts/clone-environment.ts <source-environment> <target-environment>');
+const forceFlag = args.includes('--force');
+
+// Die Argumente ohne Flags extrahieren
+const envArgs = args.filter(arg => !arg.startsWith('--'));
+
+if (envArgs.length !== 2) {
+  console.error('Verwendung: npx tsx scripts/clone-environment.ts <source-environment> <target-environment> [--force]');
   process.exit(1);
 }
 
-const sourceEnv = args[0] as Environment;
-const targetEnv = args[1] as Environment;
+const sourceEnv = envArgs[0] as Environment;
+const targetEnv = envArgs[1] as Environment;
 
 // Überprüfen der Umgebungsnamen
 const validEnvironments: Environment[] = ['development', 'staging', 'production'];
 if (!validEnvironments.includes(sourceEnv) || !validEnvironments.includes(targetEnv)) {
-  console.error('Ungültige Umgebung. Gültige Werte: development, staging, production');
+  console.error(`${colors.red}Ungültige Umgebung. Gültige Werte: development, staging, production${colors.reset}`);
   process.exit(1);
 }
 
 if (sourceEnv === targetEnv) {
-  console.error('Quell- und Zielumgebung dürfen nicht identisch sein.');
+  console.error(`${colors.red}Fehler: Quell- und Zielumgebung dürfen nicht identisch sein.${colors.reset}`);
   process.exit(1);
 }
 
-// Hauptfunktion zum Klonen der Umgebung
-async function cloneEnvironment() {
-  try {
-    console.log(`🔄 Klonen der Umgebung von ${sourceEnv} nach ${targetEnv}...`);
-
-    // 1. Umgebungsvariablen klonen
-    console.log('📄 Umgebungsvariablen werden geklont...');
-    const newConfig = cloneEnvironmentConfig(sourceEnv, targetEnv);
-    console.log(`✅ Umgebungsvariablen wurden erfolgreich geklont: ${Object.keys(newConfig).length} Variablen`);
-
-    // 2. Datenbank klonen (Wenn die Konfiguration eine Datenbank-URL enthält)
-    if (process.env.DATABASE_URL) {
-      await cloneDatabase();
-    } else {
-      console.warn('⚠️ Keine Datenbank-URL gefunden. Der Datenbankklonvorgang wird übersprungen.');
-    }
-
-    console.log(`\n✅ Klonen von ${sourceEnv} nach ${targetEnv} erfolgreich abgeschlossen!`);
-    
-    // Hinweise ausgeben
-    if (targetEnv === 'production') {
-      console.log('\n⚠️ WICHTIGER HINWEIS:');
-      console.log('Sie haben in die Produktionsumgebung geklont. Bitte überprüfen Sie die Konfiguration,');
-      console.log('insbesondere Sicherheitseinstellungen, bevor Sie die Anwendung starten.');
-    }
-
-    console.log('\nUm die neue Umgebung zu starten:');
-    console.log(`NODE_ENV=${targetEnv} npm run ${targetEnv === 'production' ? 'start' : 'dev'}`);
-
-  } catch (error) {
-    console.error(`❌ Fehler beim Klonen der Umgebung: ${error.message}`);
-    process.exit(1);
+/**
+ * Erstellt ein Backup der Zielumgebungskonfiguration
+ */
+function backupTargetConfig(targetEnv: Environment): void {
+  const targetConfigPath = path.resolve(process.cwd(), ENV_CONFIG_FILES[targetEnv]);
+  
+  if (fs.existsSync(targetConfigPath)) {
+    const backupPath = `${targetConfigPath}.backup`;
+    fs.copyFileSync(targetConfigPath, backupPath);
+    console.log(`${colors.blue}Backup der Zielkonfiguration erstellt: ${backupPath}${colors.reset}`);
   }
 }
 
-// Hilfsfunktion zum Klonen der Datenbank
-async function cloneDatabase() {
+/**
+ * Klont eine Umgebung in eine andere
+ */
+async function cloneEnvironment(): Promise<void> {
+  console.log(`\n${colors.bright}Bau-Structura App - Umgebungskloner${colors.reset}\n`);
+  console.log(`${colors.bright}Klone von ${colors.green}${sourceEnv}${colors.reset} ${colors.bright}nach ${colors.yellow}${targetEnv}${colors.reset}\n`);
+  
+  // 1. Prüfen, ob die Quellumgebungskonfiguration existiert
+  const sourceConfigPath = path.resolve(process.cwd(), ENV_CONFIG_FILES[sourceEnv]);
+  const targetConfigPath = path.resolve(process.cwd(), ENV_CONFIG_FILES[targetEnv]);
+  
+  if (!fs.existsSync(sourceConfigPath)) {
+    console.error(`${colors.red}Fehler: Die Quellkonfiguration ${ENV_CONFIG_FILES[sourceEnv]} existiert nicht.${colors.reset}`);
+    console.log(`\nBitte erstellen Sie zuerst die Quellumgebung mit:`);
+    console.log(`${colors.bright}./scripts/run-env-setup.sh ${sourceEnv}${colors.reset}\n`);
+    process.exit(1);
+  }
+  
+  // 2. Prüfen, ob die Zielumgebungskonfiguration bereits existiert
+  const targetExists = fs.existsSync(targetConfigPath);
+  
+  if (targetExists && !forceFlag) {
+    console.log(`${colors.yellow}Die Zielkonfiguration ${ENV_CONFIG_FILES[targetEnv]} existiert bereits.${colors.reset}`);
+    console.log(`Um sie zu überschreiben, führen Sie den Befehl mit --force aus.`);
+    console.log(`${colors.bright}./scripts/run-env-clone.sh ${sourceEnv} ${targetEnv} --force${colors.reset}\n`);
+    process.exit(1);
+  }
+  
+  // 3. Backup der Zielumgebungskonfiguration erstellen
+  if (targetExists) {
+    backupTargetConfig(targetEnv);
+  }
+  
   try {
-    console.log('🔄 Datenbank wird geklont...');
+    // 4. Konfiguration klonen
+    console.log(`Klone Konfiguration...`);
+    const newConfig = cloneEnvironmentConfig(sourceEnv, targetEnv);
     
-    // Die zu ladende Konfigurationsdatei bestimmen
-    const sourceConfigPath = path.resolve(process.cwd(), `.env.${sourceEnv}`);
-    const targetConfigPath = path.resolve(process.cwd(), `.env.${targetEnv}`);
+    // 5. Konfiguration speichern
+    saveEnvironmentConfig(targetEnv, newConfig);
+    console.log(`${colors.green}✓ Konfiguration erfolgreich geklont und in ${ENV_CONFIG_FILES[targetEnv]} gespeichert.${colors.reset}`);
     
-    // Quell- und Zielumgebungsvariablen laden
-    const sourceConfig = dotenv.parse(fs.readFileSync(sourceConfigPath));
-    const targetConfig = dotenv.parse(fs.readFileSync(targetConfigPath));
-    
-    // Überprüfen, ob beide Umgebungen Datenbank-URLs haben
-    if (!sourceConfig.DATABASE_URL || !targetConfig.DATABASE_URL) {
-      throw new Error('Beide Umgebungen müssen eine DATABASE_URL-Variable haben.');
+    // 6. Datenbank klonen (optional)
+    if (targetExists && newConfig.DATABASE_URL) {
+      console.log(`\n${colors.yellow}⚠️ Datenbank-Klonen ist ein optionaler Schritt, der derzeit nicht automatisch ausgeführt wird.${colors.reset}`);
+      console.log(`${colors.yellow}⚠️ Für ein vollständiges Umgebungsklonen müssen Sie die Datenbank manuell klonen.${colors.reset}`);
     }
     
-    // Datenbankname aus der URL extrahieren (einige Vereinfachungen)
-    const sourceDbUrl = new URL(sourceConfig.DATABASE_URL);
-    const targetDbUrl = new URL(targetConfig.DATABASE_URL);
+    console.log(`\n${colors.bright}Die ${targetEnv}-Umgebung wurde erfolgreich aus ${sourceEnv} geklont.${colors.reset}`);
+    console.log(`\nSie können die Anwendung jetzt in der ${targetEnv}-Umgebung starten mit:`);
+    console.log(`${colors.bright}./scripts/env-tools.sh start ${targetEnv}${colors.reset}\n`);
     
-    console.log(`📦 Backup der Quelldatenbank wird erstellt...`);
-    
-    // Temporären Backup-Dateinamen generieren
-    const backupFileName = `./backup/backup_${sourceEnv}_to_${targetEnv}_${Date.now()}.dump`;
-    
-    // Sicherstellen, dass das Backup-Verzeichnis existiert
-    if (!fs.existsSync('./backup')) {
-      fs.mkdirSync('./backup', { recursive: true });
-    }
-    
-    // Backup der Quelldatenbank erstellen (mit pg_dump)
-    // Dies ist ein vereinfachtes Beispiel und sollte für die tatsächliche Umgebung angepasst werden
-    try {
-      console.log(`🔄 Führe pg_dump für ${sourceEnv}-Datenbank aus...`);
-      
-      // Wir verwenden die Umgebungsvariablen der Quellumgebung
-      const command = `PGPASSWORD="${sourceDbUrl.password}" pg_dump -h ${sourceDbUrl.hostname} -p ${sourceDbUrl.port || 5432} -U ${sourceDbUrl.username} -d ${sourceDbUrl.pathname.slice(1)} -f ${backupFileName} -F c`;
-      
-      execSync(command, { stdio: 'inherit' });
-      console.log(`✅ Backup der Quelldatenbank wurde erstellt: ${backupFileName}`);
-      
-    } catch (error) {
-      console.error(`❌ Fehler beim Erstellen des Datenbankbackups: ${error.message}`);
-      console.log('⚠️ Datenbankklonvorgang übersprungen. Nur Umgebungsvariablen wurden geklont.');
-      return;
-    }
-    
-    // Wiederherstellung der Datenbank in der Zielumgebung
-    try {
-      console.log(`🔄 Stelle Backup in ${targetEnv}-Datenbank wieder her...`);
-      
-      // Wir verwenden die Umgebungsvariablen der Zielumgebung
-      // Beachten Sie, dass wir zuerst die Zieldatenbank löschen und neu erstellen
-      const dropCommand = `PGPASSWORD="${targetDbUrl.password}" dropdb -h ${targetDbUrl.hostname} -p ${targetDbUrl.port || 5432} -U ${targetDbUrl.username} ${targetDbUrl.pathname.slice(1)} --if-exists`;
-      const createCommand = `PGPASSWORD="${targetDbUrl.password}" createdb -h ${targetDbUrl.hostname} -p ${targetDbUrl.port || 5432} -U ${targetDbUrl.username} ${targetDbUrl.pathname.slice(1)}`;
-      const restoreCommand = `PGPASSWORD="${targetDbUrl.password}" pg_restore -h ${targetDbUrl.hostname} -p ${targetDbUrl.port || 5432} -U ${targetDbUrl.username} -d ${targetDbUrl.pathname.slice(1)} ${backupFileName} -c`;
-      
-      console.log('🗑️  Lösche Zieldatenbank, falls vorhanden...');
-      execSync(dropCommand, { stdio: 'inherit' });
-      
-      console.log('🆕 Erstelle neue Zieldatenbank...');
-      execSync(createCommand, { stdio: 'inherit' });
-      
-      console.log('📥 Stelle Backup in Zieldatenbank wieder her...');
-      execSync(restoreCommand, { stdio: 'inherit' });
-      
-      console.log(`✅ Datenbank wurde erfolgreich von ${sourceEnv} nach ${targetEnv} geklont!`);
-      
-    } catch (error) {
-      console.error(`❌ Fehler beim Wiederherstellen der Datenbank: ${error.message}`);
-      console.log('⚠️ Die Zieldatenbank ist möglicherweise in einem inkonsistenten Zustand.');
-    }
   } catch (error) {
-    console.error(`❌ Fehler beim Datenbankklonen: ${error.message}`);
-    throw error;
+    console.error(`\n${colors.red}Fehler beim Klonen der Umgebung: ${error.message}${colors.reset}`);
+    process.exit(1);
   }
 }
 
 // Skript ausführen
 cloneEnvironment().catch(error => {
-  console.error(`❌ Unbehandelter Fehler: ${error.message}`);
+  console.error(`${colors.red}Unbehandelter Fehler: ${error.message}${colors.reset}`);
   process.exit(1);
 });
