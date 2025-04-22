@@ -29,7 +29,8 @@ export const ENV_DEFAULTS: Record<string, string> = {
   EMAIL_DEV_MODE: 'true',
   RATE_LIMIT_LOGIN: '20',
   RATE_LIMIT_API: '300',
-  RATE_LIMIT_HEALTH: '300'
+  RATE_LIMIT_HEALTH: '300',
+  APP_URL: 'http://localhost:5000'
 };
 
 // Umgebungsvariablen, die beim Klonen geschützt werden sollen (nicht überschrieben)
@@ -52,7 +53,8 @@ export const ENV_SPECIFIC_DEFAULTS: Record<Environment, Record<string, string>> 
     LOG_LEVEL: 'debug',
     EMAIL_FROM: 'dev@baustructura.de',
     EMAIL_FROM_NAME: 'BauStructura (DEV)',
-    EMAIL_DEV_MODE: 'true'
+    EMAIL_DEV_MODE: 'true',
+    APP_URL: 'http://localhost:5000'
   },
   staging: {
     NODE_ENV: 'staging',
@@ -60,7 +62,8 @@ export const ENV_SPECIFIC_DEFAULTS: Record<Environment, Record<string, string>> 
     EMAIL_FROM: 'staging@baustructura.de',
     EMAIL_FROM_NAME: 'BauStructura (STAGING)',
     EMAIL_DEV_MODE: 'true',
-    BCRYPT_ROUNDS: '11'
+    BCRYPT_ROUNDS: '11',
+    APP_URL: 'https://staging.baustructuraapp.de'
   },
   production: {
     NODE_ENV: 'production',
@@ -72,7 +75,8 @@ export const ENV_SPECIFIC_DEFAULTS: Record<Environment, Record<string, string>> 
     TWO_FACTOR_ENABLED: 'true',
     RATE_LIMIT_LOGIN: '5',
     RATE_LIMIT_API: '150',
-    RATE_LIMIT_HEALTH: '30'
+    RATE_LIMIT_HEALTH: '30',
+    APP_URL: 'https://baustructuraapp.de'
   }
 };
 

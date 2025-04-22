@@ -57,7 +57,7 @@ async function sendWelcomeEmail() {
           <h3>Ihre Zugangsdaten:</h3>
           <p><strong>Benutzername:</strong> <span class="credentials">${USER_INFO.username}</span></p>
           <p><strong>Temporäres Passwort:</strong> <span class="credentials">${USER_INFO.password}</span></p>
-          <p><strong>Login-URL:</strong> <a href="https://baustructuraapp.de">https://baustructuraapp.de</a></p>
+          <p><strong>Login-URL:</strong> <a href="${config.APP_URL}">${config.APP_URL}</a></p>
         </div>
         
         <div class="note">
@@ -100,7 +100,7 @@ wir freuen uns, Sie als neuen Benutzer der Bau - Structura App begrüßen zu dü
 Ihre Zugangsdaten:
 - Benutzername: ${USER_INFO.username}
 - Temporäres Passwort: ${USER_INFO.password}
-- Login-URL: https://baustructuraapp.de
+- Login-URL: ${config.APP_URL}
 
 Wichtig: Bitte ändern Sie aus Sicherheitsgründen Ihr Passwort nach der ersten Anmeldung.
 
