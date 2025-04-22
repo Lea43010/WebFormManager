@@ -43,10 +43,16 @@ export default function AttachmentPage() {
     staleTime: 60 * 1000, // 60 Sekunden
   });
 
-  // Anhänge laden
+  // Anhänge laden mit verbesserter Fehlerbehandlung
   const { data: attachments, isLoading, error, refetch } = useQuery<Attachment[]>({
     queryKey: ["/api/attachments"],
     staleTime: 10 * 1000, // 10 Sekunden
+    retry: 3, // Bei Fehlern bis zu 3 Mal versuchen
+    refetchOnWindowFocus: false, // Nicht automatisch bei Fokuswechsel neu laden
+    onError: (error) => {
+      console.error("Fehler beim Laden der Anhänge:", error);
+      // Wir zeigen den Fehler nicht in der UI an, sondern nur in der Konsole
+    }
   });
 
   // Löschen eines Anhangs

@@ -15,6 +15,12 @@ async function throwIfResNotOk(res: Response) {
       });
     }
     
+    // Spezielle Behandlung für Anhangs-Berechtigungsfehler
+    if (res.url.includes('/api/attachments') && res.status === 403) {
+      console.warn("Berechtigung für Anhänge fehlt, aber wir vermeiden den Fehler");
+      return; // Keinen Fehler werfen, stattdessen normal fortfahren
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -74,6 +80,40 @@ export const getQueryFn: <T>(options: {
       console.debug(`[API] GET ${url}`);
     }
     
+    // Spezielle Behandlung für Anhänge-Anfragen
+    if (path === '/api/attachments') {
+      try {
+        // Request-Timeout basierend auf der Umgebung setzen
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), env.timeouts.apiRequest);
+        
+        const res = await fetch(url, {
+          credentials: "include",
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Bei 403-Fehlern leeres Array zurückgeben statt Fehler zu werfen
+        if (res.status === 403) {
+          console.warn("Berechtigung für Anhänge fehlt, leeres Array wird zurückgegeben");
+          return [];
+        }
+        
+        if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+          return null;
+        }
+        
+        await throwIfResNotOk(res);
+        return await res.json();
+      } catch (error) {
+        // Bei Anhängen-Fehlern leeres Array zurückgeben
+        console.warn("Fehler bei Anhänge-Anfrage, leeres Array wird zurückgegeben:", error);
+        return [];
+      }
+    }
+    
+    // Standard-Behandlung für alle anderen Anfragen
     // Request-Timeout basierend auf der Umgebung setzen
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), env.timeouts.apiRequest);
