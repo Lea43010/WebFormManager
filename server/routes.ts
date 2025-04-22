@@ -73,7 +73,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(companies);
       }
       
-      // Manager und normale Benutzer können nur Firmen sehen, die mit ihren Projekten verbunden sind
+      // Alle Firmen holen
+      const allCompanies = await storage.getCompanies();
+      
+      if (req.user.role === 'manager') {
+        // Manager können nur ihre eigenen Firmen sehen
+        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+        const companies = allCompanies.filter(company => company.created_by === req.user.id);
+        return res.json(companies);
+      }
+      
+      // Normale Benutzer können nur Firmen sehen, die mit ihren Projekten verbunden sind
       // Holen der Projekte des Benutzers
       const userProjects = await storage.getProjectsByUser(req.user.id);
       
@@ -81,9 +91,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (userProjects.length === 0) {
         return res.json([]);
       }
-      
-      // Alle Firmen holen
-      const allCompanies = await storage.getCompanies();
       
       // Firmen filtern, die mit Projekten des Benutzers verbunden sind
       const companies = allCompanies.filter(company => 
@@ -115,7 +122,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(company);
       }
       
-      // Für andere Benutzer: Prüfen, ob die Firma mit einem ihrer Projekte verbunden ist
+      // Manager können nur ihre eigenen Firmen sehen (die sie erstellt haben)
+      if (req.user.role === 'manager') {
+        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+        if (company.created_by === req.user.id) {
+          return res.json(company);
+        } else {
+          return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf dieses Unternehmen. Manager können nur ihre eigenen Unternehmen sehen." });
+        }
+      }
+      
+      // Für normale Benutzer: Prüfen, ob die Firma mit einem ihrer Projekte verbunden ist
       const userProjects = await storage.getProjectsByUser(req.user.id);
       const hasAccess = userProjects.some(project => project.companyId === company.id);
       
@@ -133,12 +150,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/companies", async (req, res, next) => {
     try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       // Telefonnummer muss explizit als String formatiert werden
       const formData = {
         ...req.body,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
-        companyPhone: req.body.companyPhone?.toString() || null
+        companyPhone: req.body.companyPhone?.toString() || null,
+        created_by: req.user.id // Speichert den erstellenden Benutzer
       };
       
       const validatedData = insertCompanySchema.parse(formData);
@@ -165,12 +187,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Berechtigungsprüfung für nicht-Administratoren
       if (req.user.role !== 'administrator') {
-        // Prüfen, ob die Firma mit einem Projekt des Benutzers verbunden ist
-        const userProjects = await storage.getProjectsByUser(req.user.id);
-        const hasAccess = userProjects.some(project => project.companyId === existingCompany.id);
-        
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieser Firma" });
+        // Manager können nur ihre eigenen Unternehmen bearbeiten (die sie erstellt haben)
+        if (req.user.role === 'manager') {
+          // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+          if (existingCompany.created_by !== req.user.id) {
+            return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Unternehmens. Manager können nur ihre eigenen Unternehmen bearbeiten." });
+          }
+        } else {
+          // Prüfen, ob die Firma mit einem Projekt des Benutzers verbunden ist
+          const userProjects = await storage.getProjectsByUser(req.user.id);
+          const hasAccess = userProjects.some(project => project.companyId === existingCompany.id);
+          
+          if (!hasAccess) {
+            return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieser Firma" });
+          }
         }
       }
       
@@ -237,22 +267,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(customers);
       }
       
-      // Manager und normale Benutzer können nur Kunden sehen, die mit ihren Projekten verbunden sind
-      // Holen der Projekte des Benutzers
-      const userProjects = await storage.getProjectsByUser(req.user.id);
-      
-      // Wenn keine Projekte, leeres Array zurückgeben
-      if (userProjects.length === 0) {
-        return res.json([]);
-      }
-      
       // Alle Kunden holen
       const allCustomers = await storage.getCustomers();
       
-      // Kunden filtern, die mit Projekten des Benutzers verbunden sind
-      const customers = allCustomers.filter(customer => 
-        userProjects.some(project => project.customerId === customer.id)
-      );
+      // Manager können nur ihre eigenen Kunden sehen (die sie erstellt haben)
+      if (req.user.role === 'manager') {
+        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+        const customers = allCustomers.filter(customer => customer.created_by === req.user.id);
+        return res.json(customers);
+      }
+      
+      // Normale Benutzer können nur Kunden sehen, die mit ihren Projekten verbunden sind oder von ihnen erstellt wurden
+      // Holen der Projekte des Benutzers
+      const userProjects = await storage.getProjectsByUser(req.user.id);
+      
+      // Kunden filtern, die mit Projekten des Benutzers verbunden sind oder von ihnen erstellt wurden
+      const customers = allCustomers.filter(customer => {
+        return userProjects.some(project => project.customerId === customer.id) || 
+               // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+               customer.created_by === req.user.id;
+      });
       
       res.json(customers);
     } catch (error) {
@@ -279,9 +313,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(customer);
       }
       
-      // Für andere Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist
+      // Manager können nur ihre eigenen Kunden sehen (die sie erstellt haben)
+      if (req.user.role === 'manager') {
+        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+        if (customer.created_by === req.user.id) {
+          return res.json(customer);
+        } else {
+          return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Kunden. Manager können nur ihre eigenen Kunden sehen." });
+        }
+      }
+      
+      // Für normale Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist oder von ihnen erstellt wurde
       const userProjects = await storage.getProjectsByUser(req.user.id);
-      const hasAccess = userProjects.some(project => project.customerId === customer.id);
+      const hasAccess = userProjects.some(project => project.customerId === customer.id) || 
+                        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+                        customer.created_by === req.user.id;
       
       if (hasAccess) {
         return res.json(customer);
@@ -317,6 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerId: req.body.customerId ? (typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId) : undefined,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
         customerPhone: req.body.customerPhone?.toString() || null,
+        created_by: req.user.id // Speichert den erstellenden Benutzer
       };
       
       const validatedData = insertCustomerSchema.parse(formData);
@@ -344,12 +391,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Berechtigungsprüfung
       // Administratoren können jeden Kunden bearbeiten
       if (req.user.role !== 'administrator') {
-        // Für andere Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist
-        const userProjects = await storage.getProjectsByUser(req.user.id);
-        const hasAccess = userProjects.some(project => project.customerId === existingCustomer.id);
-        
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden" });
+        // Manager können nur ihre eigenen Kunden bearbeiten (die sie erstellt haben)
+        if (req.user.role === 'manager') {
+          // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+          if (existingCustomer.created_by !== req.user.id) {
+            return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden. Manager können nur ihre eigenen Kunden bearbeiten." });
+          }
+        } else {
+          // Für normale Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist oder von ihnen erstellt wurde
+          const userProjects = await storage.getProjectsByUser(req.user.id);
+          const hasAccess = userProjects.some(project => project.customerId === existingCustomer.id) ||
+                            // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
+                            existingCustomer.created_by === req.user.id;
+          
+          if (!hasAccess) {
+            return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden" });
+          }
         }
       }
       

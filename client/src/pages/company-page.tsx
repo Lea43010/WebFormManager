@@ -44,8 +44,20 @@ export default function CompanyPage() {
         return await res.json();
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+    onSuccess: (newCompany) => {
+      // Update cache directly for immediate UI updates
+      if (currentCompany?.id) {
+        // For updates: replace the updated company in the cache
+        queryClient.setQueryData<Company[]>(["/api/companies"], (oldData) => 
+          oldData?.map(item => item.id === newCompany.id ? newCompany : item) || []
+        );
+      } else {
+        // For new companies: add to the existing list
+        queryClient.setQueryData<Company[]>(["/api/companies"], (oldData) => 
+          oldData ? [...oldData, newCompany] : [newCompany]
+        );
+      }
+      
       setIsEditing(false);
       toast({
         title: currentCompany ? "Unternehmen aktualisiert" : "Unternehmen erstellt",
@@ -67,7 +79,11 @@ export default function CompanyPage() {
       await apiRequest("DELETE", `/api/companies/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+      // Direkte Aktualisierung des Caches ohne neu zu laden
+      queryClient.setQueryData<Company[]>(["/api/companies"], (oldData) => 
+        oldData ? oldData.filter(company => company.id !== currentCompany?.id) : []
+      );
+      
       setIsDeleteDialogOpen(false);
       toast({
         title: "Unternehmen gelöscht",

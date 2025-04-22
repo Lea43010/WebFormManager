@@ -81,12 +81,28 @@ export default function ProjectPage() {
         return await res.json();
       }
     },
-    onSuccess: () => {
-      // Beide Abfrage-Keys invalidieren, um sicherzustellen, dass alle Ansichten aktualisiert werden
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
-      // Auch die aktuelle projekteigene Ansicht invalidieren
-      queryClient.invalidateQueries({ queryKey: [projectsEndpoint] });
+    onSuccess: (newProject) => {
+      // Direktes Update des Caches für sofortige UI-Aktualisierung
+      if (currentProject?.id) {
+        // Für Updates: Ersetze das aktualisierte Projekt im Cache
+        // Aktualisiere alle relevanten Caches
+        ["/api/projects", "/api/user/projects", projectsEndpoint].forEach(cacheKey => {
+          queryClient.setQueryData<Project[]>([cacheKey], (oldData) => {
+            if (!oldData) return oldData;
+            return oldData.map(item => item.id === newProject.id ? newProject : item);
+          });
+        });
+      } else {
+        // Für neue Projekte: Zum Cache hinzufügen
+        // Aktualisiere alle relevanten Caches
+        ["/api/projects", "/api/user/projects", projectsEndpoint].forEach(cacheKey => {
+          queryClient.setQueryData<Project[]>([cacheKey], (oldData) => {
+            if (!oldData) return [newProject];
+            return [...oldData, newProject];
+          });
+        });
+      }
+      
       setIsEditing(false);
       toast({
         title: currentProject ? "Projekt aktualisiert" : "Projekt erstellt",
@@ -108,11 +124,14 @@ export default function ProjectPage() {
       await apiRequest("DELETE", `/api/projects/${id}`);
     },
     onSuccess: () => {
-      // Beide Abfrage-Keys invalidieren
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/projects"] });
-      // Auch die aktuelle projekteigene Ansicht invalidieren
-      queryClient.invalidateQueries({ queryKey: [projectsEndpoint] });
+      // Direkte Aktualisierung des Caches ohne neu zu laden
+      // Aktualisiere alle relevanten Caches
+      ["/api/projects", "/api/user/projects", projectsEndpoint].forEach(cacheKey => {
+        queryClient.setQueryData<Project[]>([cacheKey], (oldData) => 
+          oldData ? oldData.filter(project => project.id !== currentProject?.id) : []
+        );
+      });
+      
       setIsDeleteDialogOpen(false);
       toast({
         title: "Projekt gelöscht",

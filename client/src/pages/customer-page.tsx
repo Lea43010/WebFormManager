@@ -44,8 +44,20 @@ export default function CustomerPage() {
         return await res.json();
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+    onSuccess: (newCustomer) => {
+      // Update cache directly for immediate UI updates
+      if (currentCustomer?.id) {
+        // For updates: replace the updated customer in the cache
+        queryClient.setQueryData<Customer[]>(["/api/customers"], (oldData) => 
+          oldData?.map(item => item.id === newCustomer.id ? newCustomer : item) || []
+        );
+      } else {
+        // For new customers: add to the existing list
+        queryClient.setQueryData<Customer[]>(["/api/customers"], (oldData) => 
+          oldData ? [...oldData, newCustomer] : [newCustomer]
+        );
+      }
+      
       setIsEditing(false);
       toast({
         title: currentCustomer ? "Kunde aktualisiert" : "Kunde erstellt",
@@ -67,7 +79,11 @@ export default function CustomerPage() {
       await apiRequest("DELETE", `/api/customers/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      // Direkte Aktualisierung des Caches ohne neu zu laden
+      queryClient.setQueryData<Customer[]>(["/api/customers"], (oldData) => 
+        oldData ? oldData.filter(customer => customer.id !== currentCustomer?.id) : []
+      );
+      
       setIsDeleteDialogOpen(false);
       toast({
         title: "Kunde gelöscht",

@@ -74,6 +74,7 @@ export const customers = pgTable("tblcustomer", {
   geodata: varchar("geodate", { length: 255 }),
   customerPhone: varchar("customer_phone", { length: 20 }),
   customerEmail: varchar("customer_email", { length: 255 }),
+  created_by: integer("created_by").references(() => users.id),
 });
 
 // Persons table
@@ -516,6 +517,7 @@ export const insertCustomerSchema = createInsertSchema(customers).transform((dat
     customerId: data.customerId !== undefined ? (typeof data.customerId === 'string' ? parseInt(data.customerId, 10) : data.customerId) : undefined,
     postalCode: typeof data.postalCode === 'string' ? parseInt(data.postalCode, 10) : data.postalCode,
     // Telefonnummer wird jetzt als String gespeichert, keine Umwandlung nötig
+    created_by: data.created_by !== undefined ? (typeof data.created_by === 'string' ? parseInt(data.created_by, 10) : data.created_by) : undefined,
   };
 });
 export const insertPersonSchema = createInsertSchema(persons);
