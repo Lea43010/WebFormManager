@@ -1678,7 +1678,7 @@ export default function InformationPage() {
               <ShieldCheck className="h-4 w-4" />
               <AlertTitle>Konformität mit EU Data Act und EU KI Act</AlertTitle>
               <AlertDescription>
-                Die Baustellen-App wurde unter Berücksichtigung der Anforderungen des EU Data Act und des EU KI Act entwickelt.
+                Die Bau-Structura App wurde unter Berücksichtigung der aktuellen Anforderungen des EU Data Act und des EU KI Act (stand April 2025) entwickelt.
               </AlertDescription>
             </Alert>
             
@@ -1692,28 +1692,39 @@ export default function InformationPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="font-medium">Datenportabilität</h3>
+                    <h3 className="font-medium">Datenportabilität (Art. 5, 6 EU Data Act)</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Die Datenbankstruktur unterstützt den Export aller projektbezogenen Daten in standardisierten 
-                      Formaten, was den Nutzern ermöglicht, ihre Daten zwischen verschiedenen Diensten zu übertragen.
+                      Formaten (CSV, JSON, PDF), was den Nutzern ermöglicht, ihre Daten zwischen verschiedenen Diensten zu übertragen.
+                      Datenexporte können jederzeit über die entsprechenden Exportfunktionen durchgeführt werden.
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium">Transparenz</h3>
+                    <h3 className="font-medium">Transparenz und Rechenschaftspflicht (Art. 8, 10 EU Data Act)</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Die App bietet eine klare Dokumentation der Datenstrukturen und ihrer Beziehungen, 
-                      was für die Benutzer verständlich ist und ihnen ermöglicht, den Umfang der gespeicherten 
-                      Daten zu verstehen.
+                      sowie eine vollständige Übersicht über alle gespeicherten Daten. Änderungen an Daten werden 
+                      protokolliert und ermöglichen eine lückenlose Nachverfolgung (Audit-Trail).
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium">Datenschutz</h3>
+                    <h3 className="font-medium">Datenschutz und -sicherheit (Art. 11 EU Data Act, DSGVO)</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Sensible Daten wie Benutzerpasswörter werden nur in gehashter Form gespeichert, und 
                       personenbezogene Daten werden nur im erforderlichen Umfang gespeichert, um das Prinzip 
-                      der Datenminimierung zu erfüllen.
+                      der Datenminimierung zu erfüllen. Die Anwendung implementiert technische und organisatorische 
+                      Maßnahmen zum Schutz aller Daten.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Rechtmäßige Datenweitergabe (Art. 19, 20 EU Data Act)</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Weitergabe von Daten an Dritte (z.B. für KI-basierte Analysen) erfolgt nur mit expliziter 
+                      Zustimmung der Nutzer. Eine vollständige Transparenz wird durch klare Kennzeichnung und 
+                      Informationen über Umfang und Zweck der Datenweitergabe gewährleistet.
                     </p>
                   </div>
                 </CardContent>
@@ -1723,33 +1734,61 @@ export default function InformationPage() {
                 <CardHeader>
                   <CardTitle>EU KI Act Konformität</CardTitle>
                   <CardDescription>
-                    Risikominimierung und Transparenz bei KI-gestützten Funktionen
+                    Risikominimierung und Transparenz bei KI-gestützten Funktionen gemäß neuestem EU KI Act
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="font-medium">Risikobasierte Kategorisierung</h3>
+                    <h3 className="font-medium">Risikobasierte Kategorisierung (Art. 6, 9 EU KI Act)</h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Die in der App implementierten KI-Systeme fallen in die Kategorie mit minimalem Risiko, 
-                      da sie keine autonomen Entscheidungen über Personen treffen, keine Bereiche mit hohem 
-                      Risiko betreffen und jederzeit menschlicher Überprüfung unterliegen.
+                      Die in der App implementierten KI-Systeme wurden einer sorgfältigen Risikobewertung unterzogen 
+                      und fallen in die Kategorie mit minimalem Risiko, da sie keine autonomen Entscheidungen über Personen treffen, 
+                      keine Bereiche mit hohem Risiko betreffen, ausschließlich als Unterstützungswerkzeuge dienen 
+                      und jederzeit menschlicher Überprüfung und Korrekturmöglichkeiten unterliegen.
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium">Boden- und Asphaltklassifizierung</h3>
+                    <h3 className="font-medium">Transparenz und Information (Art. 13, 52 EU KI Act)</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Alle KI-gestützten Funktionen sind klar als solche gekennzeichnet. Die App informiert Nutzer 
+                      transparent über die eingesetzten KI-Systeme, deren Zweck, Funktionsweise und Grenzen. 
+                      Konfidenzwerte werden angezeigt, und die Entscheidungsprozesse der KI werden 
+                      verständlich dokumentiert.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Boden- und Asphaltklassifizierung (KI-gestützte Bildanalyse)</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse und 
-                      Belastungsklasse wird mit Transparenzmaßnahmen wie der Anzeige von Konfidenzwerten, 
-                      menschlicher Aufsicht, Korrekturfunktionen und Erklärbarkeit umgesetzt.
+                      Belastungsklasse erfüllt alle Anforderungen des EU KI Acts durch:
+                      <ul className="list-disc ml-4 mt-1">
+                        <li>Explizite Anzeige von Konfidenzwerten bei jeder Klassifizierung</li>
+                        <li>Menschliche Aufsicht mit jederzeit möglicher manueller Korrektur</li>
+                        <li>Erklärbarkeitsfunktion, die Analysegrundlagen transparent macht</li>
+                        <li>Dokumentation der Trainingsdaten und verwendeten Algorithmen</li>
+                      </ul>
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="font-medium">Intelligente Dateiorganisation</h3>
+                    <h3 className="font-medium">Qualitätsmanagement und kontinuierliche Verbesserung (Art. 17 EU KI Act)</h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Die KI-gestützte Analyse von Dokumenten erfolgt nur auf explizite Anforderung des Benutzers (Opt-in). 
-                      Vorschläge werden mit Begründung und Konfidenzwert angezeigt und erst nach expliziter Bestätigung angewendet.
+                      Alle KI-Systeme werden regelmäßig auf Qualität, Genauigkeit und potentielle Verzerrungen geprüft.
+                      Nutzerrückmeldungen und -korrekturen werden zur kontinuierlichen Verbesserung der Modelle verwendet,
+                      unter strikter Einhaltung der Datenschutzbestimmungen. Die App dokumentiert alle Aktualisierungen
+                      und Verbesserungen der KI-Komponenten.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Governance und Verantwortlichkeit (Art. 16, 30 EU KI Act)</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Bau-Structura App hat klare Verantwortlichkeiten für KI-Systeme implementiert, mit
+                      dokumentierten Prozessen für die Behandlung von technischen Problemen und Fehlern.
+                      Alle eingesetzten KI-Systeme wurden vor der Implementierung auf Konformität mit dem 
+                      EU KI Act geprüft und werden kontinuierlich überwacht.
                     </p>
                   </div>
                 </CardContent>

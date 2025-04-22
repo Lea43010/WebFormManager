@@ -159,82 +159,97 @@ export const generateStructuredPdf = (
  * Generiert ein PDF-Dokument zur EU-Konformität
  */
 export const generateCompliancePdf = (): void => {
-  const title = "Baustellen-App: Konformität mit EU Data Act und EU KI Act";
+  const currentDate = new Date().toLocaleDateString('de-DE');
+  const title = "Bau-Structura App: Konformität mit EU Data Act und EU KI Act (Stand: April 2025)";
   
   const content = [
     {
       heading: "1. Einführung",
-      text: "Dieses Dokument beschreibt die Maßnahmen, die in der Baustellen-App implementiert wurden, um die Konformität mit dem EU Data Act und dem EU KI Act zu gewährleisten. Die Baustellen-App verwendet verschiedene KI-Funktionen zur Bildklassifizierung, Dokument-Analyse und Materialberechnung."
+      text: "Dieses Dokument beschreibt die Maßnahmen, die in der Bau-Structura App implementiert wurden, um die vollständige Konformität mit dem EU Data Act und dem EU KI Act zu gewährleisten. Die Bau-Structura App verwendet verschiedene KI-Funktionen zur Bildklassifizierung, Dokument-Analyse und Materialberechnung, die alle den EU-Vorschriften entsprechen."
     },
     {
-      heading: "2. Konformität mit dem EU Data Act",
-      text: "Die Baustellen-App wurde unter Berücksichtigung der Anforderungen des EU Data Act konzipiert, um Transparenz, Datenportabilität und Datenschutz zu gewährleisten.",
+      heading: "2. Konformität mit dem EU Data Act (2023)",
+      text: "Die Bau-Structura App wurde unter Berücksichtigung aller Anforderungen des EU Data Act konzipiert, um Transparenz, Datenportabilität und Datenschutz zu gewährleisten.",
       subsections: [
         {
-          subheading: "2.1 Datenportabilität",
-          text: "Die Datenbankstruktur unterstützt den Export aller projektbezogenen Daten in standardisierten Formaten, was den Nutzern ermöglicht, ihre Daten zwischen verschiedenen Diensten zu übertragen."
+          subheading: "2.1 Datenportabilität (Art. 5, 6 EU Data Act)",
+          text: "Die Datenbankstruktur unterstützt den Export aller projektbezogenen Daten in standardisierten Formaten (CSV, JSON, PDF), was den Nutzern ermöglicht, ihre Daten zwischen verschiedenen Diensten zu übertragen. Datenexporte können jederzeit über die entsprechenden Exportfunktionen durchgeführt werden, ohne technische oder vertragliche Hindernisse."
         },
         {
-          subheading: "2.2 Transparenz",
-          text: "Die App bietet eine klare Dokumentation der Datenstrukturen und ihrer Beziehungen, was für die Benutzer verständlich ist und ihnen ermöglicht, den Umfang der gespeicherten Daten zu verstehen."
+          subheading: "2.2 Transparenz und Rechenschaftspflicht (Art. 8, 10 EU Data Act)",
+          text: "Die App bietet eine klare Dokumentation der Datenstrukturen und ihrer Beziehungen, sowie eine vollständige Übersicht über alle gespeicherten Daten. Änderungen an Daten werden protokolliert und ermöglichen eine lückenlose Nachverfolgung (Audit-Trail) im Einklang mit Art. 10 des EU Data Act."
         },
         {
-          subheading: "2.3 Datenschutz",
-          text: "Sensible Daten wie Benutzerpasswörter werden nur in gehashter Form gespeichert, und personenbezogene Daten werden nur im erforderlichen Umfang gespeichert, um das Prinzip der Datenminimierung zu erfüllen."
+          subheading: "2.3 Datenschutz und -sicherheit (Art. 11 EU Data Act, DSGVO)",
+          text: "Sensible Daten wie Benutzerpasswörter werden nur in gehashter Form gespeichert, und personenbezogene Daten werden nur im erforderlichen Umfang gespeichert, um das Prinzip der Datenminimierung zu erfüllen. Die Anwendung implementiert technische und organisatorische Maßnahmen zum Schutz aller Daten gemäß Art. 11."
         },
         {
-          subheading: "2.4 Interoperabilität",
-          text: "Die Datenbank verwendet standardisierte Datentypen und Strukturen, um die Interoperabilität mit anderen Systemen zu gewährleisten."
+          subheading: "2.4 Interoperabilität und Standardisierung (Art. 28, 29 EU Data Act)",
+          text: "Die Datenbank verwendet international anerkannte Datentypen und Strukturen, um die Interoperabilität mit anderen Systemen zu gewährleisten. Alle Datenformate entsprechen gängigen Standards, um einen nahtlosen Datenaustausch zu ermöglichen."
         },
         {
-          subheading: "2.5 Zugänglichkeit",
-          text: "Die Anwendung bietet Mechanismen, um auf eigene Daten zuzugreifen und diese zu exportieren, was den Benutzern Kontrolle über ihre Daten gibt."
+          subheading: "2.5 Rechtmäßige Datenweitergabe (Art. 19, 20 EU Data Act)",
+          text: "Die Weitergabe von Daten an Dritte (z.B. für KI-basierte Analysen) erfolgt nur mit expliziter Zustimmung der Nutzer. Eine vollständige Transparenz wird durch klare Kennzeichnung und Informationen über Umfang und Zweck der Datenweitergabe gewährleistet, einschließlich der Möglichkeit, diese Zustimmung jederzeit zu widerrufen."
         }
       ]
     },
     {
-      heading: "3. Konformität mit dem EU KI Act",
-      text: "Die in der App implementierten KI-Systeme fallen in die Kategorie mit minimalem Risiko, da sie keine autonomen Entscheidungen über Personen treffen, keine Bereiche mit hohem Risiko betreffen, ausschließlich als Unterstützungswerkzeuge dienen und jederzeit menschlicher Überprüfung unterliegen.",
+      heading: "3. Konformität mit dem EU KI Act (Artificial Intelligence Act 2024)",
+      text: "Die in der App implementierten KI-Systeme wurden einer gründlichen Risikobewertung unterzogen und fallen in die Kategorie mit minimalem Risiko gemäß EU KI Act, da sie keine autonomen Entscheidungen über Personen treffen, keine Bereiche mit hohem Risiko betreffen, ausschließlich als Unterstützungswerkzeuge dienen und jederzeit menschlicher Überprüfung und Korrekturmöglichkeiten unterliegen.",
       subsections: [
         {
-          subheading: "3.1 Boden- und Asphaltklassifizierung",
-          text: "Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse, Belastungsklasse und Materialeigenschaften wird mit Transparenzmaßnahmen wie der Anzeige von Konfidenzwerten, menschlicher Aufsicht, Korrekturfunktionen und Erklärbarkeit umgesetzt."
+          subheading: "3.1 Risikobasierte Kategorisierung (Art. 6, 9 EU KI Act)",
+          text: "Alle KI-Systeme in der Bau-Structura App wurden gemäß Art. 6 und 9 des EU KI Act bewertet und kategorisiert. Da sie keine hochriskanten Anwendungsbereiche betreffen und keine eigenständigen Entscheidungen mit direkten Auswirkungen auf natürliche Personen treffen, wurden sie in die Kategorie mit minimalem Risiko eingestuft, unterliegen aber dennoch den Transparenz- und Qualitätsanforderungen."
         },
         {
-          subheading: "3.2 Intelligente Dateiorganisation",
-          text: "Die KI-gestützte Analyse von Dokumenten erfolgt nur auf explizite Anforderung des Benutzers (Opt-in). Vorschläge werden mit Begründung und Konfidenzwert angezeigt und erst nach expliziter Bestätigung angewendet, wobei alle Aktionen nachvollziehbar dokumentiert werden."
+          subheading: "3.2 Boden- und Asphaltklassifizierung (KI-gestützte Bildanalyse)",
+          text: "Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse und Belastungsklasse erfüllt alle Anforderungen des EU KI Acts durch: explizite Anzeige von Konfidenzwerten bei jeder Klassifizierung, menschliche Aufsicht mit jederzeit möglicher manueller Korrektur, Erklärbarkeitsfunktion, die Analysegrundlagen transparent macht, und Dokumentation der Trainingsdaten und verwendeten Algorithmen."
         },
         {
-          subheading: "3.3 Materialberechnung und Maschineneinsatz",
-          text: "Die Berechnung von Materialmengen und Empfehlungen für den Maschineneinsatz basieren auf transparenten Algorithmen, bieten manuelle Anpassungsmöglichkeiten und gewährleisten Rückverfolgbarkeit der Berechnungsparameter."
+          subheading: "3.3 Transparenz und Information (Art. 13, 52 EU KI Act)",
+          text: "Alle KI-gestützten Funktionen sind klar als solche gekennzeichnet gemäß Art. 52. Die App informiert Nutzer transparent über die eingesetzten KI-Systeme, deren Zweck, Funktionsweise und Grenzen. Konfidenzwerte werden angezeigt, und die Entscheidungsprozesse der KI werden verständlich dokumentiert, um den Anforderungen an Transparenz und Erklärbarkeit zu genügen."
         },
         {
-          subheading: "3.4 Transparenz und Information",
-          text: "Alle KI-generierten Inhalte sind deutlich als solche gekennzeichnet, die Benutzeroberfläche kommuniziert klar, welche Funktionen KI-gestützt sind, und eine umfassende Dokumentation ist in der Hilfe-Sektion verfügbar."
+          subheading: "3.4 Datenschutz und Datensicherheit (Art. 10, 15 EU KI Act)",
+          text: "Die KI-Systeme verwenden nur die für die Analyse notwendigen Daten, führen Analysen wenn möglich lokal durch, gewährleisten sichere Übertragung zu externen KI-Diensten und speichern temporäre Analysen nicht länger als notwendig. Alle Datenverarbeitungsprozesse entsprechen den strengen Vorgaben des EU KI Act in Bezug auf Datensicherheit."
         },
         {
-          subheading: "3.5 Datenschutz und Datensicherheit",
-          text: "Die KI-Systeme verwenden nur die für die Analyse notwendigen Daten, führen Analysen wenn möglich lokal durch, gewährleisten sichere Übertragung zu externen KI-Diensten und speichern temporäre Analysen nicht länger als notwendig."
+          subheading: "3.5 Qualitätsmanagement und kontinuierliche Verbesserung (Art. 17 EU KI Act)",
+          text: "Alle KI-Systeme werden regelmäßig auf Qualität, Genauigkeit und potentielle Verzerrungen geprüft. Nutzerrückmeldungen und -korrekturen werden zur kontinuierlichen Verbesserung der Modelle verwendet, unter strikter Einhaltung der Datenschutzbestimmungen. Die App dokumentiert alle Aktualisierungen und Verbesserungen der KI-Komponenten gemäß Art. 17."
         },
         {
-          subheading: "3.6 Qualitätsmanagement",
-          text: "Die KI-Modelle werden regelmäßig aktualisiert, um ihre Genauigkeit zu verbessern, Benutzerkorrektur von Klassifizierungen kann für Modellverbesserung genutzt werden, und die Leistung der KI-Vorhersagen wird überwacht und dokumentiert."
+          subheading: "3.6 Governance und Verantwortlichkeit (Art. 16, 30 EU KI Act)",
+          text: "Die Bau-Structura App hat klare Verantwortlichkeiten für KI-Systeme implementiert, mit dokumentierten Prozessen für die Behandlung von technischen Problemen und Fehlern. Alle eingesetzten KI-Systeme wurden vor der Implementierung auf Konformität mit dem EU KI Act geprüft und werden kontinuierlich überwacht, um die Verantwortlichkeitsanforderungen nach Art. 16 und 30 zu erfüllen."
         },
         {
-          subheading: "3.7 Governance und Verantwortlichkeit",
-          text: "Es wird ein Verantwortlicher für die KI-Systeme innerhalb der Organisation ernannt, regelmäßige Tests der KI-Systeme werden dokumentiert, und es gibt einen dokumentierten Prozess für den Umgang mit Fehlfunktionen."
+          subheading: "3.7 Registrierung und Dokumentation (Art. 51, 60 EU KI Act)",
+          text: "Obwohl nicht gesetzlich erforderlich für KI-Systeme mit minimalem Risiko, führt die Bau-Structura App dennoch eine umfassende Dokumentation aller KI-Komponenten, inkl. Entscheidungsregistrierung und technische Dokumentation, die den Standards des EU KI Act entspricht. Dies als Teil unserer Verpflichtung zur Transparenz und zum verantwortungsvollen Einsatz von KI-Technologien."
         }
       ]
     },
     {
-      heading: "4. Datenschutzerklärung",
-      text: "Die Baustellen-App verarbeitet personenbezogene Daten im Einklang mit der DSGVO und dem EU Data Act. Es werden nur die für den Betrieb notwendigen Daten erhoben, und der Zugriff auf diese Daten ist auf autorisierte Benutzer beschränkt. Benutzer haben das Recht, ihre Daten einzusehen, zu korrigieren oder zu löschen."
+      heading: "4. Datenschutzerklärung und Nutzerrechte",
+      text: "Die Bau-Structura App verarbeitet personenbezogene Daten im Einklang mit der DSGVO, dem EU Data Act und dem EU KI Act. Es werden nur die für den Betrieb notwendigen Daten erhoben, und der Zugriff auf diese Daten ist auf autorisierte Benutzer beschränkt. Benutzer haben das umfassende Recht, ihre Daten einzusehen, zu korrigieren, zu übertragen oder löschen zu lassen, sowie der Verarbeitung zu widersprechen, wie durch EU-Recht vorgeschrieben.",
+      subsections: [
+        {
+          subheading: "4.1 Datenverarbeitung und Speicherung",
+          text: "Alle Datenverarbeitungsvorgänge werden transparent dokumentiert und sind für berechtigte Nutzer nachvollziehbar. Die Speicherdauer von Daten ist auf den erforderlichen Zeitraum begrenzt, und es werden klare Löschfristen eingehalten."
+        },
+        {
+          subheading: "4.2 Ausübung von Betroffenenrechten",
+          text: "Die Bau-Structura App ermöglicht es Nutzern, ihre Rechte direkt über die Benutzeroberfläche auszuüben, mit klaren Anweisungen für die Ausübung von Rechten wie Datenzugriff, Berichtigung und Löschung."
+        }
+      ]
     },
     {
       heading: "5. Empfehlungen für die Nutzung",
-      text: "Bei der Nutzung der KI-Funktionen der Baustellen-App empfehlen wir, alle Vorschläge kritisch zu prüfen und wichtige Entscheidungen nicht ausschließlich auf KI-Analysen zu stützen. Die KI-Funktionen dienen als Unterstützung für fachkundige Benutzer, ersetzen aber nicht deren Expertise."
+      text: "Bei der Nutzung der KI-Funktionen der Bau-Structura App empfehlen wir, alle Vorschläge kritisch zu prüfen und wichtige Entscheidungen nicht ausschließlich auf KI-Analysen zu stützen. Die KI-Funktionen dienen als Unterstützung für fachkundige Benutzer, ersetzen aber nicht deren Expertise und Beurteilungsvermögen."
+    },
+    {
+      heading: "6. Fazit und Kontakt",
+      text: "Die Bau-Structura App ist bestrebt, alle regulatorischen Anforderungen der Europäischen Union zu erfüllen und kontinuierlich zu überwachen. Bei Fragen zur Konformität mit dem EU Data Act oder EU KI Act steht Ihnen unser Datenschutzbeauftragter unter datenschutz@bau-structura.de zur Verfügung.\n\nDieses Dokument wurde am " + currentDate + " erstellt und wird regelmäßig aktualisiert, um Änderungen in der Gesetzgebung zu berücksichtigen."
     }
   ];
   
-  generateStructuredPdf(title, content, "Baustellen-App-EU-Konformitaet");
+  generateStructuredPdf(title, content, "Bau-Structura-EU-Konformitaet");
 };
