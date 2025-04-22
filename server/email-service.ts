@@ -40,7 +40,7 @@ interface EmailProvider {
 }
 
 /**
- * Provider für Brevo (früher SendinBlue)
+ * Provider für Brevo (früher SendinBlue) mit direkter API-Nutzung
  */
 class BrevoEmailProvider implements EmailProvider {
   private apiKey: string;
@@ -57,14 +57,7 @@ class BrevoEmailProvider implements EmailProvider {
     }
     
     try {
-      const SibApiV3Sdk = await import('sib-api-v3-sdk');
-      
-      // Brevo API-Konfiguration
-      const defaultClient = SibApiV3Sdk.ApiClient.instance;
-      const apiKey = defaultClient.authentications['api-key'];
-      apiKey.apiKey = this.apiKey;
-      
-      const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+      const apiUrl = 'https://api.brevo.com/v3/smtp/email';
       
       // Empfänger-Array erstellen
       const to = Array.isArray(options.to) 
@@ -78,38 +71,72 @@ class BrevoEmailProvider implements EmailProvider {
       };
       
       // Anfrage vorbereiten
-      const sendEmailRequest = {
+      const emailData: any = {
         sender,
         to,
         subject: options.subject,
-        htmlContent: options.html,
-        textContent: options.text,
-        attachment: options.attachments?.map(attachment => ({
+        htmlContent: options.html || undefined,
+        textContent: options.text || undefined
+      };
+      
+      // Wenn Anhänge vorhanden sind, diese hinzufügen
+      if (options.attachments && options.attachments.length > 0) {
+        emailData.attachment = options.attachments.map(attachment => ({
           name: attachment.filename,
           content: typeof attachment.content === 'string' 
             ? Buffer.from(attachment.content).toString('base64')
             : attachment.content.toString('base64'),
           contentType: attachment.contentType
-        }))
-      };
+        }));
+      }
       
       // Wenn eine Template-ID angegeben wurde, diese verwenden
       if (options.templateId) {
-        const templateRequest = {
-          templateId: Number(options.templateId),
-          params: options.templateData,
-          ...sendEmailRequest
-        };
-        await apiInstance.sendTransacEmail(templateRequest);
-      } else {
-        // Sonst einfache E-Mail senden
-        await apiInstance.sendTransacEmail(sendEmailRequest);
+        emailData.templateId = Number(options.templateId);
+        if (options.templateData) {
+          emailData.params = options.templateData;
+        }
       }
       
-      emailLogger.info(`E-Mail erfolgreich gesendet an: ${options.to}`);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': this.apiKey,
+        },
+        body: JSON.stringify(emailData),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        
+        // Spezifischere Fehlerbehandlung für häufige Probleme
+        let fehlergrund = "";
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.code === 'unauthorized' || response.status === 401) {
+            fehlergrund = "Ungültiger API-Schlüssel";
+            emailLogger.error('Brevo API-Schlüssel ungültig. Generieren Sie einen neuen Schlüssel im Brevo-Dashboard.');
+          } else if (errorJson.message?.includes('sender email')) {
+            fehlergrund = "Absender-E-Mail nicht verifiziert";
+            emailLogger.error('Die Absender-E-Mail info@bau-structura.de ist nicht verifiziert. Bitte verifizieren Sie die Domain in Ihrem Brevo-Konto.');
+          } else {
+            fehlergrund = errorJson.message || errorText;
+          }
+        } catch (e) {
+          fehlergrund = errorText;
+        }
+        
+        throw new Error(`E-Mail-Versand fehlgeschlagen: ${response.statusText} - ${fehlergrund}`);
+      }
+      
+      const recipientList = Array.isArray(options.to) ? options.to.join(', ') : options.to;
+      emailLogger.info(`E-Mail erfolgreich gesendet an: ${recipientList}`);
+      console.log(`✅ E-Mail erfolgreich gesendet an: ${recipientList}`);
       return true;
     } catch (error) {
       emailLogger.error('Fehler beim Senden der E-Mail über Brevo:', error);
+      console.error('⚠️ Fehler beim Senden der E-Mail:', error);
       return false;
     }
   }
@@ -225,21 +252,14 @@ class EmailService {
   
   constructor() {
     // Provider basierend auf Konfiguration auswählen
-    if (config.isProduction) {
-      const apiKey = config.email.apiKey || process.env.BREVO_API_KEY;
-      if (!apiKey) {
-        emailLogger.warn('Kein Brevo API-Key gefunden, verwende Konsolen-Provider auch in Produktion');
-        this.provider = new ConsoleEmailProvider();
-      } else {
-        this.provider = new BrevoEmailProvider(apiKey);
-      }
+    // Auch in der Entwicklungsumgebung Brevo verwenden, um E-Mail-Tests durchzuführen
+    const apiKey = config.email.apiKey || process.env.BREVO_API_KEY;
+    if (!apiKey) {
+      emailLogger.warn('Kein Brevo API-Key gefunden, verwende Konsolen-Provider');
+      this.provider = new ConsoleEmailProvider();
     } else {
-      // In Entwicklung: basierend auf dev-Mode-Einstellung
-      if (config.email.devMode && config.email.devOutputPath) {
-        this.provider = new FileEmailProvider(config.email.devOutputPath);
-      } else {
-        this.provider = new ConsoleEmailProvider();
-      }
+      emailLogger.info('Brevo API-Key gefunden, verwende Brevo-Provider');
+      this.provider = new BrevoEmailProvider(apiKey);
     }
   }
   

@@ -27,17 +27,12 @@ export async function sendVerificationCode(
     // Auch in der Produktionsumgebung den Code loggen, aber mit Hinweis
     console.log(`[E-MAIL-VERIFIZIERUNGSCODE] Code: ${code} wird an ${email} gesendet.`);
     
-    // Hinweis zur Domain-Verifizierung beim ersten Start
-    const absenderEmail = 'noreply@baustructuraapp.de';
-    console.log(`WICHTIG: Die Absender-E-Mail "${absenderEmail}" muss in Ihrem Brevo-Konto verifiziert sein.`);
-    console.log(`Ansonsten können Sie im Brevo-Dashboard eine verifizierte E-Mail konfigurieren und diese in server/email.ts anpassen.`);
-
     // Tatsächlicher E-Mail-Versand über Brevo API
     const API_KEY = process.env.BREVO_API_KEY;
     const apiUrl = 'https://api.brevo.com/v3/smtp/email';
     
     const emailData = {
-      sender: { name: 'Bau - Structura App', email: 'noreply@baustructuraapp.de' },
+      sender: { name: 'Bau-Structura', email: 'info@bau-structura.de' },
       to: [{ email }],
       subject: resetLink ? 'Passwort zurücksetzen - Bau - Structura App' : 'Ihr Anmeldecode - Bau - Structura App',
       htmlContent: resetLink 

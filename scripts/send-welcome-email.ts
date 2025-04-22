@@ -159,7 +159,7 @@ Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht 
     // E-Mail an Benutzer senden
     const result = await emailService.sendEmail({
       to: USER_INFO.user_email,
-      subject: 'Willkommen bei Bau - Structura App - Ihre Zugangsdaten',
+      subject: 'Willkommen bei Bau-Structura App - Ihre Zugangsdaten',
       html: htmlContent,
       text: textContent
     });
@@ -167,7 +167,7 @@ Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht 
     // Kopie an Administrator senden
     const adminResult = await emailService.sendEmail({
       to: 'lea.zimmer@gmx.net',
-      subject: `[KOPIE] Willkommen bei Bau - Structura App - Zugangsdaten für ${USER_INFO.username}`,
+      subject: `[KOPIE] Willkommen bei Bau-Structura App - Zugangsdaten für ${USER_INFO.username}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2>Kopie der Willkommens-E-Mail</h2>

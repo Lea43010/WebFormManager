@@ -72,8 +72,8 @@ const storage = {
 // Email-Konfiguration
 const email = {
   provider: 'brevo', // 'brevo', 'console', etc.
-  fromEmail: isProduction ? 'info@baustructura.de' : 'dev-test@baustructura.de',
-  fromName: isProduction ? 'BauStructura' : 'BauStructura (DEV)',
+  fromEmail: isProduction ? 'info@bau-structura.de' : 'dev-test@bau-structura.de',
+  fromName: isProduction ? 'Bau-Structura' : 'Bau-Structura (DEV)',
   apiKey: process.env.BREVO_API_KEY,
   // In Entwicklung können E-Mails in eine Datei oder die Konsole ausgegeben werden
   devMode: !isProduction,
@@ -114,8 +114,8 @@ const externalServices = {
 
 // Anwendungs-URL
 const APP_URL = (() => {
-  if (isProduction) return process.env.APP_URL || 'https://baustructuraapp.de';
-  if (isStaging) return process.env.APP_URL || 'https://staging.baustructuraapp.de';
+  if (isProduction) return process.env.APP_URL || 'https://bau-structura.de';
+  if (isStaging) return process.env.APP_URL || 'https://staging.bau-structura.de';
   return process.env.APP_URL || 'http://localhost:5000';
 })();
 
