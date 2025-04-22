@@ -113,6 +113,7 @@ const sections = [
   { id: "hilfreiche-links", title: "Hilfreiche Links" },
   { id: "geo-anleitung", title: "Geo-Informationen" },
   { id: "gps-tracking", title: "GPS-Tracking" },
+  { id: "bewegungsprotokolle", title: "Bewegungsprotokolle" },
   { id: "flaechenmessung", title: "Strecken- & Flächenmessung" },
   { id: "geofencing", title: "GeoFencing" },
   { id: "strassenbau-module", title: "Straßenbau-Module" },
@@ -1030,6 +1031,94 @@ export default function InformationPage() {
                 <Link to="/tracking">
                   <Map className="h-4 w-4" />
                   Zum GPS-Tracking
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Bewegungsprotokolle */}
+          <div id="bewegungsprotokolle" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Bewegungsprotokolle</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Die Bewegungsprotokolle dokumentieren umfassend alle aufgezeichneten Bewegungen von Teams und Ausrüstung und ermöglichen 
+              detaillierte Analysen, Effizienzauswertungen und Nachweise für verschiedene Zwecke.
+            </p>
+            
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Protokollübersicht</CardTitle>
+                  <CardDescription>
+                    Übersicht und Zugriff auf Bewegungsdaten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Protokollzugriff</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Öffnen Sie die Bewegungsprotokolle über den Button "Bewegungsprotokolle" in der oberen rechten Ecke der Geo-Informationsseite.
+                      Alternativ können Sie auch den direkten Link im Hauptmenü unter "Geo-Daten" verwenden. Die Protokolle werden nach Zeitraum, 
+                      Team oder Ausrüstung gefiltert angezeigt.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Datenanalyse und Visualisierung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Bewegungsprotokolle werden in verschiedenen Formaten dargestellt:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Tabellarische Listenansicht mit Filtern und Sortierung</li>
+                        <li>Kartenvisualisierung mit farbcodierten Bewegungsspuren</li>
+                        <li>Zeitleistenansicht für chronologische Übersicht</li>
+                        <li>Statistische Auswertungen und Diagramme</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Protokollauswertung</CardTitle>
+                  <CardDescription>
+                    Erweiterte Analyseoptionen für Bewegungsdaten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium">Effizienzoptimierung</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Die Analyse der Bewegungsdaten hilft bei der Optimierung von Arbeitsabläufen:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Identifizierung ineffizienter Routen und Fahrwege</li>
+                        <li>Erkennung von Engpässen und Wartezeiten</li>
+                        <li>Vorschläge zur Optimierung von Teamwegen und -zuordnungen</li>
+                        <li>Automatische Berechnung von Kostenersparnis-Potenzialen</li>
+                      </ul>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium">Dokumentation und Export</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Protokolldaten können für verschiedene Zwecke exportiert werden:
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>PDF-Berichte mit Bewegungsspuren für Abrechnungen</li>
+                        <li>Excel-Exporte für detaillierte Zeiterfassung</li>
+                        <li>Leistungsnachweise für Kunden und Auftraggeber</li>
+                        <li>Exportformate für Buchhaltungs- und ERP-Systeme</li>
+                      </ul>
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="mt-6">
+              <Button asChild className="gap-2">
+                <Link to="/tracking/reports">
+                  <FileText className="h-4 w-4" />
+                  Zu den Bewegungsprotokollen
                 </Link>
               </Button>
             </div>

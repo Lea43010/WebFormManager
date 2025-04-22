@@ -1086,6 +1086,28 @@ export default function GeoMapPage() {
         <h1 className="text-2xl font-bold ml-2">Geo-Informationen</h1>
       </div>
       
+      {/* Tracking-Funktionen hervorgehoben als eigenständiges Panel */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex-1">
+          <h3 className="text-lg font-medium flex items-center text-blue-700 mb-2">
+            <Info className="h-5 w-5 mr-1" /> Live-Tracking & Bewegungsprotokolle
+          </h3>
+          <p className="text-sm text-gray-600 mb-3">
+            NEU: Sie können jetzt Teams und Ausrüstung in Echtzeit verfolgen und umfassende Bewegungsprotokolle einsehen!
+          </p>
+        </div>
+        <div className="flex gap-3 items-center">
+          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/tracking"}>
+            <MapPin className="h-4 w-4 mr-2" />
+            Team-Tracking
+          </Button>
+          <Button className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/tracking/reports"}>
+            <FileText className="h-4 w-4 mr-2" />
+            Bewegungsprotokolle
+          </Button>
+        </div>
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Card className="h-[calc(100vh-120px)] flex flex-col">
