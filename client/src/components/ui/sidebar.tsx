@@ -110,22 +110,22 @@ export function Sidebar() {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-primary-dark text-black">
-      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary">
+    <div className="flex flex-col h-full bg-gray-800 text-white">
+      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900">
         <div className="flex items-center">
           <img 
             src={logoImage} 
-            alt="Sachverständigenbüro - Justitia" 
-            className="h-8 mr-3" 
+            alt="Bau - Structura Logo" 
+            className="h-10 mr-3" 
             loading="eager" 
-            width="32" 
-            height="32" 
+            width="40" 
+            height="40" 
           />
-          <span className="text-xl font-medium" style={{ color: "#6a961f" }}>Bau - Structura App</span>
+          <span className="text-xl font-medium text-green-500">Bau - Structura</span>
         </div>
         {isMobile && (
           <TooltipButton tooltipText="Menü schließen" side="bottom">
-            <Button variant="ghost" className="ml-auto text-black" onClick={toggleMobileMenu}>
+            <Button variant="ghost" className="ml-auto text-white hover:bg-gray-700" onClick={toggleMobileMenu}>
               <X className="h-6 w-6" />
             </Button>
           </TooltipButton>
@@ -133,7 +133,7 @@ export function Sidebar() {
       </div>
       <div className="flex-1 flex flex-col overflow-y-auto">
         <nav className="flex-1 px-2 py-4">
-          <div className="space-y-1">
+          <div className="space-y-3">
             {navItems.map((item) => {
               const isActive = location === item.href;
               // Berechtigungsprüfung: Menüpunkt nur anzeigen, wenn der Benutzer die erforderliche Rolle hat
@@ -145,13 +145,13 @@ export function Sidebar() {
               const menuItem = (
                 <div
                   className={cn(
-                    "group flex items-center px-2 py-2 text-base font-medium rounded-md",
+                    "group flex items-center px-3 py-2.5 text-base font-medium rounded-lg transition-colors duration-150",
                     isActive
-                      ? "bg-primary-light text-black"
-                      : "text-black hover:bg-primary-light"
+                      ? "bg-green-600 text-white"
+                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
                   )}
                 >
-                  <item.icon className="mr-3 h-6 w-6" />
+                  <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-white" : "text-gray-400")} />
                   {item.title}
                 </div>
               );
@@ -184,14 +184,15 @@ export function Sidebar() {
         </nav>
       </div>
       {user && (
-        <div className="p-4 border-t border-primary-light">
+        <div className="p-4 border-t border-gray-700">
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
-              <Avatar>
-                <AvatarFallback className="bg-primary">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+              <Avatar className="border-2 border-gray-600">
+                <AvatarFallback className="bg-green-700 text-white">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium text-black">{user.username}</p>
+                <p className="text-sm font-medium text-white">{user.username}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Angemeldet</p>
               </div>
             </div>
           </div>
