@@ -1,589 +1,414 @@
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { 
-  users, 
-  customers, 
-  persons, 
-  companies, 
-  constructionDiaryEmployees 
-} from "@shared/schema";
+import { Request, Response } from "express";
 
-// Typdefinitionen für die Datenqualitätsberichte
+// Typen für die Datenqualitätsregeln und -probleme
+export interface DataQualityRule {
+  id: number;
+  entityType: string;
+  fieldName: string;
+  ruleName: string;
+  ruleDescription: string;
+  severity: "low" | "medium" | "high";
+  active: boolean;
+}
+
 export interface DataQualityIssue {
   id: number;
   entityType: string;
   entityId: number;
   entityName: string;
+  fieldName: string;
   issueType: string;
   issueDescription: string;
   severity: "low" | "medium" | "high";
-  detected: string;
-  resolved: boolean;
-  resolvedAt?: string;
+  createdAt: string;
+  resolvedAt: string | null;
 }
 
-export interface DataQualityReport {
+export interface DataQualityMetric {
+  entityType: string;
   totalRecords: number;
-  issues: {
-    type: string;
-    count: number;
-    severity: "low" | "medium" | "high";
-    description: string;
-    affectedEntities: string[];
-  }[];
-  overallScore: number;
-  lastUpdated: string;
+  completeRecords: number;
+  incompleteRecords: number;
+  qualityScore: number;
+  lastChecked: string;
 }
 
-/**
- * Validiert eine E-Mail-Adresse mit einer stärkeren Prüfung
- * - Syntaxprüfung nach RFC 5322
- * - Domainprüfung auf bekannte Tippfehler
- */
-export function validateEmail(email: string): { isValid: boolean; reason?: string } {
-  if (!email) {
-    return { isValid: false, reason: "E-Mail-Adresse fehlt" };
+// Regeln für die verschiedenen Entitätstypen
+export const rules: DataQualityRule[] = [
+  {
+    id: 1,
+    entityType: "tblcustomer",
+    fieldName: "first_name",
+    ruleName: "required",
+    ruleDescription: "Vorname darf nicht leer sein",
+    severity: "medium",
+    active: true
+  },
+  {
+    id: 2,
+    entityType: "tblcustomer",
+    fieldName: "last_name",
+    ruleName: "required",
+    ruleDescription: "Nachname darf nicht leer sein",
+    severity: "medium",
+    active: true
+  },
+  {
+    id: 3,
+    entityType: "tblcustomer",
+    fieldName: "customer_email",
+    ruleName: "email_format",
+    ruleDescription: "E-Mail muss gültiges Format haben",
+    severity: "high",
+    active: true
+  },
+  {
+    id: 4,
+    entityType: "tblcompany",
+    fieldName: "company_name",
+    ruleName: "required",
+    ruleDescription: "Firmenname darf nicht leer sein",
+    severity: "high",
+    active: true
+  },
+  {
+    id: 5,
+    entityType: "tblproject",
+    fieldName: "project_name",
+    ruleName: "required",
+    ruleDescription: "Projektname darf nicht leer sein",
+    severity: "high",
+    active: true
+  },
+  {
+    id: 6,
+    entityType: "tblproject",
+    fieldName: "project_startdate",
+    ruleName: "valid_date",
+    ruleDescription: "Startdatum muss gültiges Datum sein",
+    severity: "medium",
+    active: true
+  },
+  {
+    id: 7,
+    entityType: "tblproject",
+    fieldName: "project_enddate",
+    ruleName: "date_after",
+    ruleDescription: "Enddatum muss nach Startdatum liegen",
+    severity: "medium",
+    active: true
   }
+];
 
-  // Grundsätzliche Syntax-Prüfung
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(email)) {
-    return { isValid: false, reason: "Ungültige E-Mail-Syntax" };
-  }
+// Datenbankabfragen für die Datenqualitätsmetriken
+export async function getDataQualityMetrics(): Promise<DataQualityMetric[]> {
+  const metrics: DataQualityMetric[] = [];
 
-  // Prüfung auf bekannte Tippfehler in Domains
-  const commonMistyped: Record<string, string> = {
-    "gmial.com": "gmail.com",
-    "gmail.de": "gmail.com",
-    "gmal.com": "gmail.com",
-    "hotmial.com": "hotmail.com",
-    "hotmal.com": "hotmail.com",
-    "yaho.com": "yahoo.com",
-    "yahooo.com": "yahoo.com",
-    "outlok.com": "outlook.com",
-    "outlook.de": "outlook.com"
-  };
-
-  const domain = email.split("@")[1].toLowerCase();
-  if (domain in commonMistyped) {
-    return { 
-      isValid: false, 
-      reason: `Domain-Tippfehler: ${domain} (meinten Sie ${commonMistyped[domain]}?)` 
-    };
-  }
-
-  // Prüfung auf weitere ungültige Domains wie .con anstatt .com
-  if (domain.endsWith(".con")) {
-    return {
-      isValid: false,
-      reason: `Ungültige TLD: ${domain} (meinten Sie ${domain.replace(".con", ".com")}?)`
-    };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Validiert eine Telefonnummer für deutsche Nummern
- * - Prüft auf gültige Formate für deutsche Festnetz- und Mobilnummern
- * - Entfernt Leerzeichen und Sonderzeichen für den Vergleich
- */
-export function validatePhoneNumber(phone: string): { isValid: boolean; reason?: string; normalized?: string } {
-  if (!phone) {
-    return { isValid: false, reason: "Telefonnummer fehlt" };
-  }
-
-  // Normalisierung: Entfernen aller Zeichen außer Ziffern, + am Anfang und evtl. Klammern
-  const normalizedPhone = phone.replace(/[^\d+()]/g, "");
-  
-  // Deutsche Mobilnummer prüfen (mit oder ohne Ländervorwahl)
-  const mobileRegex = /^(\+49|0)[1][5-7][0-9]{8,9}$/;
-  
-  // Deutsche Festnetznummer prüfen
-  const landlineRegex = /^(\+49|0)[2-9][0-9]{5,13}$/;
-  
-  if (!mobileRegex.test(normalizedPhone) && !landlineRegex.test(normalizedPhone)) {
-    return { 
-      isValid: false, 
-      reason: "Ungültiges Format für deutsche Telefonnummer",
-      normalized: normalizedPhone
-    };
-  }
-
-  // Zu lange Nummern erkennen (mehr als 15 Ziffern nach E.164-Standard)
-  if (normalizedPhone.replace(/[^0-9]/g, "").length > 15) {
-    return { 
-      isValid: false, 
-      reason: "Telefonnummer zu lang (max. 15 Ziffern)",
-      normalized: normalizedPhone
-    };
-  }
-
-  // Zu kurze Nummern erkennen (weniger als 8 Ziffern)
-  if (normalizedPhone.replace(/[^0-9]/g, "").length < 8) {
-    return { 
-      isValid: false, 
-      reason: "Telefonnummer zu kurz (min. 8 Ziffern)",
-      normalized: normalizedPhone
-    };
-  }
-
-  return { 
-    isValid: true, 
-    normalized: normalizedPhone 
-  };
-}
-
-/**
- * Prüft auf ähnliche Namen im selben Kontext
- * @param firstName Vorname
- * @param lastName Nachname
- * @param listToCompare Liste von {firstName, lastName} Objekten zum Vergleich
- * @returns Array von möglichen Duplikaten
- */
-export function findSimilarNames(
-  firstName: string, 
-  lastName: string, 
-  listToCompare: { firstName: string; lastName: string; id: number }[]
-): { id: number; firstName: string; lastName: string; similarity: number }[] {
-  const normalizedFirstName = firstName.toLowerCase().trim();
-  const normalizedLastName = lastName.toLowerCase().trim();
-  
-  return listToCompare
-    .map(item => {
-      const itemFirstName = item.firstName.toLowerCase().trim();
-      const itemLastName = item.lastName.toLowerCase().trim();
-      
-      // Exakte Übereinstimmung
-      if (itemFirstName === normalizedFirstName && itemLastName === normalizedLastName) {
-        return { ...item, similarity: 1.0 };
-      }
-      
-      // Berechnung der Ähnlichkeit
-      let similarity = 0;
-      
-      // Jaccard-Ähnlichkeit für Vor- und Nachnamen
-      const firstNameSimilarity = calculateJaccardSimilarity(normalizedFirstName, itemFirstName);
-      const lastNameSimilarity = calculateJaccardSimilarity(normalizedLastName, itemLastName);
-      
-      // Gewichtete Kombination (Nachname ist wichtiger)
-      similarity = (firstNameSimilarity * 0.4) + (lastNameSimilarity * 0.6);
-      
-      return { ...item, similarity };
-    })
-    .filter(item => item.similarity > 0.7) // Nur hohe Ähnlichkeiten zurückgeben
-    .sort((a, b) => b.similarity - a.similarity); // Nach Ähnlichkeit sortieren
-}
-
-/**
- * Berechnet die Jaccard-Ähnlichkeit zwischen zwei Strings
- * (Anzahl gemeinsamer Zeichen geteilt durch Gesamtanzahl der Zeichen)
- */
-function calculateJaccardSimilarity(str1: string, str2: string): number {
-  const set1 = new Set(str1.split(''));
-  const set2 = new Set(str2.split(''));
-  
-  // Array.from zur Konvertierung von Set zu Array für TypeScript-Kompatibilität
-  const set1Array = Array.from(set1);
-  const set2Array = Array.from(set2);
-  
-  // Berechne Schnittmenge durch Filterung
-  const intersection = set1Array.filter(x => set2.has(x));
-  
-  // Vereinigungsmenge durch Zusammenführen der Arrays und Entfernen von Duplikaten
-  const unionArray = [...new Set([...set1Array, ...set2Array])];
-  
-  return intersection.length / unionArray.length;
-}
-
-/**
- * Generiert einen Datenqualitätsbericht für alle relevanten Entitäten im System
- * @returns DataQualityReport
- */
-export async function generateDataQualityReport(): Promise<DataQualityReport> {
   try {
-    // Zählen der Gesamtanzahl der Datensätze
-    const customersCount = await db.select({ count: sql`count(*)` }).from(customers);
-    const usersCount = await db.select({ count: sql`count(*)` }).from(users);
-    const personsCount = await db.select({ count: sql`count(*)` }).from(persons);
-    const companiesCount = await db.select({ count: sql`count(*)` }).from(companies);
+    // Kunden-Metriken
+    const customersResult = await db.execute(sql`
+      SELECT COUNT(*) as total_records,
+             SUM(CASE WHEN first_name IS NOT NULL AND last_name IS NOT NULL AND customer_email IS NOT NULL THEN 1 ELSE 0 END) as complete_records
+      FROM tblcustomer
+    `);
     
-    const totalRecords = 
-      Number(customersCount[0]?.count || 0) + 
-      Number(usersCount[0]?.count || 0) + 
-      Number(personsCount[0]?.count || 0) + 
-      Number(companiesCount[0]?.count || 0);
+    const customersData = customersResult.rows[0];
+    const totalCustomers = parseInt(customersData.total_records);
+    const completeCustomers = parseInt(customersData.complete_records);
     
-    // Array für alle gefundenen Probleme
-    const issues: DataQualityReport['issues'] = [];
-    let totalIssues = 0;
-    
-    // E-Mail-Validierungsprobleme prüfen
-    const invalidEmails = await findInvalidEmails();
-    if (invalidEmails.length > 0) {
-      issues.push({
-        type: "email",
-        count: invalidEmails.length,
-        severity: invalidEmails.length > 10 ? "high" : "medium",
-        description: "Ungültige E-Mail-Adressen",
-        affectedEntities: ["Kunden", "Benutzer", "Kontakte"]
-      });
-      totalIssues += invalidEmails.length;
-    }
-    
-    // Telefonnummerprobleme prüfen
-    const invalidPhones = await findInvalidPhoneNumbers();
-    if (invalidPhones.length > 0) {
-      issues.push({
-        type: "phone",
-        count: invalidPhones.length,
-        severity: invalidPhones.length > 15 ? "high" : "medium",
-        description: "Ungültige Telefonnummern",
-        affectedEntities: ["Kunden", "Kontakte"]
-      });
-      totalIssues += invalidPhones.length;
-    }
-    
-    // Duplikate bei Mitarbeitern prüfen
-    const duplicateEmployees = await findDuplicateEmployees();
-    if (duplicateEmployees.length > 0) {
-      issues.push({
-        type: "duplicate",
-        count: duplicateEmployees.length,
-        severity: "medium",
-        description: "Mögliche Duplikate bei Mitarbeitern",
-        affectedEntities: ["Bautagebuch"]
-      });
-      totalIssues += duplicateEmployees.length;
-    }
-    
-    // Fehlende Felder prüfen
-    const missingFields = await findMissingOptionalFields();
-    if (missingFields.length > 0) {
-      issues.push({
-        type: "missing",
-        count: missingFields.length,
-        severity: "low",
-        description: "Fehlende optionale Felder",
-        affectedEntities: ["Projekte", "Kunden"]
-      });
-      totalIssues += missingFields.length;
-    }
-    
-    // Gesamtbewertung berechnen (einfache Formel: 100% - Prozentsatz der Probleme)
-    const overallScore = Math.max(0, Math.min(100, Math.round(100 - (totalIssues / totalRecords * 100))));
-    
-    return {
-      totalRecords,
-      issues,
-      overallScore,
-      lastUpdated: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error("Fehler bei der Generierung des Datenqualitätsberichts:", error);
-    throw error;
-  }
-}
+    metrics.push({
+      entityType: "customers",
+      totalRecords: totalCustomers,
+      completeRecords: completeCustomers,
+      incompleteRecords: totalCustomers - completeCustomers,
+      qualityScore: totalCustomers > 0 ? Math.round((completeCustomers / totalCustomers) * 100) : 100,
+      lastChecked: new Date().toISOString()
+    });
 
-/**
- * Sucht nach ungültigen E-Mail-Adressen im System
- */
-async function findInvalidEmails(): Promise<DataQualityIssue[]> {
-  try {
-    const issues: DataQualityIssue[] = [];
+    // Unternehmen-Metriken
+    const companiesResult = await db.execute(sql`
+      SELECT COUNT(*) as total_records,
+             SUM(CASE WHEN company_name IS NOT NULL AND city IS NOT NULL THEN 1 ELSE 0 END) as complete_records
+      FROM tblcompany
+    `);
     
-    // Kunden mit E-Mails prüfen
-    const customersWithEmails = await db
-      .select({
-        id: customers.id,
-        email: customers.customerEmail,
-        firstName: customers.firstName,
-        lastName: customers.lastName
-      })
-      .from(customers)
-      .where(sql`${customers.customerEmail} IS NOT NULL`);
+    const companiesData = companiesResult.rows[0];
+    const totalCompanies = parseInt(companiesData.total_records);
+    const completeCompanies = parseInt(companiesData.complete_records);
     
-    // Benutzer mit E-Mails prüfen
-    const usersWithEmails = await db
-      .select({
-        id: users.id,
-        email: users.userEmail,
-        name: users.userName
-      })
-      .from(users)
-      .where(sql`${users.userEmail} IS NOT NULL`);
-    
-    // Kontakte mit E-Mails prüfen
-    const personsWithEmails = await db
-      .select({
-        id: persons.id,
-        email: persons.personEmail,
-        firstName: persons.firstName,
-        lastName: persons.lastName
-      })
-      .from(persons)
-      .where(sql`${persons.personEmail} IS NOT NULL`);
-    
-    // Kunden validieren
-    customersWithEmails.forEach((customer, index) => {
-      const validation = validateEmail(customer.email);
-      if (!validation.isValid) {
-        issues.push({
-          id: index + 1, // Generiere eine eindeutige ID
-          entityType: "Kunde",
-          entityId: customer.id,
-          entityName: `${customer.firstName} ${customer.lastName}`,
-          issueType: "email",
-          issueDescription: `Ungültige E-Mail: ${customer.email} (${validation.reason})`,
-          severity: "high",
-          detected: new Date().toISOString(),
-          resolved: false
-        });
-      }
+    metrics.push({
+      entityType: "companies",
+      totalRecords: totalCompanies,
+      completeRecords: completeCompanies,
+      incompleteRecords: totalCompanies - completeCompanies,
+      qualityScore: totalCompanies > 0 ? Math.round((completeCompanies / totalCompanies) * 100) : 100,
+      lastChecked: new Date().toISOString()
     });
+
+    // Projekte-Metriken
+    const projectsResult = await db.execute(sql`
+      SELECT COUNT(*) as total_records,
+             SUM(CASE WHEN project_name IS NOT NULL AND project_startdate IS NOT NULL THEN 1 ELSE 0 END) as complete_records
+      FROM tblproject
+    `);
     
-    // Benutzer validieren
-    usersWithEmails.forEach((user, index) => {
-      const validation = validateEmail(user.email);
-      if (!validation.isValid) {
-        issues.push({
-          id: customersWithEmails.length + index + 1,
-          entityType: "Benutzer",
-          entityId: user.id,
-          entityName: user.name,
-          issueType: "email",
-          issueDescription: `Ungültige E-Mail: ${user.email} (${validation.reason})`,
-          severity: "high",
-          detected: new Date().toISOString(),
-          resolved: false
-        });
-      }
+    const projectsData = projectsResult.rows[0];
+    const totalProjects = parseInt(projectsData.total_records);
+    const completeProjects = parseInt(projectsData.complete_records);
+    
+    metrics.push({
+      entityType: "projects",
+      totalRecords: totalProjects,
+      completeRecords: completeProjects,
+      incompleteRecords: totalProjects - completeProjects,
+      qualityScore: totalProjects > 0 ? Math.round((completeProjects / totalProjects) * 100) : 100,
+      lastChecked: new Date().toISOString()
     });
+
+    // Anhänge-Metriken
+    const attachmentsResult = await db.execute(sql`
+      SELECT COUNT(*) as total_records,
+             SUM(CASE WHEN file_path IS NOT NULL AND file_name IS NOT NULL THEN 1 ELSE 0 END) as complete_records
+      FROM tblattachment
+    `);
     
-    // Kontakte validieren
-    personsWithEmails.forEach((person, index) => {
-      const validation = validateEmail(person.email);
-      if (!validation.isValid) {
-        issues.push({
-          id: customersWithEmails.length + usersWithEmails.length + index + 1,
-          entityType: "Kontakt",
-          entityId: person.id,
-          entityName: `${person.firstName} ${person.lastName}`,
-          issueType: "email",
-          issueDescription: `Ungültige E-Mail: ${person.email} (${validation.reason})`,
-          severity: "high",
-          detected: new Date().toISOString(),
-          resolved: false
-        });
-      }
+    const attachmentsData = attachmentsResult.rows[0];
+    const totalAttachments = parseInt(attachmentsData.total_records || '0');
+    const completeAttachments = parseInt(attachmentsData.complete_records || '0');
+    
+    metrics.push({
+      entityType: "attachments",
+      totalRecords: totalAttachments,
+      completeRecords: completeAttachments,
+      incompleteRecords: totalAttachments - completeAttachments,
+      qualityScore: totalAttachments > 0 ? Math.round((completeAttachments / totalAttachments) * 100) : 100,
+      lastChecked: new Date().toISOString()
     });
-    
-    return issues;
+
+    return metrics;
   } catch (error) {
-    console.error("Fehler beim Suchen nach ungültigen E-Mail-Adressen:", error);
+    console.error("Error getting data quality metrics:", error);
     return [];
   }
 }
 
-/**
- * Sucht nach ungültigen Telefonnummern im System
- */
-async function findInvalidPhoneNumbers(): Promise<DataQualityIssue[]> {
-  try {
-    const issues: DataQualityIssue[] = [];
-    
-    // Kunden mit Telefonnummern prüfen
-    const customersWithPhones = await db
-      .select({
-        id: customers.id,
-        phone: customers.customerPhone,
-        firstName: customers.firstName,
-        lastName: customers.lastName
-      })
-      .from(customers)
-      .where(sql`${customers.customerPhone} IS NOT NULL`);
-    
-    // Kontakte mit Telefonnummern prüfen
-    const personsWithPhones = await db
-      .select({
-        id: persons.id,
-        phone: persons.personPhone,
-        firstName: persons.firstName,
-        lastName: persons.lastName
-      })
-      .from(persons)
-      .where(sql`${persons.personPhone} IS NOT NULL`);
-    
-    // Kunden validieren
-    customersWithPhones.forEach((customer, index) => {
-      const validation = validatePhoneNumber(customer.phone);
-      if (!validation.isValid) {
-        issues.push({
-          id: index + 1,
-          entityType: "Kunde",
-          entityId: customer.id,
-          entityName: `${customer.firstName} ${customer.lastName}`,
-          issueType: "phone",
-          issueDescription: `Ungültige Telefonnummer: ${customer.phone} (${validation.reason})`,
-          severity: "medium",
-          detected: new Date().toISOString(),
-          resolved: false
-        });
-      }
-    });
-    
-    // Kontakte validieren
-    personsWithPhones.forEach((person, index) => {
-      const validation = validatePhoneNumber(person.phone);
-      if (!validation.isValid) {
-        issues.push({
-          id: customersWithPhones.length + index + 1,
-          entityType: "Kontakt",
-          entityId: person.id,
-          entityName: `${person.firstName} ${person.lastName}`,
-          issueType: "phone",
-          issueDescription: `Ungültige Telefonnummer: ${person.phone} (${validation.reason})`,
-          severity: "medium",
-          detected: new Date().toISOString(),
-          resolved: false
-        });
-      }
-    });
-    
-    return issues;
-  } catch (error) {
-    console.error("Fehler beim Suchen nach ungültigen Telefonnummern:", error);
-    return [];
-  }
-}
+// Datenqualitätsprüfung durchführen
+export async function runDataQualityCheck(): Promise<DataQualityIssue[]> {
+  const issues: DataQualityIssue[] = [];
+  const activeRules = rules.filter(rule => rule.active);
 
-/**
- * Sucht nach möglichen Duplikaten bei Bautagebuch-Mitarbeitern
- */
-async function findDuplicateEmployees(): Promise<DataQualityIssue[]> {
   try {
-    const issues: DataQualityIssue[] = [];
-    
-    // Gruppiere Mitarbeiter nach Bautagebuch-Einträgen
-    const allEmployees = await db.select().from(constructionDiaryEmployees);
-    
-    // Gruppieren nach Bautagebuch-ID
-    const employeesByDiary = allEmployees.reduce((acc, employee) => {
-      const diaryId = employee.constructionDiaryId;
-      if (!acc[diaryId]) {
-        acc[diaryId] = [];
-      }
-      acc[diaryId].push(employee);
-      return acc;
-    }, {});
-    
-    // Für jedes Bautagebuch nach Duplikaten suchen
-    let idCounter = 1;
-    Object.entries(employeesByDiary).forEach(([diaryId, employees]) => {
-      // Prüfe jeden Mitarbeiter gegen alle anderen im selben Eintrag
-      employees.forEach(employee => {
-        const otherEmployees = employees.filter(e => e.id !== employee.id);
-        const similarEmployees = findSimilarNames(
-          employee.firstName,
-          employee.lastName,
-          otherEmployees
-        );
-        
-        // Wenn ähnliche Mitarbeiter gefunden wurden, erstelle ein Issue
-        if (similarEmployees.length > 0) {
-          const mostSimilar = similarEmployees[0];
-          
-          issues.push({
-            id: idCounter++,
-            entityType: "Mitarbeiter",
-            entityId: employee.id,
-            entityName: `${employee.firstName} ${employee.lastName}`,
-            issueType: "duplicate",
-            issueDescription: `Mögliches Duplikat: ${mostSimilar.firstName} ${mostSimilar.lastName} (ID: ${mostSimilar.id})`,
-            severity: "medium",
-            detected: new Date().toISOString(),
-            resolved: false
-          });
+    // 1. Prüfe Kundenregeln
+    const customerRules = activeRules.filter(rule => rule.entityType === "tblcustomer");
+    if (customerRules.length > 0) {
+      const customers = await db.execute(sql`SELECT * FROM tblcustomer`);
+      
+      for (const customer of customers.rows) {
+        for (const rule of customerRules) {
+          if (rule.ruleName === "required" && (!customer[rule.fieldName] || customer[rule.fieldName] === "")) {
+            issues.push({
+              id: issues.length + 1,
+              entityType: "customers",
+              entityId: customer.id,
+              entityName: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || `Kunde #${customer.id}`,
+              fieldName: rule.fieldName,
+              issueType: "missing_value",
+              issueDescription: `${getFieldLabel(rule.fieldName)} fehlt`,
+              severity: rule.severity,
+              createdAt: new Date().toISOString(),
+              resolvedAt: null
+            });
+          } else if (rule.ruleName === "email_format" && rule.fieldName === "customer_email" && customer.customer_email) {
+            // Einfache E-Mail-Validierung
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(customer.customer_email)) {
+              issues.push({
+                id: issues.length + 1,
+                entityType: "customers",
+                entityId: customer.id,
+                entityName: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || `Kunde #${customer.id}`,
+                fieldName: rule.fieldName,
+                issueType: "invalid_format",
+                issueDescription: `E-Mail-Format ist ungültig: '${customer.customer_email}'`,
+                severity: rule.severity,
+                createdAt: new Date().toISOString(),
+                resolvedAt: null
+              });
+            }
+          }
         }
-      });
-    });
-    
-    return issues;
-  } catch (error) {
-    console.error("Fehler beim Suchen nach Mitarbeiter-Duplikaten:", error);
-    return [];
-  }
-}
+      }
+    }
 
-/**
- * Sucht nach Entitäten mit fehlenden optionalen Feldern
- */
-async function findMissingOptionalFields(): Promise<DataQualityIssue[]> {
-  try {
-    const issues: DataQualityIssue[] = [];
-    
-    // Kunden mit fehlenden Feldern prüfen
-    const customersWithMissingFields = await db
-      .select({
-        id: customers.id,
-        firstName: customers.firstName,
-        lastName: customers.lastName,
-        street: customers.street,
-        city: customers.city,
-        postalCode: customers.postalCode
-      })
-      .from(customers)
-      .where(
-        sql`${customers.street} IS NULL OR ${customers.city} IS NULL OR ${customers.postalCode} IS NULL`
-      );
-    
-    // Issues für Kunden erstellen
-    customersWithMissingFields.forEach((customer, index) => {
-      const missingFields = [];
-      if (!customer.street) missingFields.push("Straße");
-      if (!customer.city) missingFields.push("Stadt");
-      if (!customer.postalCode) missingFields.push("PLZ");
+    // 2. Prüfe Unternehmensregeln
+    const companyRules = activeRules.filter(rule => rule.entityType === "tblcompany");
+    if (companyRules.length > 0) {
+      const companies = await db.execute(sql`SELECT * FROM tblcompany`);
       
-      issues.push({
-        id: index + 1,
-        entityType: "Kunde",
-        entityId: customer.id,
-        entityName: `${customer.firstName} ${customer.lastName}`,
-        issueType: "missing",
-        issueDescription: `Fehlende Felder: ${missingFields.join(", ")}`,
-        severity: "low",
-        detected: new Date().toISOString(),
-        resolved: false
-      });
-    });
-    
+      for (const company of companies.rows) {
+        for (const rule of companyRules) {
+          if (rule.ruleName === "required" && (!company[rule.fieldName] || company[rule.fieldName] === "")) {
+            issues.push({
+              id: issues.length + 1,
+              entityType: "companies",
+              entityId: company.company_id,
+              entityName: company.company_name || `Unternehmen #${company.company_id}`,
+              fieldName: rule.fieldName,
+              issueType: "missing_value",
+              issueDescription: `${getFieldLabel(rule.fieldName)} fehlt`,
+              severity: rule.severity,
+              createdAt: new Date().toISOString(),
+              resolvedAt: null
+            });
+          }
+        }
+      }
+    }
+
+    // 3. Prüfe Projektregeln
+    const projectRules = activeRules.filter(rule => rule.entityType === "tblproject");
+    if (projectRules.length > 0) {
+      const projects = await db.execute(sql`SELECT * FROM tblproject`);
+      
+      for (const project of projects.rows) {
+        for (const rule of projectRules) {
+          if (rule.ruleName === "required" && (!project[rule.fieldName] || project[rule.fieldName] === "")) {
+            issues.push({
+              id: issues.length + 1,
+              entityType: "projects",
+              entityId: project.id,
+              entityName: project.project_name || `Projekt #${project.id}`,
+              fieldName: rule.fieldName,
+              issueType: "missing_value",
+              issueDescription: `${getFieldLabel(rule.fieldName)} fehlt`,
+              severity: rule.severity,
+              createdAt: new Date().toISOString(),
+              resolvedAt: null
+            });
+          } else if (rule.ruleName === "valid_date" && rule.fieldName === "project_startdate") {
+            if (project.project_startdate && !(project.project_startdate instanceof Date) && isNaN(Date.parse(project.project_startdate))) {
+              issues.push({
+                id: issues.length + 1,
+                entityType: "projects",
+                entityId: project.id,
+                entityName: project.project_name || `Projekt #${project.id}`,
+                fieldName: rule.fieldName,
+                issueType: "invalid_date",
+                issueDescription: `Startdatum ist kein gültiges Datum: '${project.project_startdate}'`,
+                severity: rule.severity,
+                createdAt: new Date().toISOString(),
+                resolvedAt: null
+              });
+            }
+          } else if (rule.ruleName === "date_after" && rule.fieldName === "project_enddate") {
+            if (project.project_startdate && project.project_enddate) {
+              const startDate = new Date(project.project_startdate);
+              const endDate = new Date(project.project_enddate);
+              
+              if (endDate < startDate) {
+                issues.push({
+                  id: issues.length + 1,
+                  entityType: "projects",
+                  entityId: project.id,
+                  entityName: project.project_name || `Projekt #${project.id}`,
+                  fieldName: rule.fieldName,
+                  issueType: "invalid_value",
+                  issueDescription: `Enddatum liegt vor Startdatum`,
+                  severity: rule.severity,
+                  createdAt: new Date().toISOString(),
+                  resolvedAt: null
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
     return issues;
   } catch (error) {
-    console.error("Fehler beim Suchen nach fehlenden Feldern:", error);
+    console.error("Error running data quality check:", error);
     return [];
   }
 }
 
-/**
- * Liefert eine Liste aller aktuellen Datenqualitätsprobleme
- */
-export async function getAllDataQualityIssues(): Promise<DataQualityIssue[]> {
+// Resolving Issues
+export async function resolveIssue(issueId: number): Promise<boolean> {
+  // In einer vollständigen Implementierung würden wir hier die Datenbank aktualisieren
+  // Für den Prototyp geben wir einfach true zurück
+  return true;
+}
+
+// Toggle Rule Active State
+export async function toggleRuleActive(ruleId: number): Promise<boolean> {
+  // In einer vollständigen Implementierung würden wir hier die Datenbank aktualisieren
+  // Für den Prototyp geben wir einfach true zurück
+  return true;
+}
+
+// Handler für die API-Routen
+export async function getDataQualityMetricsHandler(req: Request, res: Response) {
   try {
-    // In einer realen Implementierung würden die Issues in einer Datenbank gespeichert
-    // und hier abgerufen werden. Für diesen Prototyp generieren wir sie on-the-fly.
-    const emailIssues = await findInvalidEmails();
-    const phoneIssues = await findInvalidPhoneNumbers();
-    const duplicateIssues = await findDuplicateEmployees();
-    const missingFieldIssues = await findMissingOptionalFields();
-    
-    return [
-      ...emailIssues,
-      ...phoneIssues,
-      ...duplicateIssues,
-      ...missingFieldIssues
-    ];
+    const metrics = await getDataQualityMetrics();
+    res.json(metrics);
   } catch (error) {
-    console.error("Fehler beim Abrufen der Datenqualitätsprobleme:", error);
-    return [];
+    console.error("Error in getDataQualityMetricsHandler:", error);
+    res.status(500).json({ error: "Fehler beim Abrufen der Datenqualitätsmetriken" });
+  }
+}
+
+export async function runDataQualityCheckHandler(req: Request, res: Response) {
+  try {
+    const issues = await runDataQualityCheck();
+    res.json(issues);
+  } catch (error) {
+    console.error("Error in runDataQualityCheckHandler:", error);
+    res.status(500).json({ error: "Fehler beim Ausführen der Datenqualitätsprüfung" });
+  }
+}
+
+export async function resolveIssueHandler(req: Request, res: Response) {
+  try {
+    const { issueId } = req.body;
+    const success = await resolveIssue(issueId);
+    if (success) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: "Problem konnte nicht als gelöst markiert werden" });
+    }
+  } catch (error) {
+    console.error("Error in resolveIssueHandler:", error);
+    res.status(500).json({ error: "Fehler beim Markieren des Problems als gelöst" });
+  }
+}
+
+export async function toggleRuleActiveHandler(req: Request, res: Response) {
+  try {
+    const { ruleId } = req.body;
+    const success = await toggleRuleActive(ruleId);
+    if (success) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: "Regel konnte nicht umgeschaltet werden" });
+    }
+  } catch (error) {
+    console.error("Error in toggleRuleActiveHandler:", error);
+    res.status(500).json({ error: "Fehler beim Umschalten des Regelstatus" });
+  }
+}
+
+// Helper-Funktion für Feldbezeichnungen
+function getFieldLabel(fieldName: string): string {
+  switch (fieldName) {
+    case "first_name": return "Vorname";
+    case "last_name": return "Nachname";
+    case "customer_email": return "E-Mail";
+    case "company_name": return "Firmenname";
+    case "project_name": return "Projektname";
+    case "project_startdate": return "Startdatum";
+    case "project_enddate": return "Enddatum";
+    default: return fieldName;
   }
 }

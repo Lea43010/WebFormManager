@@ -14,7 +14,12 @@ import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { setupBackupRoutes } from "./backup";
 import { setupStripeRoutes } from "./stripe-routes";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
-import { generateDataQualityReport, getAllDataQualityIssues } from "./data-quality";
+import { 
+  getDataQualityMetricsHandler, 
+  runDataQualityCheckHandler, 
+  resolveIssueHandler, 
+  toggleRuleActiveHandler 
+} from "./data-quality";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
