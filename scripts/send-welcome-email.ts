@@ -123,7 +123,7 @@ Ihr Bau - Structura App Team
 Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.
     `;
     
-    // E-Mail senden
+    // E-Mail an Benutzer senden
     const result = await emailService.sendEmail({
       to: USER_INFO.user_email,
       subject: 'Willkommen bei Bau - Structura App - Ihre Zugangsdaten',
@@ -131,8 +131,31 @@ Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht 
       text: textContent
     });
     
+    // Kopie an Administrator senden
+    const adminResult = await emailService.sendEmail({
+      to: 'lea.zimmer@gmx.net',
+      subject: `[KOPIE] Willkommen bei Bau - Structura App - Zugangsdaten für ${USER_INFO.username}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2>Kopie der Willkommens-E-Mail</h2>
+          <p>Diese E-Mail ist eine Kopie der Willkommens-E-Mail, die an ${USER_INFO.user_name} (${USER_INFO.user_email}) gesendet wurde.</p>
+          <p><strong>Erstellt für Benutzer:</strong> ${USER_INFO.username}</p>
+          <p><strong>Erstellt am:</strong> ${heute}</p>
+          <hr style="border: 1px solid #eee; margin: 20px 0;" />
+          ${htmlContent}
+        </div>
+      `,
+      text: `KOPIE der Willkommens-E-Mail für ${USER_INFO.username}\n\nErstellt am: ${heute}\n\n${textContent}`
+    });
+    
     if (result) {
       console.log(`✅ Willkommens-E-Mail erfolgreich an ${USER_INFO.user_email} gesendet.`);
+      
+      if (adminResult) {
+        console.log(`✅ Kopie der Willkommens-E-Mail erfolgreich an lea.zimmer@gmx.net gesendet.`);
+      } else {
+        console.error(`❌ Fehler beim Senden der Kopie der Willkommens-E-Mail an den Administrator.`);
+      }
     } else {
       console.error(`❌ Fehler beim Senden der Willkommens-E-Mail.`);
     }

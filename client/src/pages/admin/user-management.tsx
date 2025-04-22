@@ -307,6 +307,14 @@ const USER_INFO = {
                     </ul>
                   </div>
                   <div>
+                    <h4 className="font-medium">Dokumentation und Archivierung:</h4>
+                    <ul className="list-disc pl-5 text-sm space-y-1">
+                      <li>Eine Kopie jeder Willkommens-E-Mail wird automatisch an <strong>lea.zimmer@gmx.net</strong> gesendet</li>
+                      <li>Die Kopie enthält zusätzliche Informationen wie Erstellungsdatum und Benutzerdetails</li>
+                      <li>Alle verschickten E-Mails werden in der Entwicklungsumgebung in <code>temp/emails/</code> gespeichert</li>
+                    </ul>
+                  </div>
+                  <div>
                     <h4 className="font-medium">Datei:</h4>
                     <p className="text-sm font-mono">scripts/send-welcome-email.ts</p>
                   </div>
