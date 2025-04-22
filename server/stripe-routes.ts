@@ -128,6 +128,7 @@ export function setupStripeRoutes(app: Express) {
     let event: Stripe.Event;
     
     try {
+      // @ts-ignore - Wir ignorieren den Typfehler für die API-Version
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
         apiVersion: "2023-10-16", // Kompatible Version
       });

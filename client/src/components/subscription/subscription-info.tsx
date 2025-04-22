@@ -220,55 +220,137 @@ export function SubscriptionInfo() {
       <CardContent>
         {subscriptionData?.status === "trial" && (
           <div className="space-y-4">
-            <p>
-              Sie befinden sich in der <strong>kostenlosen 4-wöchigen Testphase</strong>.
-            </p>
-            <p>
-              Ende der Testphase: <strong>{formatDate(subscriptionData.trialEndDate)}</strong>
-            </p>
-            <p>
-              Um nach Ablauf der Testphase weiterhin alle Funktionen nutzen zu können, schließen Sie ein 
-              Abonnement ab. Nur mit einem aktiven Abonnement können Sie nach der Testphase weiterhin
-              auf Ihre Daten zugreifen.
-            </p>
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <h3 className="text-lg font-medium mb-2 text-blue-800">
+                Kostenlose Testphase aktiv
+              </h3>
+              <p className="mb-3">
+                Sie befinden sich in der <strong>kostenlosen 4-wöchigen Testphase</strong> und haben 
+                vollen Zugriff auf alle Premium-Funktionen der Bau-Structura App.
+              </p>
+              <p className="mb-3">
+                <span className="font-medium">Ende der Testphase:</span> <strong>{formatDate(subscriptionData.trialEndDate)}</strong>
+              </p>
+              <div className="mt-3 text-sm text-blue-700">
+                <p>
+                  Um nach Ablauf der Testphase weiterhin alle Funktionen nutzen zu können, schließen Sie ein 
+                  Abonnement ab. Nur mit einem aktiven Abonnement können Sie nach der Testphase weiterhin
+                  auf Ihre Projekte und Daten zugreifen.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Was ist im Abonnement enthalten?</h3>
+              <ul className="space-y-2 ml-5 list-disc">
+                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
+                <li>Unbegrenzte Projektverwaltung mit Dokumentenablage</li>
+                <li>KI-basierte Baustellenanalyse und Materialschätzung</li>
+                <li>GPS-Tracking und Geodatenanalyse für Ihre Bauprojekte</li>
+                <li>Automatisierte Berichte und Bautagebuch-Funktionen</li>
+                <li>Professioneller E-Mail-Support</li>
+              </ul>
+            </div>
           </div>
         )}
 
         {subscriptionData?.status === "active" && (
           <div className="space-y-4">
-            <p>
-              Sie haben ein <strong>aktives Abonnement</strong> und können alle Funktionen der
-              Bau-Structura App uneingeschränkt nutzen.
-            </p>
-            {subscriptionData.lastPaymentDate && (
-              <p>
-                Letzte Zahlung: <strong>{formatDate(subscriptionData.lastPaymentDate)}</strong>
+            <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+              <h3 className="text-lg font-medium mb-2 text-green-800">
+                Aktives Abonnement
+              </h3>
+              <p className="mb-3">
+                Sie haben ein <strong>aktives Abonnement</strong> und können alle Funktionen der
+                Bau-Structura App uneingeschränkt nutzen.
               </p>
-            )}
+              {subscriptionData.lastPaymentDate && (
+                <p>
+                  <span className="font-medium">Letzte Zahlung:</span> <strong>{formatDate(subscriptionData.lastPaymentDate)}</strong>
+                </p>
+              )}
+              <div className="mt-3 text-sm text-green-700">
+                <p>
+                  Mit Ihrem aktiven Abonnement genießen Sie uneingeschränkten Zugriff auf alle Premium-Funktionen. 
+                  Ihre Zahlung verlängert sich automatisch, Sie können Ihr Abonnement jedoch jederzeit kündigen.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Ihre Abonnement-Vorteile</h3>
+              <ul className="space-y-2 ml-5 list-disc">
+                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
+                <li>Unbegrenzte Projektverwaltung mit Dokumentenablage</li>
+                <li>KI-basierte Baustellenanalyse und Materialschätzung</li>
+                <li>GPS-Tracking und Geodatenanalyse für Ihre Bauprojekte</li>
+                <li>Automatisierte Berichte und Bautagebuch-Funktionen</li>
+                <li>Professioneller E-Mail-Support</li>
+              </ul>
+            </div>
           </div>
         )}
 
         {subscriptionData?.status === "canceled" && (
           <div className="space-y-4">
-            <p>
-              Ihr Abonnement wurde <strong>gekündigt</strong>.
-            </p>
-            <p>
-              Sie haben mit diesem Zugangsdaten keinen Zugriff mehr auf die erweiterten Funktionen 
-              der Bau-Structura App. Um wieder vollen Zugriff zu erhalten, schließen Sie ein neues 
-              Abonnement ab.
-            </p>
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <h3 className="text-lg font-medium mb-2 text-amber-800">
+                Abonnement gekündigt
+              </h3>
+              <p className="mb-3">
+                Ihr Abonnement wurde <strong>gekündigt</strong> und ist nicht mehr aktiv.
+              </p>
+              <div className="mt-3 text-sm text-amber-700">
+                <p>
+                  Sie haben mit diesem Zugangsdaten aktuell keinen Zugriff mehr auf die erweiterten Funktionen 
+                  der Bau-Structura App. Um wieder vollen Zugriff zu erhalten, schließen Sie ein neues 
+                  Abonnement ab.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Was haben Sie verpasst?</h3>
+              <ul className="space-y-2 ml-5 list-disc">
+                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
+                <li>Unbegrenzte Projektverwaltung mit Dokumentenablage</li>
+                <li>KI-basierte Baustellenanalyse und Materialschätzung</li>
+                <li>GPS-Tracking und Geodatenanalyse für Ihre Bauprojekte</li>
+                <li>Automatisierte Berichte und Bautagebuch-Funktionen</li>
+                <li>Professioneller E-Mail-Support</li>
+              </ul>
+            </div>
           </div>
         )}
         
         {subscriptionData?.status === "admin" && (
           <div className="space-y-4">
-            <p>
-              Sie sind als <strong>Administrator</strong> angemeldet und haben <strong>uneingeschränkten Zugriff</strong> auf alle Funktionen der Bau-Structura App.
-            </p>
-            <p>
-              Als Administrator benötigen Sie kein aktives Abonnement, um die Anwendung zu nutzen.
-            </p>
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+              <h3 className="text-lg font-medium mb-2 text-purple-800">
+                Administrator-Zugang
+              </h3>
+              <p className="mb-3">
+                Sie sind als <strong>Administrator</strong> angemeldet und haben <strong>uneingeschränkten Zugriff</strong> auf alle Funktionen der Bau-Structura App.
+              </p>
+              <div className="mt-3 text-sm text-purple-700">
+                <p>
+                  Als Administrator benötigen Sie kein aktives Abonnement, um die Anwendung zu nutzen. 
+                  Sie haben zusätzlich Zugriff auf administrative Funktionen und können alle Inhalte verwalten.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Ihre Administrator-Funktionen</h3>
+              <ul className="space-y-2 ml-5 list-disc">
+                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
+                <li>Benutzerverwaltung und Rechtekontrolle</li>
+                <li>Verwaltung aller Projekte im System</li>
+                <li>Zugriff auf alle Dateien und Dokumente</li>
+                <li>Systemkonfiguration und Datenbankverwaltung</li>
+                <li>Überwachung und Steuerung aller App-Komponenten</li>
+              </ul>
+            </div>
           </div>
         )}
       </CardContent>
