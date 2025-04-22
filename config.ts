@@ -112,6 +112,13 @@ const externalServices = {
   },
 };
 
+// Anwendungs-URL
+const APP_URL = (() => {
+  if (isProduction) return process.env.APP_URL || 'https://baustructuraapp.de';
+  if (isStaging) return process.env.APP_URL || 'https://staging.baustructuraapp.de';
+  return process.env.APP_URL || 'http://localhost:5000';
+})();
+
 // Zusammenführen aller Konfigurationen
 const config = {
   env: nodeEnv,
@@ -127,6 +134,7 @@ const config = {
   email,
   ai,
   externalServices,
+  APP_URL, // Anwendungs-URL für E-Mails und Links
 };
 
 export default config;
