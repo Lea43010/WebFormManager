@@ -21,6 +21,7 @@ import LandingPage from "@/pages/landing-page";
 import SimpleLoginPage from "@/pages/simple-login";
 import AdminPage from "@/pages/admin-page";
 import DeploymentDocsPage from "@/pages/admin/deployment-docs";
+import UserManagementPage from "@/pages/admin/user-management";
 import SubscriptionPage from "@/pages/subscription-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
@@ -39,6 +40,7 @@ function Router() {
       {/* Admin-Bereich mit spezieller Zugriffsbeschränkung */}
       <AdminProtectedRoute path="/admin" component={AdminPage} />
       <AdminProtectedRoute path="/admin/deployment-docs" component={DeploymentDocsPage} />
+      <AdminProtectedRoute path="/admin/users" component={UserManagementPage} />
       
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
