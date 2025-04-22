@@ -129,7 +129,7 @@ export function setupStripeRoutes(app: Express) {
     
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2024-03-26", // Aktuelle Version zum Zeitpunkt der Entwicklung
+        apiVersion: "2023-10-16", // Kompatible Version
       });
       
       event = stripe.webhooks.constructEvent(

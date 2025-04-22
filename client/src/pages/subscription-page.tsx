@@ -112,30 +112,35 @@ export default function SubscriptionPage() {
           <CardContent>
             <div className="prose prose-slate max-w-none">
               <p>
-                Mit einem aktiven Abonnement der Bau-Structura App erhalten Sie Zugriff auf alle 
-                Premium-Funktionen und können das volle Potenzial der Anwendung nutzen.
+                Bau-Structura bietet eine leistungsstarke Software-Lösung für die Verwaltung von Bauprojekten, 
+                Mitarbeitern und Ressourcen. Mit unserem Abonnement erhalten Sie:
               </p>
               
-              <h3>Was ist im Abonnement enthalten?</h3>
               <ul>
-                <li>Unbegrenzte Anzahl an Projekten</li>
-                <li>Zugriff auf alle erweiterten Funktionen</li>
-                <li>Speicherplatz für Ihre Dokumente und Anhänge</li>
-                <li>Prioritäts-Support</li>
-                <li>Regelmäßige Updates und neue Funktionen</li>
+                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
+                <li>Unbegrenzte Projektverwaltung mit Dokumentenablage</li>
+                <li>Intelligente KI-basierte Baustellenanalyse und Materialschätzung</li>
+                <li>GPS-Tracking und Geodatenanalyse für Ihre Bauprojekte</li>
+                <li>Automatisierte Berichte und Bautagebuch-Funktionen</li>
+                <li>Professioneller E-Mail-Support</li>
               </ul>
               
-              <h3>Preismodell</h3>
+              <h3>Abonnement-Details</h3>
               <p>
-                Der Preis für das Abonnement basiert auf einem monatlichen Zahlungsmodell. 
-                Sie können Ihr Abonnement jederzeit kündigen.
+                Abonnieren Sie jetzt und optimieren Sie Ihr Baustellenmanagement mit modernster Technologie. 
+                Die ersten 4 Wochen sind kostenlos, danach beträgt die monatliche Gebühr €XX,XX (zzgl. MwSt). 
+                Sie können Ihr Abonnement jederzeit mit einer Frist von 30 Tagen kündigen.
               </p>
               
-              <h3>Testphase</h3>
+              <h3>Kostenlose Testphase</h3>
               <p>
-                Jeder neue Benutzer erhält eine kostenlose 4-wöchige Testphase, in der alle Funktionen
-                uneingeschränkt genutzt werden können. Nach Ablauf der Testphase ist ein Abonnement
-                erforderlich, um weiterhin auf alle Funktionen zugreifen zu können.
+                Jeder neue Benutzer erhält automatisch eine kostenlose 4-wöchige Testphase mit vollem 
+                Funktionsumfang. Nach Ablauf dieser Phase wird ein aktives Abonnement benötigt, um weiterhin 
+                auf Ihre Projekte und Daten zugreifen zu können.
+              </p>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                Mit Ihrem Abonnement akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinien.
               </p>
             </div>
           </CardContent>

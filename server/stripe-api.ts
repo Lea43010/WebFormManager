@@ -15,10 +15,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 // Preisplan-ID für das Abonnement
-// In einer Produktionsumgebung sollte dies aus einer Umgebungsvariable gelesen werden
-// z.B.: const SUBSCRIPTION_PRICE_ID = process.env.STRIPE_PRICE_ID;
-// Für Testzwecke verwenden wir einen Standard-Testpreis von Stripe
-const SUBSCRIPTION_PRICE_ID = "price_1PFQCTGlHQ70ZJQwdw7BqhCi"; // Testpreis für monatliches Abonnement
+// Verwendung der eingerichteten Umgebungsvariable
+if (!process.env.STRIPE_PRICE_ID) {
+  throw new Error('Fehlender Stripe-Preis: STRIPE_PRICE_ID');
+}
+const SUBSCRIPTION_PRICE_ID = process.env.STRIPE_PRICE_ID;
 
 /**
  * Erstellt oder aktualisiert einen Stripe-Kunden für einen Benutzer
