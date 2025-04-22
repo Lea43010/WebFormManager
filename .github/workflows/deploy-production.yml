@@ -1,0 +1,157 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Bestätigen Sie das Deployment in die Produktionsumgebung'
+        required: true
+        default: 'nein'
+        type: choice
+        options:
+          - ja
+          - nein
+      reason:
+        description: 'Grund für die manuelle Ausführung'
+        required: false
+        default: 'Manuelle Deployment-Anforderung'
+
+jobs:
+  confirm-production-deploy:
+    name: Confirm Production Deployment
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Check confirmation
+        if: ${{ github.event.inputs.confirm != 'ja' }}
+        run: |
+          echo "Deployment in die Produktionsumgebung nicht bestätigt. Abbruch."
+          exit 1
+  
+  deploy-to-production:
+    name: Deploy to Production Environment
+    runs-on: ubuntu-latest
+    needs: confirm-production-deploy
+    if: ${{ success() || github.event_name == 'push' }}
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create .env.production file
+        run: |
+          cat > .env.production << EOF
+          # Produktionsumgebung Konfiguration
+          NODE_ENV=production
+          PORT=80
+          HOST=0.0.0.0
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          
+          # Datenbankverbindung
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          
+          # API-Keys
+          BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          DEEPAI_API_KEY=${{ secrets.DEEPAI_API_KEY }}
+          MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          
+          # Stripe Integration
+          STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+          VITE_STRIPE_PUBLIC_KEY=${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          
+          # Logging und Fehlerbehandlung
+          LOG_LEVEL=warn
+          
+          # Email-Konfiguration
+          EMAIL_FROM=info@baustructura.de
+          EMAIL_FROM_NAME=BauStructura
+          EMAIL_DEV_MODE=false
+          
+          # Sicherheit
+          BCRYPT_ROUNDS=12
+          TWO_FACTOR_ENABLED=true
+          RATE_LIMIT_LOGIN=5
+          RATE_LIMIT_API=150
+          RATE_LIMIT_HEALTH=30
+          
+          # Cors-Konfiguration
+          CORS_ORIGIN=https://*.baustructura.de
+          EOF
+      
+      - name: Run DB migrations
+        run: npm run db:push
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Run lint
+        run: npm run lint
+      
+      - name: Run tests (if any)
+        run: |
+          if [ -f "./package.json" ] && grep -q "\"test\":" "./package.json"; then
+            npm test
+          else
+            echo "No tests defined in package.json"
+          fi
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Create backup before deployment
+        run: |
+          echo "Erstelle Backup der Produktionsumgebung vor dem Deployment"
+          # Hier käme der Code für die Datenbank-Sicherung
+          # Beispiel: pg_dump oder anderes Backup-Script
+      
+      - name: Deploy to production server
+        run: |
+          echo "Deployment zu Produktionsumgebung gestartet"
+          # Hier käme der tatsächliche Deployment-Code für die Produktionsumgebung
+          # Beispiel: rsync, scp, oder spezielles Deployment-Script
+          
+          # Simulated delay to represent deployment time
+          sleep 10
+          
+          echo "Deployment zu Produktionsumgebung abgeschlossen"
+      
+      - name: Run health check
+        run: |
+          echo "Führe Health-Check der Produktionsumgebung durch"
+          # Beispiel: curl oder anderes Health-Check-Script
+          # curl -f https://api.baustructura.de/health || (echo "Health Check failed"; exit 1)
+      
+      - name: Notify team on success
+        if: success()
+        run: |
+          echo "Deployment zu Produktionsumgebung erfolgreich!"
+          # Hier könnte ein Slack/Teams/Discord-Webhook oder E-Mail-Versand erfolgen
+      
+      - name: Notify team on failure
+        if: failure()
+        run: |
+          echo "Deployment zu Produktionsumgebung fehlgeschlagen!"
+          # Hier könnte ein Slack/Teams/Discord-Webhook oder E-Mail-Versand erfolgen
+          
+          echo "Starte Rollback-Prozess..."
+          # Hier käme der Code für den Rollback bei fehlgeschlagenem Deployment

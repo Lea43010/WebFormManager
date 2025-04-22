@@ -1,0 +1,118 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Grund für die manuelle Ausführung'
+        required: false
+        default: 'Manuelle Deployment-Anforderung'
+
+jobs:
+  deploy-to-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create .env.staging file
+        run: |
+          cat > .env.staging << EOF
+          # Staging-Umgebung Konfiguration
+          NODE_ENV=staging
+          PORT=5000
+          HOST=0.0.0.0
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          
+          # Datenbankverbindung
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          
+          # API-Keys
+          BREVO_API_KEY=${{ secrets.BREVO_API_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          DEEPAI_API_KEY=${{ secrets.DEEPAI_API_KEY }}
+          MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
+          
+          # Stripe Integration
+          STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+          VITE_STRIPE_PUBLIC_KEY=${{ secrets.VITE_STRIPE_PUBLIC_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          
+          # Logging und Fehlerbehandlung
+          LOG_LEVEL=info
+          
+          # Email-Konfiguration
+          EMAIL_FROM=staging@baustructura.de
+          EMAIL_FROM_NAME=BauStructura (STAGING)
+          EMAIL_DEV_MODE=true
+          
+          # Sicherheit
+          BCRYPT_ROUNDS=11
+          TWO_FACTOR_ENABLED=true
+          RATE_LIMIT_LOGIN=20
+          RATE_LIMIT_API=500
+          RATE_LIMIT_HEALTH=100
+          EOF
+      
+      - name: Run DB migrations
+        run: npm run db:push
+        env:
+          NODE_ENV: staging
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: staging
+      
+      - name: Run lint
+        run: npm run lint
+      
+      - name: Run tests (if any)
+        run: |
+          if [ -f "./package.json" ] && grep -q "\"test\":" "./package.json"; then
+            npm test
+          else
+            echo "No tests defined in package.json"
+          fi
+        env:
+          NODE_ENV: staging
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+      - name: Deploy to staging server
+        run: |
+          echo "Deployment zu Staging-Umgebung gestartet"
+          # Hier käme der tatsächliche Deployment-Code für die Staging-Umgebung
+          # Beispiel: rsync, scp, oder spezielles Deployment-Script
+          
+          # Simulated delay to represent deployment time
+          sleep 5
+          
+          echo "Deployment zu Staging-Umgebung abgeschlossen"
+      
+      - name: Notify team on success
+        if: success()
+        run: |
+          echo "Deployment zu Staging-Umgebung erfolgreich!"
+          # Hier könnte ein Slack/Teams/Discord-Webhook oder E-Mail-Versand erfolgen
+      
+      - name: Notify team on failure
+        if: failure()
+        run: |
+          echo "Deployment zu Staging-Umgebung fehlgeschlagen!"
+          # Hier könnte ein Slack/Teams/Discord-Webhook oder E-Mail-Versand erfolgen
