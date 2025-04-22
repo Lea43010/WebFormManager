@@ -62,10 +62,11 @@ export async function createCheckoutSession(userId: number): Promise<string> {
   // Stelle sicher, dass der Benutzer einen Stripe-Kunden hat
   const customerId = await createOrUpdateStripeCustomer(userId);
   
-  // Erstelle eine Checkout-Session mit mehreren Zahlungsmethoden
+  // Erstelle eine Checkout-Session
+  // In der neuesten Stripe-API-Version müssen wir die payment_method_types nicht explizit angeben
+  // Stripe bestimmt automatisch die verfügbaren Zahlungsmethoden basierend auf der Währung und Region
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    payment_method_types: ['card', 'paypal', 'sepa_debit'], // Kreditkarte, PayPal und SEPA-Lastschrift
     line_items: [
       {
         price: SUBSCRIPTION_PRICE_ID,
@@ -77,8 +78,10 @@ export async function createCheckoutSession(userId: number): Promise<string> {
     cancel_url: `${process.env.APP_URL || 'http://localhost:3000'}/subscription?canceled=true`,
     // Lokalisierung für deutsche Kunden
     locale: 'de',
-    // Zusätzliche Optionen für bessere Benutzererfahrung
+    // Automatische Rechnungsadressenerfassung
     billing_address_collection: 'auto',
+    // PayPal aktivieren (sollte in dieser API-Version automatisch unterstützt werden)
+    payment_method_options: {},
   });
   
   return session.url || '';

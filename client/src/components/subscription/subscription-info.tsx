@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CreditCard, Wallet, CreditCard as BankIcon } from "lucide-react";
+import { Loader2, CreditCard, Wallet, BanknoteIcon } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -272,7 +272,7 @@ export function SubscriptionInfo() {
                   </div>
                 </div>
                 <div className="flex items-center p-3 border rounded-md">
-                  <BankIcon className="h-5 w-5 mr-2 text-blue-600" />
+                  <BanknoteIcon className="h-5 w-5 mr-2 text-blue-600" />
                   <div>
                     <h4 className="font-medium">SEPA-Lastschrift</h4>
                     <p className="text-sm text-muted-foreground">Direkte Abbuchung von Ihrem Konto</p>
