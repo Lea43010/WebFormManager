@@ -1135,18 +1135,6 @@ export default function GeoMapPage() {
               </Select>
             </div>
             
-            {/* Sehr auffällige Tracking-Buttons direkt in der Karte */}
-            <div className="mx-4 mt-2 mb-0 flex gap-2 justify-center">
-              <Button className="bg-blue-600 hover:bg-blue-700 w-1/2" onClick={() => window.location.href = "/tracking"}>
-                <MapPin className="h-4 w-4 mr-2" />
-                <span className="font-bold">Team-Tracking</span>
-              </Button>
-              <Button className="bg-green-600 hover:bg-green-700 w-1/2" onClick={() => window.location.href = "/tracking/reports"}>
-                <FileText className="h-4 w-4 mr-2" />
-                <span className="font-bold">Bewegungsprotokolle</span>
-              </Button>
-            </div>
-            
             <CardHeader className="pb-0">
               <Tabs defaultValue="map" value={activeTab} onValueChange={setActiveTab}>
                 <div className="flex justify-between items-center">
