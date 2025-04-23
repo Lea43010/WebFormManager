@@ -19,7 +19,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { CalendarWeekPlanner } from './calendar-week-planner-simple';
+import { BasicCalendarView } from './basic-calendar-view';
 
 interface MilestoneSectionProps {
   projectId: number;
