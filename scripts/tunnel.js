@@ -11,6 +11,9 @@ import localtunnel from 'localtunnel';
 const PORT = parseInt(process.env.PORT || '5001', 10);
 const SUBDOMAIN = 'bau-structura-test';
 
+// Zusätzliche Konfiguration für lokale IPv4-Adresse
+process.env.LOCALTUNNEL_LOCAL_HOST = "127.0.0.1";
+
 // Funktion zum Starten des Tunnels
 async function startTunnel() {
   try {
@@ -18,7 +21,9 @@ async function startTunnel() {
     
     const tunnel = await localtunnel({ 
       port: PORT,
-      subdomain: SUBDOMAIN
+      subdomain: SUBDOMAIN,
+      local_host: '127.0.0.1',
+      allow_invalid_cert: true
     });
     
     console.log(`\n✅ Tunnel gestartet! Öffentliche URL: ${tunnel.url}\n`);

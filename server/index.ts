@@ -106,24 +106,24 @@ app.use((req, res, next) => {
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
       
-      // Starte den localtunnel für öffentlichen Zugriff
+      // Starte den einfachen Zugangsserver für öffentlichen Zugriff
       if (config.isDevelopment) {
         process.env.PORT = String(port);
         try {
-          // Starte den Tunnel im Hintergrund
-          logger.info('Starte Localtunnel für öffentlichen Zugriff...');
+          // Starte den Zugangsserver im Hintergrund
+          logger.info('Starte öffentlichen Zugang für Tests...');
           import('child_process').then(({ spawn }) => {
-            const tunnelProcess = spawn('node', ['scripts/tunnel.js'], {
+            const accessProcess = spawn('node', ['scripts/public-access.js'], {
               detached: true,
-              stdio: ['ignore', 'inherit', 'inherit']
+              stdio: ['inherit', 'inherit', 'inherit']
             });
-            tunnelProcess.unref();
-            logger.info('Localtunnel-Prozess gestartet');
+            accessProcess.unref();
+            logger.info('Öffentlicher Zugang wird eingerichtet (dauert ca. 5-10 Sekunden)');
           }).catch(err => {
             logger.error('Fehler beim Importieren des child_process-Moduls:', err);
           });
         } catch (error) {
-          logger.error('Fehler beim Starten des Localtunnels:', error);
+          logger.error('Fehler beim Starten des öffentlichen Zugangs:', error);
         }
       }
     })
