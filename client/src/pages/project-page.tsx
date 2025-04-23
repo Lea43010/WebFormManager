@@ -289,31 +289,31 @@ export default function ProjectPage() {
     >
       {!isEditing ? (
         <div className="space-y-4">
-          {/* Hinweis-Card */}
-          <div className="bg-amber-50 border border-amber-300 p-4 rounded-lg">
-            <div className="flex items-center gap-3 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600">
+          {/* Hinweis-Card - Mobile-freundlich */}
+          <div className="bg-amber-50 border border-amber-300 p-3 sm:p-4 rounded-lg">
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 flex-shrink-0 mt-1 sm:mt-0 w-5 h-5 sm:w-6 sm:h-6">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
-              <h3 className="text-lg font-semibold text-amber-800">Wichtiger Hinweis zur Reihenfolge der Dateneingabe</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-amber-800">Wichtiger Hinweis zur Dateneingabe</h3>
             </div>
-            <p className="text-amber-800 mb-4">
+            <p className="text-xs sm:text-sm text-amber-800 mb-3 sm:mb-4">
               Um ein neues Projekt anzulegen, müssen Sie zuerst <strong>Unternehmen</strong> und <strong>Kunden</strong> eintragen. 
-              Bitte stellen Sie sicher, dass die erforderlichen Firmen- und Kundendaten vorhanden sind, bevor Sie mit der Projekterstellung beginnen.
+              Bitte stellen Sie sicher, dass diese Daten vorhanden sind.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button 
                 variant="outline" 
-                className="text-amber-800 border-amber-300 hover:bg-amber-100"
+                className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                 onClick={() => navigate("/companies")}
               >
                 Unternehmen anlegen
               </Button>
               <Button 
                 variant="outline" 
-                className="text-amber-800 border-amber-300 hover:bg-amber-100"
+                className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                 onClick={() => navigate("/customers")}
               >
                 Kunden anlegen
@@ -321,27 +321,36 @@ export default function ProjectPage() {
             </div>
           </div>
           
-          <div className="flex justify-between">
-            <div className="flex gap-2">
+          {/* Aktionsleiste */}
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
+            {/* Ansichtsoptionen - Mobile-optimiert */}
+            <div className="flex gap-2 w-full sm:w-auto mb-2 sm:mb-0">
               <Button 
                 variant={viewMode === 'list' ? "default" : "outline"} 
                 size="sm"
                 onClick={() => setViewMode('list')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
               >
-                <List className="mr-2 h-4 w-4" />
+                <List className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Liste
               </Button>
               <Button 
                 variant={viewMode === 'grid' ? "default" : "outline"} 
                 size="sm"
                 onClick={() => setViewMode('grid')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
               >
-                <Grid className="mr-2 h-4 w-4" />
+                <Grid className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Kacheln
               </Button>
             </div>
-            <Button onClick={handleAddProject}>
-              <PlusCircle className="mr-2 h-4 w-4" />
+            
+            {/* Neues Projekt Button */}
+            <Button 
+              onClick={handleAddProject}
+              className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
+            >
+              <PlusCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Neues Projekt
             </Button>
           </div>
