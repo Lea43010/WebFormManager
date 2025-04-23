@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bau-Structura Test-URL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .warning {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bau-Structura Test-Zugang</h1>
+    
+    <div class="container">
+        <h2>Optionen für Test-Zugriff:</h2>
+        
+        <div class="warning">
+            <p><strong>Hinweis:</strong> Die gewählte URL öffnet sich in einem neuen Tab. Falls der Tunnel nicht funktioniert, bitte eine der anderen Optionen probieren.</p>
+        </div>
+        
+        <h3>Option 1: Replit-URL (empfohlen)</h3>
+        <p>Dies ist die zuverlässigste Option und funktioniert in den meisten Netzwerken.</p>
+        <a href="https://workspace.leazimmer.repl.co" target="_blank" class="button">Replit-URL öffnen</a>
+        
+        <h3>Option 2: Alternative Tunnel</h3>
+        <p>Falls die erste Option nicht funktioniert, diese Tunnel-URLs ausprobieren:</p>
+        <ul>
+            <li><a href="https://bau-structura-app.loca.lt" target="_blank">https://bau-structura-app.loca.lt</a></li>
+            <li><a href="https://bau-structura-test.loca.lt" target="_blank">https://bau-structura-test.loca.lt</a></li>
+        </ul>
+        
+        <h3>Option 3: Direkter Zugriff (für Entwickler)</h3>
+        <p>Über die lokale Adresse der Anwendung:</p>
+        <code>http://localhost:5001</code>
+    </div>
+    
+    <div class="container">
+        <h2>Fehlerbehebung</h2>
+        <p>Falls Sie Probleme beim Zugriff haben:</p>
+        <ul>
+            <li>Prüfen Sie Ihre Internetverbindung</li>
+            <li>Versuchen Sie einen anderen Browser</li>
+            <li>Probieren Sie alle verfügbaren URLs aus der Liste oben</li>
+            <li>Bei der Fehlermeldung "IPv4-Adresse wird benötigt", ignorieren Sie das Feld und klicken Sie direkt auf "Submit"</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Automatische Weiterleitung nach 2 Sekunden
+        setTimeout(function() {
+            window.location.href = "https://workspace.leazimmer.repl.co";
+        }, 2000);
+    </script>
+</body>
+</html>

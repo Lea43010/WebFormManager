@@ -106,24 +106,24 @@ app.use((req, res, next) => {
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
       
-      // Starte den einfachen Zugangsserver für öffentlichen Zugriff
+      // Starte den einfachen Proxy-Server für öffentlichen Zugriff
       if (config.isDevelopment) {
         process.env.PORT = String(port);
         try {
-          // Starte den Zugangsserver im Hintergrund
-          logger.info('Starte öffentlichen Zugang für Tests...');
+          // Starte den Proxy-Server im Hintergrund
+          logger.info('Starte einfachen Proxy-Server für Tests...');
           import('child_process').then(({ spawn }) => {
-            const accessProcess = spawn('node', ['scripts/public-access.js'], {
+            const proxyProcess = spawn('node', ['scripts/simple-proxy.js'], {
               detached: true,
               stdio: ['inherit', 'inherit', 'inherit']
             });
-            accessProcess.unref();
-            logger.info('Öffentlicher Zugang wird eingerichtet (dauert ca. 5-10 Sekunden)');
+            proxyProcess.unref();
+            logger.info('Proxy-Server wird auf Port 9000 gestartet');
           }).catch(err => {
             logger.error('Fehler beim Importieren des child_process-Moduls:', err);
           });
         } catch (error) {
-          logger.error('Fehler beim Starten des öffentlichen Zugangs:', error);
+          logger.error('Fehler beim Starten des Proxy-Servers:', error);
         }
       }
     })
