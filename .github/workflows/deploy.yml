@@ -1,0 +1,38 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  # Ermöglicht auch manuelle Auslösung
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          
+      - name: Install Dependencies
+        run: npm ci
+        
+      - name: Build
+        run: npm run build
+        env:
+          # Stellen Sie sicher, dass alle benötigten Umgebungsvariablen verfügbar sind
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Weitere benötigte Umgebungsvariablen hier hinzufügen
+          
+      - name: Deploy to Server
+        # Hier können Sie einen Deployment-Schritt einfügen, z.B. FTP-Upload oder SSH-Befehl
+        # Beispiel mit einer GitHub Action für FTP:
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
