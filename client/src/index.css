@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Sehr kleine Schriftgröße für mobile Geräte */
+  .text-2xs {
+    font-size: 0.65rem;
+    line-height: 1rem;
+  }
+}
+
 .green-emoji {
   filter: hue-rotate(90deg) saturate(1.5);
 }

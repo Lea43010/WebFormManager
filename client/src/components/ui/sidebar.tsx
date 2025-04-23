@@ -215,31 +215,33 @@ export function Sidebar() {
   return (
     <>
       {isMobile && (
-        <TooltipButton tooltipText="Menü öffnen" side="right">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="fixed top-4 left-4 z-40" 
-            onClick={toggleMobileMenu}
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </TooltipButton>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="fixed top-3 left-3 z-40 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white" 
+          onClick={toggleMobileMenu}
+          aria-label="Menü öffnen"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       )}
       
       {isMobile ? (
         <div
           className={cn(
-            "fixed inset-0 z-30 transform transition-transform duration-300 ease-in-out",
+            "fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="h-full w-64">
+          {/* Sidebar mit erhöhtem z-index um über allem zu sein */}
+          <div className="h-full w-72 max-w-[85vw] relative z-10">
             {sidebarContent}
           </div>
+          {/* Abdunkelnder Hintergrund */}
           <div 
-            className="absolute inset-0 bg-black bg-opacity-50 -z-10"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setIsMobileOpen(false)}
+            aria-hidden="true"
           />
         </div>
       ) : (
