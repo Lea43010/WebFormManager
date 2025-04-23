@@ -960,7 +960,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         </TabsContent>
         
         <TabsContent value="calendar-view" className="space-y-4">
-          <BasicCalendarView projectId={projectId} />
+          <FallbackCalendar projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="list-view" className="space-y-4">
