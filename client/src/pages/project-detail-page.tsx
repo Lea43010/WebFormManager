@@ -410,33 +410,36 @@ export default function ProjectDetailPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-6">
+          {/* Mobile-freundliche Button-Gruppe */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-4 sm:mb-6">
             <Button
               variant="outline"
               onClick={handleBackToList}
+              className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zurück zur Projektliste
+              <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Zurück zur Liste
             </Button>
             <Button
               onClick={() => setIsEditing(true)}
+              className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
             >
-              <Edit className="mr-2 h-4 w-4" />
+              <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Projekt bearbeiten
             </Button>
           </div>
 
           <Tabs defaultValue="overview" className="mt-4">
-            <TabsList>
-              <TabsTrigger value="overview">Übersicht</TabsTrigger>
-              <TabsTrigger value="permissions">Genehmigungen</TabsTrigger>
-              <TabsTrigger value="milestones">Meilensteine</TabsTrigger>
-              <TabsTrigger value="capacity">Bedarf/Kapazitäten</TabsTrigger>
-              <TabsTrigger value="diary">Bautagebuch</TabsTrigger>
+            <TabsList className="mb-4 flex-nowrap overflow-x-auto h-auto w-full border-b space-x-2 p-0.5 sm:p-1 bg-transparent">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Übersicht</TabsTrigger>
+              <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Genehmigungen</TabsTrigger>
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Meilensteine</TabsTrigger>
+              <TabsTrigger value="capacity" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Bedarf/Kapazitäten</TabsTrigger>
+              <TabsTrigger value="diary" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Bautagebuch</TabsTrigger>
               {project.projectArt === "Hochbau" && (
-                <TabsTrigger value="costgroups">Kostengruppen</TabsTrigger>
+                <TabsTrigger value="costgroups" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Kostengruppen</TabsTrigger>
               )}
-              <TabsTrigger value="attachments">Anhänge</TabsTrigger>
+              <TabsTrigger value="attachments" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 whitespace-nowrap">Anhänge</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">

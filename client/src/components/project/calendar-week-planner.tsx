@@ -245,17 +245,18 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
             <p className="text-muted-foreground">Keine Meilensteine für die ausgewählten Filter vorhanden.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          // Mobile-optimierter Kalenderwochen-Planer
+          <div className="overflow-x-auto pb-1 -mx-4 sm:mx-0">
             <div className="min-w-max">
-              {/* Monatsheader */}
+              {/* Monatsheader - Angepasste Größen für mobile Ansicht */}
               <div className="flex border-b">
-                <div className="w-60 p-2 font-medium border-r bg-gray-50">Meilenstein</div>
+                <div className="w-40 sm:w-60 p-1 sm:p-2 text-xs sm:text-sm font-medium border-r bg-gray-50">Meilenstein</div>
                 <div className="flex">
                   {monthHeaders.map((header, idx) => (
                     <div 
                       key={idx} 
-                      className="text-center font-medium bg-gray-50 border-r"
-                      style={{ width: `${header.colspan * 2.5}rem` }}
+                      className="text-center font-medium bg-gray-50 border-r text-xs sm:text-sm"
+                      style={{ width: `${header.colspan * 2}rem` }}
                     >
                       {header.month}
                     </div>
@@ -263,13 +264,13 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
                 </div>
               </div>
               
-              {/* Kalenderwochen-Header */}
+              {/* Kalenderwochen-Header - Kleinere Elemente für mobile Optimierung */}
               <div className="flex border-b">
-                <div className="w-60 p-2 font-medium border-r">Bauphase</div>
+                <div className="w-40 sm:w-60 p-1 sm:p-2 text-xs sm:text-sm font-medium border-r">Bauphase</div>
                 {weeksToShow.map(week => (
                   <div 
                     key={week} 
-                    className={`w-10 p-1 text-center text-xs font-medium ${
+                    className={`w-8 sm:w-10 p-0.5 sm:p-1 text-center text-xs font-medium ${
                       week === getCurrentWeek() && selectedYear === getCurrentYear() 
                         ? 'bg-blue-100' 
                         : ''
@@ -280,23 +281,23 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
                 ))}
               </div>
               
-              {/* Meilensteine mit Bauphasen */}
+              {/* Meilensteine mit Bauphasen - Touch-freundlichere Elemente */}
               {filteredMilestones.map(milestone => (
                 <div 
                   key={milestone.id} 
                   className="flex border-b hover:bg-gray-50 cursor-pointer group"
                   onClick={() => setSelectedMilestoneId(prev => prev === milestone.id ? null : milestone.id)}
                 >
-                  <div className={`w-60 p-2 border-r flex items-center ${
+                  <div className={`w-40 sm:w-60 p-1 sm:p-2 border-r flex items-center ${
                     selectedMilestoneId === milestone.id ? 'bg-blue-50' : ''
                   }`}>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col">
-                            <div className="font-medium">{milestone.name}</div>
-                            <div className="text-xs flex items-center gap-1">
-                              <span className={`px-1.5 py-0.5 rounded text-xs ${
+                          <div className="flex flex-col w-full">
+                            <div className="font-medium text-xs sm:text-sm truncate">{milestone.name}</div>
+                            <div className="text-[10px] sm:text-xs flex items-center gap-1 flex-wrap">
+                              <span className={`px-1 py-0.5 rounded text-[10px] sm:text-xs ${
                                 milestone.ewbFoeb === 'EWB' ? 'bg-[#e8f3e2] text-[#5c9935]' :
                                 milestone.ewbFoeb === 'FÖB' ? 'bg-blue-100 text-blue-800' :
                                 milestone.ewbFoeb === 'EWB,FÖB' ? 'bg-purple-100 text-purple-800' :
@@ -304,7 +305,7 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
                               }`}>
                                 {milestone.ewbFoeb || 'keine'}
                               </span>
-                              <span className="text-gray-500">{milestone.type || 'Sonstiges'}</span>
+                              <span className="text-gray-500 truncate">{milestone.type || 'Sonstiges'}</span>
                             </div>
                           </div>
                         </TooltipTrigger>
