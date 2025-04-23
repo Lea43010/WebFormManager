@@ -105,6 +105,27 @@ app.use((req, res, next) => {
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
+      
+      // Starte den localtunnel für öffentlichen Zugriff
+      if (config.isDevelopment) {
+        process.env.PORT = String(port);
+        try {
+          // Starte den Tunnel im Hintergrund
+          logger.info('Starte Localtunnel für öffentlichen Zugriff...');
+          import('child_process').then(({ spawn }) => {
+            const tunnelProcess = spawn('node', ['scripts/tunnel.js'], {
+              detached: true,
+              stdio: ['ignore', 'inherit', 'inherit']
+            });
+            tunnelProcess.unref();
+            logger.info('Localtunnel-Prozess gestartet');
+          }).catch(err => {
+            logger.error('Fehler beim Importieren des child_process-Moduls:', err);
+          });
+        } catch (error) {
+          logger.error('Fehler beim Starten des Localtunnels:', error);
+        }
+      }
     })
     .on('error', (err: any) => {
       if (err && typeof err === 'object' && 'code' in err && err.code === 'EADDRINUSE') {
