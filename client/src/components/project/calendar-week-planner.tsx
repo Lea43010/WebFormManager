@@ -245,7 +245,6 @@ export function CalendarWeekPlanner({ projectId }: CalendarWeekPlannerProps) {
             <p className="text-muted-foreground">Keine Meilensteine für die ausgewählten Filter vorhanden.</p>
           </div>
         ) : (
-          // Mobile-optimierter Kalenderwochen-Planer
           <div className="overflow-x-auto pb-1 -mx-4 sm:mx-0">
             <div className="min-w-max">
               {/* Monatsheader - Angepasste Größen für mobile Ansicht */}
