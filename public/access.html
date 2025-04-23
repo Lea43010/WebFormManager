@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bau-Structura Zugang</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --primary-light: #0074e8;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --white: #ffffff;
+            --border: #dee2e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f7f9;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            margin-bottom: 15px;
+        }
+        
+        .card {
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background-color: var(--primary);
+            color: var(--white);
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--info);
+            color: #0c5460;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid var(--warning);
+            color: #856404;
+        }
+        
+        .btn {
+            display: inline-block;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            user-select: none;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            text-decoration: none;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        
+        .btn-primary {
+            color: var(--white);
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .steps {
+            list-style-type: none;
+            counter-reset: steps;
+            margin-bottom: 20px;
+        }
+        
+        .steps li {
+            position: relative;
+            padding-left: 45px;
+            margin-bottom: 15px;
+            min-height: 30px;
+        }
+        
+        .steps li::before {
+            counter-increment: steps;
+            content: counter(steps);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary);
+            color: var(--white);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+        }
+        
+        .link-list {
+            list-style-type: none;
+            margin-bottom: 20px;
+        }
+        
+        .link-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .link-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .link-list a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .link-list a:hover {
+            text-decoration: underline;
+        }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: text-bottom;
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 30px;
+            color: var(--secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path fill="#0056b3" d="M501.62 92.11L267.24 2.04a31.958 31.958 0 0 0-22.47 0L10.38 92.11A16.001 16.001 0 0 0 0 107.09V144c0 8.84 7.16 16 16 16h480c8.84 0 16-7.16 16-16v-36.91c0-6.67-4.14-12.64-10.38-14.98zM64 192v160H48c-8.84 0-16 7.16-16 16v48h448v-48c0-8.84-7.16-16-16-16h-16V192h-64v160h-96V192h-64v160h-96V192H64zm432 256H16c-8.84 0-16 7.16-16 16v32c0 8.84 7.16 16 16 16h480c8.84 0 16-7.16 16-16v-32c0-8.84-7.16-16-16-16z"/>
+            </svg>
+            <h1>Bau-Structura App</h1>
+            <p>Testzugang und Hilfestellungen</p>
+        </header>
+        
+        <div class="card">
+            <div class="card-header">Zugriff auf die Test-Umgebung</div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Information:</strong> Diese Seite bietet verschiedene Möglichkeiten, auf die Bau-Structura Test-Umgebung zuzugreifen.
+                </div>
+                
+                <h3>Direkte Zugriffs-URLs</h3>
+                <p>Folgende URLs können für den Zugriff auf die Anwendung verwendet werden:</p>
+                
+                <ol class="steps">
+                    <li>
+                        <strong>Haupt-URL (Replit):</strong>
+                        <div>
+                            <a href="https://workspace-leazimmer.repl.co" target="_blank" class="btn btn-primary btn-block">Bau-Structura App öffnen</a>
+                        </div>
+                    </li>
+                    <li>
+                        <strong>Alternative Tunnel-URLs:</strong>
+                        <ul class="link-list">
+                            <li><a href="https://bau-structura-app.loca.lt" target="_blank">https://bau-structura-app.loca.lt</a></li>
+                            <li><a href="https://bau-structura-test.loca.lt" target="_blank">https://bau-structura-test.loca.lt</a></li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Problembehebung</div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <strong>Hinweis:</strong> Falls Sie beim Zugriff auf Probleme stoßen, folgen Sie diesen Hinweisen.
+                </div>
+                
+                <h3>IPv4-Adresse Fehlermeldung</h3>
+                <p>Falls Sie die Meldung erhalten, dass eine IPv4-Adresse erforderlich ist:</p>
+                
+                <ol class="steps">
+                    <li>
+                        <strong>Bei der Aufforderung zur Eingabe einer IPv4-Adresse:</strong>
+                        <p>Sie können dieses Feld leer lassen oder "127.0.0.1" eingeben und dann auf "Weiter" klicken.</p>
+                    </li>
+                    <li>
+                        <strong>Falls die Meldung "Die IPv4-Adresse ist nicht korrekt" erscheint:</strong>
+                        <p>Schließen Sie dieses Dialogfenster und kehren Sie zur Anmeldung zurück.</p>
+                    </li>
+                    <li>
+                        <strong>Verwenden Sie die direkte Replit-URL:</strong>
+                        <p>Die Replit-URL (erste Option oben) sollte ohne diese Probleme funktionieren.</p>
+                    </li>
+                </ol>
+                
+                <h3>Allgemeine Fehlerbehebung</h3>
+                <ul class="steps">
+                    <li>Versuchen Sie, den Browser-Cache zu leeren und neu zu laden</li>
+                    <li>Probieren Sie einen anderen Browser (Chrome, Firefox, Edge)</li>
+                    <li>Prüfen Sie Ihre Netzwerkverbindung</li>
+                    <li>Bei anhaltenden Problemen kontaktieren Sie bitte den Support</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Für Entwickler: Lokaler Zugriff</div>
+            <div class="card-body">
+                <p>Für Entwickler mit Zugriff auf die Entwicklungsumgebung:</p>
+                
+                <div class="code-block">
+                    http://localhost:5001  <!-- Hauptserver -->
+                    http://localhost:9000  <!-- Proxy-Server (wenn aktiv) -->
+                </div>
+                
+                <p>Status des Proxy-Servers prüfen:</p>
+                <div class="code-block">
+                    http://localhost:9000/proxy-status
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 Bau-Structura App | Kontakt: support@bau-structura.de</p>
+        </footer>
+    </div>
+</body>
+</html>
