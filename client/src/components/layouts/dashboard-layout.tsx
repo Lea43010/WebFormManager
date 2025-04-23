@@ -34,7 +34,7 @@ export default function DashboardLayout({
       
       <div className="flex flex-col w-full flex-1 overflow-hidden">
         <header className="relative z-10 flex-shrink-0 flex h-16 sm:h-20 bg-white border-b border-gray-200">
-          <div className="flex-1 px-2 sm:px-4 flex justify-between">
+          <div className="flex-1 px-responsive flex justify-between">
             <div className="flex-1 flex items-center">
               {/* Platzhalter für Menü-Button auf mobilen Geräten */}
               <div className="w-8 h-8 md:hidden"></div>
@@ -47,7 +47,7 @@ export default function DashboardLayout({
                     </svg>
                   </div>
                   <input
-                    className="block w-full h-8 sm:h-10 pl-8 sm:pl-10 pr-2 sm:pr-3 py-1 sm:py-2 text-sm sm:text-base rounded-md border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    className="block w-full h-8 sm:h-10 pl-8 sm:pl-10 pr-2 sm:pr-3 py-1 sm:py-2 text-sm sm:text-base rounded-md border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-touch-target"
                     placeholder="Suchen..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -73,7 +73,7 @@ export default function DashboardLayout({
                         window.location.href = '/auth';
                       });
                   }}
-                  className="text-sm text-gray-600 hover:text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 rounded hover:bg-gray-100"
+                  className="text-sm text-gray-600 hover:text-gray-900 px-2 sm:px-3 py-1 sm:py-1.5 rounded hover:bg-gray-100 min-touch-target flex items-center justify-center"
                   aria-label="Abmelden"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,11 +87,11 @@ export default function DashboardLayout({
         
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-white">
           <div className="py-3 sm:py-6">
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-6">
+            <div className="max-w-7xl mx-auto px-responsive">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-responsive">
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{title}</h1>
                 {location !== "/" && (
-                  <a href="/" className="inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-primary">
+                  <a href="/" className="inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-primary min-touch-target">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -104,22 +104,22 @@ export default function DashboardLayout({
               )}
             </div>
             
-            <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 mt-2 sm:mt-4">
-              <div className="border-t border-gray-200 pt-3 sm:pt-4">
+            <div className="max-w-7xl mx-auto px-responsive mt-responsive">
+              <div className="border-t border-gray-200 pt-responsive">
                 {tabs && tabs.length > 0 && (
                   <>
-                    <div className="border-b border-gray-200 mb-3 sm:mb-6 overflow-x-auto">
+                    <div className="border-b border-gray-200 mb-responsive overflow-x-auto -mx-3 px-3 sm:-mx-0 sm:px-0">
                       <Tabs
                         value={activeTab || tabs[0]}
                         onValueChange={onTabChange}
                         className="-mb-px"
                       >
-                        <TabsList className="bg-transparent">
+                        <TabsList className="bg-transparent w-auto inline-flex">
                           {tabs.map((tab) => (
                             <TabsTrigger
                               key={tab}
                               value={tab}
-                              className="text-sm sm:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 sm:py-3 px-2 sm:px-4 border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium whitespace-nowrap"
+                              className="text-sm sm:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 sm:py-3 px-2 sm:px-4 border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium whitespace-nowrap min-touch-target"
                             >
                               {tab}
                             </TabsTrigger>

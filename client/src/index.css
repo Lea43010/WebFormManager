@@ -8,6 +8,29 @@
     font-size: 0.65rem;
     line-height: 1rem;
   }
+  
+  /* Responsive Padding Utilities */
+  .px-responsive {
+    @apply px-3 sm:px-4 md:px-6;
+  }
+  
+  .py-responsive {
+    @apply py-3 sm:py-4 md:py-6;
+  }
+  
+  /* Responsive Margin Utilities */
+  .mt-responsive {
+    @apply mt-3 sm:mt-4 md:mt-6;
+  }
+  
+  .mb-responsive {
+    @apply mb-3 sm:mb-4 md:mb-6;
+  }
+  
+  /* Responsive Width/Height Utilities */
+  .min-touch-target {
+    @apply min-h-[44px] min-w-[44px]; /* Mindestgröße für Touch-Targets */
+  }
 }
 
 .green-emoji {
@@ -60,6 +83,59 @@ button[class*="calendar"],
   @apply min-h-[48px] py-3 text-base w-full;
 }
 
+/* Responsive Tabellen */
+.responsive-table-container {
+  @apply w-full overflow-x-auto touch-manipulation;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table {
+  @apply min-w-full divide-y divide-gray-200;
+}
+
+/* Für Tabellen auf kleinen Geräten */
+@media (max-width: 640px) {
+  .card-layout-for-tables .responsive-table {
+    @apply hidden;
+  }
+  
+  .card-layout-for-tables .mobile-card {
+    @apply block;
+  }
+}
+
+@media (min-width: 641px) {
+  .card-layout-for-tables .mobile-card {
+    @apply hidden;
+  }
+  
+  .card-layout-for-tables .responsive-table {
+    @apply table;
+  }
+}
+
+/* Mobile Card statt Tabelle */
+.mobile-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3;
+}
+
+/* Fluid Typography */
+html {
+  font-size: 16px;
+}
+
+@media screen and (min-width: 768px) {
+  html {
+    font-size: calc(16px + 0.5vw);
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  html {
+    font-size: calc(16px + 0.25vw);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -67,5 +143,10 @@ button[class*="calendar"],
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Bilder immer responsiv machen */
+  img {
+    @apply max-w-full h-auto;
   }
 }
