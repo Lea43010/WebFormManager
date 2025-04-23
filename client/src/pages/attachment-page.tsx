@@ -164,16 +164,16 @@ export default function AttachmentPage() {
       }
     >
       <div className="container p-4">
-        <div className="flex flex-wrap justify-between items-center mb-6">
-          <div className="flex space-x-4 mb-4 md:mb-0">
+        <div className="flex flex-wrap justify-between items-center mb-4 sm:mb-6">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto mb-2 sm:mb-0">
             <Button 
               onClick={() => {
                 setUploadMode("regular");
                 setUploadDialogOpen(true);
               }}
-              className="bg-[#6a961f] hover:bg-[#5a8418] text-white"
+              className="bg-[#6a961f] hover:bg-[#5a8418] text-white flex-1 sm:flex-none h-10 text-xs sm:text-sm"
             >
-              <Upload className="mr-2 h-4 w-4" />
+              <Upload className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Datei hochladen
             </Button>
             
@@ -183,18 +183,19 @@ export default function AttachmentPage() {
                 setUploadDialogOpen(true);
               }}
               variant="outline"
+              className="flex-1 sm:flex-none h-10 text-xs sm:text-sm"
             >
-              <Camera className="mr-2 h-4 w-4" />
+              <Camera className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Kamera
             </Button>
           </div>
         </div>
 
         <Tabs defaultValue="all">
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">Alle Anhänge</TabsTrigger>
-            <TabsTrigger value="byProject">Nach Projekt</TabsTrigger>
-            <TabsTrigger value="organization">Smart Organisation</TabsTrigger>
+          <TabsList className="mb-4 sm:mb-6 w-full overflow-x-auto flex-nowrap whitespace-nowrap h-9 sm:h-10 p-0.5 sm:p-1">
+            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3 h-8 truncate">Alle Anhänge</TabsTrigger>
+            <TabsTrigger value="byProject" className="text-xs sm:text-sm px-2 sm:px-3 h-8 truncate">Nach Projekt</TabsTrigger>
+            <TabsTrigger value="organization" className="text-xs sm:text-sm px-2 sm:px-3 h-8 truncate">Smart Organisation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
