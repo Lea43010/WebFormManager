@@ -109,22 +109,6 @@ export default function HomePage() {
             </CardFooter>
           </Card>
 
-          {/* Bautagebuchkarte */}
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 hover:shadow-md transition-shadow">
-            <CardHeader className="p-2 sm:p-3">
-              <CardTitle className="text-indigo-800 text-sm sm:text-base flex items-center gap-1 sm:gap-2">
-                <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span className="truncate">Bautagebuch</span>
-              </CardTitle>
-            </CardHeader>
-            <CardFooter className="p-2 sm:p-3 pt-0">
-              <Button variant="default" className="w-full text-xs sm:text-sm h-8 sm:h-10 bg-indigo-600 hover:bg-indigo-700" 
-                      onClick={() => navigate("/attachments")}>
-                Öffnen
-              </Button>
-            </CardFooter>
-          </Card>
-
           {/* Geomapkarte */}
           <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-md transition-shadow">
             <CardHeader className="p-2 sm:p-3">
