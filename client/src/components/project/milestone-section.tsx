@@ -19,7 +19,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { BasicCalendarView } from './basic-calendar-view';
+import FallbackCalendar from '@/components/calendar/fallback-calendar';
 
 interface MilestoneSectionProps {
   projectId: number;
@@ -960,7 +960,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
         </TabsContent>
         
         <TabsContent value="calendar-view" className="space-y-4">
-          <CalendarWeekPlanner projectId={projectId} />
+          <BasicCalendarView projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="list-view" className="space-y-4">
@@ -1341,7 +1341,7 @@ export function MilestoneSection({ projectId }: MilestoneSectionProps) {
                                   <FormControl>
                                     <Input 
                                       placeholder="z.B. 500" 
-                                      value={field.value !== undefined ? field.value : ''} 
+                                      value={field.value !== null && field.value !== undefined ? field.value : ''} 
                                       onChange={field.onChange}
                                       onBlur={field.onBlur}
                                       name={field.name}
