@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardCopy, Globe, Info, Server, Terminal } from "lucide-react";
+import { ClipboardCopy, Globe, Info, Server, Terminal, TestTube2, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
 export default function DeploymentDocs() {
@@ -39,11 +39,15 @@ export default function DeploymentDocs() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="environments">Umgebungen</TabsTrigger>
           <TabsTrigger value="tools">Tools</TabsTrigger>
           <TabsTrigger value="workflows">Workflows</TabsTrigger>
+          <TabsTrigger value="tests" className="flex items-center">
+            <TestTube2 className="h-4 w-4 mr-2" />
+            Tests
+          </TabsTrigger>
           <TabsTrigger value="troubleshooting">Fehlerbehebung</TabsTrigger>
         </TabsList>
 
