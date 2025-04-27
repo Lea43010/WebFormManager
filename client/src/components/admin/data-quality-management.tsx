@@ -16,7 +16,9 @@ import {
   PieChart, 
   AlertCircle, 
   BarChart,
-  Download
+  Download,
+  Code,
+  FileJson
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Progress } from "@/components/ui/progress";
@@ -55,6 +57,7 @@ export function DataQualityManagement() {
   const [issues, setIssues] = useState<DataQualityIssue[]>([]);
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [issueFilter, setIssueFilter] = useState<string | null>(null);
+  const [jsonReport, setJsonReport] = useState<string>("");
 
   // Mock-Daten für Entwicklungszwecke
   const mockReport: DataQualityReport = {
@@ -334,6 +337,14 @@ export function DataQualityManagement() {
                   <FileCheck className="h-4 w-4" />
                   Einstellungen
                 </TabsTrigger>
+                <TabsTrigger value="html-report" className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  HTML-Bericht
+                </TabsTrigger>
+                <TabsTrigger value="json-report" className="flex items-center gap-2">
+                  <FileJson className="h-4 w-4" />
+                  JSON-Bericht
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="dashboard">
@@ -542,6 +553,84 @@ export function DataQualityManagement() {
                           </p>
                         </div>
                         <Button variant="outline">Aktivieren</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="html-report">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">HTML-Bericht zur Datenbankstruktur</CardTitle>
+                    <CardDescription>
+                      Interaktiver HTML-Bericht zur Überprüfung der Datenbankstruktur und -qualität
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-4">
+                      <div className="rounded border">
+                        <iframe 
+                          src="/api/debug/data-quality/html-report" 
+                          className="w-full min-h-[600px] rounded" 
+                          title="Datenbankstruktur-Qualitätsbericht"
+                        ></iframe>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-muted-foreground">
+                          Der HTML-Bericht bietet eine interaktive Ansicht der Datenbankstrukturqualität
+                        </p>
+                        <a 
+                          href="/api/debug/data-quality/html-report" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="no-underline"
+                        >
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <Code className="h-4 w-4" />
+                            In neuem Tab öffnen
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="json-report">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">JSON-Bericht zur Datenbankstruktur</CardTitle>
+                    <CardDescription>
+                      Technischer JSON-Bericht mit detaillierten Informationen zur Datenbankstruktur
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-4">
+                      <div className="rounded border bg-zinc-950 p-4 overflow-auto max-h-[600px]">
+                        <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
+                          <code>
+                            {`Lade JSON-Daten...
+// Der JSON-Bericht wird direkt vom API-Endpunkt abgerufen
+// Verwenden Sie den Button unten, um den vollständigen Bericht im JSON-Format zu öffnen`}
+                          </code>
+                        </pre>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-muted-foreground">
+                          Der JSON-Bericht enthält technische Details zur weitergehenden Analyse
+                        </p>
+                        <a 
+                          href="/api/debug/data-quality/json-report" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="no-underline"
+                        >
+                          <Button variant="outline" size="sm" className="flex items-center gap-2">
+                            <FileJson className="h-4 w-4" />
+                            JSON-Bericht öffnen
+                          </Button>
+                        </a>
                       </div>
                     </div>
                   </CardContent>
