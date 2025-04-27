@@ -331,6 +331,60 @@ export class DataQualityChecker {
   }
 
   /**
+   * Generiert einen JSON-Bericht der gefundenen Probleme
+   */
+  async generateJsonReport(): Promise<any> {
+    const errorCount = this.issues.filter(issue => issue.issue_type === 'error').length;
+    const warningCount = this.issues.filter(issue => issue.issue_type === 'warning').length;
+    const infoCount = this.issues.filter(issue => issue.issue_type === 'info').length;
+    
+    return {
+      status: "success",
+      timestamp: new Date().toISOString(),
+      summary: {
+        total_issues: this.issues.length,
+        error_count: errorCount,
+        warning_count: warningCount,
+        info_count: infoCount
+      },
+      categories: this.groupIssuesByCategory(),
+      issues: this.issues
+    };
+  }
+  
+  /**
+   * Gruppiert Probleme nach Kategorie für den Bericht
+   */
+  private groupIssuesByCategory(): Record<string, any> {
+    const categories: Record<string, any> = {};
+    
+    for (const issue of this.issues) {
+      const category = issue.category;
+      
+      if (!categories[category]) {
+        categories[category] = {
+          issues: [],
+          error_count: 0,
+          warning_count: 0,
+          info_count: 0
+        };
+      }
+      
+      categories[category].issues.push(issue);
+      
+      if (issue.issue_type === 'error') {
+        categories[category].error_count++;
+      } else if (issue.issue_type === 'warning') {
+        categories[category].warning_count++;
+      } else if (issue.issue_type === 'info') {
+        categories[category].info_count++;
+      }
+    }
+    
+    return categories;
+  }
+
+  /**
    * Generiert einen HTML-Bericht der gefundenen Probleme
    */
   async generateHtmlReport(): Promise<string> {

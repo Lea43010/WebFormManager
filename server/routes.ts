@@ -2999,6 +2999,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // JSON-Bericht-Endpunkt
+    app.get("/api/debug/data-quality/json-report", async (req, res, next) => {
+      try {
+        if (!dataQualityCheckerInstance) {
+          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+        }
+        
+        await dataQualityCheckerInstance.runChecks();
+        const jsonReport = await dataQualityCheckerInstance.generateJsonReport();
+        
+        // Als JSON senden
+        res.json(jsonReport);
+      } catch (error) {
+        console.error("Error in debug JSON report:", error);
+        next(error);
+      }
+    });
+    
     console.log('[DEBUG] Debug-API-Endpunkte für Datenbankstrukturprüfung aktiviert.');
   }
   

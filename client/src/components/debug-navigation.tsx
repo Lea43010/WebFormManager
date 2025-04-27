@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bug, Database, BookOpen, FileText, LayoutDashboard } from "lucide-react";
+import { Bug, Database, BookOpen, FileText, LayoutDashboard, Json, FileJson, FileHtml } from "lucide-react";
 
 const DebugNavigation: React.FC = () => {
   return (
