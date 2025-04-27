@@ -25,6 +25,7 @@ import UserManagementPage from "@/pages/admin/user-management";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
 import DbStructureQualityPage from "@/pages/db-structure-quality-page";
+import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 
@@ -51,6 +52,8 @@ function Router() {
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/data-quality" component={DataQualityPage} />
+      <AdminProtectedRoute path="/db-structure-quality-debug" component={DbStructureQualityPage} />
+      <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route component={NotFound} />
