@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Bug, Database, BookOpen, FileText, LayoutDashboard } from "lucide-react";
 
 const DebugNavigation: React.FC = () => {
@@ -17,31 +18,32 @@ const DebugNavigation: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
           <Link href="/dashboard">
-            <a className="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+            <Button variant="ghost" className="flex items-center justify-start w-full">
               <LayoutDashboard className="h-4 w-4 mr-2 text-gray-500" />
               <span>Dashboard</span>
-            </a>
+            </Button>
           </Link>
           
-          <Link href="/db-structure-quality-debug">
-            <a className="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          {/* Direkte Links ohne wouter, damit die Server-Rendering korrekt funktioniert */}
+          <a href="/db-structure-quality-debug" className="no-underline">
+            <Button variant="ghost" className="flex items-center justify-start w-full">
               <Database className="h-4 w-4 mr-2 text-gray-500" />
               <span>Datenbankstruktur-Qualitätsprüfung</span>
-            </a>
-          </Link>
+            </Button>
+          </a>
           
-          <Link href="/construction-diary-debug">
-            <a className="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          <a href="/construction-diary-debug" className="no-underline">
+            <Button variant="ghost" className="flex items-center justify-start w-full">
               <FileText className="h-4 w-4 mr-2 text-gray-500" />
               <span>Bautagebuch-Debug</span>
-            </a>
-          </Link>
+            </Button>
+          </a>
           
           <Link href="/data-quality">
-            <a className="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+            <Button variant="ghost" className="flex items-center justify-start w-full">
               <BookOpen className="h-4 w-4 mr-2 text-gray-500" />
               <span>Datenqualität</span>
-            </a>
+            </Button>
           </Link>
         </div>
       </CardContent>

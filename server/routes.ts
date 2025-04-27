@@ -2851,6 +2851,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Direkter Endpunkt für die Debug-Seite ohne React-Routing
+  app.get("/standalone-construction-diary", (req, res) => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bautagebuch Standalone Debug</title>
+  <link rel="stylesheet" href="/assets/index.css">
+  <script type="module" src="/src/standalone-construction-diary.tsx"></script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+    `;
+    res.setHeader('Content-Type', 'text/html');
+    res.send(htmlContent);
+  });
 
   const httpServer = createServer(app);
   return httpServer;
