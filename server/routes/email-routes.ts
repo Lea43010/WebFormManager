@@ -68,29 +68,33 @@ export function registerEmailRoutes(app: express.Express) {
             .credentials { font-family: Consolas, monospace; font-weight: bold; }
             .note { font-size: 0.9em; background-color: #fdf6e3; padding: 10px; border-left: 4px solid #e5c07b; margin: 15px 0; }
             .footer { margin-top: 30px; font-size: 0.9em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+            .button { display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 15px; }
+            .button:hover { background-color: #1d4ed8; }
+            .feature-list { margin-top: 15px; }
+            .feature-list li { margin-bottom: 8px; }
           </style>
         </head>
         <body>
           <div class="container">
-            <h1>Willkommen bei Bau - Structura App</h1>
+            <h1>Willkommen in der Bau - Structura App!</h1>
             
-            <p>Sehr geehrter Herr ${user_name},</p>
+            <p>Sehr geehrte Frau/Herr ${user_name},</p>
             
-            <p>wir freuen uns, Sie als neuen Benutzer der Bau - Structura App begrüßen zu dürfen. Ihr Konto wurde erfolgreich eingerichtet und ist ab sofort einsatzbereit.</p>
+            <p>herzlich willkommen bei der Bau - Structura App! Wir freuen uns sehr, Sie als neue Nutzerin/neuen Nutzer begrüßen zu dürfen. Ihr Konto wurde erfolgreich eingerichtet und steht Ihnen ab sofort zur Verfügung.</p>
             
             <div class="highlight">
-              <h3>Ihre Zugangsdaten:</h3>
+              <h3>Hier Ihre Zugangsdaten:</h3>
               <p><strong>Benutzername:</strong> <span class="credentials">${username}</span></p>
               <p><strong>Temporäres Passwort:</strong> <span class="credentials">${password}</span></p>
               <p><strong>Login-URL:</strong> <a href="https://bau-structura.de">https://bau-structura.de</a></p>
             </div>
             
             <div class="note">
-              <p><strong>Wichtig:</strong> Bitte ändern Sie aus Sicherheitsgründen Ihr Passwort nach der ersten Anmeldung.</p>
+              <p><strong>Wichtig:</strong> Aus Sicherheitsgründen bitten wir Sie, Ihr Passwort nach der ersten Anmeldung zu ändern.</p>
             </div>
             
-            <h3>Die wichtigsten Funktionen im Überblick:</h3>
-            <ul>
+            <h3>Ein kurzer Überblick über Ihre Möglichkeiten in der App:</h3>
+            <ul class="feature-list">
               <li>Projektübersicht und -verwaltung</li>
               <li>Bautagebuch mit automatischer Speicherung</li>
               <li>Meilensteinkontrolle und Terminplanung</li>
@@ -99,15 +103,19 @@ export function registerEmailRoutes(app: express.Express) {
               <li>Bedarfs- und Kapazitätsplanung</li>
             </ul>
             
-            <p>Sollten Sie Fragen zur Nutzung der Anwendung haben oder auf Probleme stoßen, steht Ihnen unser Support-Team gerne zur Verfügung.</p>
+            <p>
+              <a href="https://bau-structura.de/docs/anleitung" class="button">Zur Anleitung der Bau - Structura App</a>
+            </p>
             
-            <p>Wir wünschen Ihnen viel Erfolg bei der Nutzung der Bau - Structura App!</p>
+            <p>Unser Support-Team steht Ihnen jederzeit gerne zur Verfügung, falls Sie Fragen haben oder Unterstützung benötigen.</p>
             
-            <p>Mit freundlichen Grüßen,<br>
+            <p>Wir wünschen Ihnen viel Freude und Erfolg bei der Arbeit mit der Bau - Structura App!</p>
+            
+            <p>Mit besten Grüßen,<br>
             Ihr Bau - Structura App Team</p>
             
             <div class="footer">
-              <p>Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.</p>
+              <p>Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
             </div>
           </div>
         </body>
@@ -116,20 +124,22 @@ export function registerEmailRoutes(app: express.Express) {
         
         // Text-Version für E-Mail-Clients, die kein HTML anzeigen
         const textContent = `
-Willkommen bei Bau - Structura App
+Willkommen in der Bau - Structura App!
 
-Sehr geehrter Herr ${user_name},
+Sehr geehrte Frau/Herr ${user_name},
 
-wir freuen uns, Sie als neuen Benutzer der Bau - Structura App begrüßen zu dürfen. Ihr Konto wurde erfolgreich eingerichtet und ist ab sofort einsatzbereit.
+herzlich willkommen bei der Bau - Structura App!
+Wir freuen uns sehr, Sie als neue Nutzerin/neuen Nutzer begrüßen zu dürfen. Ihr Konto wurde erfolgreich eingerichtet und steht Ihnen ab sofort zur Verfügung.
 
-Ihre Zugangsdaten:
-- Benutzername: ${username}
-- Temporäres Passwort: ${password}
-- Login-URL: https://bau-structura.de
+Hier Ihre Zugangsdaten:
 
-Wichtig: Bitte ändern Sie aus Sicherheitsgründen Ihr Passwort nach der ersten Anmeldung.
+Benutzername: ${username}
+Temporäres Passwort: ${password}
+Login-URL: https://bau-structura.de
 
-Die wichtigsten Funktionen im Überblick:
+Wichtig: Aus Sicherheitsgründen bitten wir Sie, Ihr Passwort nach der ersten Anmeldung zu ändern.
+
+Ein kurzer Überblick über Ihre Möglichkeiten in der App:
 * Projektübersicht und -verwaltung
 * Bautagebuch mit automatischer Speicherung
 * Meilensteinkontrolle und Terminplanung
@@ -137,21 +147,23 @@ Die wichtigsten Funktionen im Überblick:
 * Oberflächenanalyse mit KI-Unterstützung
 * Bedarfs- und Kapazitätsplanung
 
-Sollten Sie Fragen zur Nutzung der Anwendung haben oder auf Probleme stoßen, steht Ihnen unser Support-Team gerne zur Verfügung.
+Anleitung zur Bau - Structura App: https://bau-structura.de/docs/anleitung
 
-Wir wünschen Ihnen viel Erfolg bei der Nutzung der Bau - Structura App!
+Unser Support-Team steht Ihnen jederzeit gerne zur Verfügung, falls Sie Fragen haben oder Unterstützung benötigen.
 
-Mit freundlichen Grüßen,
+Wir wünschen Ihnen viel Freude und Erfolg bei der Arbeit mit der Bau - Structura App!
+
+Mit besten Grüßen,
 Ihr Bau - Structura App Team
 
 ---
-Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht auf diese E-Mail.
+Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.
         `;
         
         // E-Mail an Benutzer senden
         const result = await emailService.sendEmail({
           to: user_email,
-          subject: 'Willkommen bei Bau-Structura App - Ihre Zugangsdaten',
+          subject: 'Herzlich willkommen in der Bau-Structura App!',
           html: htmlContent,
           text: textContent
         });
@@ -165,7 +177,7 @@ Diese E-Mail wurde am ${heute} automatisch generiert. Bitte antworten Sie nicht 
           if (adminEmail) {
             adminResult = await emailService.sendEmail({
               to: adminEmail,
-              subject: `[KOPIE] Willkommen bei Bau-Structura App - Zugangsdaten für ${username}`,
+              subject: `[KOPIE] Herzlich willkommen in der Bau-Structura App - Zugangsdaten für ${username}`,
               html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                   <h2>Kopie der Willkommens-E-Mail</h2>
