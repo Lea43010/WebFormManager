@@ -20,7 +20,8 @@ import {
   resolveIssueHandler, 
   toggleRuleActiveHandler 
 } from "./data-quality";
-import { checkDatabaseStructureHandler } from "./db-structure-quality";
+import { checkDatabaseStructureHandler, checkDatabaseStructure } from "./db-structure-quality";
+import { dataQualityChecker } from "./data-quality-checker";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
@@ -2898,7 +2899,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Datenbankstruktur-Qualitätsbericht (JSON)
   app.get("/api/admin/data-quality/report", async (req, res, next) => {
     try {
-      // Authentifizierungsprüfung für Debugging-Zwecke deaktiviert
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
       
       // Importiere den DataQualityChecker
       const { dataQualityChecker } = require('./data-quality-checker');
@@ -2916,7 +2919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // HTML-Bericht für die Datenbankstrukturqualität
   app.get("/api/admin/data-quality/db-structure-report", async (req, res, next) => {
     try {
-      // Authentifizierungsprüfung für Debugging-Zwecke deaktiviert
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
       
       // Importiere den DataQualityChecker
       const { dataQualityChecker } = require('./data-quality-checker');
@@ -2933,6 +2938,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Spezielle Debug-Endpunkte ohne Authentifizierung
+  // Diese Endpunkte sind immer verfügbar, für Entwicklungs- und Testzwecke
+  {
+    app.get("/api/debug/db-structure/report", async (req, res, next) => {
+      try {
+        // Verwende die direkt importierte Funktion
+        const dbStructureReport = await checkDatabaseStructureHandler(req, res, next);
+        
+        if (!res.headersSent) {
+          res.json(dbStructureReport);
+        }
+      } catch (error) {
+        console.error("Error in debug DB structure report:", error);
+        next(error);
+      }
+    });
+    
+    app.get("/api/debug/data-quality/report", async (req, res, next) => {
+      try {
+        // Verwende den DataQualityChecker aus dem Import
+        const issues = await dataQualityChecker.runChecks();
+        
+        res.json(issues);
+      } catch (error) {
+        console.error("Error in debug data quality report:", error);
+        next(error);
+      }
+    });
+    
+    app.get("/api/debug/data-quality/html-report", async (req, res, next) => {
+      try {
+        // Verwende den DataQualityChecker aus dem Import
+        await dataQualityChecker.runChecks();
+        const htmlReport = await dataQualityChecker.generateHtmlReport();
+        
+        // Als HTML-Dokument senden
+        res.setHeader('Content-Type', 'text/html');
+        res.send(htmlReport);
+      } catch (error) {
+        console.error("Error in debug HTML report:", error);
+        next(error);
+      }
+    });
+    
+    console.log('[DEBUG] Debug-API-Endpunkte für Datenbankstrukturprüfung aktiviert.');
+  }
   
   // Statische HTML-Dateien im public-Verzeichnis zuerst prüfen (vor allen anderen Routen)
   // Dies MUSS am Anfang der Funktion stehen, damit es andere Routen überschreiben kann

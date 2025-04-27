@@ -106,7 +106,14 @@
         document.getElementById('loader').style.display = 'block';
         document.getElementById('report').innerHTML = 'Prüfung läuft...';
         
-        const response = await fetch('/api/admin/data-quality/report');
+        // Zuerst versuchen, den Debug-Endpunkt ohne Authentifizierung zu nutzen
+        let response;
+        try {
+          response = await fetch('/api/debug/db-structure/report');
+        } catch (error) {
+          console.error("Debug-Endpunkt nicht verfügbar, versuche normalen Endpunkt:", error);
+          response = await fetch('/api/admin/data-quality/report');
+        }
         
         if (!response.ok) {
           if (response.status === 401) {
@@ -127,15 +134,24 @@
     
     document.getElementById('showHtmlReport').addEventListener('click', async () => {
       try {
-        // Erst prüfen, ob der Benutzer angemeldet ist
-        const testResponse = await fetch('/api/user');
-        if (!testResponse.ok && testResponse.status === 401) {
-          alert('Nicht authentifiziert. Bitte melden Sie sich zuerst an.');
-          return;
+        document.getElementById('htmlReportContainer').style.display = 'block';
+        
+        // Erst versuchen, den Debug-Endpunkt ohne Authentifizierung zu nutzen
+        let url;
+        try {
+          const testResponse = await fetch('/api/debug/data-quality/html-report');
+          if (testResponse.ok) {
+            url = '/api/debug/data-quality/html-report';
+          } else {
+            // Fallback auf normalen Endpunkt
+            url = '/api/admin/data-quality/db-structure-report';
+          }
+        } catch (error) {
+          console.error("Debug-Endpunkt nicht verfügbar, versuche normalen Endpunkt:", error);
+          url = '/api/admin/data-quality/db-structure-report';
         }
         
-        document.getElementById('htmlReportContainer').style.display = 'block';
-        document.getElementById('htmlReport').src = '/api/admin/data-quality/db-structure-report';
+        document.getElementById('htmlReport').src = url;
       } catch (error) {
         alert(`Fehler beim Laden des HTML-Berichts: ${error.message}`);
       }

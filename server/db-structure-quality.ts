@@ -62,7 +62,9 @@ async function getColumns(tableName: string): Promise<{columnName: string, dataT
       ORDER BY ordinal_position;
     `;
     
-    return await db.execute(query);
+    const result = await db.execute(query);
+    // Explizite Typumwandlung, um mit den TypeScript-Typen kompatibel zu sein
+    return result as unknown as {columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[];
   } catch (error) {
     logger.error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}:`, error);
     throw new Error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}`);
