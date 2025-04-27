@@ -1,179 +1,210 @@
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { Request, Response } from "express";
+import { logger } from "./logger";
 
-// Interface für die Datenbank-Strukturprüfung
-export interface DbStructureIssue {
+// Schnittstelle für DB-Strukturprobleme
+export interface DbIssue {
   category: string;
-  issue: string;
-  details: string[];
-  severity: "low" | "medium" | "high";
+  issue_type: string;
+  message: string;
+  table_name?: string;
+  column_name?: string;
+  recommended_action?: string;
+  severity: "high" | "medium" | "low";
 }
 
-// Interface für die Datenbank-Strukturprüfungs-Regeln
-export interface DbStructureRule {
-  check: string;
-  description: string;
-  enabled: boolean;
-  severity: "low" | "medium" | "high";
+// Schnittstelle für DB-Strukturprüfungsergebnis
+export interface DbStructureQualityResult {
+  issues: DbIssue[];
+  summary: {
+    total_issues: number;
+    high_severity_issues: number;
+    medium_severity_issues: number;
+    low_severity_issues: number;
+    tables_checked: number;
+    columns_checked: number;
+  };
+  status: string;
 }
 
-// Definierte Regeln für die Datenbankstrukturprüfung
-export const dbStructureRules: DbStructureRule[] = [
-  {
-    check: "lowercase_tablenames",
-    description: "Tabellennamen sollten kleingeschrieben sein",
-    enabled: true,
-    severity: "medium"
-  },
-  {
-    check: "snake_case_columns",
-    description: "Spaltennamen sollten in snake_case formatiert sein",
-    enabled: true,
-    severity: "medium"
-  },
-  {
-    check: "non_nullable_ids",
-    description: "ID-Spalten sollten nicht NULL sein",
-    enabled: true,
-    severity: "high"
-  }
-];
-
-/**
- * Führt die Datenbankstrukturprüfung durch
- */
-export async function checkDatabaseStructure(): Promise<DbStructureIssue[]> {
-  const issues: DbStructureIssue[] = [];
-  const enabledRules = dbStructureRules.filter(rule => rule.enabled);
-
+// Hilfsfunktion zum Abrufen von Tabellen aus der PostgreSQL-Datenbank
+async function getTables(): Promise<{tableName: string, tableSchema: string}[]> {
   try {
-    // Hole alle Tabellen aus dem public Schema
-    const tablesResult = await db.execute(sql`
-      SELECT table_name 
-      FROM information_schema.tables 
+    const query = sql`
+      SELECT table_name as "tableName", table_schema as "tableSchema"
+      FROM information_schema.tables
       WHERE table_schema = 'public'
-    `);
+      AND table_type = 'BASE TABLE'
+      ORDER BY table_name;
+    `;
+    
+    return await db.execute(query);
+  } catch (error) {
+    logger.error("Fehler beim Abrufen von Tabellen:", error);
+    throw new Error("Fehler beim Abrufen von Tabellen aus der Datenbank");
+  }
+}
 
-    const tables = tablesResult.rows.map(row => row.table_name);
+// Hilfsfunktion zum Abrufen von Spalten einer Tabelle
+async function getColumns(tableName: string): Promise<{columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[]> {
+  try {
+    const query = sql`
+      SELECT 
+        column_name as "columnName", 
+        data_type as "dataType", 
+        is_nullable as "isNullable",
+        column_default as "columnDefault"
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+      AND table_name = ${tableName}
+      ORDER BY ordinal_position;
+    `;
+    
+    return await db.execute(query);
+  } catch (error) {
+    logger.error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}:`, error);
+    throw new Error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}`);
+  }
+}
 
-    // Regel 1: Prüfe Tabellennamen (lowercase_tablenames)
-    if (enabledRules.some(rule => rule.check === "lowercase_tablenames")) {
-      const ruleDetails = enabledRules.find(rule => rule.check === "lowercase_tablenames");
-      const invalidTables = tables
-        .filter(tableName => typeof tableName === 'string')
-        .filter(tableName => {
-          // Prüfe, ob der Tabellenname Großbuchstaben oder Leerzeichen enthält
-          return !/^[a-z0-9_]+$/.test(tableName as string);
-        });
-
-      if (invalidTables.length > 0) {
-        issues.push({
-          category: "Tabellennamenskonvention",
-          issue: "Tabellennamen sollten kleingeschrieben sein und keine Sonderzeichen enthalten",
-          details: invalidTables as string[],
-          severity: ruleDetails?.severity || "medium"
-        });
-      }
+// Funktion zur Prüfung der Datenbankstruktur
+// Handler für die Express-Route
+export async function checkDatabaseStructureHandler(req: any, res: any, next: any) {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
     }
-
-    // Regel 2: Prüfe Spaltennamen (snake_case_columns)
-    if (enabledRules.some(rule => rule.check === "snake_case_columns")) {
-      const ruleDetails = enabledRules.find(rule => rule.check === "snake_case_columns");
-      const invalidColumnResults: string[] = [];
-
-      for (const tableName of tables) {
-        if (typeof tableName !== 'string') continue;
-        
-        const columnsResult = await db.execute(sql`
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_schema = 'public' AND table_name = ${tableName}
-        `);
-
-        const columns = columnsResult.rows.map(row => row.column_name);
-        const invalidColumns = columns
-          .filter(columnName => typeof columnName === 'string')
-          .filter(columnName => {
-            // Prüfe, ob der Spaltenname Großbuchstaben oder Leerzeichen enthält
-            return !/^[a-z0-9_]+$/.test(columnName as string);
-          });
-
-        if (invalidColumns.length > 0) {
-          invalidColumnResults.push(`Tabelle '${tableName}': ${invalidColumns.join(', ')}`);
-        }
-      }
-
-      if (invalidColumnResults.length > 0) {
-        issues.push({
-          category: "Spaltennamenskonvention",
-          issue: "Spaltennamen sollten in snake_case formatiert sein (kleingeschrieben mit Unterstrichen)",
-          details: invalidColumnResults,
-          severity: ruleDetails?.severity || "medium"
-        });
-      }
+    
+    // Nur Administratoren können auf die Datenbankstrukturprüfung zugreifen
+    if (req.user.role !== 'administrator') {
+      return res.status(403).json({ 
+        message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." 
+      });
     }
-
-    // Regel 3: Prüfe Nullable-IDs (non_nullable_ids)
-    if (enabledRules.some(rule => rule.check === "non_nullable_ids")) {
-      const ruleDetails = enabledRules.find(rule => rule.check === "non_nullable_ids");
-      const nullableIdResults: string[] = [];
-
-      for (const tableName of tables) {
-        if (typeof tableName !== 'string') continue;
-        
-        const idColumnsResult = await db.execute(sql`
-          SELECT column_name, is_nullable 
-          FROM information_schema.columns 
-          WHERE table_schema = 'public' 
-          AND table_name = ${tableName}
-          AND (column_name LIKE '%id' OR column_name LIKE '%_id')
-        `);
-
-        const nullableIds = idColumnsResult.rows
-          .filter(col => col.is_nullable === 'YES')
-          .map(col => col.column_name as string);
-
-        if (nullableIds.length > 0) {
-          nullableIdResults.push(`Tabelle '${tableName}': ${nullableIds.join(', ')}`);
-        }
-      }
-
-      if (nullableIdResults.length > 0) {
-        issues.push({
-          category: "ID-Feldkonfiguration",
-          issue: "ID-Spalten sollten nicht NULL sein",
-          details: nullableIdResults,
-          severity: ruleDetails?.severity || "high"
-        });
-      }
-    }
-
-    return issues;
+    
+    const dbStructureReport = await checkDatabaseStructure();
+    res.json(dbStructureReport);
   } catch (error) {
     console.error("Fehler bei der Datenbankstrukturprüfung:", error);
-    throw error;
+    next(error);
   }
 }
 
-/**
- * Express-Handler für die Datenbankstrukturprüfung
- */
-export async function checkDatabaseStructureHandler(req: Request, res: Response) {
+export async function checkDatabaseStructure(): Promise<DbStructureQualityResult> {
+  const issues: DbIssue[] = [];
+  let tablesChecked = 0;
+  let columnsChecked = 0;
+  
   try {
-    const issues = await checkDatabaseStructure();
-    res.json({
-      timestamp: new Date().toISOString(),
-      rules: dbStructureRules,
-      issues: issues,
-      totalIssues: issues.length,
-      status: issues.length > 0 ? "issues_found" : "passed"
-    });
+    // Holen Sie alle Tabellen
+    const tables = await getTables();
+    tablesChecked = tables.length;
+    
+    // Für jede Tabelle die Struktur prüfen
+    for (const table of tables) {
+      const tableName = table.tableName;
+      
+      // Prüfen Sie die Tabellennamenkonvention (sollte mit 'tbl' beginnen)
+      if (!tableName.startsWith('tbl')) {
+        issues.push({
+          category: "Namenskonventionen",
+          issue_type: "table_naming",
+          message: `Tabellenname beginnt nicht mit 'tbl'`,
+          table_name: tableName,
+          recommended_action: "Tabellennamen sollten mit 'tbl' beginnen für Konsistenz",
+          severity: "medium",
+        });
+      }
+      
+      // Prüfen Sie die Spalten dieser Tabelle
+      const columns = await getColumns(tableName);
+      columnsChecked += columns.length;
+      
+      // Prüfen Sie, ob die ID-Spalte vorhanden ist und NOT NULL ist
+      const idColumn = columns.find(col => col.columnName === 'id');
+      if (!idColumn) {
+        issues.push({
+          category: "Strukturkonsistenz",
+          issue_type: "missing_id",
+          message: `Tabelle hat keine 'id'-Spalte`,
+          table_name: tableName,
+          recommended_action: "Jede Tabelle sollte eine eindeutige ID-Spalte haben",
+          severity: "high",
+        });
+      } else if (idColumn.isNullable === 'YES') {
+        issues.push({
+          category: "Datenintegrität",
+          issue_type: "nullable_id",
+          message: `Die 'id'-Spalte erlaubt NULL-Werte`,
+          table_name: tableName,
+          column_name: 'id',
+          recommended_action: "Die ID-Spalte sollte NOT NULL sein",
+          severity: "high",
+        });
+      }
+      
+      // Prüfen auf Snake-Case in Spaltennamen
+      for (const column of columns) {
+        if (column.columnName.includes('_')) {
+          // Snake Case erkannt (gewünscht in der Datenbank)
+        } else if (column.columnName !== column.columnName.toLowerCase()) {
+          // Wenn nicht Snake Case und enthält Großbuchstaben, könnte es CamelCase sein
+          issues.push({
+            category: "Namenskonventionen",
+            issue_type: "column_naming",
+            message: `Spaltenname verwendet nicht Snake-Case (mit Unterstrichen)`,
+            table_name: tableName,
+            column_name: column.columnName,
+            recommended_action: "Spaltennamen sollten in Snake-Case formatiert sein (z.B. 'user_name' statt 'userName')",
+            severity: "medium",
+          });
+        }
+      }
+      
+      // Prüfen Sie, ob eine created_at-Spalte vorhanden ist
+      if (!columns.some(col => col.columnName === 'created_at')) {
+        issues.push({
+          category: "Audit-Trail",
+          issue_type: "missing_created_at",
+          message: `Tabelle hat keine 'created_at'-Spalte`,
+          table_name: tableName,
+          recommended_action: "Jede Tabelle sollte eine created_at-Spalte für Audit-Zwecke haben",
+          severity: "low",
+        });
+      }
+      
+      // Prüfen Sie auf TEXT-Felder ohne Längenbegrenzung (potenzielles Leistungsproblem)
+      const textColumns = columns.filter(col => col.dataType === 'text');
+      if (textColumns.length > 3) {
+        issues.push({
+          category: "Leistungsoptimierung",
+          issue_type: "too_many_text_fields",
+          message: `Tabelle hat mehr als 3 TEXT-Felder ohne Längenbegrenzung`,
+          table_name: tableName,
+          recommended_action: "Erwägen Sie, TEXT-Felder durch VARCHAR mit angemessener Längenbegrenzung zu ersetzen",
+          severity: "low",
+        });
+      }
+    }
+    
+    // Zusammenfassung erstellen
+    const summary = {
+      total_issues: issues.length,
+      high_severity_issues: issues.filter(i => i.severity === 'high').length,
+      medium_severity_issues: issues.filter(i => i.severity === 'medium').length,
+      low_severity_issues: issues.filter(i => i.severity === 'low').length,
+      tables_checked: tablesChecked,
+      columns_checked: columnsChecked,
+    };
+    
+    return {
+      issues,
+      summary,
+      status: "success",
+    };
+    
   } catch (error) {
-    console.error("Fehler im checkDatabaseStructureHandler:", error);
-    res.status(500).json({ 
-      error: "Fehler bei der Datenbankstrukturprüfung",
-      message: error instanceof Error ? error.message : "Unbekannter Fehler"
-    });
+    logger.error("Fehler bei der Datenbankstrukturprüfung:", error);
+    throw new Error("Fehler bei der Prüfung der Datenbankstruktur");
   }
 }
