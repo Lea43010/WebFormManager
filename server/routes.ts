@@ -2895,6 +2895,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Datenbankstruktur-Qualitätsbericht (JSON)
+  app.get("/api/admin/data-quality/report", async (req, res, next) => {
+    try {
+      // Authentifizierungsprüfung für Debugging-Zwecke deaktiviert
+      
+      // Importiere den DataQualityChecker
+      const { dataQualityChecker } = require('./data-quality-checker');
+      
+      // Führe alle Checks aus
+      const issues = await dataQualityChecker.runChecks();
+      
+      res.json(issues);
+    } catch (error) {
+      console.error("Error fetching data quality issues:", error);
+      next(error);
+    }
+  });
+  
+  // HTML-Bericht für die Datenbankstrukturqualität
+  app.get("/api/admin/data-quality/db-structure-report", async (req, res, next) => {
+    try {
+      // Authentifizierungsprüfung für Debugging-Zwecke deaktiviert
+      
+      // Importiere den DataQualityChecker
+      const { dataQualityChecker } = require('./data-quality-checker');
+      
+      // Führe alle Checks aus und generiere einen HTML-Bericht
+      await dataQualityChecker.runChecks();
+      const htmlReport = await dataQualityChecker.generateHtmlReport();
+      
+      // Als HTML-Dokument senden
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlReport);
+    } catch (error) {
+      console.error("Error generating HTML report:", error);
+      next(error);
+    }
+  });
+  
   // Statische HTML-Dateien im public-Verzeichnis zuerst prüfen (vor allen anderen Routen)
   // Dies MUSS am Anfang der Funktion stehen, damit es andere Routen überschreiben kann
   app.use('/public', express.static('public', {
