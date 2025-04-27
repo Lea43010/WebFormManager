@@ -20,6 +20,7 @@ import {
   resolveIssueHandler, 
   toggleRuleActiveHandler 
 } from "./data-quality";
+import { checkDatabaseStructureHandler } from "./db-structure-quality";
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
@@ -2827,6 +2828,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await toggleRuleActiveHandler(req, res);
     } catch (error) {
       console.error("Error toggling data quality rule:", error);
+      next(error);
+    }
+  });
+
+  // Datenbankstruktur-Prüfung
+  app.get("/api/data-quality/db-structure", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können Datenbankstrukturprüfungen durchführen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung für Datenbankstrukturprüfung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      // Handler aufrufen
+      await checkDatabaseStructureHandler(req, res);
+    } catch (error) {
+      console.error("Error checking database structure:", error);
       next(error);
     }
   });

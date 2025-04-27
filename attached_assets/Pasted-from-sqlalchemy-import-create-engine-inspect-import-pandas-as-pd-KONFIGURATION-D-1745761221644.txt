@@ -1,0 +1,73 @@
+from sqlalchemy import create_engine, inspect
+import pandas as pd
+
+# --- KONFIGURATION ---
+
+# Deine Datenbankverbindung
+db_user = "dein_user"
+db_password = "dein_passwort"
+db_host = "dein_host"  # Beispiel: db.somedomain.com
+db_port = "5432"
+db_name = "deine_db"
+
+# Verbindung bauen
+DATABASE_URL = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+# --- REGELN DEFINIEREN ---
+rules = [
+    {"check": "lowercase_tablenames"},
+    {"check": "snake_case_columns"},
+    {"check": "non_nullable_ids"}
+]
+
+# --- IMPLEMENTIERUNG ---
+
+class DataQualityChecker:
+    def __init__(self, engine):
+        self.engine = engine
+        self.inspector = inspect(engine)
+        self.issues = []
+
+    def run_checks(self, rules):
+        tables = self.inspector.get_table_names(schema='public')
+        
+        # Regel 1: Tabellen-Namen prüfen
+        if any(rule['check'] == "lowercase_tablenames" for rule in rules):
+            invalid_tables = [t for t in tables if not t.islower() or " " in t]
+            if invalid_tables:
+                self.issues.append(("Ungültige Tabellennamen", invalid_tables))
+        
+        # Regel 2 und 3: Spalten prüfen
+        for table in tables:
+            columns = self.inspector.get_columns(table, schema='public')
+            df = pd.DataFrame(columns)
+
+            if any(rule['check'] == "snake_case_columns" for rule in rules):
+                invalid_columns = df[df['name'].str.contains(r'[A-Z\s]')]
+                if not invalid_columns.empty:
+                    self.issues.append((f"Ungültige Spaltennamen in {table}", invalid_columns['name'].tolist()))
+
+            if any(rule['check'] == "non_nullable_ids" for rule in rules):
+                nullable_ids = df[(df['name'].str.endswith('id')) & (df['nullable'] == True)]
+                if not nullable_ids.empty:
+                    self.issues.append((f"ID-Spalten dürfen NULL sein in {table}", nullable_ids['name'].tolist()))
+    
+    def print_report(self):
+        if not self.issues:
+            print("✅ Alle Checks bestanden!")
+        else:
+            print("🚨 Data Quality Probleme gefunden:")
+            for issue, details in self.issues:
+                print(f"\n- {issue}: {details}")
+
+# --- AUSFÜHRUNG ---
+
+def main():
+    engine = create_engine(DATABASE_URL)
+    checker = DataQualityChecker(engine)
+    checker.run_checks(rules)
+    checker.print_report()
+    engine.dispose()
+
+if __name__ == "__main__":
+    main()
