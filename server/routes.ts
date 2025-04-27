@@ -2852,8 +2852,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Statische HTML-Dateien im public-Verzeichnis zuerst prüfen 
-  app.use(express.static('public', {
+  // Statische HTML-Dateien im public-Verzeichnis zuerst prüfen (vor allen anderen Routen)
+  // Dies MUSS am Anfang der Funktion stehen, damit es andere Routen überschreiben kann
+  app.use('/public', express.static('public', {
     // Dateien mit .html-Endung als Content-Type text/html bedienen
     setHeaders: (res, path) => {
       if (path.endsWith('.html')) {
@@ -2861,6 +2862,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   }));
+  
+  // Debug-Hilfsrouten direkt zu den HTML-Dateien
+  app.get('/construction-diary-debug', (req, res) => {
+    res.sendFile(path.resolve('public/construction-diary-debug.html'));
+  });
+  
+  app.get('/db-structure-quality-debug', (req, res) => {
+    res.sendFile(path.resolve('public/db-structure-quality-debug.html'));
+  });
 
   const httpServer = createServer(app);
   return httpServer;
