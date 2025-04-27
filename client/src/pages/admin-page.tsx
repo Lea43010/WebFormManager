@@ -29,12 +29,6 @@ export default function AdminPage() {
                 <span>Benutzerverwaltung</span>
               </a>
             </Link>
-            <Link href="/admin/emails">
-              <a className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
-                <Mail className="h-4 w-4 mr-2" />
-                <span>E-Mails</span>
-              </a>
-            </Link>
             <Link href="/admin/deployment-docs">
               <a className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
                 <Settings className="h-4 w-4 mr-2" />
@@ -67,6 +61,13 @@ export default function AdminPage() {
               <TabsTrigger value="dataquality" className="flex items-center">
                 <BarChart className="h-4 w-4 mr-2" />
                 Datenqualität
+              </TabsTrigger>
+              
+              <TabsTrigger value="emails" className="flex items-center" asChild>
+                <Link href="/admin/emails">
+                  <Mail className="h-4 w-4 mr-2" />
+                  E-Mails
+                </Link>
               </TabsTrigger>
 
               <TabsTrigger value="deployment" className="flex items-center" asChild>
