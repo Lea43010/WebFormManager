@@ -84,7 +84,8 @@ export class DataQualityChecker {
     `;
     
     const result = await executeWithRetry(() => sql(query));
-    return result.rows;
+    // SQL-Ergebnis manuell auf das erwartete Format konvertieren
+    return result as unknown as { tableName: string; tableSchema: string }[];
   }
 
   /**
@@ -109,7 +110,13 @@ export class DataQualityChecker {
     `;
     
     const result = await executeWithRetry(() => sql(query, [tableName]));
-    return result.rows;
+    // SQL-Ergebnis manuell auf das erwartete Format konvertieren
+    return result as unknown as { 
+      columnName: string; 
+      dataType: string;
+      isNullable: string;
+      columnDefault: string | null;
+    }[];
   }
 
   /**
@@ -125,7 +132,9 @@ export class DataQualityChecker {
     `;
     
     const result = await executeWithRetry(() => sql(query, [tableName]));
-    return result.rows.map((row: any) => row.column_name);
+    // SQL-Ergebnis manuell konvertieren
+    const typedResult = result as unknown as Array<{column_name: string}>;
+    return typedResult.map((row: {column_name: string}) => row.column_name);
   }
 
   /**
@@ -151,7 +160,12 @@ export class DataQualityChecker {
     `;
     
     const fkResult = await executeWithRetry(() => sql(fkQuery, [tableName]));
-    const foreignKeys = fkResult.rows;
+    // SQL-Ergebnis manuell konvertieren
+    const foreignKeys = fkResult as unknown as Array<{
+      foreignKeyColumn: string;
+      referencedTable: string;
+      referencedColumn: string;
+    }>;
     
     if (foreignKeys.length === 0) return;
     
@@ -174,7 +188,9 @@ export class DataQualityChecker {
     `;
     
     const indexResult = await executeWithRetry(() => sql(indexQuery, [tableName]));
-    const indexedColumns = indexResult.rows.map((row: any) => row.columnName);
+    // SQL-Ergebnis manuell konvertieren
+    const typedIndexResult = indexResult as unknown as Array<{columnName: string}>;
+    const indexedColumns = typedIndexResult.map((row: {columnName: string}) => row.columnName);
     
     // Überprüfen, ob jeder Fremdschlüssel indiziert ist
     for (const fk of foreignKeys) {

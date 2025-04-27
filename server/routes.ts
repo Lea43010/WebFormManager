@@ -2744,7 +2744,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
       }
       
-      const issues = await getAllDataQualityIssues();
+      // Importiere den DataQualityChecker
+      const { dataQualityChecker } = require('./data-quality-checker');
+      
+      // Führe alle Checks aus
+      const issues = await dataQualityChecker.runChecks();
+      
       res.json(issues);
     } catch (error) {
       console.error("Error fetching data quality issues:", error);
