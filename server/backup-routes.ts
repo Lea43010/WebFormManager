@@ -32,7 +32,7 @@ const isAdmin = (req: express.Request, res: express.Response, next: express.Next
   }
   
   const user = req.user as any;
-  if (user.role !== 'admin') {
+  if (user.role !== 'administrator') {
     return res.status(403).json({ message: 'Keine ausreichenden Berechtigungen' });
   }
   

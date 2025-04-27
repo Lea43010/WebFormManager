@@ -24,7 +24,7 @@ export default function BackupManagement() {
   const [activeTab, setActiveTab] = useState("files");
 
   // Abrufen der vorhandenen Backups
-  const { data: backups, isLoading, error, refetch } = useQuery({
+  const { data: backups, isLoading, error, refetch } = useQuery<BackupFile[]>({
     queryKey: ["/api/admin/backups"],
     retry: false,
   });
@@ -99,8 +99,17 @@ export default function BackupManagement() {
     window.open(`/api/admin/backups/download/${filename}`, '_blank');
   };
 
+  // Typdefinition für den Backup-Service-Status
+  interface BackupServiceStatus {
+    active: boolean;
+    scheduleTime: string;
+    retentionDays: number;
+    backupDir: string;
+    lastBackup: string | null;
+  }
+
   // Status des automatischen Backup-Dienstes
-  const { data: backupServiceStatus } = useQuery({
+  const { data: backupServiceStatus } = useQuery<BackupServiceStatus>({
     queryKey: ["/api/admin/backups/service-status"],
     retry: false,
   });
