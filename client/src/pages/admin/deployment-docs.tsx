@@ -450,6 +450,249 @@ export default function DeploymentDocs() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="tests" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TestTube2 className="h-5 w-5 mr-2" />
+                Test-Dokumentation
+              </CardTitle>
+              <CardDescription>
+                Übersicht der Tests und Testabdeckung der Bau-Structura App
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold">Testphilosophie</h3>
+                <p className="mb-4">
+                  Die Bau-Structura App folgt einem mehrschichtigen Testansatz, um sicherzustellen, 
+                  dass die Anwendung zuverlässig, robust und benutzerfreundlich ist:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                  <Card className="border-l-4 border-l-blue-400">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-blue-500 flex items-center text-base">
+                        <TestTube2 className="h-4 w-4 mr-2" />
+                        Unit-Tests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        Testen einzelner Komponenten und Funktionen in Isolation mit Jest und React Testing Library.
+                        Momentan 26 Unit-Tests über verschiedene Komponenten.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-amber-400">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-amber-500 flex items-center text-base">
+                        <TestTube2 className="h-4 w-4 mr-2" />
+                        Integrationstests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        Testen des Zusammenspiels verschiedener Komponenten.
+                        Momentan 11 Integrationstests für die Hauptsysteme.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-red-400">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-red-500 flex items-center text-base">
+                        <TestTube2 className="h-4 w-4 mr-2" />
+                        End-to-End-Tests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        Testen der Anwendung aus Benutzerperspektive.
+                        In Planung für kritische Benutzerworkflows.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold">Unit-Tests</h3>
+                <p className="mb-4">
+                  Die Unit-Tests stellen sicher, dass einzelne Komponenten und Funktionen wie erwartet funktionieren.
+                </p>
+
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Datenbankstruktur-Qualitätsprüfung (7 Tests)
+                    </h4>
+                    <p className="text-sm mb-2 text-muted-foreground">
+                      Datei: <code>server/__tests__/db-structure-quality.test.ts</code>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-muted rounded p-2 text-sm">Qualitätsprüfung implementiert</div>
+                      <div className="bg-muted rounded p-2 text-sm">Regeln für Tabellennamen (tbl-Präfix)</div>
+                      <div className="bg-muted rounded p-2 text-sm">Regeln für Primärschlüssel</div>
+                      <div className="bg-muted rounded p-2 text-sm">Regeln für Fremdschlüssel</div>
+                      <div className="bg-muted rounded p-2 text-sm">HTML-Report-Generierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">JSON-Report-Generierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Tab-Navigation UI</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Benutzer-Management (5 Tests)
+                    </h4>
+                    <p className="text-sm mb-2 text-muted-foreground">
+                      Datei: <code>server/__tests__/user-management.test.ts</code>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-muted rounded p-2 text-sm">Benutzer-Schema Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">E-Mail-Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Passwort-Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Rollenvalidierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Passwort-Hashing</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Geo-Informationen (5 Tests)
+                    </h4>
+                    <p className="text-sm mb-2 text-muted-foreground">
+                      Datei: <code>client/src/__tests__/geo-information.test.tsx</code>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-muted rounded p-2 text-sm">Map-Komponente Rendering</div>
+                      <div className="bg-muted rounded p-2 text-sm">Marker-Anzeige</div>
+                      <div className="bg-muted rounded p-2 text-sm">Standortformular Rendering</div>
+                      <div className="bg-muted rounded p-2 text-sm">Adresssuche</div>
+                      <div className="bg-muted rounded p-2 text-sm">Koordinatenaktualisierung</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Bautagebuch (7 Tests)
+                    </h4>
+                    <p className="text-sm mb-2 text-muted-foreground">
+                      Datei: <code>server/__tests__/construction-diary.test.ts</code>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="bg-muted rounded p-2 text-sm">Schema-Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Wetter-Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Temperatur-Validierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Eintrag-Erstellung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Eintrag-Abruf</div>
+                      <div className="bg-muted rounded p-2 text-sm">Eintrag-Aktualisierung</div>
+                      <div className="bg-muted rounded p-2 text-sm">Eintrag-Löschung</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold">Integrationstests</h3>
+                <p className="mb-4">
+                  Integrationstests prüfen, ob verschiedene Komponenten der Anwendung korrekt zusammenarbeiten.
+                </p>
+                
+                <p className="text-sm mb-2 text-muted-foreground">
+                  Datei: <code>integration-tests/app-integration.test.js</code>
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Authentication & Benutzer-Verwaltung (3 Tests)
+                    </h4>
+                    <div className="bg-muted rounded p-2 text-sm mt-2">
+                      Login, Benutzer anlegen, Benutzer abrufen
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Projekt-Verwaltung (2 Tests)
+                    </h4>
+                    <div className="bg-muted rounded p-2 text-sm mt-2">
+                      Projekt anlegen, Projekte abrufen
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Bautagebuch (2 Tests)
+                    </h4>
+                    <div className="bg-muted rounded p-2 text-sm mt-2">
+                      Bautagebuch-Eintrag anlegen, Bautagebuch-Einträge abrufen
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Datenqualitäts-Management (2 Tests)
+                    </h4>
+                    <div className="bg-muted rounded p-2 text-sm mt-2">
+                      HTML-Report abrufen, JSON-Report abrufen
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium flex items-center">
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                      Integration Geolocation (2 Tests)
+                    </h4>
+                    <div className="bg-muted rounded p-2 text-sm mt-2">
+                      Projektstandort aktualisieren, Projektstandort abrufen
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold">Tests ausführen</h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium">Unit-Tests</h4>
+                    <div className="bg-muted p-3 rounded-md my-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <code>node run-all-tests.mjs</code>
+                        <Button variant="ghost" size="icon" onClick={() => copyCommand("node run-all-tests.mjs")}>
+                          <ClipboardCopy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium">Integrationstests</h4>
+                    <div className="bg-muted p-3 rounded-md my-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <code>node run-integration-test.mjs</code>
+                        <Button variant="ghost" size="icon" onClick={() => copyCommand("node run-integration-test.mjs")}>
+                          <ClipboardCopy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="troubleshooting" className="space-y-4">
           <Card>
             <CardHeader>
