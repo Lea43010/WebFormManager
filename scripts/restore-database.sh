@@ -1,69 +1,107 @@
 #!/bin/bash
-
-# Wiederherstellungs-Skript für die PostgreSQL-Datenbank
+#
+# Datenbank-Wiederherstellungs-Skript für die Bau-Structura App
 # Erstellt von: Bau-Structura App
 # Datum: $(date +%F)
-# Beschreibung: Stellt ein Backup der PostgreSQL-Datenbank wieder her
+#
+# Beschreibung: Dieses Skript stellt eine Datenbank aus einem SQL-Backup wieder her.
+# Es benötigt den Pfad zur SQL-Backup-Datei als ersten Parameter.
+
+# Parameter prüfen
+if [ $# -ne 1 ]; then
+  echo "Verwendung: $0 <Pfad-zur-Backup-Datei>"
+  exit 1
+fi
+
+# Pfad zur Backup-Datei
+BACKUP_FILE="$1"
+
+# Prüfen, ob die Backup-Datei existiert
+if [ ! -f "${BACKUP_FILE}" ]; then
+  echo "FEHLER: Die Backup-Datei '${BACKUP_FILE}' wurde nicht gefunden!"
+  exit 1
+fi
+
+# Verzeichnis-Konfiguration
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR=$(dirname "$SCRIPT_DIR")
 
 # Umgebungsvariablen aus .env Datei laden (wenn vorhanden)
-if [ -f .env ]; then
-  source .env
+if [ -f "${ROOT_DIR}/.env" ]; then
+  source "${ROOT_DIR}/.env"
+  echo "Umgebungsvariablen aus .env geladen"
 fi
 
-# Backup-Verzeichnis
-BACKUP_DIR="./backups"
-
-# Überprüfen, ob ein Backup-Pfad als Parameter übergeben wurde
-if [ $# -eq 0 ]; then
-  echo "=== Verfügbare Backups ==="
-  ls -lh $BACKUP_DIR | grep "backup_" | sort
-  echo ""
-  echo "Verwendung: $0 <Backup-Datei>"
-  echo "Beispiel:   $0 $BACKUP_DIR/backup_2025-04-27_12-00-00.dump"
+# Prüfen, ob die erforderlichen Umgebungsvariablen gesetzt sind
+if [ -z "$DATABASE_URL" ]; then
+  echo "FEHLER: Die Umgebungsvariable DATABASE_URL ist nicht gesetzt!"
   exit 1
 fi
 
-BACKUP_FILE=$1
+# Datenbank-Verbindungsinformationen aus DATABASE_URL extrahieren
+# Format: postgresql://username:password@hostname:port/database?options
+DB_URL="${DATABASE_URL}"
+DB_USER=$(echo $DB_URL | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+DB_PASS=$(echo $DB_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\).*/\1/p')
+DB_HOST=$(echo $DB_URL | sed -n 's/.*@\([^:]*\).*/\1/p')
+DB_PORT=$(echo $DB_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+DB_NAME=$(echo $DB_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
 
-# Überprüfen, ob die Backup-Datei existiert
-if [ ! -f $BACKUP_FILE ]; then
-  echo "❌ Fehler: Backup-Datei '$BACKUP_FILE' existiert nicht!"
-  exit 1
+# Standardwerte für Port
+if [ -z "$DB_PORT" ]; then
+  DB_PORT=5432
 fi
 
-echo "=== Datenbank-Wiederherstellung gestartet ==="
+# Timestamp für Sicherungszwecke
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+
+# Fortschrittsanzeige
+echo "=== Datenbank-Wiederherstellung wird gestartet ==="
 echo "Datum: $(date +%F)"
 echo "Zeit: $(date +%H:%M:%S)"
-echo "Quelle: $BACKUP_FILE"
+echo "Datenbankhost: ${DB_HOST}"
+echo "Datenbankname: ${DB_NAME}"
+echo "Backup-Datei: ${BACKUP_FILE}"
+echo "========================================\n"
 
-# Bestätigung vom Benutzer anfordern
-read -p "⚠️  WARNUNG: Diese Aktion wird die aktuelle Datenbank überschreiben! Fortfahren? (j/N) " confirm
-if [[ $confirm != [jJ] ]]; then
-  echo "Wiederherstellung abgebrochen."
-  exit 0
+# Sicherheitsabfrage
+echo "WARNUNG: Diese Aktion überschreibt die aktuelle Datenbank vollständig!"
+echo "Möchten Sie fortfahren? (ja/nein)"
+
+# Bei automatischer Ausführung (z.B. via API) wird ohne Abfrage fortgefahren
+if [ -t 0 ]; then  # Terminal-Check
+  read ANSWER
+  if [ "$ANSWER" != "ja" ]; then
+    echo "Wiederherstellung abgebrochen."
+    exit 0
+  fi
+else
+  echo "Automatischer Modus: Wiederherstellung wird fortgesetzt..."
 fi
 
-# Sicherungskopie der aktuellen Datenbank erstellen
-TEMP_BACKUP="$BACKUP_DIR/pre_restore_$(date +%Y-%m-%d_%H-%M-%S).dump"
-echo "Erstelle Sicherungskopie der aktuellen Datenbank: $TEMP_BACKUP"
-pg_dump -Fc $DATABASE_URL > $TEMP_BACKUP
-
-if [ $? -ne 0 ]; then
-  echo "❌ Fehler beim Erstellen der Sicherungskopie der aktuellen Datenbank!"
-  exit 1
-fi
+# Bestehende Verbindungen schließen
+echo "Schließe bestehende Datenbankverbindungen..."
+PGPASSWORD="${DB_PASS}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "postgres" -c "
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE pg_stat_activity.datname = '${DB_NAME}'
+  AND pid <> pg_backend_pid();" || true
 
 # Datenbank wiederherstellen
-echo "Stelle Datenbank aus Backup wieder her..."
-pg_restore --clean --if-exists --no-owner --no-privileges --dbname=$DATABASE_URL $BACKUP_FILE
+echo "Starte Wiederherstellung..."
+PGPASSWORD="${DB_PASS}" psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -f "${BACKUP_FILE}"
 
 # Prüfen, ob die Wiederherstellung erfolgreich war
 if [ $? -eq 0 ]; then
-  echo "✅ Datenbank wurde erfolgreich wiederhergestellt!"
+  echo "\n=== Wiederherstellung erfolgreich abgeschlossen ==="
+  echo "Datum: $(date +%F)"
+  echo "Zeit: $(date +%H:%M:%S)"
+  echo "==================================================\n"
+  exit 0
 else
-  echo "❌ Fehler bei der Wiederherstellung der Datenbank!"
-  echo "Sicherungskopie der vorherigen Datenbank ist verfügbar unter: $TEMP_BACKUP"
+  echo "\n=== FEHLER: Wiederherstellung fehlgeschlagen ==="
+  echo "Datum: $(date +%F)"
+  echo "Zeit: $(date +%H:%M:%S)"
+  echo "==================================================\n"
   exit 1
 fi
-
-echo "=== Datenbank-Wiederherstellung abgeschlossen ==="

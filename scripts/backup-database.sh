@@ -1,51 +1,86 @@
 #!/bin/bash
-
-# Backup-Skript für die PostgreSQL-Datenbank
+#
+# Datenbankbackup-Skript für die Bau-Structura App
 # Erstellt von: Bau-Structura App
 # Datum: $(date +%F)
-# Beschreibung: Führt tägliche Backups der PostgreSQL-Datenbank durch
+#
+# Beschreibung: Dieses Skript erstellt ein vollständiges SQL-Backup der Datenbank
+# und speichert es im Verzeichnis 'backups' im Hauptverzeichnis der Anwendung.
+# Alte Backups werden nach 30 Tagen automatisch gelöscht.
 
-# Konfiguration
-BACKUP_DIR="./backups"
-DATE=$(date +%Y-%m-%d)
-TIME=$(date +%H-%M-%S)
-BACKUP_FILENAME="backup_${DATE}_${TIME}.dump"
-FULL_PATH="${BACKUP_DIR}/${BACKUP_FILENAME}"
+# Verzeichnis-Konfiguration
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR=$(dirname "$SCRIPT_DIR")
+BACKUP_DIR="${ROOT_DIR}/backups"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILE="${BACKUP_DIR}/backup_${TIMESTAMP}.sql"
 RETENTION_DAYS=30
 
 # Umgebungsvariablen aus .env Datei laden (wenn vorhanden)
-if [ -f .env ]; then
-  source .env
+if [ -f "${ROOT_DIR}/.env" ]; then
+  source "${ROOT_DIR}/.env"
+  echo "Umgebungsvariablen aus .env geladen"
 fi
 
-# Verzeichnis erstellen, falls es nicht existiert
-mkdir -p $BACKUP_DIR
-
-echo "=== Datenbank-Backup gestartet ==="
-echo "Datum: $DATE"
-echo "Zeit: $TIME"
-echo "Ziel: $FULL_PATH"
-
-# Backup erstellen
-echo "Erstelle Backup..."
-pg_dump -Fc $DATABASE_URL > $FULL_PATH
-
-# Prüfen, ob Backup erfolgreich war
-if [ $? -eq 0 ]; then
-  echo "✅ Backup erfolgreich erstellt!"
-  echo "Dateigröße: $(du -h $FULL_PATH | cut -f1)"
-  
-  # Alte Backups löschen
-  echo "Lösche Backups, die älter als $RETENTION_DAYS Tage sind..."
-  find $BACKUP_DIR -name "backup_*.dump" -type f -mtime +$RETENTION_DAYS -delete
-  
-  # Backup-Liste anzeigen
-  echo "Aktuelle Backups:"
-  ls -lh $BACKUP_DIR | grep "backup_" | sort
-else
-  echo "❌ Backup fehlgeschlagen!"
+# Prüfen, ob die erforderlichen Umgebungsvariablen gesetzt sind
+if [ -z "$DATABASE_URL" ]; then
+  echo "FEHLER: Die Umgebungsvariable DATABASE_URL ist nicht gesetzt!"
   exit 1
 fi
 
-echo "=== Datenbank-Backup abgeschlossen ==="
-echo "Nächstes Backup: Morgen um $(date +%H:%M)"
+# Datenbank-Verbindungsinformationen aus DATABASE_URL extrahieren
+# Format: postgresql://username:password@hostname:port/database?options
+DB_URL="${DATABASE_URL}"
+DB_USER=$(echo $DB_URL | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+DB_PASS=$(echo $DB_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\).*/\1/p')
+DB_HOST=$(echo $DB_URL | sed -n 's/.*@\([^:]*\).*/\1/p')
+DB_PORT=$(echo $DB_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+DB_NAME=$(echo $DB_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+
+# Standardwerte für Port
+if [ -z "$DB_PORT" ]; then
+  DB_PORT=5432
+fi
+
+# Fortschrittsanzeige
+echo "=== Datenbankbackup wird erstellt ==="
+echo "Datum: $(date +%F)"
+echo "Zeit: $(date +%H:%M:%S)"
+echo "Datenbankhost: ${DB_HOST}"
+echo "Datenbankname: ${DB_NAME}"
+echo "Backup-Datei: ${BACKUP_FILE}"
+echo "===============================\n"
+
+# Backup-Verzeichnis erstellen, falls es nicht existiert
+mkdir -p "${BACKUP_DIR}"
+
+# Backup erstellen mit pg_dump
+echo "Starte pg_dump..."
+PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -F p -f "${BACKUP_FILE}" -v
+
+# Prüfen, ob das Backup erfolgreich war
+if [ $? -eq 0 ]; then
+  # Größe des Backups berechnen
+  BACKUP_SIZE=$(du -h "${BACKUP_FILE}" | cut -f1)
+  echo "\n=== Backup erfolgreich erstellt ==="
+  echo "Backup-Datei: ${BACKUP_FILE}"
+  echo "Größe: ${BACKUP_SIZE}"
+  echo "Datum: $(date +%F)"
+  echo "Zeit: $(date +%H:%M:%S)"
+  echo "===============================\n"
+  
+  # Alte Backups löschen, die älter als RETENTION_DAYS sind
+  echo "Alte Backups werden geprüft..."
+  find "${BACKUP_DIR}" -name "backup_*.sql" -type f -mtime +${RETENTION_DAYS} -delete -print | while read line; do
+    echo "Gelöscht: $line (älter als ${RETENTION_DAYS} Tage)"
+  done
+  
+  echo "\nBackup-Prozess abgeschlossen."
+  exit 0
+else
+  echo "\n=== FEHLER: Backup fehlgeschlagen ==="
+  echo "Datum: $(date +%F)"
+  echo "Zeit: $(date +%H:%M:%S)"
+  echo "===============================\n"
+  exit 1
+fi
