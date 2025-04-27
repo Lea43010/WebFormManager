@@ -104,7 +104,7 @@ export function registerEmailRoutes(app: express.Express) {
             </ul>
             
             <p>
-              <a href="https://bau-structura.de/docs/anleitung" class="button">Zur Anleitung der Bau - Structura App</a>
+              <a href="https://bau-structura.de/" class="button">Zur Bau - Structura App</a>
             </p>
             
             <p>Unser Support-Team steht Ihnen jederzeit gerne zur Verfügung, falls Sie Fragen haben oder Unterstützung benötigen.</p>
@@ -147,7 +147,7 @@ Ein kurzer Überblick über Ihre Möglichkeiten in der App:
 * Oberflächenanalyse mit KI-Unterstützung
 * Bedarfs- und Kapazitätsplanung
 
-Anleitung zur Bau - Structura App: https://bau-structura.de/docs/anleitung
+Zur Bau - Structura App: https://bau-structura.de/
 
 Unser Support-Team steht Ihnen jederzeit gerne zur Verfügung, falls Sie Fragen haben oder Unterstützung benötigen.
 
