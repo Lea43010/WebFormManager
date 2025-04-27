@@ -38,9 +38,28 @@ async function getTables(): Promise<{tableName: string, tableSchema: string}[]> 
       ORDER BY table_name;
     `;
     
-    const result = await db.execute(query);
-    // Explizite Typumwandlung, um mit den TypeScript-Typen kompatibel zu sein
-    return result as unknown as {tableName: string, tableSchema: string}[];
+    // Das Ergebnis aus Neon/Drizzle in ein Array von strukturierten Objekten umwandeln
+    const rawResult = await db.execute(query);
+    
+    // Prüfen, ob das Ergebnis ein Array oder ein Objekt mit rows ist
+    if (!rawResult) {
+      // Fallback: leeres Array zurückgeben
+      logger.warn("Keine Tabellen gefunden oder Ergebnis ist null/undefined");
+      return [];
+    }
+    
+    if (Array.isArray(rawResult)) {
+      // Wenn es bereits ein Array ist, das korrekte Format zurückgeben
+      return rawResult as {tableName: string, tableSchema: string}[];
+    } else if (rawResult.rows && Array.isArray(rawResult.rows)) {
+      // Wenn es ein Objekt mit 'rows' Eigenschaft ist (pg-Stil)
+      return rawResult.rows as {tableName: string, tableSchema: string}[];
+    } else {
+      // Fallback: Versuche, es direkt zu konvertieren
+      logger.warn("Unerwartetes Ergebnisformat, versuche direkte Konvertierung", { resultType: typeof rawResult });
+      // Zunächst zu unknown casten, dann zum gewünschten Typ
+      return (Object.values(rawResult) as unknown) as {tableName: string, tableSchema: string}[];
+    }
   } catch (error) {
     logger.error("Fehler beim Abrufen von Tabellen:", error);
     throw new Error("Fehler beim Abrufen von Tabellen aus der Datenbank");
@@ -62,9 +81,28 @@ async function getColumns(tableName: string): Promise<{columnName: string, dataT
       ORDER BY ordinal_position;
     `;
     
-    const result = await db.execute(query);
-    // Explizite Typumwandlung, um mit den TypeScript-Typen kompatibel zu sein
-    return result as unknown as {columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[];
+    // Das Ergebnis aus Neon/Drizzle in ein Array von strukturierten Objekten umwandeln
+    const rawResult = await db.execute(query);
+    
+    // Prüfen, ob das Ergebnis ein Array oder ein Objekt mit rows ist
+    if (!rawResult) {
+      // Fallback: leeres Array zurückgeben
+      logger.warn(`Keine Spalten gefunden für Tabelle ${tableName} oder Ergebnis ist null/undefined`);
+      return [];
+    }
+    
+    if (Array.isArray(rawResult)) {
+      // Wenn es bereits ein Array ist, das korrekte Format zurückgeben
+      return rawResult as {columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[];
+    } else if (rawResult.rows && Array.isArray(rawResult.rows)) {
+      // Wenn es ein Objekt mit 'rows' Eigenschaft ist (pg-Stil)
+      return rawResult.rows as {columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[];
+    } else {
+      // Fallback: Versuche, es direkt zu konvertieren
+      logger.warn(`Unerwartetes Ergebnisformat für Spalten von Tabelle ${tableName}, versuche direkte Konvertierung`, { resultType: typeof rawResult });
+      // Zunächst zu unknown casten, dann zum gewünschten Typ
+      return (Object.values(rawResult) as unknown) as {columnName: string, dataType: string, isNullable: string, columnDefault: string | null}[];
+    }
   } catch (error) {
     logger.error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}:`, error);
     throw new Error(`Fehler beim Abrufen von Spalten für Tabelle ${tableName}`);

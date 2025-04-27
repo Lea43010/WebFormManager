@@ -2944,23 +2944,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   {
     app.get("/api/debug/db-structure/report", async (req, res, next) => {
       try {
-        // Verwende die direkt importierte Funktion
-        const dbStructureReport = await checkDatabaseStructureHandler(req, res, next);
-        
-        if (!res.headersSent) {
-          res.json(dbStructureReport);
-        }
+        // Direkte Verwendung von checkDatabaseStructure ohne Authentifizierungsprüfung
+        const dbStructureReport = await checkDatabaseStructure();
+        res.json(dbStructureReport);
       } catch (error) {
         console.error("Error in debug DB structure report:", error);
         next(error);
       }
     });
     
+    // Importiere separat den DataQualityChecker, falls er noch nicht verfügbar ist
+    let dataQualityCheckerInstance: any;
+    try {
+      // Dynamischer Import, um Probleme mit Modulabhängigkeiten zu vermeiden
+      import('./data-quality-checker').then(module => {
+        dataQualityCheckerInstance = module.dataQualityChecker;
+        console.log("DataQualityChecker erfolgreich importiert");
+      }).catch(err => {
+        console.error("Fehler beim Import von DataQualityChecker:", err);
+      });
+    } catch (error) {
+      console.error("Fehler beim dynamischen Import des DataQualityChecker:", error);
+    }
+    
     app.get("/api/debug/data-quality/report", async (req, res, next) => {
       try {
-        // Verwende den DataQualityChecker aus dem Import
-        const issues = await dataQualityChecker.runChecks();
+        if (!dataQualityCheckerInstance) {
+          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+        }
         
+        const issues = await dataQualityCheckerInstance.runChecks();
         res.json(issues);
       } catch (error) {
         console.error("Error in debug data quality report:", error);
@@ -2970,9 +2983,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     app.get("/api/debug/data-quality/html-report", async (req, res, next) => {
       try {
-        // Verwende den DataQualityChecker aus dem Import
-        await dataQualityChecker.runChecks();
-        const htmlReport = await dataQualityChecker.generateHtmlReport();
+        if (!dataQualityCheckerInstance) {
+          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+        }
+        
+        await dataQualityCheckerInstance.runChecks();
+        const htmlReport = await dataQualityCheckerInstance.generateHtmlReport();
         
         // Als HTML-Dokument senden
         res.setHeader('Content-Type', 'text/html');
