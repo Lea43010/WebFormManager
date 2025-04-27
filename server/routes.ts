@@ -2687,10 +2687,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
       }
       
-      const report = await generateDataQualityReport();
-      res.json(report);
+      // Importiere den DataQualityChecker
+      const { dataQualityChecker } = require('./data-quality-checker');
+      
+      // Führe alle Checks aus
+      const issues = await dataQualityChecker.runChecks();
+      
+      // Generiere einen HTML-Bericht (optional)
+      await dataQualityChecker.generateHtmlReport();
+      
+      // Sende die gefundenen Probleme zurück
+      res.json(issues);
     } catch (error) {
       console.error("Error generating data quality report:", error);
+      next(error);
+    }
+  });
+  
+  // HTML-Bericht für die Datenbankstrukturqualität
+  app.get("/api/admin/data-quality/db-structure-report", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Nur Administratoren können Datenbankstrukturprüfungen durchführen
+      if (req.user.role !== 'administrator') {
+        return res.status(403).json({ message: "Keine Berechtigung. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      // Importiere den DataQualityChecker
+      const { dataQualityChecker } = require('./data-quality-checker');
+      
+      // Führe alle Checks aus
+      await dataQualityChecker.runChecks();
+      
+      // Generiere einen HTML-Bericht und sende ihn zurück
+      const htmlReport = await dataQualityChecker.generateHtmlReport();
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlReport);
+    } catch (error) {
+      console.error("Error generating data quality HTML report:", error);
       next(error);
     }
   });
