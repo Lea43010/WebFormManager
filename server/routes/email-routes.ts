@@ -39,7 +39,7 @@ export function registerEmailRoutes(app: express.Express) {
       body('password').isString().isLength({ min: 6 }),
       body('sendToAdmin').isBoolean().optional()
     ],
-    async (req, res) => {
+    async (req: express.Request, res: express.Response) => {
       try {
         // Validierungsfehler prüfen
         const errors = validationResult(req);
