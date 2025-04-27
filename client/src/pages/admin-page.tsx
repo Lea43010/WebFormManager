@@ -3,8 +3,9 @@ import { UserManagement } from "@/components/admin/user-management";
 import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import BackupManagement from "@/components/admin/backup-management";
 import { DataQualityManagement } from "@/components/admin/data-quality-management";
+import SendWelcomeEmail from "@/components/admin/send-welcome-email";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode } from 'lucide-react';
+import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode, Mail } from 'lucide-react';
 import { Link } from "wouter";
 
 export default function AdminPage() {
@@ -62,6 +63,11 @@ export default function AdminPage() {
                 <BarChart className="h-4 w-4 mr-2" />
                 Datenqualität
               </TabsTrigger>
+              
+              <TabsTrigger value="emails" className="flex items-center">
+                <Mail className="h-4 w-4 mr-2" />
+                E-Mails
+              </TabsTrigger>
 
               <TabsTrigger value="deployment" className="flex items-center" asChild>
                 <Link href="/admin/deployment-docs">
@@ -96,6 +102,18 @@ export default function AdminPage() {
             
             <TabsContent value="dataquality" className="space-y-4">
               <DataQualityManagement />
+            </TabsContent>
+            
+            <TabsContent value="emails" className="space-y-4">
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">E-Mail-Funktionen</h2>
+                  <p className="text-muted-foreground mb-4">
+                    Hier können Sie administrative E-Mail-Funktionen ausführen wie Willkommens-E-Mails an neue Benutzer senden.
+                  </p>
+                </div>
+                <SendWelcomeEmail />
+              </div>
             </TabsContent>
           </>
         )}

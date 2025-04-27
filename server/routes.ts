@@ -13,6 +13,7 @@ import { setupSurfaceAnalysisRoutes as setupSurfaceAnalysisAPIRoutes } from "./s
 import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { setupBackupRoutes } from "./backup";
 import { setupStripeRoutes } from "./stripe-routes";
+import { registerEmailRoutes } from "./routes/email-routes";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
   getDataQualityMetricsHandler, 
@@ -46,6 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Stripe-Zahlungsrouten einrichten
   setupStripeRoutes(app);
+  
+  // E-Mail-Routen einrichten
+  registerEmailRoutes(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
