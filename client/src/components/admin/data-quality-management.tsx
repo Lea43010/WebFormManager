@@ -162,6 +162,30 @@ export function DataQualityManagement() {
     fetchData();
   }, [toast]);
 
+  // Laden der JSON-Daten für den Datenbankstruktur-Qualitätsbericht
+  useEffect(() => {
+    const fetchJsonReport = async () => {
+      if (selectedTab === "json-report") {
+        try {
+          const response = await fetch("/api/debug/data-quality/json-report");
+          if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+          }
+          const data = await response.json();
+          setJsonReport(JSON.stringify(data, null, 2));
+        } catch (error) {
+          console.error("Fehler beim Laden des JSON-Berichts:", error);
+          setJsonReport(JSON.stringify({
+            error: "Fehler beim Laden des Berichts",
+            message: error instanceof Error ? error.message : "Unbekannter Fehler"
+          }, null, 2));
+        }
+      }
+    };
+
+    fetchJsonReport();
+  }, [selectedTab]);
+
   // Funktion zum Markieren eines Issues als gelöst
   const markAsResolved = async (issueId: number) => {
     try {
@@ -610,7 +634,7 @@ export function DataQualityManagement() {
                       <div className="rounded border bg-zinc-950 p-4 overflow-auto max-h-[600px]">
                         <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">
                           <code>
-                            {`Lade JSON-Daten...
+                            {jsonReport || `Lade JSON-Daten...
 // Der JSON-Bericht wird direkt vom API-Endpunkt abgerufen
 // Verwenden Sie den Button unten, um den vollständigen Bericht im JSON-Format zu öffnen`}
                           </code>
