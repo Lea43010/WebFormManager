@@ -2831,8 +2831,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
-
-  // Datenbankstruktur-Prüfung
+  
+  // Datenbankstruktur-Qualitätsprüfung
   app.get("/api/data-quality/db-structure", async (req, res, next) => {
     try {
       if (!req.isAuthenticated()) {
@@ -2845,7 +2845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Handler aufrufen
-      await checkDatabaseStructureHandler(req, res);
+      await checkDatabaseStructureHandler(req, res, next);
     } catch (error) {
       console.error("Error checking database structure:", error);
       next(error);
