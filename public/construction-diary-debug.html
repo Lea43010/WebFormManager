@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bautagebuch Debug</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9fafb;
+    }
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      transition: all 150ms;
+      cursor: pointer;
+    }
+    .button-primary {
+      background-color: #10b981;
+      color: white;
+    }
+    .button-primary:hover {
+      background-color: #059669;
+    }
+    .button-outline {
+      background-color: transparent;
+      border: 1px solid #d1d5db;
+    }
+    .button-outline:hover {
+      background-color: #f9fafb;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.75rem;
+    }
+    .badge-delay {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+    .badge-safety {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .badge-quality {
+      background-color: #ede9fe;
+      color: #5b21b6;
+      border: 1px solid #c4b5fd;
+    }
+    .badge-other {
+      background-color: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    .debug-nav {
+      border: 2px dashed #fbbf24;
+      background-color: #fef3c7;
+      margin-bottom: 1.5rem;
+      border-radius: 0.5rem;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body class="p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="debug-nav">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+          <h3 class="text-sm font-medium text-yellow-800">Debug-Navigation</h3>
+        </div>
+        <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">Nur für Entwicklungszwecke</span>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+        <a href="/dashboard" class="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        
+        <a href="/public/db-structure-quality-debug.html" class="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z" />
+          </svg>
+          <span>Datenbankstruktur-Qualitätsprüfung</span>
+        </a>
+        
+        <a href="/public/construction-diary-debug.html" class="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Bautagebuch-Debug</span>
+        </a>
+        
+        <a href="/data-quality" class="flex items-center p-2 hover:bg-yellow-100 rounded-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <span>Datenqualität</span>
+        </a>
+      </div>
+    </div>
+    
+    <h1 class="text-3xl font-bold mb-2">Bautagebuch Debug</h1>
+    <p class="text-gray-500 mb-6">Verwalten Sie Bautagebuch-Einträge für ein Projekt.</p>
+    
+    <!-- Projektauswahl -->
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-2">Projekt auswählen</h2>
+      <p class="text-gray-500 text-sm mb-4">Wählen Sie ein Projekt für das Bautagebuch</p>
+      <div class="flex items-center gap-4">
+        <select id="projectSelect" class="border border-gray-300 rounded-md p-2 w-[300px]">
+          <option value="1">Neubau B27</option>
+          <option value="2">Brückensanierung A8</option>
+          <option value="3" selected>Weilheim</option>
+          <option value="4">Anbindung Industriegebiet</option>
+          <option value="5">Kreisverkehrsbau</option>
+        </select>
+        <button id="refreshButton" class="button button-outline">Aktualisieren</button>
+      </div>
+    </div>
+    
+    <!-- Hauptbereich -->
+    <div>
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold">Tagebucheinträge</h2>
+        <button id="newEntryButton" class="button button-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Neuer Eintrag
+        </button>
+      </div>
+      
+      <div class="card">
+        <div id="tableContainer">
+          <div id="loading" class="flex items-center justify-center p-6">
+            <svg class="animate-spin h-6 w-6 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Einträge werden geladen...</span>
+          </div>
+          <div id="error" class="hidden flex items-center justify-center p-6 text-red-600">
+            <span>Fehler beim Laden der Einträge. Bitte versuchen Sie es erneut.</span>
+          </div>
+          <div id="emptyState" class="hidden flex flex-col items-center justify-center p-10 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="text-lg font-medium mb-2">Keine Einträge vorhanden</h3>
+            <p class="text-gray-500 mb-4">
+              Für dieses Projekt wurden noch keine Bautagebuch-Einträge erstellt.
+            </p>
+            <button class="button button-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Eintrag erstellen
+            </button>
+          </div>
+          <table id="entriesTable" class="hidden w-full">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Mitarbeiter</th>
+                <th>Tätigkeit</th>
+                <th>Zeit</th>
+                <th>Stunden</th>
+                <th>Vorfall</th>
+                <th class="text-right">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="entriesTableBody">
+              <!-- Wird dynamisch gefüllt -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const projectSelect = document.getElementById('projectSelect');
+      const refreshButton = document.getElementById('refreshButton');
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const emptyState = document.getElementById('emptyState');
+      const entriesTable = document.getElementById('entriesTable');
+      const entriesTableBody = document.getElementById('entriesTableBody');
+      
+      let projectId = projectSelect.value;
+      
+      async function fetchDiaryEntries() {
+        loading.classList.remove('hidden');
+        error.classList.add('hidden');
+        emptyState.classList.add('hidden');
+        entriesTable.classList.add('hidden');
+        
+        try {
+          const response = await fetch(`/api/projects/${projectId}/construction-diary`);
+          if (!response.ok) {
+            throw new Error('Fehler beim Laden der Daten');
+          }
+          
+          const data = await response.json();
+          
+          if (data.length === 0) {
+            loading.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+          }
+          
+          renderEntries(data);
+          loading.classList.add('hidden');
+          entriesTable.classList.remove('hidden');
+        } catch (err) {
+          console.error('Fehler:', err);
+          loading.classList.add('hidden');
+          error.classList.remove('hidden');
+        }
+      }
+      
+      function renderEntries(entries) {
+        entriesTableBody.innerHTML = '';
+        
+        entries.forEach(entry => {
+          const date = new Date(entry.date).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+          
+          let incidentBadge = '';
+          if (entry.incidentType && entry.incidentType !== 'none') {
+            const badgeClasses = {
+              delay: 'badge-delay',
+              safety: 'badge-safety',
+              quality: 'badge-quality',
+              other: 'badge-other'
+            };
+            
+            const badgeLabels = {
+              delay: 'Verzögerung',
+              safety: 'Sicherheit',
+              quality: 'Qualität',
+              other: 'Sonstiges'
+            };
+            
+            incidentBadge = `<span class="badge ${badgeClasses[entry.incidentType]}">${badgeLabels[entry.incidentType]}</span>`;
+          }
+          
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${date}</td>
+            <td>${entry.employee}</td>
+            <td class="max-w-[200px] truncate" title="${entry.activity}">${entry.activity}</td>
+            <td>${entry.startTime} - ${entry.endTime}</td>
+            <td>${entry.workHours}</td>
+            <td>${incidentBadge}</td>
+            <td class="text-right">
+              <div class="flex justify-end gap-2">
+                <button
+                  class="text-gray-500 hover:text-gray-700 p-1"
+                  data-entry-id="${entry.id}"
+                  onclick="editEntry(${entry.id})"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
+                <button
+                  class="text-red-500 hover:text-red-700 p-1"
+                  data-entry-id="${entry.id}"
+                  onclick="deleteEntry(${entry.id})"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          `;
+          
+          entriesTableBody.appendChild(row);
+        });
+      }
+      
+      projectSelect.addEventListener('change', function() {
+        projectId = this.value;
+        fetchDiaryEntries();
+      });
+      
+      refreshButton.addEventListener('click', function() {
+        fetchDiaryEntries();
+      });
+      
+      window.editEntry = function(id) {
+        alert(`Diese Funktion ist noch in Entwicklung. Entry ID: ${id}`);
+      };
+      
+      window.deleteEntry = function(id) {
+        if (confirm('Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?')) {
+          alert(`Diese Funktion ist noch in Entwicklung. Entry ID: ${id}`);
+        }
+      };
+      
+      // Initialen Aufruf starten
+      fetchDiaryEntries();
+    });
+  </script>
+</body>
+</html>
