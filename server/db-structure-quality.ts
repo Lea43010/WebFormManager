@@ -38,7 +38,9 @@ async function getTables(): Promise<{tableName: string, tableSchema: string}[]> 
       ORDER BY table_name;
     `;
     
-    return await db.execute(query);
+    const result = await db.execute(query);
+    // Explizite Typumwandlung, um mit den TypeScript-Typen kompatibel zu sein
+    return result as unknown as {tableName: string, tableSchema: string}[];
   } catch (error) {
     logger.error("Fehler beim Abrufen von Tabellen:", error);
     throw new Error("Fehler beim Abrufen von Tabellen aus der Datenbank");

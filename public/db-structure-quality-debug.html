@@ -81,10 +81,12 @@
 <body>
   <h1>Datenbankstruktur-Qualitätsprüfung (Debug)</h1>
   <p>Dieses Tool prüft die Datenbankstruktur auf Einhaltung der Qualitätsregeln.</p>
+  <p><strong>Hinweis:</strong> Sie müssen angemeldet sein, um diese Prüfung ausführen zu können. Wenn Sie einen Authentifizierungsfehler erhalten, melden Sie sich bitte zuerst an.</p>
   
   <div>
     <button id="runCheck">Prüfung starten</button>
     <button id="showHtmlReport">HTML-Bericht anzeigen</button>
+    <a href="/login" class="back-link" style="margin-right: 15px;">Anmelden</a>
     <a href="/" class="back-link">← Zurück zur Hauptseite</a>
   </div>
   
@@ -107,7 +109,11 @@
         const response = await fetch('/api/admin/data-quality/report');
         
         if (!response.ok) {
-          throw new Error(`HTTP-Fehler: ${response.status}`);
+          if (response.status === 401) {
+            throw new Error(`Nicht authentifiziert. Bitte melden Sie sich zuerst an.`);
+          } else {
+            throw new Error(`HTTP-Fehler: ${response.status}`);
+          }
         }
         
         const data = await response.json();
@@ -121,6 +127,13 @@
     
     document.getElementById('showHtmlReport').addEventListener('click', async () => {
       try {
+        // Erst prüfen, ob der Benutzer angemeldet ist
+        const testResponse = await fetch('/api/user');
+        if (!testResponse.ok && testResponse.status === 401) {
+          alert('Nicht authentifiziert. Bitte melden Sie sich zuerst an.');
+          return;
+        }
+        
         document.getElementById('htmlReportContainer').style.display = 'block';
         document.getElementById('htmlReport').src = '/api/admin/data-quality/db-structure-report';
       } catch (error) {
