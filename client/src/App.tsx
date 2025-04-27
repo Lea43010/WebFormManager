@@ -26,6 +26,7 @@ import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
 import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
+import AdminEmailsPage from "@/pages/admin-emails";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 
@@ -44,6 +45,7 @@ function Router() {
       <AdminProtectedRoute path="/admin" component={AdminPage} />
       <AdminProtectedRoute path="/admin/deployment-docs" component={DeploymentDocsPage} />
       <AdminProtectedRoute path="/admin/users" component={UserManagementPage} />
+      <AdminProtectedRoute path="/admin/emails" component={AdminEmailsPage} />
       
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
