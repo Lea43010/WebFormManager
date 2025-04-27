@@ -24,6 +24,7 @@ import DeploymentDocsPage from "@/pages/admin/deployment-docs";
 import UserManagementPage from "@/pages/admin/user-management";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
+import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 
