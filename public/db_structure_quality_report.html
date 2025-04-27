@@ -1,0 +1,386 @@
+
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Datenbankstruktur-Qualitätsbericht</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          color: #333;
+        }
+        h1 {
+          color: #2563eb;
+          border-bottom: 2px solid #e5e7eb;
+          padding-bottom: 10px;
+        }
+        h2 {
+          color: #374151;
+          margin-top: 30px;
+        }
+        .timestamp {
+          color: #6b7280;
+          font-size: 0.9rem;
+          margin-bottom: 30px;
+        }
+        .success {
+          color: #10b981;
+          font-weight: bold;
+        }
+        .category {
+          background-color: #f3f4f6;
+          padding: 15px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+        .category-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+        .category-name {
+          font-weight: bold;
+          font-size: 1.1rem;
+          color: #1f2937;
+        }
+        .badges {
+          display: flex;
+          gap: 10px;
+        }
+        .badge {
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+        .badge-error {
+          background-color: #fee2e2;
+          color: #b91c1c;
+          border: 1px solid #fca5a5;
+        }
+        .badge-warning {
+          background-color: #fef3c7;
+          color: #92400e;
+          border: 1px solid #fcd34d;
+        }
+        .badge-info {
+          background-color: #dbeafe;
+          color: #1e40af;
+          border: 1px solid #93c5fd;
+        }
+        .issue-list {
+          list-style-type: none;
+          padding: 0;
+        }
+        .issue {
+          padding: 10px;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .issue:last-child {
+          border-bottom: none;
+        }
+        .error {
+          border-left: 4px solid #ef4444;
+          padding-left: 15px;
+        }
+        .warning {
+          border-left: 4px solid #f59e0b;
+          padding-left: 15px;
+        }
+        .info {
+          border-left: 4px solid #3b82f6;
+          padding-left: 15px;
+        }
+        .issue-message {
+          font-weight: 500;
+        }
+        .issue-details {
+          color: #6b7280;
+          margin-top: 5px;
+          font-size: 0.9rem;
+        }
+        .table-column {
+          font-family: monospace;
+          background-color: #f3f4f6;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+        .summary {
+          background-color: #ecfdf5;
+          border: 1px solid #d1fae5;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 30px;
+        }
+        .summary h2 {
+          color: #065f46;
+          margin-top: 0;
+        }
+        .summary-count {
+          font-weight: bold;
+        }
+        .rules-list {
+          list-style-type: none;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 10px;
+        }
+        .rule-item {
+          background-color: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 12px;
+        }
+        .rule-name {
+          font-weight: 500;
+          color: #4b5563;
+        }
+        .rule-desc {
+          color: #6b7280;
+          font-size: 0.9rem;
+          margin-top: 5px;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Datenbankstruktur-Qualitätsbericht</h1>
+      <div class="timestamp">Erstellt am 2025-04-27 16:27:33</div>
+      
+      <div class="summary">
+        <h2>Zusammenfassung der Prüfung</h2>
+    
+        <p><span class="summary-count">46</span> Probleme gefunden:</p>
+        <ul>
+      <li><span class="summary-count">33</span> Fehler</li><li><span class="summary-count">13</span> Warnungen</li></ul>
+      <h3>Angewandte Qualitätsregeln</h3>
+      <ul class="rules-list">
+    
+        <li class="rule-item">
+          <div class="rule-name">lowercase_tablenames</div>
+          <div class="rule-desc">Tabellennamen sollten kleingeschrieben sein</div>
+        </li>
+      
+        <li class="rule-item">
+          <div class="rule-name">snake_case_columns</div>
+          <div class="rule-desc">Spaltennamen sollten im snake_case-Format sein</div>
+        </li>
+      
+        <li class="rule-item">
+          <div class="rule-name">non_nullable_ids</div>
+          <div class="rule-desc">ID-Spalten sollten nicht NULL sein</div>
+        </li>
+      
+        <li class="rule-item">
+          <div class="rule-name">prefix_tbl</div>
+          <div class="rule-desc">Tabellennamen sollten mit 'tbl' beginnen</div>
+        </li>
+      
+        <li class="rule-item">
+          <div class="rule-name">foreign_keys_indexed</div>
+          <div class="rule-desc">Fremdschlüssel sollten indiziert sein</div>
+        </li>
+      
+        <li class="rule-item">
+          <div class="rule-name">primary_key_exists</div>
+          <div class="rule-desc">Jede Tabelle sollte einen Primärschlüssel haben</div>
+        </li>
+      
+      </ul>
+      </div>
+    
+          <div class="category">
+            <div class="category-header">
+              <div class="category-name">Datenintegrität</div>
+              <div class="badges">
+        <span class="badge badge-error">29 Fehler</span>
+              </div>
+            </div>
+            <ul class="issue-list">
+        
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'template_id' in Tabelle 'email_queue' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">email_queue</span>.<span class="table-column">template_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblBedarfKapa' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">Tabelle 'tblBedarfKapa' hat keinen Primärschlüssel</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblattachment' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblattachment</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblcompany' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblcompany</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'component_id' in Tabelle 'tblcomponent' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblcomponent</span>.<span class="table-column">component_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblcomponent' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblcomponent</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblconstruction_diary' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblconstruction_diary</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblcustomer' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblcustomer</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'customer_id' in Tabelle 'tblcustomer' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblcustomer</span>.<span class="table-column">customer_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'user_id' in Tabelle 'tbllogin_logs' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbllogin_logs</span>.<span class="table-column">user_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'material_id' in Tabelle 'tblmaterial' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblmaterial</span>.<span class="table-column">material_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblpermissions_backup' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblpermissions_backup</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">Tabelle 'tblpermissions_backup' hat keinen Primärschlüssel</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblpermissions_backup</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'person_id' in Tabelle 'tblperson' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblperson</span>.<span class="table-column">person_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblperson' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblperson</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'company_id' in Tabelle 'tblperson' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblperson</span>.<span class="table-column">company_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblproject' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'customer_id' in Tabelle 'tblproject' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">customer_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'company_id' in Tabelle 'tblproject' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">company_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'person_id' in Tabelle 'tblproject' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">person_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'customer_contact_id' in Tabelle 'tblproject' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">customer_contact_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblsurface_analysis' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblsurface_analysis</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'stripe_customer_id' in Tabelle 'tbluser' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbluser</span>.<span class="table-column">stripe_customer_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'stripe_subscription_id' in Tabelle 'tbluser' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbluser</span>.<span class="table-column">stripe_subscription_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'plan_id' in Tabelle 'tbluser_subscriptions' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbluser_subscriptions</span>.<span class="table-column">plan_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'stripe_customer_id' in Tabelle 'tbluser_subscriptions' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbluser_subscriptions</span>.<span class="table-column">stripe_customer_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'stripe_subscription_id' in Tabelle 'tbluser_subscriptions' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tbluser_subscriptions</span>.<span class="table-column">stripe_subscription_id</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'user_id' in Tabelle 'tblverification_codes' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblverification_codes</span>.<span class="table-column">user_id</span></div></li>
+            </ul>
+          </div>
+        
+          <div class="category">
+            <div class="category-header">
+              <div class="category-name">Indizierung</div>
+              <div class="badges">
+        <span class="badge badge-warning">10 Warnungen</span>
+              </div>
+            </div>
+            <ul class="issue-list">
+        
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblBedarfKapa ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblattachment ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblattachment</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel created_by in Tabelle tblconstruction_diary ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tbluser.id</div><div class="issue-details">Betrifft: <span class="table-column">tblconstruction_diary</span>.<span class="table-column">created_by</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel created_by in Tabelle tblcustomer ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tbluser.id</div><div class="issue-details">Betrifft: <span class="table-column">tblcustomer</span>.<span class="table-column">created_by</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblfile_organization_suggestion ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblfile_organization_suggestion</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblpermissions ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblpermissions</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblpermissions_old ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblpermissions_old</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel created_by in Tabelle tblproject ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tbluser.id</div><div class="issue-details">Betrifft: <span class="table-column">tblproject</span>.<span class="table-column">created_by</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel project_id in Tabelle tblsurface_analysis ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tblproject.id</div><div class="issue-details">Betrifft: <span class="table-column">tblsurface_analysis</span>.<span class="table-column">project_id</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Fremdschlüssel created_by in Tabelle tbluser ist nicht indiziert</div>
+          <div class="issue-details">Referenziert tbluser.id</div><div class="issue-details">Betrifft: <span class="table-column">tbluser</span>.<span class="table-column">created_by</span></div></li>
+            </ul>
+          </div>
+        
+          <div class="category">
+            <div class="category-header">
+              <div class="category-name">Namenskonventionen</div>
+              <div class="badges">
+        <span class="badge badge-error">3 Fehler</span><span class="badge badge-warning">3 Warnungen</span>
+              </div>
+            </div>
+            <ul class="issue-list">
+        
+            <li class="issue error">
+              <div class="issue-message">Tabellenname 'tblBedarfKapa' ist nicht vollständig kleingeschrieben</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Tabellenname 'email_queue' beginnt nicht mit 'tbl'</div>
+          <div class="issue-details">Betrifft: <span class="table-column">email_queue</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Tabellenname 'session' beginnt nicht mit 'tbl'</div>
+          <div class="issue-details">Betrifft: <span class="table-column">session</span></div></li>
+            <li class="issue warning">
+              <div class="issue-message">Tabellenname 'sms_logs' beginnt nicht mit 'tbl'</div>
+          <div class="issue-details">Betrifft: <span class="table-column">sms_logs</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">Spaltenname 'BedarfKapa_name' in Tabelle 'tblBedarfKapa' ist nicht im snake_case-Format</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span>.<span class="table-column">BedarfKapa_name</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">Spaltenname 'BedarfKapa_Anzahl' in Tabelle 'tblBedarfKapa' ist nicht im snake_case-Format</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span>.<span class="table-column">BedarfKapa_Anzahl</span></div></li>
+            </ul>
+          </div>
+        
+          <div class="category">
+            <div class="category-header">
+              <div class="category-name">Tabellenverfügbarkeit</div>
+              <div class="badges">
+        <span class="badge badge-error">1 Fehler</span>
+              </div>
+            </div>
+            <ul class="issue-list">
+        
+            <li class="issue error">
+              <div class="issue-message">Tabelle "tblBedarfKapa" existiert nicht oder ist nicht zugänglich</div>
+          <div class="issue-details">Die Tabelle konnte nicht gefunden werden. Details: relation "tblbedarfkapa" does not exist</div><div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span></div></li>
+            </ul>
+          </div>
+        
+    </body>
+    </html>
+    

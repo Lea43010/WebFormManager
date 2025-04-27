@@ -123,85 +123,126 @@ export class DataQualityChecker {
    * Holt Primärschlüsselinformationen für eine bestimmte Tabelle
    */
   private async getPrimaryKeyForTable(tableName: string): Promise<string[]> {
-    const query = `
-      SELECT a.attname as column_name
-      FROM pg_index i
-      JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
-      WHERE i.indrelid = $1::regclass
-      AND i.indisprimary
-    `;
-    
-    const result = await executeWithRetry(() => sql(query, [tableName]));
-    // SQL-Ergebnis manuell konvertieren
-    const typedResult = result as unknown as Array<{column_name: string}>;
-    return typedResult.map((row: {column_name: string}) => row.column_name);
+    try {
+      const query = `
+        SELECT a.attname as column_name
+        FROM pg_index i
+        JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+        WHERE i.indrelid = $1::regclass
+        AND i.indisprimary
+      `;
+      
+      const result = await executeWithRetry(() => sql(query, [tableName]));
+      // SQL-Ergebnis manuell konvertieren
+      const typedResult = result as unknown as Array<{column_name: string}>;
+      return typedResult.map((row: {column_name: string}) => row.column_name);
+    } catch (error) {
+      // Wenn die Tabelle nicht existiert, geben wir ein leeres Array zurück
+      // und fügen eine Meldung zu den Issues hinzu
+      if (error instanceof Error && 
+          (error.message.includes('does not exist') || 
+           error.message.includes('relation') || 
+           error.message.includes('regclass'))) {
+        this.issues.push({
+          category: 'Tabellenverfügbarkeit',
+          issue_type: 'error',
+          message: `Tabelle "${tableName}" existiert nicht oder ist nicht zugänglich`,
+          table: tableName,
+          details: `Die Tabelle konnte nicht gefunden werden. Details: ${error.message}`
+        });
+      } else {
+        // Andere Fehler loggen
+        console.error(`Fehler beim Abrufen des Primärschlüssels für Tabelle ${tableName}:`, error);
+      }
+      return [];
+    }
   }
 
   /**
    * Überprüft, ob die Fremdschlüssel einer Tabelle indiziert sind
    */
   private async checkForeignKeysIndexed(tableName: string): Promise<void> {
-    // Alle Fremdschlüssel für eine Tabelle abrufen
-    const fkQuery = `
-      SELECT
-        kcu.column_name as "foreignKeyColumn",
-        ccu.table_name as "referencedTable",
-        ccu.column_name as "referencedColumn"
-      FROM 
-        information_schema.table_constraints AS tc 
-        JOIN information_schema.key_column_usage AS kcu
-          ON tc.constraint_name = kcu.constraint_name
-          AND tc.table_schema = kcu.table_schema
-        JOIN information_schema.constraint_column_usage AS ccu
-          ON ccu.constraint_name = tc.constraint_name
-          AND ccu.table_schema = tc.table_schema
-      WHERE tc.constraint_type = 'FOREIGN KEY' 
-      AND tc.table_name = $1
-    `;
-    
-    const fkResult = await executeWithRetry(() => sql(fkQuery, [tableName]));
-    // SQL-Ergebnis manuell konvertieren
-    const foreignKeys = fkResult as unknown as Array<{
-      foreignKeyColumn: string;
-      referencedTable: string;
-      referencedColumn: string;
-    }>;
-    
-    if (foreignKeys.length === 0) return;
-    
-    // Alle Indizes für diese Tabelle abrufen
-    const indexQuery = `
-      SELECT
-        a.attname as "columnName"
-      FROM
-        pg_class t,
-        pg_class i,
-        pg_index ix,
-        pg_attribute a
-      WHERE
-        t.oid = ix.indrelid
-        AND i.oid = ix.indexrelid
-        AND a.attrelid = t.oid
-        AND a.attnum = ANY(ix.indkey)
-        AND t.relkind = 'r'
-        AND t.relname = $1
-    `;
-    
-    const indexResult = await executeWithRetry(() => sql(indexQuery, [tableName]));
-    // SQL-Ergebnis manuell konvertieren
-    const typedIndexResult = indexResult as unknown as Array<{columnName: string}>;
-    const indexedColumns = typedIndexResult.map((row: {columnName: string}) => row.columnName);
-    
-    // Überprüfen, ob jeder Fremdschlüssel indiziert ist
-    for (const fk of foreignKeys) {
-      if (!indexedColumns.includes(fk.foreignKeyColumn)) {
+    try {
+      // Alle Fremdschlüssel für eine Tabelle abrufen
+      const fkQuery = `
+        SELECT
+          kcu.column_name as "foreignKeyColumn",
+          ccu.table_name as "referencedTable",
+          ccu.column_name as "referencedColumn"
+        FROM 
+          information_schema.table_constraints AS tc 
+          JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' 
+        AND tc.table_name = $1
+      `;
+      
+      const fkResult = await executeWithRetry(() => sql(fkQuery, [tableName]));
+      // SQL-Ergebnis manuell konvertieren
+      const foreignKeys = fkResult as unknown as Array<{
+        foreignKeyColumn: string;
+        referencedTable: string;
+        referencedColumn: string;
+      }>;
+      
+      if (foreignKeys.length === 0) return;
+      
+      // Alle Indizes für diese Tabelle abrufen
+      const indexQuery = `
+        SELECT
+          a.attname as "columnName"
+        FROM
+          pg_class t,
+          pg_class i,
+          pg_index ix,
+          pg_attribute a
+        WHERE
+          t.oid = ix.indrelid
+          AND i.oid = ix.indexrelid
+          AND a.attrelid = t.oid
+          AND a.attnum = ANY(ix.indkey)
+          AND t.relkind = 'r'
+          AND t.relname = $1
+      `;
+      
+      const indexResult = await executeWithRetry(() => sql(indexQuery, [tableName]));
+      // SQL-Ergebnis manuell konvertieren
+      const typedIndexResult = indexResult as unknown as Array<{columnName: string}>;
+      const indexedColumns = typedIndexResult.map((row: {columnName: string}) => row.columnName);
+      
+      // Überprüfen, ob jeder Fremdschlüssel indiziert ist
+      for (const fk of foreignKeys) {
+        if (!indexedColumns.includes(fk.foreignKeyColumn)) {
+          this.issues.push({
+            category: "Indizierung",
+            issue_type: "warning",
+            message: `Fremdschlüssel ${fk.foreignKeyColumn} in Tabelle ${tableName} ist nicht indiziert`,
+            details: `Referenziert ${fk.referencedTable}.${fk.referencedColumn}`,
+            table: tableName,
+            column: fk.foreignKeyColumn
+          });
+        }
+      }
+    } catch (error) {
+      // Fehler abfangen und als Issue melden
+      if (error instanceof Error && 
+          (error.message.includes('does not exist') || 
+           error.message.includes('relation'))) {
+        // Dieser Fehler wurde bereits bei getPrimaryKeyForTable behandelt
+        return;
+      } else {
+        // Andere Fehler loggen
+        console.error(`Fehler bei der Fremdschlüsselüberprüfung für Tabelle ${tableName}:`, error);
         this.issues.push({
-          category: "Indizierung",
-          issue_type: "warning",
-          message: `Fremdschlüssel ${fk.foreignKeyColumn} in Tabelle ${tableName} ist nicht indiziert`,
-          details: `Referenziert ${fk.referencedTable}.${fk.referencedColumn}`,
+          category: "Systemfehler",
+          issue_type: "error",
+          message: `Fehler bei der Prüfung von Fremdschlüsseln für Tabelle ${tableName}`,
           table: tableName,
-          column: fk.foreignKeyColumn
+          details: error instanceof Error ? error.message : String(error)
         });
       }
     }
