@@ -145,16 +145,21 @@ export function ActivityLogs() {
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('page', currentPage.toString());
-      params.append('pageSize', pageSize.toString());
       
+      // API erwartet limit und offset statt page und pageSize
+      const offset = (currentPage - 1) * pageSize;
+      params.append('limit', pageSize.toString());
+      params.append('offset', offset.toString());
+      
+      // Spezifische Filter entsprechend den Backend-Endpunkten
       if (searchTerm) params.append('search', searchTerm);
-      if (actionTypeFilter) params.append('action', actionTypeFilter);
+      if (actionTypeFilter) params.append('actionType', actionTypeFilter);
       if (entityTypeFilter) params.append('entityType', entityTypeFilter);
-      if (startDate) params.append('startDate', startDate.toISOString());
-      if (endDate) params.append('endDate', endDate.toISOString());
+      if (startDate) params.append('dateFrom', startDate.toISOString());
+      if (endDate) params.append('dateTo', endDate.toISOString());
       
-      const response = await fetch(`/api/activity-logs?${params.toString()}`);
+      // Pfad entsprechend der Backend-Route anpassen
+      const response = await fetch(`/api/admin/activity-logs?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Fehler beim Laden der Aktivitätsprotokolle');
       }
@@ -215,10 +220,20 @@ export function ActivityLogs() {
   }
 
   // Daten aus der Abfrageantwort extrahieren
-  const logs = data.logs || [];
-  const totalItems = data.pagination?.totalItems || 0;
-  const totalPages = data.pagination?.totalPages || 1;
-  const entityTypes = data.entityTypes || [];
+  const logs = data?.logs || [];
+  const totalItems = data?.pagination?.total || 0;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  
+  // Wir laden die Entitätstypen separat vom Filter-Endpunkt, 
+  // verwenden hier aber vereinfacht die vorhandenen Daten
+  const entityTypes: string[] = [];
+  
+  // Einzigartige Entitätstypen aus vorhandenen Logs extrahieren
+  logs.forEach((log: any) => {
+    if (log.entity_type && !entityTypes.includes(log.entity_type)) {
+      entityTypes.push(log.entity_type);
+    }
+  });
 
   return (
     <Card>
@@ -351,27 +366,27 @@ export function ActivityLogs() {
                 {logs.map((log: any) => (
                   <TableRow key={log.id}>
                     <TableCell className="font-mono text-xs whitespace-nowrap">
-                      {format(new Date(log.timestamp), 'dd.MM.yyyy HH:mm:ss', { locale: de })}
+                      {format(new Date(log.created_at), 'dd.MM.yyyy HH:mm:ss', { locale: de })}
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        className={actionToBadgeColor[log.action as keyof typeof actionToBadgeColor]}
+                        className={actionToBadgeColor[log.action_type as keyof typeof actionToBadgeColor]}
                         variant="outline"
                       >
                         <span className="flex items-center gap-1">
-                          {actionToIcon[log.action as keyof typeof actionToIcon]}
-                          {actionTypes[log.action as keyof typeof actionTypes] || log.action}
+                          {actionToIcon[log.action_type as keyof typeof actionToIcon]}
+                          {actionTypes[log.action_type as keyof typeof actionTypes] || log.action_type}
                         </span>
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {log.username || `Benutzer ID: ${log.userId}`}
+                      {log.username || `Benutzer ID: ${log.user_id}`}
                     </TableCell>
                     <TableCell className="capitalize">
-                      {log.entityType}
+                      {log.entity_type}
                     </TableCell>
                     <TableCell className="hidden md:table-cell max-w-xs truncate">
-                      {log.description}
+                      {log.details ? (typeof log.details === 'string' ? log.details : JSON.stringify(log.details)) : '-'}
                     </TableCell>
                   </TableRow>
                 ))}
