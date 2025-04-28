@@ -18,6 +18,7 @@ import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
+import logger from "./logger";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
   getDataQualityMetricsHandler, 
@@ -3126,7 +3127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint zum Überprüfen des Trial-Status aller Benutzer
   app.get("/api/admin/trial/status", checkAdminRole, async (req, res) => {
     try {
-      const users = await storage.getUsers();
+      const users = await storage.getAllUsers();
       
       // Analysiere den Trial-Status für alle Benutzer
       const now = new Date();
