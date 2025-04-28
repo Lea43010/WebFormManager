@@ -55,7 +55,18 @@ export function UserManagement() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [newUser, setNewUser] = useState<Partial<InsertUser>>({
+  // Korrekte Typisierung für den Benutzerstatus mit Pflichtfeldern
+  const [newUser, setNewUser] = useState<{
+    username: string;
+    password: string;
+    name: string | null;
+    email: string | null;
+    role: 'administrator' | 'manager' | 'benutzer';
+    gdprConsent: boolean;
+    // Optional können weitere Felder aus InsertUser hier definiert werden
+    trialEndDate?: Date;
+    subscriptionStatus?: string;
+  }>({
     username: '',
     password: '',
     name: '',
@@ -64,15 +75,15 @@ export function UserManagement() {
     gdprConsent: true // Automatisch gesetzt, da vom Admin erstellt
   });
 
-  // Abfrage der Benutzerliste
+  // Abfrage der Benutzerliste mit korrekter Typisierung
   const { data: users, isLoading, refetch } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
       return response.json();
     },
-    // Nur für Administratoren und Manager sichtbar
-    enabled: user && (user.role === 'administrator' || user.role === 'manager'),
+    // Nur für Administratoren und Manager sichtbar - explizite Typüberprüfung
+    enabled: !!user && (['administrator', 'manager'].includes(user.role || '')),
     // Stets aktuelle Daten abrufen, um Caching-Probleme zu vermeiden
     staleTime: 0,
     refetchOnMount: true,
