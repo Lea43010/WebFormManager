@@ -1086,24 +1086,20 @@ export default function GeoMapPage() {
         <h1 className="text-2xl font-bold ml-2">Geo-Informationen</h1>
       </div>
       
-      {/* Tracking-Funktionen hervorgehoben als eigenständiges Panel */}
+      {/* Hinweis auf Bautagebuch als zentrale Dokumentationslösung */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
         <div className="flex-1">
           <h3 className="text-lg font-medium flex items-center text-blue-700 mb-2">
-            <Info className="h-5 w-5 mr-1" /> Live-Tracking & Bewegungsprotokolle
+            <Info className="h-5 w-5 mr-1" /> Bautagebuch-Dokumentation
           </h3>
           <p className="text-sm text-gray-600 mb-3">
-            NEU: Sie können jetzt Teams und Ausrüstung in Echtzeit verfolgen und umfassende Bewegungsprotokolle einsehen!
+            Nutzen Sie das Bautagebuch für die zentrale Dokumentation aller relevanten Bauprojektaktivitäten!
           </p>
         </div>
         <div className="flex gap-3 items-center">
-          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/tracking"}>
-            <MapPin className="h-4 w-4 mr-2" />
-            Team-Tracking
-          </Button>
-          <Button className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/tracking/reports"}>
+          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/construction-diary"}>
             <FileText className="h-4 w-4 mr-2" />
-            Bewegungsprotokolle
+            Zum Bautagebuch
           </Button>
         </div>
       </div>
