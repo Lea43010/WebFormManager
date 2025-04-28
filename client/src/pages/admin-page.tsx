@@ -21,15 +21,6 @@ export default function AdminPage() {
           <ShieldAlert className="h-8 w-8 mr-2 text-primary" />
           <h1 className="text-4xl font-bold">Administration</h1>
         </div>
-        
-        {isAdmin && (
-          <div className="flex items-center space-x-2">
-            <Link href="/admin/deployment-docs" className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
-                <Settings className="h-4 w-4 mr-2" />
-                <span>Deployment</span>
-            </Link>
-          </div>
-        )}
       </div>
       
       <Tabs defaultValue="users" className="space-y-4">
