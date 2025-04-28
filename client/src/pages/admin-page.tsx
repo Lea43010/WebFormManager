@@ -88,6 +88,10 @@ export default function AdminPage() {
               <SystemLogs />
             </TabsContent>
 
+            <TabsContent value="trials" className="space-y-4">
+              <TrialManagement />
+            </TabsContent>
+
             <TabsContent value="backups" className="space-y-4">
               <BackupManagement />
             </TabsContent>

@@ -21,7 +21,6 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle, Clock, RefreshCw, Send } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { formatDate } from "@/lib/utils";
 
 type TrialStatus = {
   id: number;
