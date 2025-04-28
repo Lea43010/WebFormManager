@@ -2135,30 +2135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", checkAdminRole, async (req, res, next) => {
     try {
       const users = await storage.getAllUsers();
-      
-      // Feldnamen von snake_case zu camelCase für Frontend konvertieren
-      const transformedUsers = users.map(user => {
-        // Ausgabe für Debugging
-        console.log("Original user data:", JSON.stringify(user, null, 2));
-        
-        const transformed = {
-          ...user,
-          // Explizit die Datumswerte umwandeln
-          registrationDate: user.registration_date,
-          trialEndDate: user.trial_end_date,
-          subscriptionStatus: user.subscription_status,
-          lastPaymentDate: user.last_payment_date,
-          stripeCustomerId: user.stripe_customer_id,
-          stripeSubscriptionId: user.stripe_subscription_id,
-        };
-        
-        // Ausgabe für Debugging
-        console.log("Transformed user data:", JSON.stringify(transformed, null, 2));
-        
-        return transformed;
-      });
-      
-      res.json(transformedUsers);
+      res.json(users);
     } catch (error) {
       next(error);
     }

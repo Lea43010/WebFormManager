@@ -186,7 +186,23 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users) as User[];
+    // Sicherstellen, dass alle Benutzerfelder, auch die neuen Spalten, ausgewählt werden
+    return await db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdBy: users.createdBy,
+      gdprConsent: users.gdprConsent,
+      registrationDate: users.registrationDate,
+      trialEndDate: users.trialEndDate,
+      subscriptionStatus: users.subscriptionStatus,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId,
+      lastPaymentDate: users.lastPaymentDate
+    }).from(users);
   }
   
   async createUser(insertUser: InsertUser): Promise<User> {
