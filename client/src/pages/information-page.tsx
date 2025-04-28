@@ -106,6 +106,7 @@ const belastungsklassen = [
 
 // Definiere die Inhaltsabschnitte für das Seitenmenü
 const sections = [
+  { id: "benutzerhandbuch", title: "Benutzerhandbuch" },
   { id: "datenarchitektur", title: "Datenarchitektur" },
   { id: "externe-dienste", title: "Externe Geoportale und Dienste" },
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
@@ -126,7 +127,7 @@ const LAST_UPDATED = "2024-04-20";
 
 export default function InformationPage() {
   const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState<string>("datenarchitektur");
+  const [activeSection, setActiveSection] = useState<string>("benutzerhandbuch");
   const [sectionUpdates, setSectionUpdates] = useState<Record<string, string>>({});
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   
@@ -275,6 +276,73 @@ export default function InformationPage() {
         
         {/* Hauptinhalt */}
         <div className="lg:w-3/4 order-1 lg:order-2 space-y-8">
+          {/* Benutzerhandbuch Sektion */}
+          <div id="benutzerhandbuch" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Benutzerhandbuch</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Das vollständige Benutzerhandbuch für die Bau - Structura App enthält detaillierte Anleitungen
+              zu allen Funktionen und Bereichen der Anwendung. Es bietet sowohl für Anfänger als auch für 
+              fortgeschrittene Nutzer wichtige Informationen zur optimalen Nutzung des Systems.
+            </p>
+            
+            <Card className="mb-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Benutzerhandbuch-Übersicht
+                </CardTitle>
+                <CardDescription>
+                  Die wichtigsten Themen im Benutzerhandbuch auf einen Blick
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 list-disc pl-5">
+                  <li>Einführung und Grundkonzepte</li>
+                  <li>Anmeldung und Registrierung</li>
+                  <li>Dashboard und Navigation</li>
+                  <li>Projektverwaltung</li>
+                  <li>Bautagebuch-Nutzung</li>
+                  <li>Meilensteine und Zeitplanung</li>
+                  <li>Oberflächenanalyse-Tools</li>
+                  <li>Bedarfs- und Kapazitätsplanung</li>
+                  <li>Dokumentenverwaltung</li>
+                  <li>Administrative Funktionen</li>
+                </ul>
+              </CardContent>
+            </Card>
+            
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <Button 
+                className="flex-1 flex items-center justify-center gap-2"
+                variant="default" 
+                asChild
+              >
+                <a href="/docs/Benutzerhandbuch.md" target="_blank">
+                  <FileText className="h-4 w-4" />
+                  Benutzerhandbuch im Browser öffnen
+                </a>
+              </Button>
+              
+              <Button 
+                className="flex-1 flex items-center justify-center gap-2"
+                variant="outline" 
+                onClick={() => window.open("/docs/Benutzerhandbuch.md", "_blank")}
+              >
+                <Download className="h-4 w-4" />
+                Benutzerhandbuch herunterladen
+              </Button>
+            </div>
+            
+            <Alert>
+              <Info className="h-4 w-4 mr-2" />
+              <AlertTitle>Aktuelle Version</AlertTitle>
+              <AlertDescription>
+                Das Benutzerhandbuch wird regelmäßig aktualisiert. Die aktuelle Version ist vom 28.04.2025.
+                Bei Fragen oder für Support wenden Sie sich bitte an Ihren Administrator.
+              </AlertDescription>
+            </Alert>
+          </div>
+          
           {/* Datenarchitektur Sektion */}
           <div id="datenarchitektur" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Datenarchitektur</h2>
