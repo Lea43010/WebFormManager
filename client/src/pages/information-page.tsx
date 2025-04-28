@@ -932,14 +932,14 @@ export default function InformationPage() {
                   <div>
                     <h3 className="font-medium">Integrierte Spezialfunktionen</h3>
                     <div className="text-sm text-gray-600 mt-1">
-                      <p>Die Geo-Informationsseite bietet umfangreiche Zusatzfunktionen:</p>
+                      <div>Die Geo-Informationsseite bietet umfangreiche Zusatzfunktionen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>GPS-Tracking für Teams und Ausrüstung</li>
                         <li>Strecken- und Flächenmessung</li>
                         <li>GeoFencing mit automatischen Benachrichtigungen</li>
                         <li>Spezialmodule für Straßenbau und -instandhaltung</li>
                       </ul>
-                      <p>Detaillierte Beschreibungen zu den einzelnen Funktionen finden Sie in den entsprechenden Abschnitten dieser Hilfeseite.</p>
+                      <div className="mt-2">Detaillierte Beschreibungen zu den einzelnen Funktionen finden Sie in den entsprechenden Abschnitten dieser Hilfeseite.</div>
                     </div>
                   </div>
                 </CardContent>
@@ -984,14 +984,14 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Datensparsamkeit</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Das Tracking-System verwendet eine intelligente Datenübertragung, die den Datenverbrauch minimiert:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Das Tracking-System verwendet eine intelligente Datenübertragung, die den Datenverbrauch minimiert:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Bei Stillstand werden Positionsdaten seltener übertragen</li>
                         <li>Bei schneller Bewegung erfolgt eine häufigere Aktualisierung</li>
                         <li>Bei Offline-Betrieb werden Daten zwischengespeichert und später synchronisiert</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1015,15 +1015,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Aufgabenzuweisung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Weisen Sie Teams direkt aus der Kartenansicht Aufgaben zu:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Weisen Sie Teams direkt aus der Kartenansicht Aufgaben zu:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Klicken Sie auf ein Team und wählen Sie "Neue Aufgabe"</li>
                         <li>Definieren Sie die Aufgabendetails mit Priorität und Zeitvorgabe</li>
                         <li>Fügen Sie bei Bedarf Fotos oder Dokumente hinzu</li>
                         <li>Die Teammitglieder erhalten sofort eine Benachrichtigung</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1048,15 +1048,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Diebstahlschutz</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Der integrierte Diebstahlschutz bietet mehrere Sicherheitsfunktionen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Der integrierte Diebstahlschutz bietet mehrere Sicherheitsfunktionen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Alarmauslösung bei unerlaubter Bewegung</li>
                         <li>Automatische SMS- oder E-Mail-Benachrichtigung an definierte Kontakte</li>
                         <li>Lokale Alarmsignale können ferngesteuert aktiviert werden</li>
                         <li>Export des Bewegungsprotokolls für Versicherungszwecke</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
