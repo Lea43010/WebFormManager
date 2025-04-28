@@ -528,6 +528,7 @@ export default function InformationPage() {
                       variant: "default",
                     });
                   } catch (error) {
+                    console.error('PDF Generierungsfehler:', error);
                     toast({
                       title: "Fehler",
                       description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",

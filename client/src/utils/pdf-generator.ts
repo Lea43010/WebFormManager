@@ -78,16 +78,16 @@ export const generateStructuredPdf = (
     // Schriftart und Größe für Titel
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(18);
-    
+
     // Titel hinzufügen
     pdf.text(title, 20, 20);
     pdf.line(20, 25, 190, 25);
-    
+
     let yPosition = 35;
     const pageWidth = 210;
     const margin = 20;
     const textWidth = pageWidth - 2 * margin;
-    
+
     // Inhalt hinzufügen
     content.forEach((section) => {
       // Prüfen, ob neue Seite benötigt wird
@@ -95,21 +95,21 @@ export const generateStructuredPdf = (
         pdf.addPage();
         yPosition = 20;
       }
-      
+
       // Abschnittsüberschrift
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(14);
       pdf.text(section.heading, margin, yPosition);
       yPosition += 8;
-      
+
       // Abschnittstext
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(11);
-      
+
       const splitText = pdf.splitTextToSize(section.text, textWidth);
       pdf.text(splitText, margin, yPosition);
       yPosition += splitText.length * 6 + 5;
-      
+
       // Unterabschnitte, falls vorhanden
       if (section.subsections) {
         section.subsections.forEach((subsection) => {
@@ -118,27 +118,27 @@ export const generateStructuredPdf = (
             pdf.addPage();
             yPosition = 20;
           }
-          
+
           // Unterabschnittsüberschrift
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(12);
           pdf.text(subsection.subheading, margin, yPosition);
           yPosition += 6;
-          
+
           // Unterabschnittstext
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(11);
-          
+
           const splitSubText = pdf.splitTextToSize(subsection.text, textWidth);
           pdf.text(splitSubText, margin, yPosition);
           yPosition += splitSubText.length * 6 + 5;
         });
       }
-      
+
       // Abstandszeile zwischen den Abschnitten
       yPosition += 3;
     });
-    
+
     // Fußzeile mit Erstellungsdatum
     const today = new Date();
     pdf.setFont('helvetica', 'italic');
@@ -148,7 +148,7 @@ export const generateStructuredPdf = (
       margin,
       287
     );
-    
+
     pdf.save(`${filename}.pdf`);
   } catch (error) {
     console.error('Fehler bei der PDF-Generierung:', error);
@@ -170,23 +170,23 @@ export const generateUserManualPdf = async (): Promise<void> => {
     });
 
     // Load the user manual content
-    const response = await fetch('/docs/Benutzerhandbuch.md');
+    const response = await fetch('/Benutzerhandbuch.md');
     if (!response.ok) {
       throw new Error(`Fehler beim Laden des Benutzerhandbuchs: ${response.status}`);
     }
-    
+
     const manualText = await response.text();
-    
+
     // Erstelle ein neues PDF-Dokument
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
     });
-    
+
     // Titel und Datum oben
     const title = "Benutzerhandbuch Bau - Structura App";
     const currentDate = new Date().toLocaleDateString('de-DE');
-    
+
     // Header
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
@@ -195,11 +195,11 @@ export const generateUserManualPdf = async (): Promise<void> => {
     pdf.setFont('helvetica', 'italic');
     pdf.text(`Erstellt am: ${currentDate}`, 20, 30);
     pdf.line(20, 35, 190, 35);
-    
+
     // Inhalt (einfache Textverarbeitung von Markdown)
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    
+
     // Einfache Textverarbeitung - ein Versuch, grundlegende Markdown-Eigenschaften zu erhalten
     const lines = manualText.split('\n');
     let yPosition = 45;
@@ -207,16 +207,16 @@ export const generateUserManualPdf = async (): Promise<void> => {
     const pageWidth = 210;
     const margin = 20;
     const textWidth = pageWidth - 2 * margin;
-    
+
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
-      
+
       // Seitenumbruch prüfen
       if (yPosition > 270) {
         pdf.addPage();
         yPosition = 20;
       }
-      
+
       // Hauptüberschrift (# Titel)
       if (line.startsWith('# ')) {
         pdf.setFont('helvetica', 'bold');
@@ -226,7 +226,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += lineHeight + 3;
         continue;
       }
-      
+
       // Überschrift zweiter Ebene (## Titel)
       if (line.startsWith('## ')) {
         pdf.setFont('helvetica', 'bold');
@@ -236,7 +236,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += lineHeight + 2;
         continue;
       }
-      
+
       // Überschrift dritter Ebene (### Titel)
       if (line.startsWith('### ')) {
         pdf.setFont('helvetica', 'bold');
@@ -246,7 +246,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += lineHeight + 1;
         continue;
       }
-      
+
       // Listenelement
       if (line.startsWith('- ') || line.startsWith('* ')) {
         pdf.setFont('helvetica', 'normal');
@@ -257,7 +257,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += (splitLine.length * lineHeight);
         continue;
       }
-      
+
       // Nummerierte Liste
       if (/^\d+\./.test(line)) {
         pdf.setFont('helvetica', 'normal');
@@ -267,7 +267,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += (splitLine.length * lineHeight);
         continue;
       }
-      
+
       // Normaler Text
       if (line.trim() !== '') {
         pdf.setFont('helvetica', 'normal');
@@ -277,11 +277,11 @@ export const generateUserManualPdf = async (): Promise<void> => {
         yPosition += (splitLine.length * lineHeight);
         continue;
       }
-      
+
       // Leerzeile
       yPosition += lineHeight / 2;
     }
-    
+
     // Füge Fußzeile hinzu
     pdf.setFont('helvetica', 'italic');
     pdf.setFontSize(9);
@@ -290,7 +290,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
       margin,
       287
     );
-    
+
     // Speichere die PDF-Datei
     pdf.save("Bau-Structura-Benutzerhandbuch.pdf");
   } catch (error) {
@@ -301,7 +301,7 @@ export const generateUserManualPdf = async (): Promise<void> => {
 export const generateCompliancePdf = (): void => {
   const currentDate = new Date().toLocaleDateString('de-DE');
   const title = "Bau-Structura App: Konformität mit EU Data Act und EU KI Act (Stand: April 2025)";
-  
+
   const content = [
     {
       heading: "1. Einführung",
@@ -390,6 +390,6 @@ export const generateCompliancePdf = (): void => {
       text: "Die Bau-Structura App ist bestrebt, alle regulatorischen Anforderungen der Europäischen Union zu erfüllen und kontinuierlich zu überwachen. Bei Fragen zur Konformität mit dem EU Data Act oder EU KI Act steht Ihnen unser Datenschutzbeauftragter unter datenschutz@bau-structura.de zur Verfügung.\n\nDieses Dokument wurde am " + currentDate + " erstellt und wird regelmäßig aktualisiert, um Änderungen in der Gesetzgebung zu berücksichtigen."
     }
   ];
-  
+
   generateStructuredPdf(title, content, "Bau-Structura-EU-Konformitaet");
 };
