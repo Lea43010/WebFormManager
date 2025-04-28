@@ -1,430 +1,402 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Pagination } from '@/components/ui/pagination';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { Loader2, DownloadIcon, FilterIcon, RefreshCcw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import {
+  RotateCw,
+  ArrowUpDown,
+  ExternalLink,
+  AlertTriangle,
+  Check,
+  X,
+  Edit,
+  Trash,
+  Plus,
+  Eye,
+  Clock,
+  FileText,
+  Download,
+  Upload,
+  Settings,
+  UserPlus,
+  LogIn,
+  LogOut,
+  Lock,
+  Key,
+  Shield,
+  Send,
+  Search
+} from "lucide-react";
 
-// Anzahl der Logs pro Seite
-const ITEMS_PER_PAGE = 25;
-
-// Formatiere Datum und Zeit für die Anzeige
-const formatDateTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return format(date, 'dd.MM.yyyy HH:mm:ss', { locale: de });
+// Definition der Aktivitätstypen
+const actionTypes = {
+  CREATE: 'Erstellen',
+  READ: 'Lesen',
+  UPDATE: 'Aktualisieren',
+  DELETE: 'Löschen',
+  LOGIN: 'Anmeldung',
+  LOGOUT: 'Abmeldung',
+  DOWNLOAD: 'Herunterladen',
+  UPLOAD: 'Hochladen',
+  SETTING_CHANGE: 'Einstellungsänderung',
+  USER_INVITE: 'Benutzereinladung',
+  PASSWORD_RESET: 'Passwort-Reset',
+  PERMISSION_CHANGE: 'Berechtigungsänderung',
+  EXPORT: 'Exportieren',
+  IMPORT: 'Importieren',
+  SEND_EMAIL: 'E-Mail senden',
+  OTHER: 'Sonstige'
 };
 
-// Helfer-Funktion, um die Badge-Farbe je nach Aktionstyp zu bestimmen
-const getActionTypeBadgeVariant = (actionType: string): "default" | "secondary" | "destructive" | "outline" => {
-  switch (actionType) {
-    case 'CREATE':
-      return 'default'; // Grün
-    case 'UPDATE':
-      return 'secondary'; // Violett
-    case 'DELETE':
-      return 'destructive'; // Rot
-    default:
-      return 'outline'; // Standard
-  }
+const actionToIcon = {
+  CREATE: <Plus className="h-4 w-4" />,
+  READ: <Eye className="h-4 w-4" />,
+  UPDATE: <Edit className="h-4 w-4" />,
+  DELETE: <Trash className="h-4 w-4" />,
+  LOGIN: <LogIn className="h-4 w-4" />,
+  LOGOUT: <LogOut className="h-4 w-4" />,
+  DOWNLOAD: <Download className="h-4 w-4" />,
+  UPLOAD: <Upload className="h-4 w-4" />,
+  SETTING_CHANGE: <Settings className="h-4 w-4" />,
+  USER_INVITE: <UserPlus className="h-4 w-4" />,
+  PASSWORD_RESET: <Key className="h-4 w-4" />,
+  PERMISSION_CHANGE: <Lock className="h-4 w-4" />,
+  EXPORT: <Download className="h-4 w-4" />,
+  IMPORT: <Upload className="h-4 w-4" />,
+  SEND_EMAIL: <Send className="h-4 w-4" />,
+  OTHER: <FileText className="h-4 w-4" />
 };
 
+const actionToBadgeColor = {
+  CREATE: "bg-green-100 text-green-800 hover:bg-green-200",
+  READ: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+  UPDATE: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+  DELETE: "bg-red-100 text-red-800 hover:bg-red-200",
+  LOGIN: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+  LOGOUT: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+  DOWNLOAD: "bg-cyan-100 text-cyan-800 hover:bg-cyan-200",
+  UPLOAD: "bg-teal-100 text-teal-800 hover:bg-teal-200",
+  SETTING_CHANGE: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+  USER_INVITE: "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+  PASSWORD_RESET: "bg-pink-100 text-pink-800 hover:bg-pink-200",
+  PERMISSION_CHANGE: "bg-amber-100 text-amber-800 hover:bg-amber-200",
+  EXPORT: "bg-emerald-100 text-emerald-800 hover:bg-emerald-200",
+  IMPORT: "bg-lime-100 text-lime-800 hover:bg-lime-200",
+  SEND_EMAIL: "bg-sky-100 text-sky-800 hover:bg-sky-200",
+  OTHER: "bg-gray-100 text-gray-800 hover:bg-gray-200"
+};
+
+// Komponente zur Anzeige und Verwaltung von Aktivitätsprotokollen
 export function ActivityLogs() {
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [actionTypeFilter, setActionTypeFilter] = useState('');
+  const [entityTypeFilter, setEntityTypeFilter] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   
-  // Filter-Status
-  const [page, setPage] = useState(1);
-  const [userId, setUserId] = useState<string>('');
-  const [component, setComponent] = useState<string>('');
-  const [actionType, setActionType] = useState<string>('');
-  const [entityType, setEntityType] = useState<string>('');
-  const [dateFrom, setDateFrom] = useState<Date | null>(null);
-  const [dateTo, setDateTo] = useState<Date | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('all');
-  
-  // Abfrage der Filter-Optionen
-  const { data: filterOptions, isLoading: filtersLoading } = useQuery({
-    queryKey: ['/api/admin/activity-logs/filters'],
-    staleTime: 3600000, // 1 Stunde cachen
-  });
-  
-  // Aufbereiten der Abfragefilter
-  const getQueryFilters = () => {
-    const filters: Record<string, string> = {
-      limit: ITEMS_PER_PAGE.toString(),
-      offset: ((page - 1) * ITEMS_PER_PAGE).toString(),
-    };
-    
-    if (userId) filters.userId = userId;
-    if (component) filters.component = component;
-    if (actionType) filters.actionType = actionType;
-    if (entityType) filters.entityType = entityType;
-    
-    if (dateFrom) {
-      filters.dateFrom = format(dateFrom, 'yyyy-MM-dd');
-    }
-    
-    if (dateTo) {
-      // Auf Ende des Tages setzen
-      const endOfDay = new Date(dateTo);
-      endOfDay.setHours(23, 59, 59, 999);
-      filters.dateTo = format(endOfDay, 'yyyy-MM-dd HH:mm:ss');
-    }
-    
-    return filters;
-  };
-  
-  // Tab-spezifische Filter anwenden
-  useEffect(() => {
-    if (activeTab === 'all') {
-      setActionType('');
-    } else {
-      setActionType(activeTab.toUpperCase());
-    }
-    
-    // Zurück zur ersten Seite
-    setPage(1);
-  }, [activeTab]);
-  
-  // Abfrage der Aktivitätsprotokolle mit Filtern
-  const { 
-    data: logsData, 
-    isLoading: logsLoading, 
-    refetch: refetchLogs 
+  // Abfrage der Aktivitätslogs vom Server
+  const {
+    data = {},
+    isLoading,
+    isError,
+    error,
+    refetch
   } = useQuery({
-    queryKey: ['/api/admin/activity-logs', getQueryFilters()],
-    refetchOnWindowFocus: false
+    queryKey: [
+      '/api/activity-logs',
+      currentPage,
+      pageSize,
+      searchTerm,
+      actionTypeFilter,
+      entityTypeFilter,
+      startDate,
+      endDate
+    ],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      params.append('pageSize', pageSize.toString());
+      
+      if (searchTerm) params.append('search', searchTerm);
+      if (actionTypeFilter) params.append('action', actionTypeFilter);
+      if (entityTypeFilter) params.append('entityType', entityTypeFilter);
+      if (startDate) params.append('startDate', startDate.toISOString());
+      if (endDate) params.append('endDate', endDate.toISOString());
+      
+      const response = await fetch(`/api/activity-logs?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Laden der Aktivitätsprotokolle');
+      }
+      return response.json();
+    }
   });
   
-  // Filter zurücksetzen
-  const resetFilters = () => {
-    setUserId('');
-    setComponent('');
-    setEntityType('');
-    setDateFrom(null);
-    setDateTo(null);
-    setActiveTab('all');
-    setActionType('');
-    setPage(1);
-  };
-  
-  // Aktivitätslogs exportieren (CSV)
-  const exportLogs = async () => {
-    try {
-      if (!logsData || !logsData.logs || logsData.logs.length === 0) {
-        toast({
-          title: "Keine Daten zum Exportieren",
-          description: "Es sind keine Aktivitätsprotokolle vorhanden, die exportiert werden können.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // CSV-Kopfzeile
-      let csv = "ID,Benutzer,Komponente,Aktion,Entitätstyp,Entitäts-ID,Details,Datum,IP-Adresse\n";
-      
-      // CSV-Zeilen
-      logsData.logs.forEach((log: any) => {
-        // Bereinigt Details (JSON) für den CSV-Export
-        const details = log.details ? JSON.stringify(log.details).replace(/"/g, '""') : '';
-        
-        csv += [
-          log.id,
-          `${log.username || ''} (${log.user_name || ''})`,
-          log.component || '',
-          log.action_type || '',
-          log.entity_type || '',
-          log.entity_id || '',
-          `"${details}"`, // In Anführungszeichen für CSV-Sicherheit
-          log.created_at ? formatDateTime(log.created_at) : '',
-          log.ip_address || ''
-        ].join(',') + '\n';
-      });
-      
-      // CSV-Datei erstellen und herunterladen
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', `aktivitaetsprotokolle_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
+  // Zurücksetzen auf Seite 1, wenn sich Filter ändern
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, actionTypeFilter, entityTypeFilter, startDate, endDate, pageSize]);
+
+  // Fehlerbehandlung
+  useEffect(() => {
+    if (isError && error) {
       toast({
-        title: "Export erfolgreich",
-        description: `${logsData.logs.length} Aktivitätsprotokolle wurden exportiert.`,
-      });
-    } catch (error) {
-      console.error("Fehler beim Exportieren:", error);
-      toast({
-        title: "Export fehlgeschlagen",
-        description: "Beim Exportieren der Aktivitätsprotokolle ist ein Fehler aufgetreten.",
-        variant: "destructive"
+        title: "Fehler",
+        description: `Fehler beim Laden der Aktivitätsprotokolle: ${error.message}`,
+        variant: "destructive",
       });
     }
+  }, [isError, error, toast]);
+
+  // Anzahl der Einträge pro Seite ändern
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(parseInt(value));
   };
-  
+
+  // Renderoptionen für die Aktionstypen im Filter
+  const renderActionTypeOptions = () => {
+    return Object.entries(actionTypes).map(([key, value]) => (
+      <SelectItem key={key} value={key}>
+        <div className="flex items-center gap-2">
+          {actionToIcon[key as keyof typeof actionToIcon]}
+          <span>{value}</span>
+        </div>
+      </SelectItem>
+    ));
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Aktivitätsprotokolle</CardTitle>
+          <CardDescription>
+            Übersicht aller Systemaktivitäten und Benutzeraktionen
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center py-10">
+          <div className="flex flex-col items-center">
+            <RotateCw className="h-8 w-8 animate-spin text-primary" />
+            <p className="mt-4 text-muted-foreground">Aktivitätsprotokolle werden geladen...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Daten aus der Abfrageantwort extrahieren
+  const logs = data.logs || [];
+  const totalItems = data.pagination?.totalItems || 0;
+  const totalPages = data.pagination?.totalPages || 1;
+  const entityTypes = data.entityTypes || [];
+
   return (
-    <Card className="w-full">
-      <CardHeader className="bg-muted/50">
-        <CardTitle className="text-xl font-bold">Aktivitätsprotokolle</CardTitle>
-        <CardDescription>
-          Anzeige aller Benutzeraktivitäten im System
-        </CardDescription>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Aktivitätsprotokolle</CardTitle>
+            <CardDescription>
+              Übersicht aller Systemaktivitäten und Benutzeraktionen
+            </CardDescription>
+          </div>
+          <Button onClick={() => refetch()} className="flex items-center gap-2" variant="outline">
+            <RotateCw className="h-4 w-4" />
+            Aktualisieren
+          </Button>
+        </div>
       </CardHeader>
-      
-      <Tabs 
-        defaultValue="all" 
-        value={activeTab} 
-        onValueChange={setActiveTab} 
-        className="w-full"
-      >
-        <div className="px-4 pt-4 flex items-center justify-between flex-wrap gap-2">
-          <TabsList>
-            <TabsTrigger value="all">Alle Aktivitäten</TabsTrigger>
-            <TabsTrigger value="create">Erstellungen</TabsTrigger>
-            <TabsTrigger value="update">Änderungen</TabsTrigger>
-            <TabsTrigger value="delete">Löschungen</TabsTrigger>
-            <TabsTrigger value="login">Anmeldungen</TabsTrigger>
-          </TabsList>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetFilters}
-              disabled={logsLoading}
-            >
-              <FilterIcon className="h-4 w-4 mr-1" />
-              Filter zurücksetzen
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={refetchLogs} 
-              disabled={logsLoading}
-            >
-              <RefreshCcw className="h-4 w-4 mr-1" />
-              Aktualisieren
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={exportLogs} 
-              disabled={logsLoading || !logsData || !logsData.logs || logsData.logs.length === 0}
-            >
-              <DownloadIcon className="h-4 w-4 mr-1" />
-              Exportieren
-            </Button>
-          </div>
-        </div>
-        
-        {/* Filter-Bereich */}
-        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="text-sm font-medium">Benutzer-ID</label>
-            <Input 
-              placeholder="Benutzer-ID" 
-              value={userId} 
-              onChange={(e) => {
-                setUserId(e.target.value);
-                setPage(1);
-              }}
-            />
+      <CardContent>
+        {/* Filterbereich */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="search" className="text-sm font-medium">Suche</label>
+            <div className="flex">
+              <Input
+                id="search"
+                placeholder="Suche nach Beschreibung..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+              <Button variant="ghost" className="px-2 ml-1" onClick={() => setSearchTerm('')}>
+                {searchTerm ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
           
-          <div>
-            <label className="text-sm font-medium">Komponente</label>
-            <Select 
-              value={component} 
-              onValueChange={(value) => {
-                setComponent(value);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Komponente auswählen" />
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="action-type" className="text-sm font-medium">Aktionstyp</label>
+            <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
+              <SelectTrigger id="action-type">
+                <SelectValue placeholder="Alle Aktionen" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Komponenten</SelectItem>
-                {filterOptions?.components?.map((comp: string) => (
-                  <SelectItem key={comp} value={comp}>
-                    {comp}
-                  </SelectItem>
-                ))}
+                <SelectItem value="">Alle Aktionen</SelectItem>
+                {renderActionTypeOptions()}
               </SelectContent>
             </Select>
           </div>
           
-          <div>
-            <label className="text-sm font-medium">Entitätstyp</label>
-            <Select 
-              value={entityType} 
-              onValueChange={(value) => {
-                setEntityType(value);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Entitätstyp auswählen" />
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="entity-type" className="text-sm font-medium">Entitätstyp</label>
+            <Select value={entityTypeFilter} onValueChange={setEntityTypeFilter}>
+              <SelectTrigger id="entity-type">
+                <SelectValue placeholder="Alle Entitäten" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Entitätstypen</SelectItem>
-                {filterOptions?.entityTypes?.map((type: string) => (
+                <SelectItem value="">Alle Entitäten</SelectItem>
+                {entityTypes.map((type: string) => (
                   <SelectItem key={type} value={type}>
-                    {type}
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          <div>
-            <label className="text-sm font-medium">Von Datum</label>
-            <DatePicker
-              date={dateFrom}
-              setDate={(date) => {
-                setDateFrom(date);
-                setPage(1);
-              }}
-              placeholder="Von Datum"
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="page-size" className="text-sm font-medium">Einträge pro Seite</label>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger id="page-size">
+                <SelectValue placeholder="10" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Datumsfilter */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="start-date" className="text-sm font-medium">Startdatum</label>
+            <DatePicker 
+              date={startDate} 
+              setDate={(date: Date | null) => setStartDate(date)}
+              placeholder="Startdatum wählen" 
             />
           </div>
           
-          <div>
-            <label className="text-sm font-medium">Bis Datum</label>
-            <DatePicker
-              date={dateTo}
-              setDate={(date) => {
-                setDateTo(date);
-                setPage(1);
-              }}
-              placeholder="Bis Datum"
+          <div className="flex flex-col space-y-1.5">
+            <label htmlFor="end-date" className="text-sm font-medium">Enddatum</label>
+            <DatePicker 
+              date={endDate} 
+              setDate={(date: Date | null) => setEndDate(date)}
+              placeholder="Enddatum wählen" 
             />
           </div>
         </div>
         
-        <TabsContent value={activeTab} className="m-0">
-          <CardContent className="p-0">
-            {/* Ladezustand */}
-            {(logsLoading || filtersLoading) && (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">Daten werden geladen...</span>
-              </div>
-            )}
-            
-            {/* Keine Daten vorhanden */}
-            {!logsLoading && (!logsData?.logs || logsData.logs.length === 0) && (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-lg font-medium mb-2">Keine Aktivitätsprotokolle gefunden</p>
-                <p className="text-muted-foreground">
-                  Passen Sie die Filter an oder versuchen Sie es später erneut.
-                </p>
-              </div>
-            )}
-            
-            {/* Daten-Tabelle */}
-            {!logsLoading && logsData?.logs && logsData.logs.length > 0 && (
-              <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Benutzer</TableHead>
-                        <TableHead>Komponente</TableHead>
-                        <TableHead>Aktion</TableHead>
-                        <TableHead>Entität</TableHead>
-                        <TableHead>Details</TableHead>
-                        <TableHead>Datum</TableHead>
-                        <TableHead>IP-Adresse</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logsData.logs.map((log: any) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-medium">
-                            {log.username || 'N/A'} <br />
-                            <span className="text-xs text-muted-foreground">
-                              {log.user_name || ''}
-                            </span>
-                          </TableCell>
-                          <TableCell>{log.component || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge variant={getActionTypeBadgeVariant(log.action_type)}>
-                              {log.action_type || 'N/A'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {log.entity_type || 'N/A'}
-                            {log.entity_id && (
-                              <span className="text-xs text-muted-foreground block">
-                                ID: {log.entity_id}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {log.details ? (
-                              <details>
-                                <summary className="cursor-pointer text-sm">Details anzeigen</summary>
-                                <pre className="text-xs mt-1 p-2 bg-muted rounded-md overflow-x-auto">
-                                  {JSON.stringify(log.details, null, 2)}
-                                </pre>
-                              </details>
-                            ) : (
-                              <span className="text-muted-foreground">Keine Details</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {log.created_at ? formatDateTime(log.created_at) : 'N/A'}
-                          </TableCell>
-                          <TableCell>{log.ip_address || 'N/A'}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-                
-                {/* Paginierung */}
-                {logsData.pagination && logsData.pagination.total > ITEMS_PER_PAGE && (
-                  <div className="flex items-center justify-end p-4 border-t">
-                    <Pagination
-                      currentPage={page}
-                      totalPages={logsData.pagination.pages}
-                      onPageChange={setPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </TabsContent>
-      </Tabs>
+        {/* Zusammenfassung der Ergebnisse */}
+        <div className="mb-4 text-sm text-muted-foreground">
+          {totalItems === 0 ? (
+            <p>Keine Aktivitätsprotokolle gefunden</p>
+          ) : (
+            <p>
+              {totalItems} {totalItems === 1 ? 'Eintrag' : 'Einträge'} gefunden
+              {(searchTerm || actionTypeFilter || entityTypeFilter || startDate || endDate) && ' (gefiltert)'}
+            </p>
+          )}
+        </div>
+        
+        {/* Datentabelle */}
+        {logs.length > 0 ? (
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[180px]">Zeitpunkt</TableHead>
+                  <TableHead>Aktion</TableHead>
+                  <TableHead>Benutzer</TableHead>
+                  <TableHead>Entitätstyp</TableHead>
+                  <TableHead className="hidden md:table-cell">Beschreibung</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {logs.map((log: any) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="font-mono text-xs whitespace-nowrap">
+                      {format(new Date(log.timestamp), 'dd.MM.yyyy HH:mm:ss', { locale: de })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={actionToBadgeColor[log.action as keyof typeof actionToBadgeColor]}
+                        variant="outline"
+                      >
+                        <span className="flex items-center gap-1">
+                          {actionToIcon[log.action as keyof typeof actionToIcon]}
+                          {actionTypes[log.action as keyof typeof actionTypes] || log.action}
+                        </span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {log.username || `Benutzer ID: ${log.userId}`}
+                    </TableCell>
+                    <TableCell className="capitalize">
+                      {log.entityType}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell max-w-xs truncate">
+                      {log.description}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <AlertTriangle className="h-10 w-10 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">Keine Aktivitätsprotokolle gefunden</h3>
+            <p className="text-muted-foreground mt-2">
+              Passen Sie Ihre Filterkriterien an oder versuchen Sie es später erneut.
+            </p>
+          </div>
+        )}
+        
+        {/* Paginierung */}
+        <div className="mt-4 flex items-center justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </CardContent>
     </Card>
   );
 }
