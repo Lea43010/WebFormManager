@@ -23,10 +23,6 @@ export default function AdminPage() {
         
         {isAdmin && (
           <div className="flex items-center space-x-2">
-            <Link href="/admin/users" className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
-                <Users className="h-4 w-4 mr-2" />
-                <span>Benutzerverwaltung</span>
-            </Link>
             <Link href="/admin/deployment-docs" className="flex items-center px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-md text-primary transition-colors">
                 <Settings className="h-4 w-4 mr-2" />
                 <span>Deployment</span>
@@ -39,7 +35,7 @@ export default function AdminPage() {
         <TabsList>
           <TabsTrigger value="users" className="flex items-center">
             <Users className="h-4 w-4 mr-2" />
-            Benutzer
+            Benutzerverwaltung
           </TabsTrigger>
           
           {isAdmin && (
@@ -70,13 +66,6 @@ export default function AdminPage() {
                 <a href="/admin/deployment-docs">
                   <FileCode className="h-4 w-4 mr-2" />
                   Deployment
-                </a>
-              </TabsTrigger>
-              
-              <TabsTrigger value="user-management" className="flex items-center" asChild>
-                <a href="/admin/users">
-                  <Users className="h-4 w-4 mr-2" />
-                  Benutzerverwaltung
                 </a>
               </TabsTrigger>
             </>
