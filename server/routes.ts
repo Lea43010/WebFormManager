@@ -2149,15 +2149,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Ablaufdatum der Testphase auf 4 Wochen nach Erstellung setzen
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 28); // 4 Wochen (28 Tage)
+      // Aktuelle Zeit für Registrierungsdatum
+      const now = new Date();
+      
+      // Ablaufdatum der Testphase auf 14 Tage nach Erstellung setzen (von 28 Tage auf 14 Tage reduziert)
+      const trialEndDate = new Date(now);
+      trialEndDate.setDate(trialEndDate.getDate() + 14); // 2 Wochen (14 Tage)
 
       // Passworthashing erfolgt in der storage.createUser Funktion
       const userData = {
         ...req.body,
         createdBy: req.user.id,
+        registrationDate: now, // Registrierungsdatum hinzufügen
         trialEndDate, // Ablaufdatum der Testphase hinzufügen
+        subscriptionStatus: 'trial', // Status auf "trial" setzen
       };
       
       const validatedData = insertUserSchema.parse(userData);
