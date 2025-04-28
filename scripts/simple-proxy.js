@@ -11,7 +11,7 @@ import { URL } from 'url';
 
 // Konfiguration
 const PORT = 9000;
-const TARGET_PORT = 5001;
+const TARGET_PORT = process.env.PORT || 5000; // Verwende den tatsächlichen Port des Servers
 const TARGET_HOST = 'localhost';
 
 // Einfacher Proxy-Server erstellen

@@ -868,7 +868,7 @@ export default function DeploymentDocs() {
                 </p>
                 <ul className="list-disc list-inside text-sm space-y-1 mt-2">
                   <li>Direkt unter <code>/docs/Benutzerhandbuch.md</code> im Projektverzeichnis</li>
-                  <li>In der App unter &quot;Hilfe&quot; &raquo; &quot;Benutzerhandbuch&quot;</li>
+                  <li>In der App unter &quot;Hilfe & Info&quot; &gt; &quot;Benutzerhandbuch&quot;</li>
                   <li>Als PDF-Download über den Link unten</li>
                 </ul>
               </div>
