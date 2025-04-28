@@ -158,6 +158,94 @@ export const generateStructuredPdf = (
 /**
  * Generiert ein PDF-Dokument zur EU-Konformität
  */
+/**
+ * Generiert ein PDF-Dokument aus dem Benutzerhandbuch
+ */
+export const generateUserManualPdf = async (): Promise<void> => {
+  try {
+    // Lade das Benutzerhandbuch als Text
+    const response = await fetch('/docs/Benutzerhandbuch.md');
+    if (!response.ok) {
+      throw new Error(`Fehler beim Laden des Benutzerhandbuchs: ${response.status}`);
+    }
+    
+    const manualText = await response.text();
+    
+    // Extrahiere Hauptabschnitte aus dem Markdown
+    const sections = parseMarkdownToSections(manualText);
+    
+    const title = "Benutzerhandbuch Bau - Structura App";
+    const currentDate = new Date().toLocaleDateString('de-DE');
+    
+    generateStructuredPdf(title, sections, "Bau-Structura-Benutzerhandbuch");
+  } catch (error) {
+    console.error('Fehler bei der Generierung des Benutzerhandbuch-PDFs:', error);
+  }
+};
+
+/**
+ * Hilfsfunktion zum Parsen des Markdown-Texts in strukturierte Abschnitte
+ */
+const parseMarkdownToSections = (markdownText: string): any[] => {
+  const sections: any[] = [];
+  const lines = markdownText.split('\n');
+  
+  let currentSection: any = null;
+  let currentSubsection: any = null;
+  let currentText = '';
+  
+  // Überspringe die ersten zwei Zeilen (Titel und Leerzeile)
+  for (let i = 2; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Hauptüberschrift (## Überschrift)
+    if (line.startsWith('## ')) {
+      // Speichere den vorherigen Abschnitt, falls vorhanden
+      if (currentSection) {
+        currentSection.text = currentText.trim();
+        sections.push(currentSection);
+      }
+      
+      // Starte einen neuen Abschnitt
+      currentSection = {
+        heading: line.substring(3),
+        text: '',
+        subsections: []
+      };
+      currentText = '';
+      
+    // Unterüberschrift (### Überschrift)
+    } else if (line.startsWith('### ')) {
+      // Speichere den aktuellen Text zum Hauptabschnitt
+      if (currentText.trim() && currentSection) {
+        currentSection.text = currentText.trim();
+        currentText = '';
+      }
+      
+      // Starte einen neuen Unterabschnitt
+      if (currentSection) {
+        currentSubsection = {
+          subheading: line.substring(4),
+          text: ''
+        };
+        currentSection.subsections.push(currentSubsection);
+      }
+      
+    // Normaler Text oder Listen - wird zum aktuellen Text hinzugefügt
+    } else {
+      currentText += line + '\n';
+    }
+  }
+  
+  // Füge den letzten Abschnitt hinzu, falls vorhanden
+  if (currentSection) {
+    currentSection.text = currentText.trim();
+    sections.push(currentSection);
+  }
+  
+  return sections;
+};
+
 export const generateCompliancePdf = (): void => {
   const currentDate = new Date().toLocaleDateString('de-DE');
   const title = "Bau-Structura App: Konformität mit EU Data Act und EU KI Act (Stand: April 2025)";

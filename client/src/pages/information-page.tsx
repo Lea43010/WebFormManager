@@ -518,7 +518,11 @@ export default function InformationPage() {
               <Button 
                 className="flex-1 flex items-center justify-center gap-2"
                 variant="outline" 
-                onClick={() => window.open("/docs/Benutzerhandbuch.md", "_blank")}
+                onClick={() => {
+                  import('@/utils/pdf-generator').then(module => {
+                    module.generateUserManualPdf();
+                  });
+                }}
               >
                 <Download className="h-4 w-4" />
                 Benutzerhandbuch herunterladen
