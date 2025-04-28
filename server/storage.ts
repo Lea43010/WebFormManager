@@ -185,6 +185,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
   
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users) as User[];
+  }
+  
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning() as User[];
     return user;
@@ -236,10 +240,6 @@ export class DatabaseStorage implements IStorage {
       console.error("Fehler beim Löschen des Benutzers:", error);
       throw new Error(`Fehler beim Löschen des Benutzers: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }
-  
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users) as User[];
   }
   
   async getProjectsByUser(userId: number): Promise<Project[]> {
