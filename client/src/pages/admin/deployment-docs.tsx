@@ -29,7 +29,7 @@ export default function DeploymentDocs() {
         </div>
         <div className="flex items-center space-x-2">
           <Info className="h-5 w-5 text-blue-500" />
-          <span className="text-sm text-muted-foreground">Zuletzt aktualisiert: {new Date().toLocaleDateString('de-DE')}</span>
+          <span className="text-sm text-muted-foreground">Zuletzt aktualisiert: 28.04.2025</span>
         </div>
       </div>
 
@@ -814,6 +814,77 @@ export default function DeploymentDocs() {
                   </p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="manual" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                Benutzerhandbuch
+              </CardTitle>
+              <CardDescription>
+                Umfassende Anleitung für Anwender der Bau-Structura App
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>
+                Das Benutzerhandbuch enthält detaillierte Anleitungen für alle Funktionen der Bau-Structura App.
+                Es ist sowohl für neue Benutzer als auch für erfahrene Anwender eine wichtige Ressource.
+              </p>
+              
+              <h3 className="text-lg font-semibold mt-4">Inhalt des Handbuchs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                <div className="bg-muted p-3 rounded-md">
+                  <h4 className="font-medium mb-2">Grundfunktionen</h4>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    <li>Anmeldung und Registrierung</li>
+                    <li>Dashboard-Übersicht</li>
+                    <li>Projektmanagement</li>
+                    <li>Bautagebuch</li>
+                    <li>Meilensteine</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-muted p-3 rounded-md">
+                  <h4 className="font-medium mb-2">Erweiterte Funktionen</h4>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    <li>Oberflächenanalyse</li>
+                    <li>Bedarfs- und Kapazitätsplanung</li>
+                    <li>Dokumenten-Management</li>
+                    <li>Administration</li>
+                    <li>Datensicherung</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md">
+                <p className="font-medium">Zugriff auf das Benutzerhandbuch</p>
+                <p className="text-sm mt-2">
+                  Das vollständige Benutzerhandbuch ist als Markdown-Dokument verfügbar und kann 
+                  über verschiedene Wege aufgerufen werden:
+                </p>
+                <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+                  <li>Direkt unter <code>/docs/Benutzerhandbuch.md</code> im Projektverzeichnis</li>
+                  <li>In der App unter &quot;Hilfe&quot; &raquo; &quot;Benutzerhandbuch&quot;</li>
+                  <li>Als PDF-Download über den Link unten</li>
+                </ul>
+              </div>
+              
+              <div className="flex justify-center mt-6">
+                <Button className="w-full md:w-auto">
+                  <a href="/docs/Benutzerhandbuch.md" target="_blank" className="flex items-center">
+                    Benutzerhandbuch öffnen
+                  </a>
+                </Button>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mt-4">
+                Das Handbuch wird regelmäßig aktualisiert, um neue Funktionen und Verbesserungen zu dokumentieren.
+                Die aktuelle Version ist vom 28.04.2025.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
