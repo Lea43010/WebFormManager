@@ -1401,28 +1401,28 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Benachrichtigungskanäle</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Legen Sie fest, wie Sie über GeoFence-Ereignisse informiert werden möchten:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Legen Sie fest, wie Sie über GeoFence-Ereignisse informiert werden möchten:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Push-Benachrichtigungen auf mobilen Endgeräten</li>
                         <li>E-Mail-Benachrichtigungen an definierte Empfänger</li>
                         <li>SMS-Benachrichtigungen für besonders wichtige Ereignisse</li>
                         <li>Automatische Einträge im Bautagebuch</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Automatisierte Aktionen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      GeoFence-Ereignisse können automatische Aktionen auslösen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>GeoFence-Ereignisse können automatische Aktionen auslösen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Status-Änderungen in Projekten oder Aufgaben</li>
                         <li>Automatisches Ein-/Auschecken zur Zeiterfassung</li>
                         <li>Dokumente zum Unterschreiben bereitstellen</li>
                         <li>Checklisten für bestimmte Baustellen/Bereiche öffnen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1457,30 +1457,32 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Erfassungsmethoden</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die App ermöglicht die systematische Erfassung von Straßenzuständen durch:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die App ermöglicht die systematische Erfassung von Straßenzuständen durch:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Foto-Upload mit automatischer GPS-Verortung</li>
                         <li>KI-gestützte Schadensanalyse mit Erkennung von Rissen, Schlaglöchern etc.</li>
                         <li>Manuelle Bewertungsskala (1-5) mit strukturierten Eingabefeldern</li>
                         <li>Spracherkennung für schnelle Schadensbeschreibungen</li>
                       </ul>
-                      Alle Erfassungen werden automatisch auf der Karte visualisiert und können
-                      nach Schadenstyp, Schweregrad oder Erfassungsdatum gefiltert werden.
-                    </p>
+                      <div className="mt-2">
+                        Alle Erfassungen werden automatisch auf der Karte visualisiert und können
+                        nach Schadenstyp, Schweregrad oder Erfassungsdatum gefiltert werden.
+                      </div>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Mobile Datenerfassung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Für die Arbeit vor Ort bietet die mobile Version:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Für die Arbeit vor Ort bietet die mobile Version:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Offline-Funktionalität für Gebiete ohne Mobilfunkabdeckung</li>
                         <li>Schnellerfassung per Kamera mit automatischer Positionierung</li>
                         <li>Vorausfüllung von Metadaten basierend auf der Position</li>
                         <li>Sprachsteuerung für freihändige Bedienung</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1495,22 +1497,22 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Klassifikationssystem</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die erfassten Daten werden gemäß aktueller Normen wie ZTV BEA-StB oder ZTV Asphalt-StB
-                      klassifiziert. Dies umfasst:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die erfassten Daten werden gemäß aktueller Normen wie ZTV BEA-StB oder ZTV Asphalt-StB
+                      klassifiziert. Dies umfasst:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Systematische Erfassung von Oberflächenschäden nach Typ und Ausmaß</li>
                         <li>Berechnung standardisierter Zustandsindizes</li>
                         <li>Einstufung in Zustandsklassen von 1 (sehr gut) bis 5 (sehr schlecht)</li>
                         <li>Normgerechte Dokumentation für behördliche Anforderungen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Schadenstypen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Das System unterscheidet zwischen verschiedenen Schadenstypen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Das System unterscheidet zwischen verschiedenen Schadenstypen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Risse (Netzrisse, Längsrisse, Querrisse)</li>
                         <li>Verformungen (Spurrinnen, Aufwölbungen, Setzungen)</li>
@@ -1518,7 +1520,7 @@ export default function InformationPage() {
                         <li>Oberflächenschäden (Kornausbruch, Bindemittelverlust)</li>
                         <li>Flickstellen und Aufgrabungen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1533,28 +1535,28 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Automatische Empfehlungen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Basierend auf der Zustandserfassung generiert die App automatisch Instandsetzungsvorschläge:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Basierend auf der Zustandserfassung generiert die App automatisch Instandsetzungsvorschläge:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Angepasste Sanierungsempfehlungen je nach Schadenstyp und -ausmaß</li>
                         <li>Kostenprognosen für verschiedene Sanierungsvarianten</li>
                         <li>Priorisierungsvorschläge basierend auf Schadensrelevanz und Verkehrsbelastung</li>
                         <li>Exportmöglichkeit für Ausschreibungsunterlagen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Maßnahmentypen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die App unterscheidet zwischen verschiedenen Maßnahmentypen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die App unterscheidet zwischen verschiedenen Maßnahmentypen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Oberflächenbehandlung (Versiegelung, dünne Schichten)</li>
                         <li>Deckenerneuerung (Fräsen und Neuasphaltierung der obersten Schicht)</li>
                         <li>Vollausbau (kompletter Austausch des Straßenaufbaus)</li>
                         <li>Lokale Reparatur (punktuelle Instandsetzung)</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1569,29 +1571,31 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Zeitliche Entwicklung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Besonders wertvoll ist die Möglichkeit, Straßenzustände über Zeit zu verfolgen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Besonders wertvoll ist die Möglichkeit, Straßenzustände über Zeit zu verfolgen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Zeitreihenanalyse mit grafischer Darstellung der Zustandsentwicklung</li>
                         <li>Vergleichsansicht "vorher/nachher" mit Bildmaterial</li>
                         <li>Prognosemodelle zur Abschätzung der weiteren Zustandsentwicklung</li>
                         <li>Langzeitdokumentation für Gewährleistungsfragen</li>
                       </ul>
-                      Dies ermöglicht eine vorausschauende Erhaltungsplanung und optimierte Budgetallokation.
-                    </p>
+                      <div className="mt-2">
+                        Dies ermöglicht eine vorausschauende Erhaltungsplanung und optimierte Budgetallokation.
+                      </div>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Lebenszyklus-Management</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die App unterstützt das Management des gesamten Lebenszyklus:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die App unterstützt das Management des gesamten Lebenszyklus:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Erfassung der ursprünglichen Bauart und Baujahr</li>
                         <li>Dokumentation aller Instandsetzungsmaßnahmen</li>
                         <li>Berechnung der Restnutzungsdauer</li>
                         <li>Optimaler Zeitpunkt für präventive Instandhaltung</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
