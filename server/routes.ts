@@ -15,6 +15,7 @@ import { setupBackupRoutes } from "./backup";
 import { setupStripeRoutes } from "./stripe-routes";
 import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
+import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
@@ -55,6 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Aktivitätsprotokoll-Routen einrichten
   setupActivityLogRoutes(app);
+  
+  // Login-Protokoll-Routen einrichten
+  setupLoginLogsRoutes(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {

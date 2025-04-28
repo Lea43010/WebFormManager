@@ -47,10 +47,20 @@ export function LoginLogsManagement() {
   const [successFilter, setSuccessFilter] = useState<string | null>(null);
 
   // Daten abrufen
-  const { data: logs, isLoading, refetch } = useQuery<LoginLog[]>({
-    queryKey: ['/api/login-logs'],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['/api/admin/login-logs'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/login-logs');
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen der Login-Logs');
+      }
+      return response.json();
+    },
     refetchInterval: 60000, // Alle 60 Sekunden automatisch aktualisieren
   });
+  
+  // Extrahiere die Logs aus der Antwort
+  const logs = data?.logs || [];
 
   // Daten filtern
   const filteredLogs = logs?.filter((log) => {

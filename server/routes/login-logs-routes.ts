@@ -25,7 +25,7 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
 async function getLoginLogs(
   limit: number = 100, 
   offset: number = 0, 
-  filters: any = {}
+  filters: Record<string, any> = {}
 ): Promise<any[]> {
   try {
     // Basisabfrage
@@ -47,7 +47,7 @@ async function getLoginLogs(
 /**
  * Anzahl der Login-Logs abfragen für Paginierung
  */
-async function countLoginLogs(filters: any = {}): Promise<number> {
+async function countLoginLogs(filters: Record<string, any> = {}): Promise<number> {
   try {
     // Basisabfrage für die Gesamtanzahl
     const countQuery = sql`SELECT COUNT(*) FROM tbllogin_logs`;
