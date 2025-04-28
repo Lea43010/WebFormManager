@@ -39,7 +39,7 @@ export default function DeploymentDocs() {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-4xl">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="environments">Umgebungen</TabsTrigger>
           <TabsTrigger value="tools">Tools</TabsTrigger>
@@ -49,6 +49,7 @@ export default function DeploymentDocs() {
             Tests
           </TabsTrigger>
           <TabsTrigger value="troubleshooting">Fehlerbehebung</TabsTrigger>
+          <TabsTrigger value="manual">Anleitung</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

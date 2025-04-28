@@ -1,0 +1,293 @@
+# Benutzerhandbuch Bau - Structura App
+
+## Inhaltsverzeichnis
+
+1. [Einführung](#einführung)
+2. [Anmeldung und Registrierung](#anmeldung-und-registrierung)
+3. [Hauptfunktionen](#hauptfunktionen)
+   - [Dashboard](#dashboard)
+   - [Projekte verwalten](#projekte-verwalten)
+   - [Bautagebuch](#bautagebuch)
+   - [Meilensteine](#meilensteine)
+   - [Oberflächenanalyse](#oberflächenanalyse)
+   - [Bedarfs- und Kapazitätsplanung](#bedarfs--und-kapazitätsplanung)
+   - [Dokumenten-Management](#dokumenten-management)
+4. [Administration](#administration)
+   - [Benutzerverwaltung](#benutzerverwaltung)
+   - [System-Logs](#system-logs)
+   - [Testphasen-Management](#testphasen-management)
+   - [Datensicherung](#datensicherung)
+   - [Datenqualität](#datenqualität)
+5. [Häufig gestellte Fragen (FAQ)](#häufig-gestellte-fragen-faq)
+6. [Support und Kontakt](#support-und-kontakt)
+
+## Einführung
+
+Die Bau - Structura App ist eine umfassende Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. Sie bietet moderne Werkzeuge für Projektmanagement, Dokumentation, Analyse und Planung und ist speziell auf die Bedürfnisse der Baubranche zugeschnitten.
+
+### Systemanforderungen
+
+- **Browser**: Moderne Browser wie Chrome, Firefox, Edge oder Safari
+- **Endgeräte**: Unterstützung für Desktop-PCs, Tablets und Smartphones
+- **Internet**: Stabile Internetverbindung
+
+## Anmeldung und Registrierung
+
+### Erste Anmeldung
+
+1. Öffnen Sie die Anwendung in Ihrem Browser
+2. Geben Sie Ihre Zugangsdaten (Benutzername und Passwort) ein
+3. Bei erstmaliger Anmeldung werden Sie aufgefordert, Ihr Passwort zu ändern
+4. Akzeptieren Sie die Datenschutzerklärung (DSGVO-Einwilligung)
+
+### Passwort vergessen
+
+1. Klicken Sie auf der Login-Seite auf "Passwort vergessen"
+2. Geben Sie Ihren Benutzernamen oder Ihre E-Mail-Adresse ein
+3. Sie erhalten einen Wiederherstellungscode per SMS
+4. Geben Sie den Code ein und setzen Sie ein neues Passwort
+
+## Hauptfunktionen
+
+### Dashboard
+
+Das Dashboard bietet eine Übersicht über:
+
+- Aktuelle Projekte mit Status
+- Anstehende Termine und Meilensteine
+- Neueste Bautagebuch-Einträge
+- Schnellzugriff auf häufig verwendete Funktionen
+
+### Projekte verwalten
+
+#### Neues Projekt anlegen
+
+1. Klicken Sie auf "Neues Projekt" im Dashboard
+2. Füllen Sie die Pflichtfelder aus:
+   - Projektname
+   - Projektart (Straßenbau, Tiefbau, etc.)
+   - Startdatum und geplantes Enddatum
+   - Kunde (auswählen oder neu anlegen)
+3. Zusätzliche Informationen (optional):
+   - Projektstandort mit Geodaten
+   - Projektbeschreibung
+   - Fotos oder Dokumente
+4. Klicken Sie auf "Speichern"
+
+#### Projekt bearbeiten
+
+1. Öffnen Sie das Projekt aus der Projektliste
+2. Wählen Sie "Bearbeiten"
+3. Aktualisieren Sie die gewünschten Informationen
+4. Speichern Sie die Änderungen
+
+#### Projektdetails
+
+Auf der Projektdetailseite finden Sie:
+
+- Allgemeine Projektinformationen
+- Zugehörige Kunden und Unternehmen
+- Verknüpfte Dokumente
+- Bautagebuch-Einträge
+- Meilensteine und Termine
+- Oberflächenanalysen
+
+### Bautagebuch
+
+Das digitale Bautagebuch ist das zentrale Dokumentationstool der App. Hier werden alle Aktivitäten auf der Baustelle dokumentiert.
+
+#### Neuen Eintrag erstellen
+
+1. Wählen Sie das entsprechende Projekt
+2. Gehen Sie zum Reiter "Bautagebuch"
+3. Klicken Sie auf "Neuer Eintrag"
+4. Füllen Sie die Felder aus:
+   - Datum
+   - Mitarbeiter
+   - Aktivität/Tätigkeit
+   - Arbeitsbeginn und -ende
+   - Arbeitsstunden (wird automatisch berechnet)
+   - Materialverwendung (optional)
+   - Bemerkungen (optional)
+   - Vorfalltyp (bei besonderen Ereignissen)
+5. Speichern Sie den Eintrag
+
+#### Einträge anzeigen und filtern
+
+- Alle Einträge werden chronologisch angezeigt
+- Nutzen Sie die Filterfunktion nach Datum, Mitarbeiter oder Aktivität
+- Exportieren Sie Einträge als PDF oder Excel für Berichterstellung
+
+### Meilensteine
+
+Die Meilenstein-Funktion hilft bei der Terminplanung und Projektverfolgung.
+
+#### Meilensteine erstellen
+
+1. Gehen Sie zum Reiter "Meilensteine" im Projekt
+2. Klicken Sie auf "Neuer Meilenstein"
+3. Definieren Sie:
+   - Name des Meilensteins
+   - Start-Kalenderwoche
+   - End-Kalenderwoche
+   - Jahr
+   - Farbe (für visuelle Unterscheidung)
+   - Typ
+   - EWB/FÖB-Zuordnung
+   - Bauphase
+   - Sollmenge
+4. Speichern Sie den Meilenstein
+
+#### Meilensteindetails bearbeiten
+
+- Klicken Sie auf einen Meilenstein, um Details zu bearbeiten
+- Fügen Sie wöchentliche Detailinformationen hinzu
+- Aktualisieren Sie den Status
+
+### Oberflächenanalyse
+
+Die KI-gestützte Oberflächenanalyse ermöglicht die Bewertung von Asphalt- und Bodenflächen.
+
+#### Neue Analyse erstellen
+
+1. Gehen Sie zum Reiter "Oberflächenanalyse"
+2. Klicken Sie auf "Neue Analyse"
+3. Wählen Sie den Analysetyp (Asphalt oder Boden)
+4. Erfassen Sie:
+   - Standort (manuell oder über GPS)
+   - Foto (über Kamera oder Upload)
+5. Die KI analysiert das Bild und bestimmt:
+   - Bei Asphalt: Belastungsklasse und Asphalttyp
+   - Bei Boden: Bodenklasse und Tragfähigkeitsklasse
+6. Überprüfen Sie die Ergebnisse und speichern Sie die Analyse
+
+#### Analyseergebnisse
+
+Die Ergebnisse zeigen:
+- Visuelle Darstellung mit Markierungen
+- Technische Details zur Oberfläche
+- Empfehlungen für die Bauausführung
+
+### Bedarfs- und Kapazitätsplanung
+
+Diese Funktion unterstützt die Ressourcenplanung für Projekte.
+
+#### Ressourcenplanung erstellen
+
+1. Wählen Sie das Projekt aus
+2. Gehen Sie zum Reiter "Bedarfs- und Kapazitätsplanung"
+3. Klicken Sie auf "Neuer Eintrag"
+4. Definieren Sie:
+   - Ressourcenname
+   - Benötigte Anzahl
+   - Kalenderwoche
+   - Jahr
+5. Speichern Sie den Eintrag
+
+#### Ressourcenübersicht
+
+- Sehen Sie die Ressourcenauslastung über Wochen hinweg
+- Identifizieren Sie Engpässe
+- Planen Sie vorausschauend
+
+### Dokumenten-Management
+
+Verwalten Sie alle projektbezogenen Dokumente zentral.
+
+#### Dokument hochladen
+
+1. Gehen Sie zum Reiter "Dokumente" im Projekt
+2. Klicken Sie auf "Dokument hochladen"
+3. Wählen Sie eine Datei aus
+4. Fügen Sie Metadaten hinzu:
+   - Beschreibung
+   - Kategorie (Pläne, Verträge, Fotos, etc.)
+   - Tags für bessere Auffindbarkeit
+5. Laden Sie die Datei hoch
+
+#### Dokumente organisieren
+
+- Nutzen Sie die KI-gestützte Kategorisierungsvorschläge
+- Suchen Sie nach Dokumenten mit Volltextsuche
+- Filtern Sie nach Kategorien und Tags
+
+## Administration
+
+### Benutzerverwaltung
+
+#### Benutzer anlegen (nur für Administratoren)
+
+1. Gehen Sie zur "Administration"
+2. Wählen Sie "Benutzerverwaltung"
+3. Klicken Sie auf "Neuer Benutzer"
+4. Füllen Sie die Benutzerinformationen aus:
+   - Benutzername
+   - Name
+   - E-Mail
+   - Rolle (Benutzer, Manager, Administrator)
+5. Der Benutzer erhält eine E-Mail mit Zugangsdaten
+
+#### Benutzer bearbeiten
+
+- Ändern Sie Benutzerinformationen
+- Setzen Sie Passwörter zurück
+- Deaktivieren Sie Benutzerkonten bei Bedarf
+
+### System-Logs
+
+Im Bereich System-Logs können Administratoren die Aktivitäten in der Anwendung überwachen:
+
+- **Login-Logs**: Anmeldeversuche und -erfolge
+- **Aktivitäts-Logs**: Wichtige Systemaktionen wie Änderungen an Projekten oder Benutzern
+
+### Testphasen-Management
+
+Administratoren können Testphasen für neue Benutzer verwalten:
+
+- Übersicht über aktuelle Testphasen
+- Manuelles Senden von Benachrichtigungen
+- Umstellung von Testphasen auf aktive Abonnements
+
+### Datensicherung
+
+Der Datensicherungsbereich ermöglicht:
+
+- Einsicht in automatische tägliche Backups
+- Manuelles Erstellen von Backups
+- Wiederherstellung aus Backups bei Bedarf
+
+### Datenqualität
+
+Die Datenqualitätsprüfung zeigt:
+
+- Strukturprüfung der Datenbank
+- Konsistenzprüfungen
+- Verbesserungsvorschläge
+
+## Häufig gestellte Fragen (FAQ)
+
+### Allgemein
+
+**F: Wie kann ich mein Passwort ändern?**  
+A: Klicken Sie auf Ihren Benutzernamen in der oberen rechten Ecke und wählen Sie "Profil". Dort können Sie Ihr Passwort ändern.
+
+**F: Ist die App auf mobilen Geräten nutzbar?**  
+A: Ja, die Bau - Structura App ist responsiv gestaltet und funktioniert auf Smartphones und Tablets.
+
+### Technische Fragen
+
+**F: Meine Seite lädt nicht richtig. Was kann ich tun?**  
+A: Versuchen Sie, Ihren Browser-Cache zu leeren und die Seite neu zu laden. Falls das Problem weiterhin besteht, kontaktieren Sie den Support.
+
+**F: Kann ich Daten aus der App exportieren?**  
+A: Ja, viele Bereiche bieten Export-Funktionen für PDF, Excel oder CSV.
+
+## Support und Kontakt
+
+Bei Fragen oder Problemen stehen wir Ihnen gerne zur Verfügung:
+
+- **E-Mail**: support@bau-structura.de
+- **Telefon**: +49 (0) 123 456789
+- **Geschäftszeiten**: Mo-Fr 8:00 - 17:00 Uhr
+
+Für Feature-Anfragen oder Feedback nutzen Sie bitte die Feedback-Funktion in der App oder kontaktieren Sie direkt unseren Support.
