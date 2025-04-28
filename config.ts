@@ -90,6 +90,12 @@ const email = {
     passwordReset: {
       templateId: isProduction ? 'prod-template-id-3' : 'dev-template-id-3',
     },
+    trialEnding: {
+      templateId: isProduction ? 'prod-template-id-4' : 'dev-template-id-4',
+    },
+    trialEnded: {
+      templateId: isProduction ? 'prod-template-id-5' : 'dev-template-id-5',
+    },
   },
 };
 
