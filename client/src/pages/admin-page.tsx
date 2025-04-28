@@ -3,8 +3,9 @@ import { UserManagement } from "@/components/admin/user-management";
 import BackupManagement from "@/components/admin/backup-management";
 import { DataQualityManagement } from "@/components/admin/data-quality-management";
 import { SystemLogs } from "@/components/admin/system-logs";
+import TrialManagement from "@/components/admin/trial-management";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Database, BarChart, Settings, FileCode, Mail, ActivityIcon } from 'lucide-react';
+import { ShieldAlert, Users, Database, BarChart, Settings, FileCode, Mail, ActivityIcon, Clock } from 'lucide-react';
 import { Link } from "wouter";
 
 export default function AdminPage() {
@@ -43,6 +44,11 @@ export default function AdminPage() {
               <TabsTrigger value="systemlogs" className="flex items-center">
                 <ActivityIcon className="h-4 w-4 mr-2" />
                 System-Logs
+              </TabsTrigger>
+              
+              <TabsTrigger value="trials" className="flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                Testphasen
               </TabsTrigger>
               
               <TabsTrigger value="backups" className="flex items-center">

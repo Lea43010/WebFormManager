@@ -3080,6 +3080,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.resolve('public/db-structure-quality-debug.html'));
   });
 
+  // API-Routen für Testphasen-Benachrichtigungen
+  app.post("/api/admin/trial/send-ending-notifications", checkAdminRole, async (req, res) => {
+    try {
+      const daysBeforeExpiry = parseInt(req.body.daysBeforeExpiry || "3", 10);
+      logger.info(`Manuelle Anforderung zum Senden von Testphasen-Ablauf-Benachrichtigungen (${daysBeforeExpiry} Tage vor Ablauf)`);
+      
+      const sentCount = await trialEmailService.sendTrialEndingNotifications(daysBeforeExpiry);
+      
+      res.json({
+        success: true,
+        message: `${sentCount} Benachrichtigungen zu auslaufenden Testphasen wurden gesendet`,
+        count: sentCount
+      });
+    } catch (error) {
+      logger.error("Fehler beim Senden von Testphasen-Ablauf-Benachrichtigungen:", error);
+      res.status(500).json({
+        success: false,
+        message: "Fehler beim Senden von Testphasen-Benachrichtigungen"
+      });
+    }
+  });
+
+  app.post("/api/admin/trial/send-ended-notifications", checkAdminRole, async (req, res) => {
+    try {
+      const daysAfterExpiry = parseInt(req.body.daysAfterExpiry || "1", 10);
+      logger.info(`Manuelle Anforderung zum Senden von abgelaufenen Testphasen-Benachrichtigungen (${daysAfterExpiry} Tage nach Ablauf)`);
+      
+      const sentCount = await trialEmailService.sendTrialEndedNotifications(daysAfterExpiry);
+      
+      res.json({
+        success: true,
+        message: `${sentCount} Benachrichtigungen zu abgelaufenen Testphasen wurden gesendet`,
+        count: sentCount
+      });
+    } catch (error) {
+      logger.error("Fehler beim Senden von Benachrichtigungen zu abgelaufenen Testphasen:", error);
+      res.status(500).json({
+        success: false,
+        message: "Fehler beim Senden von Benachrichtigungen zu abgelaufenen Testphasen"
+      });
+    }
+  });
+
+  // Endpoint zum Überprüfen des Trial-Status aller Benutzer
+  app.get("/api/admin/trial/status", checkAdminRole, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      
+      // Analysiere den Trial-Status für alle Benutzer
+      const now = new Date();
+      const trialStatus = users.map(user => {
+        const trialEndDate = user.trialEndDate ? new Date(user.trialEndDate) : null;
+        let status = "unbekannt";
+        let daysRemaining = null;
+        
+        if (trialEndDate) {
+          if (trialEndDate > now) {
+            status = "aktiv";
+            const diffTime = trialEndDate.getTime() - now.getTime();
+            daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          } else {
+            status = "abgelaufen";
+            const diffTime = now.getTime() - trialEndDate.getTime();
+            daysRemaining = -Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          }
+        }
+        
+        return {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          registrationDate: user.registrationDate,
+          trialEndDate: user.trialEndDate,
+          status,
+          daysRemaining,
+          subscriptionStatus: user.subscriptionStatus || "keine"
+        };
+      });
+      
+      res.json({
+        success: true,
+        data: trialStatus
+      });
+    } catch (error) {
+      logger.error("Fehler beim Abrufen der Testphasen-Status:", error);
+      res.status(500).json({
+        success: false,
+        message: "Fehler beim Abrufen der Testphasen-Status"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
