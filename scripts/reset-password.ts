@@ -64,7 +64,16 @@ async function sendPasswordResetEmail(userEmail: string, userName: string, userU
           <p><strong>Benutzername:</strong> ${userUsername}</p>
           <p><strong>Temporäres Passwort:</strong> ${tempPassword}</p>
         </div>
-        <p>Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.</p>
+        <p>Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung. So geht's:</p>
+        <ol style="margin-top: 15px; margin-bottom: 25px; padding-left: 20px;">
+          <li>Melden Sie sich mit dem temporären Passwort an</li>
+          <li>Klicken Sie rechts oben auf Ihren Namen oder Ihr Benutzerbild</li>
+          <li>Wählen Sie "Profil" im Dropdown-Menü</li>
+          <li>Scrollen Sie zum Abschnitt "Passwort ändern"</li>
+          <li>Geben Sie Ihr aktuelles temporäres Passwort ein</li>
+          <li>Geben Sie Ihr neues Wunschpasswort zweimal ein</li>
+          <li>Klicken Sie auf "Passwort ändern", um die Änderung zu speichern</li>
+        </ol>
         <p style="margin-top: 30px;">
           <a href="https://bau-structura.de" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
             Zur Anmeldung
@@ -87,7 +96,15 @@ Ihr Passwort für die Bau-Structura App wurde zurückgesetzt. Sie können sich m
 Benutzername: ${userUsername}
 Temporäres Passwort: ${tempPassword}
 
-Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.
+Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung. So geht's:
+
+1. Melden Sie sich mit dem temporären Passwort an
+2. Klicken Sie rechts oben auf Ihren Namen oder Ihr Benutzerbild
+3. Wählen Sie "Profil" im Dropdown-Menü
+4. Scrollen Sie zum Abschnitt "Passwort ändern"
+5. Geben Sie Ihr aktuelles temporäres Passwort ein
+6. Geben Sie Ihr neues Wunschpasswort zweimal ein
+7. Klicken Sie auf "Passwort ändern", um die Änderung zu speichern
 
 Anmelde-URL: https://bau-structura.de
     `;
