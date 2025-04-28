@@ -4,7 +4,8 @@
  */
 
 import { Request } from 'express';
-import { pool } from './db';
+import { db } from './db';
+import { sql } from 'drizzle-orm';
 
 // Typen für die Aktivitätsprotokolle
 export enum ActionType {
@@ -35,23 +36,13 @@ export async function logActivity(data: ActivityLogData): Promise<void> {
   try {
     const { userId, component, actionType, entityType, entityId, details, ipAddress } = data;
     
-    const query = `
+    // Direkte SQL-Ausführung mit Drizzle
+    await db.execute(sql`
       INSERT INTO tblactivity_logs 
       (user_id, component, action_type, entity_type, entity_id, details, ip_address)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `;
-    
-    const values = [
-      userId,
-      component,
-      actionType,
-      entityType,
-      entityId || null,
-      details ? JSON.stringify(details) : null,
-      ipAddress || null
-    ];
-    
-    await pool.query(query, values);
+      VALUES (${userId}, ${component}, ${actionType}, ${entityType}, ${entityId || null}, 
+              ${details ? JSON.stringify(details) : null}, ${ipAddress || null})
+    `);
     
     console.log(`[ActivityLogger] ${actionType} auf ${component} (${entityType} ID: ${entityId}) durch Benutzer ${userId}`);
   } catch (error) {
@@ -86,46 +77,35 @@ export async function getActivityLogs(
   }> = {}
 ): Promise<any[]> {
   try {
-    // Wir bauen die WHERE-Bedingungen und Parameter dynamisch auf
-    let conditions: string[] = [];
-    let params: any[] = [limit, offset];
-    let paramIndex = 3; // Beginnen mit dem dritten Parameter ($3)
+    // Dynamisch erstellte WHERE-Kondition
+    let whereConditions = [];
     
     if (filters.userId !== undefined) {
-      conditions.push(`user_id = $${paramIndex++}`);
-      params.push(filters.userId);
+      whereConditions.push(sql`al.user_id = ${filters.userId}`);
     }
     
     if (filters.component) {
-      conditions.push(`component = $${paramIndex++}`);
-      params.push(filters.component);
+      whereConditions.push(sql`al.component = ${filters.component}`);
     }
     
     if (filters.actionType) {
-      conditions.push(`action_type = $${paramIndex++}`);
-      params.push(filters.actionType);
+      whereConditions.push(sql`al.action_type = ${filters.actionType}`);
     }
     
     if (filters.entityType) {
-      conditions.push(`entity_type = $${paramIndex++}`);
-      params.push(filters.entityType);
+      whereConditions.push(sql`al.entity_type = ${filters.entityType}`);
     }
     
     if (filters.dateFrom) {
-      conditions.push(`created_at >= $${paramIndex++}`);
-      params.push(filters.dateFrom);
+      whereConditions.push(sql`al.created_at >= ${filters.dateFrom}`);
     }
     
     if (filters.dateTo) {
-      conditions.push(`created_at <= $${paramIndex++}`);
-      params.push(filters.dateTo);
+      whereConditions.push(sql`al.created_at <= ${filters.dateTo}`);
     }
     
-    const whereClause = conditions.length > 0 
-      ? `WHERE ${conditions.join(' AND ')}` 
-      : '';
-    
-    const query = `
+    // Basisabfrage ohne WHERE-Klausel
+    let baseQuery = sql`
       SELECT 
         al.id, 
         al.user_id, 
@@ -140,13 +120,20 @@ export async function getActivityLogs(
         al.ip_address
       FROM tblactivity_logs al
       LEFT JOIN tbluser u ON al.user_id = u.id
-      ${whereClause}
-      ORDER BY al.created_at DESC
-      LIMIT $1 OFFSET $2
     `;
     
-    const result = await pool.query(query, params);
-    return result.rows;
+    // WHERE-Klausel hinzufügen, wenn Filter vorhanden sind
+    if (whereConditions.length > 0) {
+      const whereClause = sql.join(whereConditions, sql` AND `);
+      baseQuery = sql`${baseQuery} WHERE ${whereClause}`;
+    }
+    
+    // Sortierung und Limit hinzufügen
+    const query = sql`${baseQuery} ORDER BY al.created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+    
+    // Ausführen der Abfrage
+    const result = await db.execute(query);
+    return result as any[];
   } catch (error) {
     console.error('Fehler beim Abrufen der Aktivitätsprotokolle:', error);
     throw error;
@@ -167,53 +154,45 @@ export async function countActivityLogs(
   }> = {}
 ): Promise<number> {
   try {
-    // Wir bauen die WHERE-Bedingungen und Parameter dynamisch auf
-    let conditions: string[] = [];
-    let params: any[] = [];
-    let paramIndex = 1;
+    // Dynamisch erstellte WHERE-Kondition
+    let whereConditions = [];
     
     if (filters.userId !== undefined) {
-      conditions.push(`user_id = $${paramIndex++}`);
-      params.push(filters.userId);
+      whereConditions.push(sql`user_id = ${filters.userId}`);
     }
     
     if (filters.component) {
-      conditions.push(`component = $${paramIndex++}`);
-      params.push(filters.component);
+      whereConditions.push(sql`component = ${filters.component}`);
     }
     
     if (filters.actionType) {
-      conditions.push(`action_type = $${paramIndex++}`);
-      params.push(filters.actionType);
+      whereConditions.push(sql`action_type = ${filters.actionType}`);
     }
     
     if (filters.entityType) {
-      conditions.push(`entity_type = $${paramIndex++}`);
-      params.push(filters.entityType);
+      whereConditions.push(sql`entity_type = ${filters.entityType}`);
     }
     
     if (filters.dateFrom) {
-      conditions.push(`created_at >= $${paramIndex++}`);
-      params.push(filters.dateFrom);
+      whereConditions.push(sql`created_at >= ${filters.dateFrom}`);
     }
     
     if (filters.dateTo) {
-      conditions.push(`created_at <= $${paramIndex++}`);
-      params.push(filters.dateTo);
+      whereConditions.push(sql`created_at <= ${filters.dateTo}`);
     }
     
-    const whereClause = conditions.length > 0 
-      ? `WHERE ${conditions.join(' AND ')}` 
-      : '';
+    // Basisabfrage ohne WHERE-Klausel
+    let countQuery = sql`SELECT COUNT(*) as total FROM tblactivity_logs`;
     
-    const query = `
-      SELECT COUNT(*) as total
-      FROM tblactivity_logs
-      ${whereClause}
-    `;
+    // WHERE-Klausel hinzufügen, wenn Filter vorhanden sind
+    if (whereConditions.length > 0) {
+      const whereClause = sql.join(whereConditions, sql` AND `);
+      countQuery = sql`${countQuery} WHERE ${whereClause}`;
+    }
     
-    const result = await pool.query(query, params);
-    return parseInt(result.rows[0].total, 10);
+    // Ausführen der Abfrage
+    const result = await db.execute(countQuery);
+    return parseInt((result[0] as any).total, 10);
   } catch (error) {
     console.error('Fehler beim Zählen der Aktivitätsprotokolle:', error);
     throw error;
@@ -225,14 +204,13 @@ export async function countActivityLogs(
  */
 export async function getDistinctComponents(): Promise<string[]> {
   try {
-    const query = `
+    const result = await db.execute(sql`
       SELECT DISTINCT component 
       FROM tblactivity_logs 
       ORDER BY component
-    `;
+    `);
     
-    const result = await pool.query(query);
-    return result.rows.map(row => row.component);
+    return (result as any[]).map(row => row.component);
   } catch (error) {
     console.error('Fehler beim Abrufen der Komponenten:', error);
     throw error;
@@ -244,14 +222,13 @@ export async function getDistinctComponents(): Promise<string[]> {
  */
 export async function getDistinctEntityTypes(): Promise<string[]> {
   try {
-    const query = `
+    const result = await db.execute(sql`
       SELECT DISTINCT entity_type 
       FROM tblactivity_logs 
       ORDER BY entity_type
-    `;
+    `);
     
-    const result = await pool.query(query);
-    return result.rows.map(row => row.entity_type);
+    return (result as any[]).map(row => row.entity_type);
   } catch (error) {
     console.error('Fehler beim Abrufen der Entitätstypen:', error);
     throw error;

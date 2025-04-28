@@ -52,6 +52,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // E-Mail-Routen einrichten
   registerEmailRoutes(app);
   
+  // Aktivitätsprotokoll-Routen einrichten
+  setupActivityLogRoutes(app);
+  
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
