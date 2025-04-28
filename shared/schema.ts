@@ -30,6 +30,7 @@ export const users = pgTable("tbluser", {
   createdBy: integer("created_by").references(() => users.id),
   gdprConsent: boolean("gdpr_consent").default(false),
   // Neue Felder für das Abonnement-System
+  registrationDate: timestamp("registration_date"),
   trialEndDate: timestamp("trial_end_date"),
   subscriptionStatus: varchar("subscription_status", { length: 50 }).default('trial'),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),

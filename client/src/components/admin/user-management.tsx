@@ -4,6 +4,8 @@ import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { InsertUser, User } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
+import { format, isValid } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 // UI-Komponenten
 import {
@@ -345,6 +347,9 @@ export function UserManagement() {
               <TableHead>Name</TableHead>
               <TableHead>E-Mail</TableHead>
               <TableHead>Rolle</TableHead>
+              <TableHead>Registriert am</TableHead>
+              <TableHead>Testphase bis</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>DSGVO</TableHead>
               {user.role === 'administrator' && <TableHead className="text-right">Aktionen</TableHead>}
             </TableRow>
@@ -366,6 +371,50 @@ export function UserManagement() {
                     {userData.role}
                   </span>
                 </TableCell>
+                
+                {/* Registrierungsdatum */}
+                <TableCell>
+                  {userData.registrationDate ? (
+                    isValid(new Date(userData.registrationDate)) ? 
+                      format(new Date(userData.registrationDate), 'dd.MM.yyyy', { locale: de }) : 
+                      'Unbekannt'
+                  ) : (
+                    'Nicht gesetzt'
+                  )}
+                </TableCell>
+                
+                {/* Testphase-Enddatum */}
+                <TableCell>
+                  {userData.trialEndDate ? (
+                    isValid(new Date(userData.trialEndDate)) ? (
+                      <span className={`
+                        font-mono 
+                        ${new Date(userData.trialEndDate) < new Date() ? 'text-red-600' : 'text-green-600'}
+                      `}>
+                        {format(new Date(userData.trialEndDate), 'dd.MM.yyyy', { locale: de })}
+                      </span>
+                    ) : 'Ungültiges Datum'
+                  ) : (
+                    'Nicht gesetzt'
+                  )}
+                </TableCell>
+                
+                {/* Abonnement-Status */}
+                <TableCell>
+                  <span className={`
+                    px-2 py-1 rounded-full text-xs
+                    ${userData.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' : ''}
+                    ${userData.subscriptionStatus === 'trial' ? 'bg-blue-100 text-blue-800' : ''}
+                    ${userData.subscriptionStatus === 'expired' ? 'bg-red-100 text-red-800' : ''}
+                    ${!userData.subscriptionStatus ? 'bg-gray-100 text-gray-800' : ''}
+                  `}>
+                    {userData.subscriptionStatus === 'active' ? 'Aktiv' : 
+                     userData.subscriptionStatus === 'trial' ? 'Testphase' : 
+                     userData.subscriptionStatus === 'expired' ? 'Abgelaufen' : 
+                     'Unbekannt'}
+                  </span>
+                </TableCell>
+                
                 <TableCell>
                   {userData.gdprConsent === true ? (
                     <div className="flex items-center text-green-600" title="DSGVO-Zustimmung erteilt">
