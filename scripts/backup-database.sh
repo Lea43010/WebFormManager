@@ -31,11 +31,27 @@ fi
 # Datenbank-Verbindungsinformationen aus DATABASE_URL extrahieren
 # Format: postgresql://username:password@hostname:port/database?options
 DB_URL="${DATABASE_URL}"
+echo "Analysiere Datenbank-URL: $DB_URL"
+
+# Extrahiere Benutzer
 DB_USER=$(echo $DB_URL | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+echo "Extrahierter Benutzer: $DB_USER"
+
+# Extrahiere Passwort
 DB_PASS=$(echo $DB_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\).*/\1/p')
-DB_HOST=$(echo $DB_URL | sed -n 's/.*@\([^:]*\).*/\1/p')
+echo "Passwort wurde extrahiert (nicht angezeigt)"
+
+# Extrahiere Host - korrigiert, um nur den Hostnamen ohne Pfad oder Parameter zu bekommen
+DB_HOST=$(echo $DB_URL | sed -n 's/.*@\([^:/]*\).*/\1/p')
+echo "Extrahierter Host: $DB_HOST"
+
+# Extrahiere Port
 DB_PORT=$(echo $DB_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+echo "Extrahierter Port: $DB_PORT"
+
+# Extrahiere Datenbankname - korrigiert, um nur den Namen ohne Parameter zu bekommen
 DB_NAME=$(echo $DB_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+echo "Extrahierter Datenbankname: $DB_NAME"
 
 # Standardwerte für Port
 if [ -z "$DB_PORT" ]; then

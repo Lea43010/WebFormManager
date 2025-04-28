@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Configure Git
         run: |
@@ -28,5 +29,78 @@ jobs:
           git checkout -b $BACKUP_BRANCH
           
       - name: Push to GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push origin HEAD:backup/$(date +%Y-%m-%d)
+          # Stelle sicher, dass es Änderungen gibt, indem wir eine "Backup-Datei" hinzufügen
+          echo "Backup erstellt am $(date)" > backup_info.txt
+          git add backup_info.txt
+          git commit -m "Automatisches Backup vom $(date +%Y-%m-%d)"
+          
+          # Push mit explizitem Token
+          git push -u origin HEAD:backup/$(date +%Y-%m-%d)
+          
+      - name: Create PostgreSQL Backup (if applicable)
+        if: ${{ success() && secrets.DATABASE_URL != '' }}
+        run: |
+          # Stelle sicher, dass pg_dump installiert ist
+          sudo apt-get -y install postgresql-client
+          
+          # Extrahiere Verbindungsinformationen aus der DB URL
+          DB_URL="${{ secrets.DATABASE_URL }}"
+          if [ -n "$DB_URL" ]; then
+            echo "Analysiere Datenbank-URL..."
+            
+            # Benutzer extrahieren
+            DB_USER=$(echo $DB_URL | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+            echo "Benutzer extrahiert."
+            
+            # Passwort extrahieren
+            DB_PASS=$(echo $DB_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\).*/\1/p')
+            echo "Passwort extrahiert."
+            
+            # Host extrahieren - korrigiert um nur den Host zu bekommen
+            DB_HOST=$(echo $DB_URL | sed -n 's/.*@\([^:/]*\).*/\1/p')
+            echo "Host extrahiert: $DB_HOST"
+            
+            # Port extrahieren
+            DB_PORT=$(echo $DB_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+            
+            # Datenbankname extrahieren - korrigiert um nur den Namen zu bekommen
+            DB_NAME=$(echo $DB_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+            echo "Datenbankname extrahiert: $DB_NAME"
+            
+            # Standardwert für Port setzen, falls nicht in der URL
+            if [ -z "$DB_PORT" ]; then
+              DB_PORT=5432
+            fi
+            echo "Port: $DB_PORT"
+            
+            # Backup-Verzeichnis erstellen
+            mkdir -p backups
+            
+            # Temporäre Datei für Backup erstellen
+            BACKUP_FILE="backups/database_backup_$(date +%Y%m%d).sql"
+            echo "Backup wird erstellt in: $BACKUP_FILE"
+            
+            # Backup erstellen mit Fehlerbehandlung
+            echo "Starte Datenbank-Backup..."
+            PGPASSWORD="$DB_PASS" pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$BACKUP_FILE" || {
+              echo "FEHLER: Database-Backup fehlgeschlagen!"
+              # Erstelle eine Fehlerdatei für Debug-Zwecke
+              echo "Backup fehlgeschlagen am $(date)" > backup_error.txt
+              git add backup_error.txt
+              git commit -m "Datenbank-Backup fehlgeschlagen am $(date +%Y-%m-%d)"
+              git push -u origin HEAD:backup/$(date +%Y-%m-%d)
+              exit 1
+            }
+            
+            echo "Backup erfolgreich erstellt."
+            
+            # Backup-Datei zum Repository hinzufügen
+            git add "$BACKUP_FILE"
+            git commit -m "Datenbank-Backup vom $(date +%Y-%m-%d)"
+            git push -u origin HEAD:backup/$(date +%Y-%m-%d)
+          else
+            echo "Keine DATABASE_URL gefunden, überspringe Datenbank-Backup."
+          fi

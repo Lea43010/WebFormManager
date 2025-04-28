@@ -70,6 +70,20 @@ try {
   process.exit(1);
 }
 
+// Sicherstellen, dass das Backup-Verzeichnis existiert
+const backupDir = path.join(rootDir, 'backups');
+if (!fs.existsSync(backupDir)) {
+  try {
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.chmodSync(backupDir, 0o777); // Volle Berechtigungen für das Backup-Verzeichnis
+    console.log(`Backup-Verzeichnis erstellt: ${backupDir}`);
+  } catch (error) {
+    console.error(`Fehler beim Erstellen des Backup-Verzeichnisses: ${error.message}`);
+  }
+} else {
+  console.log(`Backup-Verzeichnis existiert bereits: ${backupDir}`);
+}
+
 // Sofortiges Backup erstellen (optional)
 if (process.env.BACKUP_RUN_IMMEDIATELY === 'true') {
   console.log('Erstelle sofortiges Backup...');
