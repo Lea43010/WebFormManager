@@ -3072,6 +3072,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Dokumentationsordner als statisch servieren
+  app.use('/docs', express.static('docs', {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.md')) {
+        res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      }
+    }
+  }));
+  
+  // Spezielle Route für das Herunterladen des Benutzerhandbuchs als PDF
+  app.get('/api/docs/benutzerhandbuch/download', (req, res) => {
+    const filePath = path.join(process.cwd(), 'docs', 'Benutzerhandbuch.md');
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', 'attachment; filename="Bau-Structura-Benutzerhandbuch.md"');
+    res.sendFile(filePath);
+  });
+  
+  // Zusätzliche Route mit großem B für die Kompatibilität
+  app.get('/api/docs/Benutzerhandbuch/download', (req, res) => {
+    const filePath = path.join(process.cwd(), 'docs', 'Benutzerhandbuch.md');
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', 'attachment; filename="Bau-Structura-Benutzerhandbuch.md"');
+    res.sendFile(filePath);
+  });
+  
   // Debug-Hilfsrouten direkt zu den HTML-Dateien
   app.get('/construction-diary-debug', (req, res) => {
     res.sendFile(path.resolve('public/construction-diary-debug.html'));

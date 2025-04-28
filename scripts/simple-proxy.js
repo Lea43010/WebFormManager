@@ -10,7 +10,7 @@ import https from 'https';
 import { URL } from 'url';
 
 // Konfiguration
-const PORT = 9000;
+const PORT = process.env.PROXY_PORT || 9000; // Nutze Umgebungsvariable oder Standardport
 const TARGET_PORT = process.env.PORT || 5000; // Verwende den tatsächlichen Port des Servers
 const TARGET_HOST = 'localhost';
 
@@ -61,15 +61,30 @@ const server = http.createServer((req, res) => {
   req.pipe(proxyReq, { end: true });
 });
 
-// Server starten
-server.listen(PORT, () => {
-  console.log(`\n-------------------------------------------------`);
-  console.log(`✅ PROXY-SERVER AKTIV AUF PORT ${PORT}`);
-  console.log(`-------------------------------------------------`);
-  console.log(`Zugriff über: http://localhost:${PORT}`);
-  console.log(`Status-Check: http://localhost:${PORT}/proxy-status`);
-  console.log(`-------------------------------------------------\n`);
-});
+// Server starten mit Fallback auf alternative Ports
+function startServer(port) {
+  server.once('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`Port ${port} ist bereits belegt, versuche Port ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('Proxy-Server-Fehler:', err);
+    }
+  });
+  
+  server.listen(port, () => {
+    console.log(`\n-------------------------------------------------`);
+    console.log(`✅ PROXY-SERVER AKTIV AUF PORT ${port}`);
+    console.log(`-------------------------------------------------`);
+    console.log(`Zugriff über: http://localhost:${port}`);
+    console.log(`Status-Check: http://localhost:${port}/proxy-status`);
+    console.log(`-------------------------------------------------\n`);
+  });
+}
+
+// Server mit konfiguriertem Port starten
+console.log(`[INFO] [app] Proxy-Server wird auf Port ${PORT} gestartet`);
+startServer(PORT);
 
 // Sauberes Beenden
 process.on('SIGINT', () => {
