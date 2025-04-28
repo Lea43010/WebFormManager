@@ -327,7 +327,6 @@ export default function InformationPage() {
                 className="flex-1 flex items-center justify-center gap-2 bg-transparent hover:bg-muted/20 text-foreground border border-input px-4 py-2 rounded-md"
                 href="/docs/Benutzerhandbuch.md"
                 download="Bau-Structura-Benutzerhandbuch.md"
-                target="_blank"
               >
                 <Download className="h-4 w-4" />
                 Benutzerhandbuch herunterladen

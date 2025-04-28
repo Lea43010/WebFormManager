@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import express from "express";
 import path from "path";
 import fs from "fs-extra";
+import markdownpdf from "markdown-pdf";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupDownloadRoutes } from "./download";
@@ -3083,18 +3084,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Spezielle Route für das Herunterladen des Benutzerhandbuchs als PDF
   app.get('/api/docs/benutzerhandbuch/download', (req, res) => {
-    const filePath = path.join(process.cwd(), 'docs', 'Benutzerhandbuch.md');
-    res.setHeader('Content-Type', 'text/markdown');
-    res.setHeader('Content-Disposition', 'attachment; filename="Bau-Structura-Benutzerhandbuch.md"');
-    res.sendFile(filePath);
+    const mdFilePath = path.join(process.cwd(), 'docs', 'Benutzerhandbuch.md');
+    
+    // Vereinfachte Lösung: Biete die Markdown-Datei vorläufig als Download an
+    // mit einem Hinweis für den Benutzer, dass die PDF-Konvertierung in Arbeit ist
+    fs.readFile(mdFilePath, 'utf8', (err, data) => {
+      if (err) {
+        console.error('Fehler beim Lesen der Markdown-Datei:', err);
+        return res.status(500).send('Fehler beim Lesen des Benutzerhandbuchs');
+      }
+      
+      // Hinweis hinzufügen
+      const modifiedData = `# HINWEIS: PDF-Konvertierung
+> Die automatische Konvertierung in PDF ist in Arbeit. Diese Datei ist vorübergehend im Markdown-Format verfügbar.
+
+${data}`;
+      
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename="Bau-Structura-Benutzerhandbuch.md"');
+      res.send(modifiedData);
+    });
   });
   
   // Zusätzliche Route mit großem B für die Kompatibilität
   app.get('/api/docs/Benutzerhandbuch/download', (req, res) => {
-    const filePath = path.join(process.cwd(), 'docs', 'Benutzerhandbuch.md');
-    res.setHeader('Content-Type', 'text/markdown');
-    res.setHeader('Content-Disposition', 'attachment; filename="Bau-Structura-Benutzerhandbuch.md"');
-    res.sendFile(filePath);
+    // Weiterleitung zur kleingeschriebenen Version für Konsistenz
+    res.redirect('/api/docs/benutzerhandbuch/download');
   });
   
   // Debug-Hilfsrouten direkt zu den HTML-Dateien
