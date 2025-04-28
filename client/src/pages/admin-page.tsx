@@ -1,11 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/user-management";
-import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import BackupManagement from "@/components/admin/backup-management";
 import { DataQualityManagement } from "@/components/admin/data-quality-management";
-import { ActivityLogs } from "@/components/admin/activity-logs";
+import { SystemLogs } from "@/components/admin/system-logs";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode, Mail, ActivityIcon } from 'lucide-react';
+import { ShieldAlert, Users, Database, BarChart, Settings, FileCode, Mail, ActivityIcon } from 'lucide-react';
 import { Link } from "wouter";
 
 export default function AdminPage() {
@@ -45,9 +44,9 @@ export default function AdminPage() {
           
           {isAdmin && (
             <>
-              <TabsTrigger value="loginlogs" className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                Login-Protokoll
+              <TabsTrigger value="systemlogs" className="flex items-center">
+                <ActivityIcon className="h-4 w-4 mr-2" />
+                System-Logs
               </TabsTrigger>
               
               <TabsTrigger value="backups" className="flex items-center">
@@ -58,11 +57,6 @@ export default function AdminPage() {
               <TabsTrigger value="dataquality" className="flex items-center">
                 <BarChart className="h-4 w-4 mr-2" />
                 Datenqualität
-              </TabsTrigger>
-              
-              <TabsTrigger value="activitylogs" className="flex items-center">
-                <ActivityIcon className="h-4 w-4 mr-2" />
-                Aktivitätsprotokolle
               </TabsTrigger>
               
               <TabsTrigger value="emails" className="flex items-center" asChild>
@@ -95,8 +89,8 @@ export default function AdminPage() {
         
         {isAdmin && (
           <>
-            <TabsContent value="loginlogs" className="space-y-4">
-              <LoginLogsManagement />
+            <TabsContent value="systemlogs" className="space-y-4">
+              <SystemLogs />
             </TabsContent>
 
             <TabsContent value="backups" className="space-y-4">
@@ -105,10 +99,6 @@ export default function AdminPage() {
             
             <TabsContent value="dataquality" className="space-y-4">
               <DataQualityManagement />
-            </TabsContent>
-            
-            <TabsContent value="activitylogs" className="space-y-4">
-              <ActivityLogs />
             </TabsContent>
           </>
         )}

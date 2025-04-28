@@ -108,5 +108,19 @@ export function setupActivityLogRoutes(app: express.Express) {
     }
   });
   
+  // Anzahl der Aktivitätsprotokolle abfragen (für Dashboards und Übersichten)
+  app.get('/api/admin/activity-logs/count', isAdmin, async (req, res) => {
+    try {
+      const count = await countActivityLogs({});
+      res.json({ count });
+    } catch (error) {
+      console.error('Fehler beim Zählen der Aktivitätsprotokolle:', error);
+      res.status(500).json({ 
+        message: 'Fehler beim Zählen der Aktivitätsprotokolle', 
+        error: (error as Error).message 
+      });
+    }
+  });
+  
   console.log('[INFO] [activity-log] Aktivitätsprotokoll-API-Endpunkte eingerichtet');
 }
