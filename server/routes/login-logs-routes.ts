@@ -50,10 +50,11 @@ async function getLoginLogs(
 async function countLoginLogs(filters: Record<string, any> = {}): Promise<number> {
   try {
     // Basisabfrage für die Gesamtanzahl
-    const countQuery = sql`SELECT COUNT(*) FROM tbllogin_logs`;
+    const countQuery = sql`SELECT COUNT(*) as count FROM tbllogin_logs`;
     
     const result = await db.execute(countQuery);
-    return parseInt(result.rows?.[0]?.count || '0', 10);
+    const count = result.rows?.[0]?.count;
+    return parseInt(count ? count.toString() : '0', 10);
   } catch (error) {
     console.error('Fehler beim Zählen der Login-Logs:', error);
     throw error;
@@ -98,7 +99,8 @@ export function setupLoginLogsRoutes(app: express.Express) {
   // Anzahl der Login-Logs abfragen (für Dashboards und Übersichten)
   app.get('/api/admin/login-logs/count', isAdmin, async (req, res) => {
     try {
-      const count = await countLoginLogs();
+      const filters: Record<string, any> = {};
+      const count = await countLoginLogs(filters);
       res.json({ count });
     } catch (error) {
       console.error('Fehler beim Zählen der Login-Logs:', error);

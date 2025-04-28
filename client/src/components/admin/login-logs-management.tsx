@@ -63,7 +63,7 @@ export function LoginLogsManagement() {
   const logs = data?.logs || [];
 
   // Daten filtern
-  const filteredLogs = logs?.filter((log) => {
+  const filteredLogs = logs?.filter((log: LoginLog) => {
     // Text-Filter auf Benutzername und IP-Adresse anwenden
     const textMatch = filter === '' || 
       log.username.toLowerCase().includes(filter.toLowerCase()) || 
@@ -212,7 +212,7 @@ export function LoginLogsManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLogs.map((log) => (
+                  {filteredLogs.map((log: LoginLog) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-xs">
                         {formatTimestamp(log.timestamp)}
