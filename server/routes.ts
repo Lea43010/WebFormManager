@@ -2138,7 +2138,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Feldnamen von snake_case zu camelCase für Frontend konvertieren
       const transformedUsers = users.map(user => {
-        return {
+        // Ausgabe für Debugging
+        console.log("Original user data:", JSON.stringify(user, null, 2));
+        
+        const transformed = {
           ...user,
           // Explizit die Datumswerte umwandeln
           registrationDate: user.registration_date,
@@ -2147,8 +2150,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastPaymentDate: user.last_payment_date,
           stripeCustomerId: user.stripe_customer_id,
           stripeSubscriptionId: user.stripe_subscription_id,
-          // Weitere Felder bei Bedarf
         };
+        
+        // Ausgabe für Debugging
+        console.log("Transformed user data:", JSON.stringify(transformed, null, 2));
+        
+        return transformed;
       });
       
       res.json(transformedUsers);
