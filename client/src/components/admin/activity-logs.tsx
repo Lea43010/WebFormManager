@@ -134,7 +134,7 @@ export function ActivityLogs() {
     refetch
   } = useQuery({
     queryKey: [
-      '/api/activity-logs',
+      '/api/admin/activity-logs',
       currentPage,
       pageSize,
       searchTerm,
