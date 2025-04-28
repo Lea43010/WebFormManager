@@ -14,6 +14,7 @@ import { setupFileOrganizationRoutes } from "./routes/file-organization-routes";
 import { setupBackupRoutes } from "./backup";
 import { setupStripeRoutes } from "./stripe-routes";
 import { registerEmailRoutes } from "./routes/email-routes";
+import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
   getDataQualityMetricsHandler, 
