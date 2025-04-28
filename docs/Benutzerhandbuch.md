@@ -286,8 +286,8 @@ A: Ja, viele Bereiche bieten Export-Funktionen für PDF, Excel oder CSV.
 
 Bei Fragen oder Problemen stehen wir Ihnen gerne zur Verfügung:
 
-- **E-Mail**: support@bau-structura.de
-- **Telefon**: +49 (0) 123 456789
+- **E-Mail**: info@example.com (ersetzen Sie diese Adresse mit Ihrer tatsächlichen Kontakt-E-Mail)
+- **Telefon**: +49 (0) 15233531845
 - **Geschäftszeiten**: Mo-Fr 8:00 - 17:00 Uhr
 
 Für Feature-Anfragen oder Feedback nutzen Sie bitte die Feedback-Funktion in der App oder kontaktieren Sie direkt unseren Support.
