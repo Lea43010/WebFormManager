@@ -931,16 +931,16 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Integrierte Spezialfunktionen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Geo-Informationsseite bietet umfangreiche Zusatzfunktionen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <p>Die Geo-Informationsseite bietet umfangreiche Zusatzfunktionen:</p>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>GPS-Tracking für Teams und Ausrüstung</li>
                         <li>Strecken- und Flächenmessung</li>
                         <li>GeoFencing mit automatischen Benachrichtigungen</li>
                         <li>Spezialmodule für Straßenbau und -instandhaltung</li>
                       </ul>
-                      Detaillierte Beschreibungen zu den einzelnen Funktionen finden Sie in den entsprechenden Abschnitten dieser Hilfeseite.
-                    </p>
+                      <p>Detaillierte Beschreibungen zu den einzelnen Funktionen finden Sie in den entsprechenden Abschnitten dieser Hilfeseite.</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
