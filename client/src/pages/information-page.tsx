@@ -1080,15 +1080,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Statistische Auswertung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Das System bietet umfangreiche Analysetools:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Das System bietet umfangreiche Analysetools:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Fahrwege und Standzeiten pro Maschine/Mitarbeiter</li>
                         <li>Durchschnittliche Verweildauer an Baustellen</li>
                         <li>Anfahrtszeiten und Routeneffizienz</li>
                         <li>Vergleichsanalysen zwischen Teams und Projekten</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1132,15 +1132,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Datenanalyse und Visualisierung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Bewegungsprotokolle werden in verschiedenen Formaten dargestellt:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Bewegungsprotokolle werden in verschiedenen Formaten dargestellt:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Tabellarische Listenansicht mit Filtern und Sortierung</li>
                         <li>Kartenvisualisierung mit farbcodierten Bewegungsspuren</li>
                         <li>Zeitleistenansicht für chronologische Übersicht</li>
                         <li>Statistische Auswertungen und Diagramme</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1155,28 +1155,28 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Effizienzoptimierung</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Analyse der Bewegungsdaten hilft bei der Optimierung von Arbeitsabläufen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die Analyse der Bewegungsdaten hilft bei der Optimierung von Arbeitsabläufen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Identifizierung ineffizienter Routen und Fahrwege</li>
                         <li>Erkennung von Engpässen und Wartezeiten</li>
                         <li>Vorschläge zur Optimierung von Teamwegen und -zuordnungen</li>
                         <li>Automatische Berechnung von Kostenersparnis-Potenzialen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Dokumentation und Export</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Protokolldaten können für verschiedene Zwecke exportiert werden:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Protokolldaten können für verschiedene Zwecke exportiert werden:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>PDF-Berichte mit Bewegungsspuren für Abrechnungen</li>
                         <li>Excel-Exporte für detaillierte Zeiterfassung</li>
                         <li>Leistungsnachweise für Kunden und Auftraggeber</li>
                         <li>Exportformate für Buchhaltungs- und ERP-Systeme</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1221,15 +1221,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Erweiterte Funktionen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Streckenmessung bietet zusätzliche Optionen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die Streckenmessung bietet zusätzliche Optionen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Automatische Routenberechnung zwischen Punkten (Straßen, Feldwege, etc.)</li>
                         <li>Höhenprofildarstellung bei Verfügbarkeit von Höhendaten</li>
                         <li>Steigungsanalyse mit prozentualer und Winkelangabe</li>
                         <li>Wegpunkte mit Notizen und Fotos versehen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1254,15 +1254,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Erweiterte Funktionen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Flächenmessung bietet nützliche Zusatzfunktionen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die Flächenmessung bietet nützliche Zusatzfunktionen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Automatische Erkennung von Grundstücksgrenzen (wo verfügbar)</li>
                         <li>Volumenberechnung bei Eingabe einer Höhe/Tiefe</li>
                         <li>Unterflächenaufteilung in Teilbereiche</li>
                         <li>Materialbedarf basierend auf Flächengröße und gewähltem Material</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1288,15 +1288,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Exportmöglichkeiten</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Messergebnisse können in verschiedenen Formaten exportiert werden:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Die Messergebnisse können in verschiedenen Formaten exportiert werden:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>PDF-Bericht mit Kartenansicht, Maßen und Notizen</li>
                         <li>GeoJSON-Export für die Verwendung in GIS-Anwendungen</li>
                         <li>KML-Format für Google Earth und andere Kartendienste</li>
                         <li>Excel-Tabelle mit detaillierten Messwerten</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1341,15 +1341,15 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Zaun-Typen</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Es stehen verschiedene Zaun-Typen zur Verfügung:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Es stehen verschiedene Zaun-Typen zur Verfügung:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Kreis-Zaun: Definiert durch Mittelpunkt und Radius</li>
                         <li>Polygon-Zaun: Flexibel mit beliebig vielen Punkten</li>
                         <li>Korridor-Zaun: Entlang einer Route mit definierter Breite</li>
                         <li>Zeit-Zaun: Nur zu bestimmten Zeiten aktiv</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1364,8 +1364,8 @@ export default function InformationPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <h3 className="font-medium">Baustellen-Management</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      GeoFences bieten vielfältige Anwendungen:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>GeoFences bieten vielfältige Anwendungen:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Automatische Zeiterfassung beim Betreten/Verlassen der Baustelle</li>
                         <li>Diebstahlschutz durch Alarme bei unerlaubter Bewegung von Maschinen</li>
@@ -1373,20 +1373,20 @@ export default function InformationPage() {
                         <li>Automatische Materialbestellung beim Erreichen eines Lagers</li>
                         <li>Fortschrittsdokumentation beim Erreichen bestimmter Bauabschnitte</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
                     <h3 className="font-medium">Personalmanagement</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Optimieren Sie die Teamkoordination:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <div>Optimieren Sie die Teamkoordination:</div>
                       <ul className="list-disc pl-5 mt-2 space-y-1">
                         <li>Automatische Meldung wenn Teams bestimmte Arbeitsbereiche erreichen</li>
                         <li>Berechnung der effektiven Arbeitszeit pro Bereich</li>
                         <li>Einhaltung von Pausenzeiten überwachen</li>
                         <li>Notfallmeldungen bei unerwarteten Bewegungsmustern</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
