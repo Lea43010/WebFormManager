@@ -171,79 +171,125 @@ export const generateUserManualPdf = async (): Promise<void> => {
     
     const manualText = await response.text();
     
-    // Extrahiere Hauptabschnitte aus dem Markdown
-    const sections = parseMarkdownToSections(manualText);
+    // Erstelle ein neues PDF-Dokument
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+    });
     
+    // Titel und Datum oben
     const title = "Benutzerhandbuch Bau - Structura App";
     const currentDate = new Date().toLocaleDateString('de-DE');
     
-    generateStructuredPdf(title, sections, "Bau-Structura-Benutzerhandbuch");
+    // Header
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    pdf.text(title, 20, 20);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text(`Erstellt am: ${currentDate}`, 20, 30);
+    pdf.line(20, 35, 190, 35);
+    
+    // Inhalt (einfache Textverarbeitung von Markdown)
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    
+    // Einfache Textverarbeitung - ein Versuch, grundlegende Markdown-Eigenschaften zu erhalten
+    const lines = manualText.split('\n');
+    let yPosition = 45;
+    const lineHeight = 7;
+    const pageWidth = 210;
+    const margin = 20;
+    const textWidth = pageWidth - 2 * margin;
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      
+      // Seitenumbruch prüfen
+      if (yPosition > 270) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // Hauptüberschrift (# Titel)
+      if (line.startsWith('# ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(18);
+        const text = line.substring(2);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 3;
+        continue;
+      }
+      
+      // Überschrift zweiter Ebene (## Titel)
+      if (line.startsWith('## ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        const text = line.substring(3);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 2;
+        continue;
+      }
+      
+      // Überschrift dritter Ebene (### Titel)
+      if (line.startsWith('### ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        const text = line.substring(4);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 1;
+        continue;
+      }
+      
+      // Listenelement
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const text = '• ' + line.substring(2);
+        const splitLine = pdf.splitTextToSize(text, textWidth - 10);
+        pdf.text(splitLine, margin + 5, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Nummerierte Liste
+      if (/^\d+\./.test(line)) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const splitLine = pdf.splitTextToSize(line, textWidth - 10);
+        pdf.text(splitLine, margin + 5, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Normaler Text
+      if (line.trim() !== '') {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const splitLine = pdf.splitTextToSize(line, textWidth);
+        pdf.text(splitLine, margin, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Leerzeile
+      yPosition += lineHeight / 2;
+    }
+    
+    // Füge Fußzeile hinzu
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(9);
+    pdf.text(
+      `Bau-Structura App Benutzerhandbuch - ${currentDate}`,
+      margin,
+      287
+    );
+    
+    // Speichere die PDF-Datei
+    pdf.save("Bau-Structura-Benutzerhandbuch.pdf");
   } catch (error) {
     console.error('Fehler bei der Generierung des Benutzerhandbuch-PDFs:', error);
   }
-};
-
-/**
- * Hilfsfunktion zum Parsen des Markdown-Texts in strukturierte Abschnitte
- */
-const parseMarkdownToSections = (markdownText: string): any[] => {
-  const sections: any[] = [];
-  const lines = markdownText.split('\n');
-  
-  let currentSection: any = null;
-  let currentSubsection: any = null;
-  let currentText = '';
-  
-  // Überspringe die ersten zwei Zeilen (Titel und Leerzeile)
-  for (let i = 2; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Hauptüberschrift (## Überschrift)
-    if (line.startsWith('## ')) {
-      // Speichere den vorherigen Abschnitt, falls vorhanden
-      if (currentSection) {
-        currentSection.text = currentText.trim();
-        sections.push(currentSection);
-      }
-      
-      // Starte einen neuen Abschnitt
-      currentSection = {
-        heading: line.substring(3),
-        text: '',
-        subsections: []
-      };
-      currentText = '';
-      
-    // Unterüberschrift (### Überschrift)
-    } else if (line.startsWith('### ')) {
-      // Speichere den aktuellen Text zum Hauptabschnitt
-      if (currentText.trim() && currentSection) {
-        currentSection.text = currentText.trim();
-        currentText = '';
-      }
-      
-      // Starte einen neuen Unterabschnitt
-      if (currentSection) {
-        currentSubsection = {
-          subheading: line.substring(4),
-          text: ''
-        };
-        currentSection.subsections.push(currentSubsection);
-      }
-      
-    // Normaler Text oder Listen - wird zum aktuellen Text hinzugefügt
-    } else {
-      currentText += line + '\n';
-    }
-  }
-  
-  // Füge den letzten Abschnitt hinzu, falls vorhanden
-  if (currentSection) {
-    currentSection.text = currentText.trim();
-    sections.push(currentSection);
-  }
-  
-  return sections;
 };
 
 export const generateCompliancePdf = (): void => {
