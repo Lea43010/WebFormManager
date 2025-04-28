@@ -2135,7 +2135,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", checkAdminRole, async (req, res, next) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      
+      // Feldnamen von snake_case zu camelCase für Frontend konvertieren
+      const transformedUsers = users.map(user => {
+        return {
+          ...user,
+          // Explizit die Datumswerte umwandeln
+          registrationDate: user.registration_date,
+          trialEndDate: user.trial_end_date,
+          subscriptionStatus: user.subscription_status,
+          lastPaymentDate: user.last_payment_date,
+          stripeCustomerId: user.stripe_customer_id,
+          stripeSubscriptionId: user.stripe_subscription_id,
+          // Weitere Felder bei Bedarf
+        };
+      });
+      
+      res.json(transformedUsers);
     } catch (error) {
       next(error);
     }
