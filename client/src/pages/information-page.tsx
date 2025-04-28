@@ -1832,16 +1832,18 @@ export default function InformationPage() {
                   
                   <div>
                     <h3 className="font-medium">Boden- und Asphaltklassifizierung (KI-gestützte Bildanalyse)</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse und 
-                      Belastungsklasse erfüllt alle Anforderungen des EU KI Acts durch:
+                    <div className="text-sm text-gray-600 mt-1">
+                      <p>
+                        Die KI-basierte Analyse von hochgeladenen Fotos zur Bestimmung von Bodenklasse und 
+                        Belastungsklasse erfüllt alle Anforderungen des EU KI Acts durch:
+                      </p>
                       <ul className="list-disc ml-4 mt-1">
                         <li>Explizite Anzeige von Konfidenzwerten bei jeder Klassifizierung</li>
                         <li>Menschliche Aufsicht mit jederzeit möglicher manueller Korrektur</li>
                         <li>Erklärbarkeitsfunktion, die Analysegrundlagen transparent macht</li>
                         <li>Dokumentation der Trainingsdaten und verwendeten Algorithmen</li>
                       </ul>
-                    </p>
+                    </div>
                   </div>
                   
                   <div>
