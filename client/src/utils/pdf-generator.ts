@@ -178,27 +178,235 @@ export const generateUserManualPdf = async (): Promise<void> => {
    - Bedarfs- und Kapazitätsplanung
    - Dokumenten-Management
 4. Administration
-5. FAQ
-6. Support und Kontakt`;
+   - Benutzerverwaltung
+   - System-Logs
+   - Testphasen-Management
+   - Datensicherung
+   - Datenqualität
+5. Häufig gestellte Fragen (FAQ)
+6. Support und Kontakt
 
-    const pdf = new jsPDF();
+## Einführung
 
-    // Configure PDF settings
-    pdf.setFont("helvetica");
-    pdf.setFontSize(12);
+Die Bau - Structura App ist eine umfassende Lösung für die Verwaltung von Baustellen und Straßenbauprojekten. Sie bietet moderne Werkzeuge für Projektmanagement, Dokumentation, Analyse und Planung und ist speziell auf die Bedürfnisse der Baubranche zugeschnitten.
 
-    // Add title
+### Systemanforderungen
+
+- Browser: Moderne Browser wie Chrome, Firefox, Edge oder Safari
+- Endgeräte: Unterstützung für Desktop-PCs, Tablets und Smartphones
+- Internet: Stabile Internetverbindung
+
+## Anmeldung und Registrierung
+
+### Erste Anmeldung
+
+1. Öffnen Sie die Anwendung in Ihrem Browser
+2. Geben Sie Ihre Zugangsdaten (Benutzername und Passwort) ein
+3. Bei erstmaliger Anmeldung werden Sie aufgefordert, Ihr Passwort zu ändern
+4. Akzeptieren Sie die Datenschutzerklärung (DSGVO-Einwilligung)
+
+### Passwort vergessen
+
+1. Klicken Sie auf der Login-Seite auf "Passwort vergessen"
+2. Geben Sie Ihren Benutzernamen oder Ihre E-Mail-Adresse ein
+3. Sie erhalten einen Wiederherstellungscode per SMS
+4. Geben Sie den Code ein und setzen Sie ein neues Passwort
+
+## Hauptfunktionen
+
+### Dashboard
+
+Das Dashboard bietet eine Übersicht über:
+- Aktuelle Projekte mit Status
+- Anstehende Termine und Meilensteine
+- Neueste Bautagebuch-Einträge
+- Schnellzugriff auf häufig verwendete Funktionen
+
+### Projekte verwalten
+
+#### Neues Projekt anlegen
+
+1. Klicken Sie auf "Neues Projekt" im Dashboard
+2. Füllen Sie die Pflichtfelder aus (Name, Projektart, Datum, Kunde)
+3. Fügen Sie zusätzliche Informationen hinzu (optional)
+4. Speichern Sie das Projekt
+
+### Bautagebuch
+
+Das digitale Bautagebuch ist das zentrale Dokumentationstool der App. Hier werden alle Aktivitäten auf der Baustelle dokumentiert.
+
+#### Neuen Eintrag erstellen
+
+1. Wählen Sie das entsprechende Projekt
+2. Gehen Sie zum Reiter "Bautagebuch"
+3. Klicken Sie auf "Neuer Eintrag"
+4. Füllen Sie die Felder aus
+5. Speichern Sie den Eintrag
+
+### Meilensteine
+
+Die Meilenstein-Funktion hilft bei der Terminplanung und Projektverfolgung.
+
+### Oberflächenanalyse
+
+Die KI-gestützte Oberflächenanalyse ermöglicht die Klassifizierung von Bodenarten und Asphaltbelägen.
+
+### Bedarfs- und Kapazitätsplanung
+
+Die Planungsfunktion ermöglicht die Abschätzung von Ressourcenbedarf und Kapazitäten.
+
+### Dokumenten-Management
+
+Das Dokumenten-Management ermöglicht die zentrale Verwaltung aller projektbezogenen Dateien.
+
+## Administration
+
+### Benutzerverwaltung
+
+Die Benutzerverwaltung steht nur Administratoren zur Verfügung.
+
+### System-Logs
+
+Die Protokollierung ermöglicht die Nachverfolgung von Systemaktivitäten.
+
+### Datensicherung
+
+Der Datensicherungsbereich ermöglicht Backups und Wiederherstellungen.
+
+### Datenqualität
+
+Die Datenqualitätsprüfung zeigt Strukturprüfungen und Konsistenzprüfungen.
+
+## Häufig gestellte Fragen (FAQ)
+
+**F: Wie kann ich mein Passwort ändern?**  
+A: Klicken Sie auf Ihren Benutzernamen in der oberen rechten Ecke und wählen Sie "Profil". Dort können Sie Ihr Passwort ändern.
+
+**F: Ist die App auf mobilen Geräten nutzbar?**  
+A: Ja, die Bau - Structura App ist responsiv gestaltet und funktioniert auf Smartphones und Tablets.
+
+## Support und Kontakt
+
+Bei Fragen oder Problemen stehen wir Ihnen gerne zur Verfügung:
+
+- E-Mail: support@bau-structura.de
+- Telefon: +49 (0) 123 456789
+- Geschäftszeiten: Mo-Fr 8:00 - 17:00 Uhr`;
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+    });
+
+    // Titel und Datum oben
+    const title = "Benutzerhandbuch Bau - Structura App";
+    const currentDate = new Date().toLocaleDateString('de-DE');
+    
+    // Header
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
-    pdf.text("Bau - Structura App", 20, 20);
-    pdf.setFontSize(16);
-    pdf.text("Benutzerhandbuch", 20, 30);
-
-    // Add content
-    pdf.setFontSize(12);
-    const splitText = pdf.splitTextToSize(manualContent, 170);
-    pdf.text(splitText, 20, 50);
-
-    // Save PDF
+    pdf.text(title, 20, 20);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text(`Erstellt am: ${currentDate}`, 20, 30);
+    pdf.line(20, 35, 190, 35);
+    
+    // Inhalt (einfache Textverarbeitung von Markdown)
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    
+    // Einfache Textverarbeitung - ein Versuch, grundlegende Markdown-Eigenschaften zu erhalten
+    const lines = manualContent.split('\n');
+    let yPosition = 45;
+    const lineHeight = 7;
+    const pageWidth = 210;
+    const margin = 20;
+    const textWidth = pageWidth - 2 * margin;
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      
+      // Seitenumbruch prüfen
+      if (yPosition > 270) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // Hauptüberschrift (# Titel)
+      if (line.startsWith('# ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(18);
+        const text = line.substring(2);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 3;
+        continue;
+      }
+      
+      // Überschrift zweiter Ebene (## Titel)
+      if (line.startsWith('## ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        const text = line.substring(3);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 2;
+        continue;
+      }
+      
+      // Überschrift dritter Ebene (### Titel)
+      if (line.startsWith('### ')) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        const text = line.substring(4);
+        pdf.text(text, margin, yPosition);
+        yPosition += lineHeight + 1;
+        continue;
+      }
+      
+      // Listenelement
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const text = '• ' + line.substring(2);
+        const splitLine = pdf.splitTextToSize(text, textWidth - 10);
+        pdf.text(splitLine, margin + 5, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Nummerierte Liste
+      if (/^\d+\./.test(line)) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const splitLine = pdf.splitTextToSize(line, textWidth - 10);
+        pdf.text(splitLine, margin + 5, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Normaler Text
+      if (line.trim() !== '') {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(11);
+        const splitLine = pdf.splitTextToSize(line, textWidth);
+        pdf.text(splitLine, margin, yPosition);
+        yPosition += (splitLine.length * lineHeight);
+        continue;
+      }
+      
+      // Leerzeile
+      yPosition += lineHeight / 2;
+    }
+    
+    // Füge Fußzeile hinzu
+    pdf.setFont('helvetica', 'italic');
+    pdf.setFontSize(9);
+    pdf.text(
+      `Bau-Structura App Benutzerhandbuch - ${currentDate}`,
+      margin,
+      287
+    );
+    
+    // Speichere die PDF-Datei
     pdf.save("Bau-Structura-Benutzerhandbuch.pdf");
   } catch (error) {
     console.error('Fehler bei der Generierung des Benutzerhandbuch-PDFs:', error);
