@@ -81,10 +81,10 @@ export const customers = pgTable("tblcustomer", {
 // Persons table
 export const persons = pgTable("tblperson", {
   id: serial("id").primaryKey(),
-  personId: integer("person_id", { mode: "number" }),
+  personId: integer("person_id"),
   projectId: integer("project_id"),
   companyId: integer("company_id"),
-  professionalName: integer("professional_name", { mode: "number" }),
+  professionalName: integer("professional_name"),
   firstname: varchar("firstname", { length: 100 }),
   lastname: varchar("lastname", { length: 100 }),
 });
@@ -103,7 +103,7 @@ export const projects = pgTable("tblproject", {
   projectWidth: numeric("project_width", { precision: 10, scale: 2 }),
   projectLength: numeric("project_length", { precision: 10, scale: 2 }),
   projectHeight: numeric("project_height", { precision: 10, scale: 2 }),
-  projectText: integer("project_text", { mode: "number" }),
+  projectText: integer("project_text"),
   projectStartdate: date("project_startdate"),
   projectEnddate: date("project_enddate"),
   projectStop: boolean("project_stop").default(false),
@@ -129,7 +129,7 @@ export const permissions = pgTable("tblpermissions", {
 export const materials = pgTable("tblmaterial", {
   id: serial("id").primaryKey(),
   materialId: varchar("material_id", { length: 1000 }),
-  materialName: integer("material_name", { mode: "number" }),
+  materialName: integer("material_name"),
   materialAmount: doublePrecision("material_amount"),
   materialPrice: doublePrecision("material_price"),
   materialTotal: doublePrecision("material_total"),
