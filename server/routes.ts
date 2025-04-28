@@ -17,6 +17,7 @@ import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
+import { trialEmailService } from "./trial-email-service";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
   getDataQualityMetricsHandler, 

@@ -6,6 +6,7 @@ import { setupHealthRoutes } from "./health";
 import { setupApiDocs } from "./api-docs";
 import { setupApiTests } from "./api-test";
 import { setupBackupRoutes } from "./backup";
+import { initCronJobs } from "./cron-jobs";
 import config from "../config";
 import { logger } from "./logger";
 
@@ -105,6 +106,13 @@ app.use((req, res, next) => {
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
+      
+      // Initialisiere die Cron-Jobs für wiederkehrende Aufgaben
+      try {
+        initCronJobs();
+      } catch (error) {
+        logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+      }
       
       // Starte den einfachen Proxy-Server für öffentlichen Zugriff
       if (config.isDevelopment) {
