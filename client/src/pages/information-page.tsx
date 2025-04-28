@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, RefreshCw, FileCheck, ShieldCheck } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, RefreshCw, FileCheck, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { generateCompliancePdf } from "@/utils/pdf-generator";
+import { Input } from "@/components/ui/input";
 import { 
   fetchUpdateInfo, 
   getUpdateInfo, 
@@ -125,11 +126,23 @@ const sections = [
 // Das Letzte Aktualisierungsdatum für die Informationsseite
 const LAST_UPDATED = "2024-04-20";
 
+// Definiere den Typ für ein Suchergebnis
+interface SearchResult {
+  sectionId: string;
+  sectionTitle: string;
+  contentPreview: string;
+  elementId?: string; // Optional, für direktes Springen zu einem Element innerhalb eines Abschnitts
+}
+
 export default function InformationPage() {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState<string>("benutzerhandbuch");
   const [sectionUpdates, setSectionUpdates] = useState<Record<string, string>>({});
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   
   // Callback für Aktualisierungen
   const handleSectionUpdate = useCallback((section: string, info: any) => {
@@ -185,6 +198,106 @@ export default function InformationPage() {
     }
   }, [toast]);
 
+  // Suchfunktion für Hilfe-Inhalte
+  const searchContent = useCallback(() => {
+    if (!searchTerm.trim() || searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    const results: SearchResult[] = [];
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // Implementiere die Suche im Content
+    if (contentRef.current) {
+      // Durchsuche jeden Abschnitt
+      sections.forEach(section => {
+        const sectionElement = document.getElementById(section.id);
+        if (!sectionElement) return;
+        
+        // Extrahiere den sichtbaren Text aus dem Abschnitt
+        const sectionText = sectionElement.textContent || "";
+        const sectionTextLower = sectionText.toLowerCase();
+        
+        // Prüfe, ob der Suchbegriff im Abschnitt vorkommt
+        if (sectionTextLower.includes(searchTermLower)) {
+          // Finde den Index des Suchbegriffs im Text
+          const index = sectionTextLower.indexOf(searchTermLower);
+          
+          // Extrahiere einen Kontext um den Suchbegriff herum (50 Zeichen davor und danach)
+          const startIndex = Math.max(0, index - 50);
+          const endIndex = Math.min(sectionTextLower.length, index + searchTermLower.length + 50);
+          
+          // Extrahiere den Kontext
+          let context = sectionText.substring(startIndex, endIndex);
+          
+          // Markiere den Suchbegriff im Kontext für die Anzeige
+          const contextLower = context.toLowerCase();
+          const termIndex = contextLower.indexOf(searchTermLower);
+          if (termIndex >= 0) {
+            const before = context.substring(0, termIndex);
+            const term = context.substring(termIndex, termIndex + searchTerm.length);
+            const after = context.substring(termIndex + searchTerm.length);
+            context = `${before}${term}${after}`;
+          }
+          
+          // Füge Auslassungspunkte hinzu, wenn der Kontext gekürzt wurde
+          if (startIndex > 0) context = `...${context}`;
+          if (endIndex < sectionText.length) context = `${context}...`;
+          
+          results.push({
+            sectionId: section.id,
+            sectionTitle: section.title,
+            contentPreview: context
+          });
+        }
+        
+        // Suche auch in <li> Elementen für spezifischere Navigation
+        const listItems = sectionElement.querySelectorAll('li');
+        listItems.forEach((li, index) => {
+          const liText = li.textContent || "";
+          const liTextLower = liText.toLowerCase();
+          
+          if (liTextLower.includes(searchTermLower)) {
+            // Generiere eine einzigartige ID für dieses Listenelement, falls es keine hat
+            const liId = li.id || `${section.id}-list-item-${index}`;
+            if (!li.id) li.id = liId;
+            
+            results.push({
+              sectionId: section.id,
+              sectionTitle: section.title,
+              contentPreview: liText,
+              elementId: liId
+            });
+          }
+        });
+      });
+    }
+    
+    setSearchResults(results);
+    setIsSearching(false);
+    
+    if (results.length === 0 && searchTerm.trim().length > 0) {
+      toast({
+        title: "Keine Ergebnisse gefunden",
+        description: `Für "${searchTerm}" wurden keine Treffer gefunden.`,
+        variant: "default",
+      });
+    }
+  }, [searchTerm, toast]);
+  
+  // Debounce-Funktion für die Suche
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm) {
+        searchContent();
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm, searchContent]);
+
   // Funktion zur Beobachtung der sichtbaren Abschnitte beim Scrollen
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -228,17 +341,96 @@ export default function InformationPage() {
     };
   }, [handleSectionUpdate]);
 
+  // Funktion zum Springen zu einem bestimmten Suchergebnis
+  const navigateToResult = useCallback((result: SearchResult) => {
+    const { sectionId, elementId } = result;
+    
+    // Zuerst zum Abschnitt scrollen
+    const sectionElement = document.getElementById(sectionId);
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      
+      // Wenn ein spezifisches Element existiert, dieses hervorheben
+      if (elementId) {
+        setTimeout(() => {
+          const targetElement = document.getElementById(elementId);
+          if (targetElement) {
+            // Element hervorheben
+            targetElement.classList.add("bg-yellow-100");
+            targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+            
+            // Nach einer Weile die Hervorhebung entfernen
+            setTimeout(() => {
+              targetElement.classList.remove("bg-yellow-100");
+            }, 3000);
+          }
+        }, 500);
+      }
+    }
+    
+    // Suchergebnisse ausblenden
+    setSearchResults([]);
+    setSearchTerm("");
+  }, []);
+
   return (
     <div className="container mx-auto py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <h1 className="text-3xl font-bold">Hilfe & Info</h1>
-        <Button asChild variant="outline" className="gap-2">
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4" />
-            Zurück zur Übersicht
-          </Link>
-        </Button>
+        
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Input
+              type="text"
+              placeholder="Suche in Hilfe & Info..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full"
+            />
+            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            {searchTerm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                onClick={() => setSearchTerm("")}
+              >
+                &times;
+              </Button>
+            )}
+          </div>
+          
+          <Button asChild variant="outline" className="gap-2 hidden md:flex">
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4" />
+              Zurück zur Übersicht
+            </Link>
+          </Button>
+        </div>
       </div>
+      
+      {/* Suchergebnisse */}
+      {searchResults.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 animate-in fade-in">
+          <h3 className="font-medium text-lg mb-4 pb-2 border-b flex items-center">
+            <Search className="h-4 w-4 mr-2 text-primary" />
+            Suchergebnisse für "{searchTerm}" ({searchResults.length})
+          </h3>
+          <div className="space-y-4">
+            {searchResults.map((result, index) => (
+              <div key={index} className="p-3 hover:bg-gray-50 rounded-md border cursor-pointer" onClick={() => navigateToResult(result)}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className="font-normal">
+                    {result.sectionTitle}
+                  </Badge>
+                  <ChevronRight className="h-3 w-3 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-700">{result.contentPreview}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Haupt-Content mit Sidebar für Navigation */}
       <div className="flex flex-col lg:flex-row gap-8">
@@ -275,7 +467,7 @@ export default function InformationPage() {
         </div>
         
         {/* Hauptinhalt */}
-        <div className="lg:w-3/4 order-1 lg:order-2 space-y-8">
+        <div className="lg:w-3/4 order-1 lg:order-2 space-y-8" ref={contentRef}>
           {/* Benutzerhandbuch Sektion */}
           <div id="benutzerhandbuch" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Benutzerhandbuch</h2>
