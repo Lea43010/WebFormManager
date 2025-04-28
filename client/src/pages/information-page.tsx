@@ -517,11 +517,23 @@ export default function InformationPage() {
               
               <Button 
                 className="flex-1 flex items-center justify-center gap-2"
-                variant="outline" 
-                onClick={() => {
-                  import('@/utils/pdf-generator').then(module => {
-                    module.generateUserManualPdf();
-                  });
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const module = await import('@/utils/pdf-generator');
+                    await module.generateUserManualPdf();
+                    toast({
+                      title: "PDF erstellt",
+                      description: "Das Benutzerhandbuch wurde erfolgreich als PDF heruntergeladen.",
+                      variant: "default",
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Fehler",
+                      description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
+                      variant: "destructive",
+                    });
+                  }
                 }}
               >
                 <Download className="h-4 w-4" />

@@ -163,7 +163,13 @@ export const generateStructuredPdf = (
  */
 export const generateUserManualPdf = async (): Promise<void> => {
   try {
-    // Lade das Benutzerhandbuch als Text
+    // Add loading state handling
+    const loadingToast = toast({
+      title: "Generiere PDF",
+      description: "Das Benutzerhandbuch wird als PDF erstellt...",
+    });
+
+    // Load the user manual content
     const response = await fetch('/docs/Benutzerhandbuch.md');
     if (!response.ok) {
       throw new Error(`Fehler beim Laden des Benutzerhandbuchs: ${response.status}`);
