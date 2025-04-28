@@ -133,7 +133,12 @@ export async function getActivityLogs(
     
     // Ausführen der Abfrage
     const result = await db.execute(query);
-    return result as any[];
+    
+    if (!result || !result.rows) {
+      return [];
+    }
+    
+    return result.rows as any[];
   } catch (error) {
     console.error('Fehler beim Abrufen der Aktivitätsprotokolle:', error);
     throw error;
@@ -192,7 +197,14 @@ export async function countActivityLogs(
     
     // Ausführen der Abfrage
     const result = await db.execute(countQuery);
-    return parseInt((result[0] as any).total, 10);
+    
+    if (!result || !result.rows || result.rows.length === 0) {
+      return 0; // Falls keine Ergebnisse, geben wir 0 zurück
+    }
+    
+    // Wir müssen auf das erste Element in den rows zugreifen
+    const total = result.rows[0].total;
+    return parseInt(typeof total === 'string' ? total : String(total), 10);
   } catch (error) {
     console.error('Fehler beim Zählen der Aktivitätsprotokolle:', error);
     throw error;
@@ -210,7 +222,11 @@ export async function getDistinctComponents(): Promise<string[]> {
       ORDER BY component
     `);
     
-    return (result as any[]).map(row => row.component);
+    if (!result || !result.rows) {
+      return [];
+    }
+    
+    return result.rows.map(row => String(row.component));
   } catch (error) {
     console.error('Fehler beim Abrufen der Komponenten:', error);
     throw error;
@@ -228,7 +244,11 @@ export async function getDistinctEntityTypes(): Promise<string[]> {
       ORDER BY entity_type
     `);
     
-    return (result as any[]).map(row => row.entity_type);
+    if (!result || !result.rows) {
+      return [];
+    }
+    
+    return result.rows.map(row => String(row.entity_type || ''));
   } catch (error) {
     console.error('Fehler beim Abrufen der Entitätstypen:', error);
     throw error;

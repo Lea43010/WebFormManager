@@ -277,7 +277,7 @@ export function ActivityLogs() {
                 <SelectValue placeholder="Alle Aktionen" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Aktionen</SelectItem>
+                <SelectItem value="_all">Alle Aktionen</SelectItem>
                 {renderActionTypeOptions()}
               </SelectContent>
             </Select>
@@ -290,10 +290,10 @@ export function ActivityLogs() {
                 <SelectValue placeholder="Alle Entitäten" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Entitäten</SelectItem>
+                <SelectItem value="_all">Alle Entitäten</SelectItem>
                 {entityTypes.map((type: string) => (
-                  <SelectItem key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  <SelectItem key={type} value={type || '_leer'}>
+                    {type ? (type.charAt(0).toUpperCase() + type.slice(1)) : 'Unbekannt'}
                   </SelectItem>
                 ))}
               </SelectContent>
