@@ -163,135 +163,42 @@ export const generateStructuredPdf = (
  */
 export const generateUserManualPdf = async (): Promise<void> => {
   try {
-    // Add loading state handling
-    const loadingToast = toast({
-      title: "Generiere PDF",
-      description: "Das Benutzerhandbuch wird als PDF erstellt...",
-    });
+    const manualContent = `# Benutzerhandbuch Bau - Structura App
 
-    // Load the user manual content
-    const response = await fetch('/Benutzerhandbuch.md');
-    if (!response.ok) {
-      throw new Error(`Fehler beim Laden des Benutzerhandbuchs: ${response.status}`);
-    }
+## Inhaltsverzeichnis
 
-    const manualText = await response.text();
+1. Einführung
+2. Anmeldung und Registrierung
+3. Hauptfunktionen
+   - Dashboard
+   - Projekte verwalten
+   - Bautagebuch
+   - Meilensteine
+   - Oberflächenanalyse
+   - Bedarfs- und Kapazitätsplanung
+   - Dokumenten-Management
+4. Administration
+5. FAQ
+6. Support und Kontakt`;
 
-    // Erstelle ein neues PDF-Dokument
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-    });
+    const pdf = new jsPDF();
 
-    // Titel und Datum oben
-    const title = "Benutzerhandbuch Bau - Structura App";
-    const currentDate = new Date().toLocaleDateString('de-DE');
+    // Configure PDF settings
+    pdf.setFont("helvetica");
+    pdf.setFontSize(12);
 
-    // Header
-    pdf.setFont('helvetica', 'bold');
+    // Add title
     pdf.setFontSize(20);
-    pdf.text(title, 20, 20);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'italic');
-    pdf.text(`Erstellt am: ${currentDate}`, 20, 30);
-    pdf.line(20, 35, 190, 35);
+    pdf.text("Bau - Structura App", 20, 20);
+    pdf.setFontSize(16);
+    pdf.text("Benutzerhandbuch", 20, 30);
 
-    // Inhalt (einfache Textverarbeitung von Markdown)
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
+    // Add content
+    pdf.setFontSize(12);
+    const splitText = pdf.splitTextToSize(manualContent, 170);
+    pdf.text(splitText, 20, 50);
 
-    // Einfache Textverarbeitung - ein Versuch, grundlegende Markdown-Eigenschaften zu erhalten
-    const lines = manualText.split('\n');
-    let yPosition = 45;
-    const lineHeight = 7;
-    const pageWidth = 210;
-    const margin = 20;
-    const textWidth = pageWidth - 2 * margin;
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-
-      // Seitenumbruch prüfen
-      if (yPosition > 270) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-
-      // Hauptüberschrift (# Titel)
-      if (line.startsWith('# ')) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(18);
-        const text = line.substring(2);
-        pdf.text(text, margin, yPosition);
-        yPosition += lineHeight + 3;
-        continue;
-      }
-
-      // Überschrift zweiter Ebene (## Titel)
-      if (line.startsWith('## ')) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(16);
-        const text = line.substring(3);
-        pdf.text(text, margin, yPosition);
-        yPosition += lineHeight + 2;
-        continue;
-      }
-
-      // Überschrift dritter Ebene (### Titel)
-      if (line.startsWith('### ')) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(14);
-        const text = line.substring(4);
-        pdf.text(text, margin, yPosition);
-        yPosition += lineHeight + 1;
-        continue;
-      }
-
-      // Listenelement
-      if (line.startsWith('- ') || line.startsWith('* ')) {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(11);
-        const text = '• ' + line.substring(2);
-        const splitLine = pdf.splitTextToSize(text, textWidth - 10);
-        pdf.text(splitLine, margin + 5, yPosition);
-        yPosition += (splitLine.length * lineHeight);
-        continue;
-      }
-
-      // Nummerierte Liste
-      if (/^\d+\./.test(line)) {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(11);
-        const splitLine = pdf.splitTextToSize(line, textWidth - 10);
-        pdf.text(splitLine, margin + 5, yPosition);
-        yPosition += (splitLine.length * lineHeight);
-        continue;
-      }
-
-      // Normaler Text
-      if (line.trim() !== '') {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(11);
-        const splitLine = pdf.splitTextToSize(line, textWidth);
-        pdf.text(splitLine, margin, yPosition);
-        yPosition += (splitLine.length * lineHeight);
-        continue;
-      }
-
-      // Leerzeile
-      yPosition += lineHeight / 2;
-    }
-
-    // Füge Fußzeile hinzu
-    pdf.setFont('helvetica', 'italic');
-    pdf.setFontSize(9);
-    pdf.text(
-      `Bau-Structura App Benutzerhandbuch - ${currentDate}`,
-      margin,
-      287
-    );
-
-    // Speichere die PDF-Datei
+    // Save PDF
     pdf.save("Bau-Structura-Benutzerhandbuch.pdf");
   } catch (error) {
     console.error('Fehler bei der Generierung des Benutzerhandbuch-PDFs:', error);
