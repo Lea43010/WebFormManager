@@ -3,8 +3,9 @@ import { UserManagement } from "@/components/admin/user-management";
 import { LoginLogsManagement } from "@/components/admin/login-logs-management";
 import BackupManagement from "@/components/admin/backup-management";
 import { DataQualityManagement } from "@/components/admin/data-quality-management";
+import { ActivityLogs } from "@/components/admin/activity-logs";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode, Mail } from 'lucide-react';
+import { ShieldAlert, Users, Clock, Database, BarChart, Settings, FileCode, Mail, ActivityIcon } from 'lucide-react';
 import { Link } from "wouter";
 
 export default function AdminPage() {
@@ -63,6 +64,11 @@ export default function AdminPage() {
                 Datenqualität
               </TabsTrigger>
               
+              <TabsTrigger value="activitylogs" className="flex items-center">
+                <ActivityIcon className="h-4 w-4 mr-2" />
+                Aktivitätsprotokolle
+              </TabsTrigger>
+              
               <TabsTrigger value="emails" className="flex items-center" asChild>
                 <Link href="/admin/emails">
                   <Mail className="h-4 w-4 mr-2" />
@@ -105,7 +111,9 @@ export default function AdminPage() {
               <DataQualityManagement />
             </TabsContent>
             
-
+            <TabsContent value="activitylogs" className="space-y-4">
+              <ActivityLogs />
+            </TabsContent>
           </>
         )}
       </Tabs>

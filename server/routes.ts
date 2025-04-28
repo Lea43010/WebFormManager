@@ -15,6 +15,7 @@ import { setupBackupRoutes } from "./backup";
 import { setupStripeRoutes } from "./stripe-routes";
 import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
+import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { generateDownloadToken, verifyDownloadToken, invalidateToken } from "./services/token-service";
 import { 
   getDataQualityMetricsHandler, 
@@ -259,6 +260,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Nur Administrator darf Firmen löschen
       if (req.user.role !== 'administrator') {
         return res.status(403).json({ message: "Keine Berechtigung zum Löschen von Firmen. Diese Operation erfordert Administrator-Rechte." });
+      }
+      
+      // Protokolliere die Löschung eines Unternehmens
+      try {
+        await logActivity({
+          userId: req.user.id,
+          ipAddress: getIpAddress(req),
+          action: ActionType.DELETE,
+          entityType: 'company',
+          entityId: id,
+          description: `Unternehmen "${existingCompany.companyName}" (ID: ${id}) gelöscht`,
+          metadata: {
+            companyId: id,
+            companyName: existingCompany.companyName,
+            deletedBy: req.user.id,
+            deletedByUsername: req.user.username
+          }
+        });
+      } catch (logError) {
+        console.error("Fehler beim Protokollieren der Unternehmenslöschung:", logError);
+        // Wir werfen den Fehler nicht weiter, um den eigentlichen Löschvorgang nicht zu blockieren
       }
       
       await storage.deleteCompany(id);
