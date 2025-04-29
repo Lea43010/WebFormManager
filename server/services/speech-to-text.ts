@@ -1,120 +1,178 @@
-import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
-import { createReadStream } from "fs";
-import { v4 as uuidv4 } from "uuid";
-import { RoadDamageType, DamageSeverity } from "@shared/schema-road-damage";
+import { promisify } from "util";
+import { randomUUID } from "crypto";
+import OpenAI from "openai";
 
-// Initialisiere OpenAI API-Client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Prüfen, ob der OpenAI API-Schlüssel vorhanden ist
+if (!process.env.OPENAI_API_KEY) {
+  console.warn("[Warnung] OPENAI_API_KEY ist nicht gesetzt. Spracherkennung wird nicht funktionieren.");
+}
 
-// Temporärer Speicherort für Audio-Dateien
-const TEMP_AUDIO_DIR = path.join(process.cwd(), "temp", "audio");
+// OpenAI Instanz erstellen
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// Stelle sicher, dass das Verzeichnis existiert
-if (!fs.existsSync(TEMP_AUDIO_DIR)) {
-  fs.mkdirSync(TEMP_AUDIO_DIR, { recursive: true });
+// Verzeichnis für temporäre Audiodateien
+const tempDir = path.join(process.cwd(), "temp", "audio");
+
+// Sicherstellen, dass das Temp-Verzeichnis existiert
+try {
+  fs.mkdirSync(tempDir, { recursive: true });
+} catch (error) {
+  console.error("Fehler beim Erstellen des temporären Verzeichnisses:", error);
+}
+
+// Promisify für asynchrone Dateioperationen
+const writeFileAsync = promisify(fs.writeFile);
+const unlinkAsync = promisify(fs.unlink);
+
+/**
+ * Schnittstelle für das Ergebnis der Sprachanalyse
+ */
+export interface SpeechAnalysisResult {
+  transcription: string;
+  analyzedData: {
+    damageType?: string;
+    severity?: string;
+    position?: string;
+    description?: string;
+    recommendedAction?: string;
+    estimatedCost?: number;
+  };
+  confidence: number;
 }
 
 /**
- * Speichert eine Audio-Datei temporär
- * @param audioBuffer Buffer mit Audio-Daten
- * @returns Pfad zur gespeicherten Datei
+ * Speichert eine Audiodatei temporär
  */
-export async function saveAudioTemporarily(audioBuffer: Buffer): Promise<string> {
-  const filename = `${uuidv4()}.webm`;
-  const filePath = path.join(TEMP_AUDIO_DIR, filename);
+export async function saveTempAudioFile(audioBuffer: Buffer): Promise<string> {
+  const filename = `${randomUUID()}.webm`;
+  const filepath = path.join(tempDir, filename);
   
-  await fs.promises.writeFile(filePath, audioBuffer);
-  return filePath;
+  await writeFileAsync(filepath, audioBuffer);
+  return filepath;
 }
 
 /**
- * Bereinigt eine temporäre Audio-Datei
- * @param filePath Pfad zur Audio-Datei
- */
-export async function cleanupTempAudio(filePath: string): Promise<void> {
-  try {
-    if (fs.existsSync(filePath)) {
-      await fs.promises.unlink(filePath);
-    }
-  } catch (error) {
-    console.error("Fehler beim Löschen der temporären Audio-Datei:", error);
-  }
-}
-
-/**
- * Transkribiert eine Audio-Datei zu Text mithilfe der OpenAI Whisper API
- * @param audioFilePath Pfad zur Audio-Datei
- * @returns Transkribierter Text
+ * Transkribiert eine Audiodatei zu Text mit OpenAI Whisper
  */
 export async function transcribeAudio(audioFilePath: string): Promise<string> {
   try {
-    const audioReadStream = createReadStream(audioFilePath);
+    const readStream = fs.createReadStream(audioFilePath);
     
     const transcription = await openai.audio.transcriptions.create({
-      file: audioReadStream,
+      file: readStream,
       model: "whisper-1",
       language: "de",
-      response_format: "text",
     });
     
-    return transcription;
+    return transcription.text;
   } catch (error) {
     console.error("Fehler bei der Transkription:", error);
-    throw new Error("Die Audiotranskription konnte nicht durchgeführt werden.");
+    throw new Error("Spracherkennung fehlgeschlagen");
   }
 }
 
 /**
- * Analysiert einen transkribierten Text und extrahiert strukturierte Informationen zum Straßenschaden
- * @param transcription Transkribierter Text
- * @returns Strukturierte Informationen zum Straßenschaden
+ * Analysiert den transkribierten Text und extrahiert relevante Informationen
  */
-export async function analyzeDamageText(transcription: string): Promise<{
-  damageType: RoadDamageType;
-  severity: DamageSeverity;
-  description: string;
-  recommendedAction?: string;
-}> {
+export async function analyzeTranscription(transcription: string): Promise<SpeechAnalysisResult> {
   try {
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const prompt = `
-    Analysiere die folgende Beschreibung eines Straßenschadens und extrahiere die folgenden strukturierten Informationen.
-    Wenn keine Informationen vorhanden sind, nutze plausible Werte basierend auf der Beschreibung.
+    // Stellen Sie sicher, dass der transcription-Text nicht leer ist
+    if (!transcription || transcription.trim() === "") {
+      throw new Error("Die Transkription ist leer");
+    }
     
-    Text: "${transcription}"
-    
-    Extrahiere die folgenden Informationen im JSON-Format:
-    1. damageType (wähle einen aus): "riss", "schlagloch", "netzriss", "verformung", "ausbruch", "abplatzung", "kantenschaden", "fugenausbruch", "abnutzung", "sonstiges"
-    2. severity (wähle einen aus): "leicht", "mittel", "schwer", "kritisch"
-    3. description: Eine klare, zusammenfassende Beschreibung des Schadens
-    4. recommendedAction: Eine empfohlene Maßnahme zur Behebung des Schadens
-    
-    Antworte ausschließlich mit einem JSON-Objekt, ohne zusätzlichen Text.
+    // Systemanweisung für GPT, um Straßenschäden zu analysieren
+    const systemPrompt = `
+    Du bist ein Experte für Straßenbau und Straßenschäden. Analysiere die folgende Beschreibung eines Straßenschadens und extrahiere alle relevanten Informationen.
+    Rückgabeformat: JSON mit folgenden Eigenschaften:
+    - damageType: einer der folgenden Werte: "riss", "schlagloch", "netzriss", "verformung", "ausbruch", "abplatzung", "kantenschaden", "fugenausbruch", "abnutzung", "sonstiges"
+    - severity: einer der folgenden Werte: "leicht", "mittel", "schwer", "kritisch"
+    - position: Standort des Schadens (wenn angegeben)
+    - description: detaillierte Beschreibung des Schadens
+    - recommendedAction: empfohlene Maßnahmen zur Behebung (wenn ableitbar)
+    - estimatedCost: geschätzte Reparaturkosten in Euro (wenn ableitbar, sonst null)
+    - confidence: Zahl zwischen 0 und 1, die das Vertrauen in die Analyse angibt
+
+    Falls ein Wert nicht aus dem Text abgeleitet werden kann, setze ihn auf null.
+    Antworte NUR mit dem JSON-Objekt ohne weitere Erklärungen.
     `;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const response = JSON.parse(completion.choices[0]?.message?.content || "{}");
     
+    // GPT-Anfrage erstellen
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o", // Fortgeschrittenes Modell für bessere Analyse
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: transcription },
+      ],
+      temperature: 0.3, // Niedrige Temperatur für deterministischere Antworten
+      response_format: { type: "json_object" }, // Format als JSON anfordern
+    });
+    
+    // Antwort extrahieren und parsen
+    const responseText = completion.choices[0].message.content;
+    
+    if (!responseText) {
+      throw new Error("Keine Antwort von der KI erhalten");
+    }
+    
+    const result = JSON.parse(responseText);
+    
+    // Rückgabeformat zusammenstellen
     return {
-      damageType: response.damageType || "sonstiges",
-      severity: response.severity || "mittel",
-      description: response.description || transcription,
-      recommendedAction: response.recommendedAction,
+      transcription,
+      analyzedData: {
+        damageType: result.damageType || "sonstiges",
+        severity: result.severity || "mittel",
+        position: result.position || null,
+        description: result.description || transcription,
+        recommendedAction: result.recommendedAction || null,
+        estimatedCost: result.estimatedCost || null,
+      },
+      confidence: result.confidence || 0.5,
     };
   } catch (error) {
-    console.error("Fehler bei der Analyse des Textes:", error);
-    // Fallback zu Standardwerten, wenn die Analyse fehlschlägt
+    console.error("Fehler bei der Analyse der Transkription:", error);
+    
+    // Fallback-Rückgabe mit der Transkription als Beschreibung
     return {
-      damageType: "sonstiges",
-      severity: "mittel",
-      description: transcription,
+      transcription,
+      analyzedData: {
+        damageType: "sonstiges",
+        severity: "mittel",
+        description: transcription,
+      },
+      confidence: 0.1,
     };
+  } finally {
+    // Hier keine Bereinigung, da wir nur mit Text arbeiten
+  }
+}
+
+/**
+ * Prozessiert eine Audiodatei und gibt die analysierte Spracherkennung zurück
+ */
+export async function processAudio(audioFilePath: string): Promise<SpeechAnalysisResult> {
+  try {
+    // Audiodatei transkribieren
+    const transcription = await transcribeAudio(audioFilePath);
+    
+    // Transkription analysieren
+    const analysis = await analyzeTranscription(transcription);
+    
+    return analysis;
+  } catch (error) {
+    console.error("Fehler bei der Audioverarbeitung:", error);
+    throw new Error("Audioverarbeitung fehlgeschlagen");
+  } finally {
+    // Temporäre Datei bereinigen
+    try {
+      await unlinkAsync(audioFilePath);
+    } catch (cleanupError) {
+      console.error("Fehler beim Bereinigen der temporären Datei:", cleanupError);
+    }
   }
 }

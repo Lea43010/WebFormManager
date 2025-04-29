@@ -1,10 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, Map, Table, BarChart3, AlertTriangle, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { FileText, Download, Map, Table, BarChart3, AlertTriangle, ArrowLeft, Plus, Mic } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { RoadDamageForm } from "@/components/road-damages/road-damage-form";
+import { RoadDamageList } from "@/components/road-damages/road-damage-list";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 // Belastungsklassen für RStO 12 lokal definieren (statt vom Server zu importieren)
 const belastungsklassen = {
@@ -53,6 +65,15 @@ const belastungsklassen = {
 };
 
 export default function StreetModulesPage() {
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  const handleProjectSelect = (value: string) => {
+    setSelectedProjectId(parseInt(value));
+  };
+  
   return (
     <DashboardLayout 
       title="Straßenbau-Module" 
@@ -91,64 +112,91 @@ export default function StreetModulesPage() {
           <TabsContent value="zustandserfassung" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Straßenzustandserfassung</CardTitle>
+                <CardTitle>Straßenzustandserfassung mit Sprachassistent</CardTitle>
                 <CardDescription>
-                  Systematische Dokumentation und Analyse von Straßenschäden gemäß ZTV BEA-StB
+                  Systematische Dokumentation und Analyse von Straßenschäden gemäß ZTV BEA-StB mit KI-gestützter Spracherkennung
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Module-Übersicht */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Card className="border shadow-sm">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Schadenserfassung</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm">
-                      <p>Dokumentation von Rissen, Verformungen und Oberflächenschäden mit Fotos und Geo-Referenzierung.</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" disabled>In Entwicklung</Button>
-                    </CardFooter>
-                  </Card>
-
-                  <Card className="border shadow-sm">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Straßenzustandsindex</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm">
-                      <p>Berechnung des Gebrauchswertes und der Substanzwerte für verschiedene Straßenkategorien.</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" disabled>In Entwicklung</Button>
-                    </CardFooter>
-                  </Card>
-
-                  <Card className="border shadow-sm">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Schadensauswertung</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm">
-                      <p>Statistische Analyse der Schäden nach Art, Schwere und räumlicher Verteilung.</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" disabled>In Entwicklung</Button>
-                    </CardFooter>
-                  </Card>
-                </div>
-
-                {/* Status-Hinweis */}
-                <div className="bg-amber-50 p-4 rounded-md border border-amber-200 flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                  {/* Projektauswahl */}
+                  <div className="w-full md:w-1/2">
+                    <label className="text-sm font-medium mb-2 block">Projekt auswählen</label>
+                    <Select onValueChange={handleProjectSelect}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Projekt zur Straßenzustandserfassung auswählen..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Autobahnausbau A7 Abschnitt Nord</SelectItem>
+                        <SelectItem value="2">Ortsumgehung B27 Fulda</SelectItem>
+                        <SelectItem value="3">Sanierung Hauptstraße Musterstadt</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-amber-800">Modul in Entwicklung</h3>
-                    <p className="text-sm text-amber-700 mt-1">
-                      Die Straßenzustandserfassung befindet sich derzeit in der Entwicklungsphase und wird in einem kommenden Update verfügbar sein.
-                      Kontaktieren Sie uns für weitere Informationen oder um an der Beta-Phase teilzunehmen.
+                  
+                  {/* Neuen Schaden erfassen Button */}
+                  <div className="flex items-end">
+                    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          disabled={!selectedProjectId}
+                          className="w-full md:w-auto gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Straßenschaden erfassen
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[700px]">
+                        <DialogHeader>
+                          <DialogTitle>Neuen Straßenschaden erfassen</DialogTitle>
+                          <DialogDescription>
+                            Erfassen Sie einen neuen Straßenschaden manuell oder mit Hilfe des Sprachassistenten.
+                          </DialogDescription>
+                        </DialogHeader>
+                        {selectedProjectId && (
+                          <RoadDamageForm
+                            projectId={selectedProjectId}
+                            userId={user?.id || 1}
+                            onSuccess={() => {
+                              setIsFormOpen(false);
+                              toast({
+                                title: "Erfolgreich gespeichert",
+                                description: "Der Straßenschaden wurde erfolgreich erfasst."
+                              });
+                            }}
+                          />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+                
+                {selectedProjectId ? (
+                  <RoadDamageList projectId={selectedProjectId} />
+                ) : (
+                  <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 text-center">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                      <Mic className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <h3 className="text-lg font-medium text-blue-800 mb-2">Sprachgestützte Schadenserkennung</h3>
+                    <p className="text-blue-700 max-w-md mx-auto mb-4">
+                      Wählen Sie ein Projekt aus der Liste oben, um die Straßenzustandserfassung zu starten. 
+                      Sie können Schäden manuell erfassen oder die KI-gestützte Spracherfassung nutzen.
                     </p>
+                    <Button
+                      variant="outline"
+                      className="border-blue-200"
+                      onClick={() => {
+                        toast({
+                          title: "Hinweis",
+                          description: "Bitte wählen Sie zuerst ein Projekt aus."
+                        })
+                      }}
+                    >
+                      Projekt auswählen
+                    </Button>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

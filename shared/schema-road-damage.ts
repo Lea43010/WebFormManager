@@ -1,70 +1,95 @@
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { pgTable, serial, text, timestamp, integer, varchar, pgEnum, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, pgEnum, varchar, integer } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enum-Definition für die verschiedenen Schadenstypen
-export const roadDamageTypeEnum = pgEnum('road_damage_type', [
-  'riss',                  // Risse
-  'schlagloch',            // Schlaglöcher
-  'netzriss',              // Netzrisse
-  'verformung',            // Verformungen
-  'ausbruch',              // Ausbrüche
-  'abplatzung',            // Abplatzungen
-  'kantenschaden',         // Kantenschäden
-  'fugenausbruch',         // Fugenausbrüche
-  'abnutzung',             // Abnutzung
-  'sonstiges',             // Sonstige
+// Enumerationen für Straßenschäden
+export const roadDamageTypeEnum = pgEnum("road_damage_type", [
+  "riss",
+  "schlagloch",
+  "netzriss",
+  "verformung",
+  "ausbruch",
+  "abplatzung",
+  "kantenschaden",
+  "fugenausbruch",
+  "abnutzung",
+  "sonstiges",
 ]);
 
-// Enum-Definition für die Schadensschwere
-export const damageSeverityEnum = pgEnum('damage_severity', [
-  'leicht',                // Leicht - visuell erkennbar, aber keine sofortige Gefahr
-  'mittel',                // Mittel - deutliche Beeinträchtigung, mittelfristig zu reparieren
-  'schwer',                // Schwer - erhebliche Beeinträchtigung, zeitnah zu reparieren
-  'kritisch',              // Kritisch - unmittelbare Gefahr, sofortige Maßnahmen erforderlich
+export const damageSeverityEnum = pgEnum("damage_severity", [
+  "leicht",
+  "mittel",
+  "schwer",
+  "kritisch",
 ]);
 
-// Tabelle zur Speicherung von Straßenschäden
-export const roadDamages = pgTable('tblroad_damages', {
-  id: serial('id').primaryKey(),
-  projectId: integer('project_id').notNull().references(() => projects.id),
-  damageType: roadDamageTypeEnum('damage_type').notNull(),
-  severity: damageSeverityEnum('severity').notNull(),
-  position: text('position'),  // Beschreibung der Position
-  coordinates: json('coordinates'),  // Geo-Koordinaten (Lat, Lng)
-  imageUrl: text('image_url'),  // URL zum Bild des Schadens
-  description: text('description').notNull(),  // Beschreibung des Schadens
-  audioTranscription: text('audio_transcription'),  // Transkribierte Sprachaufnahme
-  recommendedAction: text('recommended_action'),  // Empfohlene Maßnahme
-  estimatedCost: integer('estimated_cost'),  // Geschätzte Kosten in Euro
-  createdBy: integer('created_by').notNull(),  // Benutzer-ID
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at'),
+// Exportiere die Typen für TypeScript
+export type RoadDamageType = z.infer<typeof roadDamageTypeSchema>;
+export type DamageSeverity = z.infer<typeof damageSeveritySchema>;
+
+// Zod-Schemas für Typen-Validierung
+export const roadDamageTypeSchema = z.enum([
+  "riss",
+  "schlagloch",
+  "netzriss",
+  "verformung",
+  "ausbruch",
+  "abplatzung",
+  "kantenschaden",
+  "fugenausbruch",
+  "abnutzung",
+  "sonstiges",
+]);
+
+export const damageSeveritySchema = z.enum([
+  "leicht",
+  "mittel",
+  "schwer",
+  "kritisch",
+]);
+
+// Straßenschaden-Tabelle
+export const roadDamages = pgTable("tblroad_damages", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull(),
+  damageType: roadDamageTypeEnum("damage_type").notNull().default("sonstiges"),
+  severity: damageSeverityEnum("severity").notNull().default("mittel"),
+  position: text("position"),
+  description: text("description").notNull(),
+  recommendedAction: text("recommended_action"),
+  imageUrl: text("image_url"),
+  audioUrl: text("audio_url"),
+  audioTranscription: text("audio_transcription"),
+  estimatedRepairCost: integer("estimated_repair_cost"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Referenz auf die Projekttabelle (muss bereits existieren)
-import { projects } from "./schema";
+// Schemas für API-Operationen
+export const insertRoadDamageSchema = createInsertSchema(roadDamages, {
+  projectId: z.number().int().positive(),
+  damageType: roadDamageTypeSchema,
+  severity: damageSeveritySchema,
+  position: z.string().min(0).max(500).optional().nullable(),
+  description: z.string().min(1).max(2000),
+  recommendedAction: z.string().min(0).max(2000).optional().nullable(),
+  imageUrl: z.string().min(0).max(500).optional().nullable(),
+  audioUrl: z.string().min(0).max(500).optional().nullable(),
+  audioTranscription: z.string().min(0).max(5000).optional().nullable(),
+  estimatedRepairCost: z.number().int().nonnegative().optional().nullable(),
+  createdBy: z.number().int().positive(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 
-// Insert-Schema für die Schadenserfassung
-export const insertRoadDamageSchema = createInsertSchema(roadDamages).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Select-Schema für die Schadenserfassung
-export const selectRoadDamageSchema = createSelectSchema(roadDamages);
-
-// Typen-Definitionen
+// Typen für Frontend/Backend
 export type RoadDamage = typeof roadDamages.$inferSelect;
 export type InsertRoadDamage = z.infer<typeof insertRoadDamageSchema>;
-export type RoadDamageType = typeof roadDamageTypeEnum.enumValues[number];
-export type DamageSeverity = typeof damageSeverityEnum.enumValues[number];
 
-// Validierungsschema für die Schadenserfassung mit Spracherkennung
-export const roadDamageWithSpeechSchema = insertRoadDamageSchema.extend({
-  audioFile: z.any().optional(),  // Enthält die Audio-Datei für die Spracherkennung
-});
-
-// Typ für die Schadenserfassung mit Spracherkennung
-export type RoadDamageWithSpeech = z.infer<typeof roadDamageWithSpeechSchema>;
+// Typen für Statistik-Antworten
+export type RoadDamageStats = {
+  totalDamages: number;
+  byType: Record<RoadDamageType, number>;
+  bySeverity: Record<DamageSeverity, number>;
+  totalEstimatedCost: number;
+  averageDamagePerKm?: number;
+};
