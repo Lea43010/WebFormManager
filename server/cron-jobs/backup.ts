@@ -1,88 +1,90 @@
 /**
  * Automatisches Backup-Skript
  */
-import { spawn } from 'child_process';
-import path from 'path';
+
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import fs from 'fs';
+import path from 'path';
 import { logger } from '../logger';
 
-// Maximale Anzahl von Backups, die aufbewahrt werden sollen
+// Logger für Backup-Aufgaben
+const backupLogger = logger.createLogger('backup');
+
+// Maximale Anzahl der zu behaltenden Backups 
 const MAX_BACKUPS = 10;
 
-// Logger für dieses Modul erstellen
-const backupLogger = logger.createLogger('backup');
+// Hilfsfunktion für asynchrone Prozessausführung
+const execAsync = promisify(exec);
 
 /**
  * Führt das Backup-Skript aus und protokolliert die Ergebnisse
  */
 export function runBackup(): void {
-  backupLogger.info('Starte automatisches Backup...');
+  // Pfad zum Backup-Skript
+  const backupScriptPath = path.resolve(process.cwd(), 'backup-script.sh');
   
-  const backupScript = path.resolve(process.cwd(), 'backup-script.sh');
-  
-  if (!fs.existsSync(backupScript)) {
-    backupLogger.error('Backup-Skript nicht gefunden:', backupScript);
+  // Prüfen, ob das Skript existiert
+  if (!fs.existsSync(backupScriptPath)) {
+    backupLogger.error('Backup-Skript nicht gefunden:', backupScriptPath);
     return;
   }
   
-  const backupProcess = spawn('bash', [backupScript], {
-    stdio: 'pipe'
-  });
+  backupLogger.info('Starte automatisches Backup...');
   
-  backupProcess.stdout.on('data', (data) => {
-    backupLogger.info('Backup-Ausgabe:', data.toString().trim());
-  });
-  
-  backupProcess.stderr.on('data', (data) => {
-    backupLogger.error('Backup-Fehler:', data.toString().trim());
-  });
-  
-  backupProcess.on('close', (code) => {
-    if (code === 0) {
-      backupLogger.info('Automatisches Backup erfolgreich abgeschlossen');
+  // Skript ausführen
+  execAsync(backupScriptPath)
+    .then(({stdout, stderr}) => {
+      if (stderr && !stderr.includes('NOTICE:') && !stderr.includes('INFO:')) {
+        backupLogger.error('Fehler beim Backup:', stderr);
+        return;
+      }
+      
+      // Erfolg protokollieren
+      const backupFile = stdout.trim().replace('Backup erstellt: ', '');
+      backupLogger.info('Automatisches Backup erfolgreich abgeschlossen:', backupFile);
+      
+      // Alte Backups bereinigen
       cleanupOldBackups();
-    } else {
-      backupLogger.error(`Backup-Prozess beendet mit Code ${code}`);
-    }
-  });
+    })
+    .catch(error => {
+      backupLogger.error('Fehler bei der Ausführung des Backup-Skripts:', error);
+    });
 }
 
 /**
  * Bereinigt alte Backups und behält nur die neuesten MAX_BACKUPS
  */
 function cleanupOldBackups(): void {
-  const backupDir = path.resolve(process.cwd(), 'backup');
+  const backupRoot = path.resolve(process.cwd(), 'backup');
   
-  if (!fs.existsSync(backupDir)) {
+  // Prüfen, ob das Backup-Verzeichnis existiert
+  if (!fs.existsSync(backupRoot)) {
     return;
   }
   
-  // Verzeichnisse nach Datum sortieren
-  const dateDirs = fs.readdirSync(backupDir)
-    .filter(dir => /^\d{4}-\d{2}-\d{2}$/.test(dir))
-    .map(dir => {
-      const fullPath = path.join(backupDir, dir);
-      const stat = fs.statSync(fullPath);
-      return { 
-        name: dir, 
-        path: fullPath, 
-        time: stat.mtime.getTime() 
-      };
-    })
-    .sort((a, b) => b.time - a.time); // Neueste zuerst
-  
-  // Lösche die ältesten, wenn mehr als MAX_BACKUPS vorhanden sind
-  if (dateDirs.length > MAX_BACKUPS) {
-    backupLogger.info(`${dateDirs.length} Backup-Verzeichnisse gefunden, behalte die neuesten ${MAX_BACKUPS}`);
+  try {
+    // Alle Datumsordner finden
+    const dateDirs = fs.readdirSync(backupRoot)
+      .filter(dir => /^\d{4}-\d{2}-\d{2}$/.test(dir))
+      .sort((a, b) => b.localeCompare(a)); // Neueste zuerst
     
-    const toDelete = dateDirs.slice(MAX_BACKUPS);
-    toDelete.forEach(dir => {
-      try {
-        backupLogger.info(`Lösche altes Backup-Verzeichnis: ${dir.name}`);
-        fs.rmSync(dir.path, { recursive: true, force: true });
-      } catch (err) {
-        backupLogger.error(`Fehler beim Löschen des Verzeichnisses ${dir.path}:`, err);
-      }
-    });
+    // Wenn zu viele Datumsordner vorhanden sind, die ältesten löschen
+    if (dateDirs.length > MAX_BACKUPS) {
+      const dirsToDelete = dateDirs.slice(MAX_BACKUPS);
+      
+      dirsToDelete.forEach(dir => {
+        const dirPath = path.join(backupRoot, dir);
+        backupLogger.info(`Lösche alten Backup-Ordner: ${dirPath}`);
+        
+        try {
+          fs.rmSync(dirPath, { recursive: true, force: true });
+        } catch (error) {
+          backupLogger.error(`Fehler beim Löschen des alten Backup-Ordners ${dirPath}:`, error);
+        }
+      });
+    }
+  } catch (error) {
+    backupLogger.error('Fehler bei der Bereinigung alter Backups:', error);
   }
 }
