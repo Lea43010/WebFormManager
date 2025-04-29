@@ -8,6 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
+import { logger } from './logger';
 
 // Hilfsfunktion für Promises
 const execPromise = promisify(exec);

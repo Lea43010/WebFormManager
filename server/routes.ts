@@ -20,6 +20,7 @@ import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
+import { registerBackupApiRoutes } from "./routes/backup-routes"; // Neue Backup-API
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
@@ -102,6 +103,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Speech-to-Text-Route einrichten
   setupSpeechToTextRoute(app);
+  
+  // Neue Backup-API-Routen einrichten
+  registerBackupApiRoutes(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {

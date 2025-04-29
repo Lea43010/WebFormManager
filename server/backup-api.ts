@@ -10,7 +10,7 @@ import { exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
-import { isAdmin } from './middleware/role-check';
+import { requireAdmin } from './middleware/role-check';
 
 // Logger für dieses Modul
 const backupLogger = logger.createLogger('backup');
@@ -23,7 +23,7 @@ const router = express.Router();
  * POST /api/backup/create
  * Erfordert Admin-Rechte
  */
-router.post('/create', isAdmin, (req, res) => {
+router.post('/create', requireAdmin(), (req, res) => {
   backupLogger.info('Manuelles Backup wird ausgelöst durch Benutzer:', req.user?.id);
   
   const backupScript = path.resolve(process.cwd(), 'backup-script.sh');
@@ -70,7 +70,7 @@ router.post('/create', isAdmin, (req, res) => {
  * GET /api/backup/list
  * Erfordert Admin-Rechte
  */
-router.get('/list', isAdmin, (req, res) => {
+router.get('/list', requireAdmin(), (req, res) => {
   const backupDir = path.resolve(process.cwd(), 'backup');
   
   if (!fs.existsSync(backupDir)) {
