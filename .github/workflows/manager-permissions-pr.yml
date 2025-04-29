@@ -1,0 +1,38 @@
+name: Manager-Berechtigungen Pull Request
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'server/routes.ts'
+      - 'server/middleware/role-check.ts'
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Berechtigungen für Manager-Rolle implementiert"
+          title: "Berechtigungen für Manager-Rolle implementiert"
+          body: |
+            # Berechtigungen für Manager-Rolle
+
+            Diese Änderungen ermöglichen es Benutzern mit der Rolle "Manager", Firmen, Kunden und Projekte zu erstellen. Vorher war die Berechtigung für diese Aktionen nicht korrekt implementiert.
+
+            ## Änderungen:
+
+            - POST-Route für `/api/companies` mit `requireManagerOrAbove`-Middleware versehen
+            - POST-Route für `/api/customers` mit `requireManagerOrAbove`-Middleware versehen
+            - POST-Route für `/api/projects` mit `requireManagerOrAbove`-Middleware versehen
+
+            ## Validierung:
+            Die Änderungen wurden mit folgenden Benutzerkonten getestet:
+            - Administrator (admin)
+            - Manager (CKazek)
+          branch: manager-permissions-fix

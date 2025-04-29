@@ -1,0 +1,36 @@
+Änderungsprotokoll vom 29.04.2025
+===========================
+
+PROBLEM:
+--------
+Manager-Benutzer (wie z.B. CKazek) konnten keine neuen Kunden, Firmen oder Projekte erstellen,
+obwohl sie laut Benutzerhandbuch und Dokumentation dazu berechtigt sein sollten.
+
+ANALYSE:
+--------
+- Die GET-Endpunkte für Kunden und Firmen enthielten spezielle Filterlogiken für Manager
+- Die POST-Endpunkte für Kunden, Firmen und Projekte fehlten die korrekten Berechtigungsprüfungen für Manager
+- Die verwendete Middleware für die Rollenprüfung war korrekt implementiert, wurde aber nicht bei den POST-Routen eingesetzt
+
+LÖSUNG:
+-------
+1. Implementierung der requireManagerOrAbove-Middleware in allen relevanten POST-Routen:
+   - POST /api/companies
+   - POST /api/customers
+   - POST /api/projects
+
+2. Logging in den POST-Routen hinzugefügt, um mehr Transparenz zu schaffen:
+   - Ausgabe der Benutzerrolle bei Erstellung eines Eintrags
+   - Nachverfolgung, welcher Benutzer welche Aktionen ausführt
+
+ERGEBNIS:
+---------
+Manager-Benutzer können nun neue Kunden, Firmen und Projekte erstellen, wie es in der
+Dokumentation beschrieben ist. Die requireManagerOrAbove-Middleware sorgt dafür, dass
+sowohl Administratoren als auch Manager diese Aktionen ausführen können.
+
+GETESTETE BENUTZER:
+------------------
+Die Änderungen wurden mit folgenden Benutzerkonten getestet:
+- Administrator (admin)
+- Manager (CKazek)
