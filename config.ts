@@ -118,6 +118,16 @@ const externalServices = {
   },
 };
 
+// Backup-Konfiguration
+const backup = {
+  enabled: process.env.ENABLE_BACKUP === 'true',
+  cronSchedule: process.env.BACKUP_CRON || '0 3 * * *',
+  directory: process.env.BACKUP_DIRECTORY || './backup',
+  maxBackups: parseInt(process.env.MAX_BACKUPS || '10', 10),
+  retentionDays: parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10),
+  debugCronJobs: process.env.DEBUG_CRON_JOBS === 'true',
+};
+
 // Anwendungs-URL
 const APP_URL = (() => {
   if (isProduction) return process.env.APP_URL || 'https://bau-structura.de';

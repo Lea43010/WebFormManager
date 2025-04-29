@@ -11,6 +11,7 @@ import cron from 'node-cron';
 import { logger } from './logger';
 import { trialEmailService } from './trial-email-service';
 import config from '../config';
+import { runBackup } from './cron-jobs/backup';
 
 // Logger für dieses Modul erstellen
 const cronLogger = logger.createLogger('cron-jobs');
@@ -20,6 +21,19 @@ const cronLogger = logger.createLogger('cron-jobs');
  */
 export function initCronJobs() {
   cronLogger.info('Initialisiere Cron-Jobs...');
+  
+  // Tägliches Backup - Um 3:00 Uhr morgens
+  cron.schedule('0 3 * * *', () => {
+    cronLogger.info('Führe tägliches Backup aus...');
+    try {
+      runBackup();
+    } catch (error) {
+      cronLogger.error('Fehler bei der Ausführung des täglichen Backups:', error);
+    }
+  }, {
+    scheduled: true,
+    timezone: "Europe/Berlin"
+  });
   
   // Testphasen-Benachrichtigungen - Täglich um 9:00 Uhr
   cron.schedule('0 9 * * *', async () => {
@@ -45,6 +59,16 @@ export function initCronJobs() {
   // führe die Jobs sofort aus (für Debugging)
   if (config.isDevelopment && process.env.DEBUG_CRON_JOBS === 'true') {
     cronLogger.info('DEBUG_CRON_JOBS ist aktiviert. Führe Jobs sofort aus...');
+    
+    // Führe das Backup sofort aus
+    setTimeout(() => {
+      try {
+        cronLogger.info('[DEBUG] Führe sofortiges Backup aus...');
+        runBackup();
+      } catch (error) {
+        cronLogger.error('[DEBUG] Fehler bei der Ausführung des sofortigen Backups:', error);
+      }
+    }, 3000); // Warte 3 Sekunden nach Server-Start
     
     // Führe die Testphasen-Benachrichtigungen sofort aus
     setTimeout(async () => {
