@@ -32,6 +32,7 @@ import {
 } from "./data-quality";
 import { checkDatabaseStructureHandler, checkDatabaseStructure } from "./db-structure-quality";
 import { dataQualityChecker } from "./data-quality-checker";
+import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
 import { ZodError, z } from "zod";
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
@@ -225,11 +226,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/companies", async (req, res, next) => {
+  app.post("/api/companies", requireManagerOrAbove(), async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
+      // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      console.log(`Benutzer mit Rolle ${req.user.role} erstellt eine neue Firma`);
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden
       // Telefonnummer muss explizit als String formatiert werden
@@ -515,15 +515,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customers", async (req, res, next) => {
+  app.post("/api/customers", requireManagerOrAbove(), async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
-      
-      // Alle authentifizierten Benutzer dürfen neue Kunden erstellen
-      // Die Beschränkung auf Administratoren und Manager wurde entfernt,
-      // sodass jeder Benutzer Kunden erstellen kann
+      // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      console.log(`Benutzer mit Rolle ${req.user.role} erstellt einen neuen Kunden`);
       
       // Wenn keine Kundennummer übergeben wurde oder diese leer ist, 
       // entfernen wir sie aus dem Request, damit sie automatisch generiert wird
@@ -716,11 +711,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects", async (req, res, next) => {
+  app.post("/api/projects", requireManagerOrAbove(), async (req, res, next) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
+      // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      console.log(`Benutzer mit Rolle ${req.user.role} erstellt ein neues Projekt`);
       
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
       // Da Zod die Konversion erwartet, schicken wir die Daten als Strings
