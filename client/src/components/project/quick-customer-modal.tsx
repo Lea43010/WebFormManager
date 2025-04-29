@@ -116,15 +116,8 @@ export default function QuickCustomerModal({
       onCustomerCreated(newCustomer.id);
       onClose();
       
-      // Optional: In einem separaten useEffect die Navigation durchführen
-      // Dies verhindert 404-Fehler und stellt sicher, dass erst der onClose() ausgeführt wird
-      setTimeout(() => {
-        // Nur navigieren, wenn die aktuelle URL nicht die Projekterstellung ist
-        if (!window.location.pathname.includes('/projects/new') && 
-            !window.location.pathname.includes('/projects/edit')) {
-          navigate(`/customers/edit/${newCustomer.id}`);
-        }
-      }, 100);
+      // Navigation zur Kundenseite entfernt, um 404-Fehler zu vermeiden
+      // Der Nutzer bleibt auf der Projektseite und kann den erstellten Kunden direkt auswählen
     } catch (error) {
       console.error("Fehler beim Erstellen des Kunden:", error);
       toast({
