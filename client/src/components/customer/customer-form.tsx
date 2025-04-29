@@ -61,6 +61,8 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
     customerPhone: z.string().optional(),
     // Optional oder leer
     customerEmail: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal('')),
+    // Geodatum
+    geodate: z.string().optional(),
   });
 
   // Vorverarbeitung für customerId aus number in string
@@ -91,6 +93,7 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
       cityPart: customer?.cityPart || "",
       state: customer?.state || "",
       country: customer?.country || "Deutschland",
+      geodate: customer?.geodate || "",
       customerPhone: customer?.customerPhone !== undefined && customer?.customerPhone !== null 
         ? (typeof customer.customerPhone === 'number' ? customer.customerPhone.toString() : customer.customerPhone) 
         : '',
@@ -422,6 +425,26 @@ export default function CustomerForm({ customer, onSubmit, isLoading = false }: 
                   </FormItem>
                 )}
               />
+              
+              <div className="col-span-2 mt-4">
+                <FormField
+                  control={form.control}
+                  name="geodate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="modern-form-label">Geodatum</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          className="modern-form-input" 
+                          placeholder="Geodatum"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
           </div>
         </div>

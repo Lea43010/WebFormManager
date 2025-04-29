@@ -305,6 +305,11 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createCompany(company: InsertCompany): Promise<Company> {
+    // Wenn keine Firmennummer angegeben wurde, automatisch eine generieren
+    if (!company.id) {
+      company.id = await this.getNextCompanyId();
+    }
+    
     const [createdCompany] = await db.insert(companies).values(company).returning() as Company[];
     return createdCompany;
   }
@@ -322,13 +327,61 @@ export class DatabaseStorage implements IStorage {
     await db.delete(companies).where(eq(companies.id, id));
   }
   
+  // Funktion zum Ermitteln der nächsten verfügbaren Firmennummer
+  async getNextCompanyId(): Promise<number> {
+    // Verwenden einer SQL-Abfrage mit MAX-Funktion
+    const result = await db.execute<{maxId: number | null}>(
+      sql`SELECT MAX(company_id) as "maxId" FROM tblcompany`
+    );
+    const maxId = result.rows[0]?.maxId || 0;
+    return maxId + 1;
+  }
+  
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers) as Customer[];
+    return await db.select({
+      id: customers.id,
+      projectId: customers.projectId,
+      customerId: customers.customerId,
+      customerType: customers.customerType,
+      firstName: customers.firstName,
+      lastName: customers.lastName,
+      street: customers.street,
+      houseNumber: customers.houseNumber,
+      addressLine2: customers.addressLine2,
+      postalCode: customers.postalCode,
+      city: customers.city,
+      cityPart: customers.cityPart,
+      state: customers.state,
+      country: customers.country,
+      customerPhone: customers.customerPhone,
+      customerEmail: customers.customerEmail,
+      geodate: customers.geodate,
+      created_by: customers.created_by
+    }).from(customers) as Customer[];
   }
   
   async getCustomer(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id)) as Customer[];
+    const [customer] = await db.select({
+      id: customers.id,
+      projectId: customers.projectId,
+      customerId: customers.customerId,
+      customerType: customers.customerType,
+      firstName: customers.firstName,
+      lastName: customers.lastName,
+      street: customers.street,
+      houseNumber: customers.houseNumber,
+      addressLine2: customers.addressLine2,
+      postalCode: customers.postalCode,
+      city: customers.city,
+      cityPart: customers.cityPart,
+      state: customers.state,
+      country: customers.country,
+      customerPhone: customers.customerPhone,
+      customerEmail: customers.customerEmail,
+      geodate: customers.geodate,
+      created_by: customers.created_by
+    }).from(customers).where(eq(customers.id, id)) as Customer[];
     return customer;
   }
   
@@ -348,16 +401,97 @@ export class DatabaseStorage implements IStorage {
       customer.customerId = await this.getNextCustomerId();
     }
     
-    const [createdCustomer] = await db.insert(customers).values(customer).returning() as Customer[];
+    // Explizite Auswahl der Felder mit korrektem geodate-Feld
+    const customerData = {
+      projectId: customer.projectId,
+      customerId: customer.customerId,
+      customerType: customer.customerType,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      street: customer.street,
+      houseNumber: customer.houseNumber,
+      addressLine2: customer.addressLine2,
+      postalCode: customer.postalCode,
+      city: customer.city,
+      cityPart: customer.cityPart,
+      state: customer.state,
+      country: customer.country,
+      customerPhone: customer.customerPhone,
+      customerEmail: customer.customerEmail,
+      geodate: customer.geodate,
+      created_by: customer.created_by
+    };
+    
+    const [createdCustomer] = await db.insert(customers).values(customerData).returning({
+      id: customers.id,
+      projectId: customers.projectId,
+      customerId: customers.customerId,
+      customerType: customers.customerType,
+      firstName: customers.firstName,
+      lastName: customers.lastName,
+      street: customers.street,
+      houseNumber: customers.houseNumber,
+      addressLine2: customers.addressLine2,
+      postalCode: customers.postalCode,
+      city: customers.city,
+      cityPart: customers.cityPart,
+      state: customers.state,
+      country: customers.country,
+      customerPhone: customers.customerPhone,
+      customerEmail: customers.customerEmail,
+      geodate: customers.geodate,
+      created_by: customers.created_by
+    }) as Customer[];
+    
     return createdCustomer;
   }
   
   async updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer | undefined> {
+    // Explizite Auswahl der Felder mit korrektem geodate-Feld
+    const customerData: any = {};
+    
+    if (customer.projectId !== undefined) customerData.projectId = customer.projectId;
+    if (customer.customerId !== undefined) customerData.customerId = customer.customerId;
+    if (customer.customerType !== undefined) customerData.customerType = customer.customerType;
+    if (customer.firstName !== undefined) customerData.firstName = customer.firstName;
+    if (customer.lastName !== undefined) customerData.lastName = customer.lastName;
+    if (customer.street !== undefined) customerData.street = customer.street;
+    if (customer.houseNumber !== undefined) customerData.houseNumber = customer.houseNumber;
+    if (customer.addressLine2 !== undefined) customerData.addressLine2 = customer.addressLine2;
+    if (customer.postalCode !== undefined) customerData.postalCode = customer.postalCode;
+    if (customer.city !== undefined) customerData.city = customer.city;
+    if (customer.cityPart !== undefined) customerData.cityPart = customer.cityPart;
+    if (customer.state !== undefined) customerData.state = customer.state;
+    if (customer.country !== undefined) customerData.country = customer.country;
+    if (customer.customerPhone !== undefined) customerData.customerPhone = customer.customerPhone;
+    if (customer.customerEmail !== undefined) customerData.customerEmail = customer.customerEmail;
+    if (customer.geodate !== undefined) customerData.geodate = customer.geodate;
+    if (customer.created_by !== undefined) customerData.created_by = customer.created_by;
+    
     const [updatedCustomer] = await db
       .update(customers)
-      .set(customer)
+      .set(customerData)
       .where(eq(customers.id, id))
-      .returning() as Customer[];
+      .returning({
+        id: customers.id,
+        projectId: customers.projectId,
+        customerId: customers.customerId,
+        customerType: customers.customerType,
+        firstName: customers.firstName,
+        lastName: customers.lastName,
+        street: customers.street,
+        houseNumber: customers.houseNumber,
+        addressLine2: customers.addressLine2,
+        postalCode: customers.postalCode,
+        city: customers.city,
+        cityPart: customers.cityPart,
+        state: customers.state,
+        country: customers.country,
+        customerPhone: customers.customerPhone,
+        customerEmail: customers.customerEmail,
+        geodate: customers.geodate,
+        created_by: customers.created_by
+      }) as Customer[];
     return updatedCustomer;
   }
   

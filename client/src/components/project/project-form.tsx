@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,11 +13,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Plus, Save } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
@@ -24,6 +25,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SpeechToText } from "@/components/ui/speech-to-text";
+import QuickCustomerModal from "./quick-customer-modal";
+import QuickCompanyModal from "./quick-company-modal";
 
 const PROJECT_TYPES = ["Hochbau", "Tiefbau"];
 
@@ -34,6 +37,11 @@ interface ProjectFormProps {
 }
 
 export default function ProjectForm({ project, onSubmit, isLoading = false }: ProjectFormProps) {
+  // State für die Modal-Fenster
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   // Create a form schema extending the insertProjectSchema
   // Custom validation function for date fields
   const validateEndDate = (endDate: Date | null | undefined, startDate: Date | null | undefined): boolean => {
@@ -50,9 +58,6 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
     companyId: z.number().nullable().optional(),
     personId: z.number().nullable().optional(),
     customerContactId: z.number().nullable().optional(),
-    permission: z.boolean().default(false),
-    permissionName: z.string().optional(),
-    permissionDate: z.date().nullable().optional(),
     projectName: z.string().min(1, "Projektname ist erforderlich"),
     projectArt: z.string().min(1, "Projektart ist erforderlich"),
     // Verwenden Sie string für Eingabefelder, aber wandeln Sie sie später in number um
@@ -114,9 +119,6 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
       companyId: project?.companyId || null,
       personId: project?.personId || null,
       customerContactId: project?.customerContactId || null,
-      permission: project?.permission || false,
-      permissionName: project?.permissionName || "",
-      permissionDate: project?.permissionDate ? new Date(project.permissionDate) : null,
       projectName: project?.projectName || "",
       projectArt: project?.projectArt || "",
       projectText: project ? (project.projectText !== null ? String(project.projectText) : '') : '',
@@ -130,6 +132,24 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
   });
 
   const projectStopValue = form.watch("projectStop");
+
+  // Handler für neu erstellte Kunden
+  const handleCustomerCreated = (customerId: number) => {
+    // Aktualisiere die Kundenliste im Cache
+    queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+    
+    // Setze den neuen Kunden als ausgewählten Kunden im Formular
+    form.setValue("customerId", customerId);
+  };
+
+  // Handler für neu erstellte Firmen
+  const handleCompanyCreated = (companyId: number) => {
+    // Aktualisiere die Firmenliste im Cache
+    queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+    
+    // Setze die neue Firma als ausgewählte Firma im Formular
+    form.setValue("companyId", companyId);
+  };
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
@@ -254,7 +274,19 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                 name="customerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kunde</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Kunde</FormLabel>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setIsCustomerModalOpen(true)}
+                        className="h-8 px-2 text-xs font-normal"
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Neu anlegen
+                      </Button>
+                    </div>
                     <Select
                       onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                       defaultValue={field.value?.toString()}
@@ -285,7 +317,19 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
                 name="companyId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Firma</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Firma</FormLabel>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setIsCompanyModalOpen(true)}
+                        className="h-8 px-2 text-xs font-normal"
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Neu anlegen
+                      </Button>
+                    </div>
                     <Select
                       onValueChange={(value) => field.onChange(value ? Number(value) : null)}
                       defaultValue={field.value?.toString()}
@@ -625,6 +669,19 @@ export default function ProjectForm({ project, onSubmit, isLoading = false }: Pr
             {project ? "Projekt aktualisieren" : "Projekt speichern"}
           </Button>
         </div>
+
+        {/* Modale Fenster für die schnelle Erstellung */}
+        <QuickCustomerModal 
+          isOpen={isCustomerModalOpen} 
+          onClose={() => setIsCustomerModalOpen(false)} 
+          onCustomerCreated={handleCustomerCreated} 
+        />
+        
+        <QuickCompanyModal 
+          isOpen={isCompanyModalOpen} 
+          onClose={() => setIsCompanyModalOpen(false)} 
+          onCompanyCreated={handleCompanyCreated} 
+        />
       </form>
     </Form>
   );

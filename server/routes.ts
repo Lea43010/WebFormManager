@@ -82,6 +82,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next(err);
   });
 
+  // Endpoint zum Abrufen der nächsten Firmennummer
+  app.get("/api/companies/next-id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const nextId = await storage.getNextCompanyId();
+      return res.json({ nextId });
+    } catch (error) {
+      console.error("Error getting next company ID:", error);
+      next(error);
+    }
+  });
+  
   // Company routes
   app.get("/api/companies", async (req, res, next) => {
     try {
@@ -297,6 +312,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint zum Abrufen der nächsten Kundennummer
+  app.get("/api/customers/next-id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const nextId = await storage.getNextCustomerId();
+      return res.json({ nextId });
+    } catch (error) {
+      console.error("Error getting next customer ID:", error);
+      next(error);
+    }
+  });
+  
+  // Endpoint zum Abrufen der nächsten Kundennummer
+  app.get("/api/customers/next-id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const nextId = await storage.getNextCustomerId();
+      return res.json({ nextId });
+    } catch (error) {
+      console.error("Error getting next customer ID:", error);
+      next(error);
+    }
+  });
+  
   // Customer routes
   app.get("/api/customers", async (req, res, next) => {
     try {

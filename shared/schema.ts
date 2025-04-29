@@ -72,9 +72,9 @@ export const customers = pgTable("tblcustomer", {
   cityPart: varchar("city_part", { length: 100 }),
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
-  geodata: varchar("geodata", { length: 255 }),
   customerPhone: varchar("customer_phone", { length: 20 }),
   customerEmail: varchar("customer_email", { length: 255 }),
+  geodate: varchar("geodate", { length: 255 }),
   created_by: integer("created_by").references(() => users.id),
 });
 
