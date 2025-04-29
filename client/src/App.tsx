@@ -30,7 +30,7 @@ import DbStructureFixPage from "@/pages/db-structure-fix-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
 import HelpPage from "@/pages/help-page";
-import StreetModulesPage from "@/pages/street-modules-page";
+import StreetModulesPage from "@/pages/street-modules-new";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
