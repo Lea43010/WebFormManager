@@ -35,7 +35,7 @@ import {
   roadDamageTypeEnum, 
   repairStatusEnum, 
   insertRoadDamageSchema 
-} from "@/schema/road-damage-schema";
+} from "../../schema/road-damage-schema";
 import { cn } from "@/lib/utils";
 
 interface RoadDamageFormProps {
