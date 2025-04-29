@@ -29,6 +29,7 @@ import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import DbStructureFixPage from "@/pages/db-structure-fix-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
+import HelpPage from "@/pages/help-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 
@@ -60,6 +61,7 @@ function Router() {
       <AdminProtectedRoute path="/db-structure-quality-debug" component={DbStructureQualityPage} />
       <AdminProtectedRoute path="/db-structure-fix" component={DbStructureFixPage} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
+      <ProtectedRoute path="/help" component={HelpPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route component={NotFound} />

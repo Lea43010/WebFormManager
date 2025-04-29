@@ -43,6 +43,30 @@ import { fromZodError } from "zod-validation-error";
 import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Dokumentations-PDFs mit korrektem Content-Type bereitstellen
+  app.get('/docs/:filename', async (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(process.cwd(), 'public', 'docs', filename);
+    
+    try {
+      const exists = await fs.pathExists(filePath);
+      if (!exists) {
+        return res.status(404).send('Dokument nicht gefunden');
+      }
+      
+      // Setze den korrekten Content-Type für PDFs
+      if (filename.endsWith('.pdf')) {
+        res.setHeader('Content-Type', 'application/pdf');
+      }
+      
+      // Sende die Datei
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error("Fehler beim Dateizugriff:", error);
+      res.status(500).send('Interner Serverfehler');
+    }
+  });
+
   // Set up authentication routes
   setupAuth(app);
   

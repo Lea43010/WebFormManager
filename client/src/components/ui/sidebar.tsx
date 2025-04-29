@@ -18,7 +18,8 @@ import {
   ShieldAlert,
   CreditCard,
   BarChart2, 
-  FileCheck
+  FileCheck,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -86,10 +87,16 @@ const navItems: NavItem[] = [
     tooltip: "Abonnement verwalten und Zahlungsinformationen",
   },
   {
-    title: "Hilfe & Info",
+    title: "Informationen",
     href: "/information",
     icon: Info,
-    tooltip: "Hilfe, Dokumentation und Informationen zur App",
+    tooltip: "Allgemeine Informationen zur App",
+  },
+  {
+    title: "Hilfe & Dokumentation",
+    href: "/help",
+    icon: HelpCircle,
+    tooltip: "Hilfe, Benutzerhandbücher und Dokumentation",
   },
   // Nutzerverwaltung wurde in den Admin-Bereich verschoben
   {
