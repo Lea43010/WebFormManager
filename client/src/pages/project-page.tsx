@@ -289,38 +289,7 @@ export default function ProjectPage() {
     >
       {!isEditing ? (
         <div className="space-y-4">
-          {/* Hinweis-Card - Mobile-freundlich */}
-          <div className="bg-amber-50 border border-amber-300 p-3 sm:p-4 rounded-lg">
-            <div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 flex-shrink-0 mt-1 sm:mt-0 w-5 h-5 sm:w-6 sm:h-6">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <h3 className="text-sm sm:text-lg font-semibold text-amber-800">Wichtiger Hinweis zur Dateneingabe</h3>
-            </div>
-            <p className="text-xs sm:text-sm text-amber-800 mb-3 sm:mb-4">
-              Um ein neues Projekt anzulegen, müssen Sie zuerst <strong>Unternehmen</strong> und <strong>Kunden</strong> eintragen. 
-              Bitte stellen Sie sicher, dass diese Daten vorhanden sind.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                variant="outline" 
-                className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
-                onClick={() => navigate("/companies")}
-              >
-                Unternehmen anlegen
-              </Button>
-              <Button 
-                variant="outline" 
-                className="text-amber-800 border-amber-300 hover:bg-amber-100 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
-                onClick={() => navigate("/customers")}
-              >
-                Kunden anlegen
-              </Button>
-            </div>
-          </div>
-          
+
           {/* Aktionsleiste */}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
             {/* Ansichtsoptionen - Mobile-optimiert */}

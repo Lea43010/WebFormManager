@@ -174,12 +174,18 @@ export function Sidebar() {
                 </div>
               );
 
+              // Data-tour Attribut für die Tour hinzufügen
+              // Konvertiere den Titel in einen tour-identifier (z.B. "Firmendaten" zu "companies-link")
+              const tourId = item.href.replace(/\//g, '') || 'dashboard';
+              const dataTourAttr = { 'data-tour': `${tourId}-link` };
+              
               // Wenn ein Tooltip-Text existiert, umschließe das Element mit der Tooltip-Komponente
               return item.tooltip ? (
                 <TooltipButton 
                   key={item.href}
                   tooltipText={item.tooltip}
                   side="right"
+                  {...dataTourAttr}
                 >
                   <Link
                     href={item.href}
@@ -193,6 +199,7 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => isMobile && setIsMobileOpen(false)}
+                  {...dataTourAttr}
                 >
                   {menuItem}
                 </Link>

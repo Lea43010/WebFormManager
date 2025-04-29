@@ -32,6 +32,7 @@ import AdminEmailsPage from "@/pages/admin-emails";
 import HelpPage from "@/pages/help-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
+import AutoTour from "@/components/onboarding/auto-tour";
 
 function Router() {
   return (
@@ -76,6 +77,7 @@ function App() {
         <Router />
       </PageTransition>
       <Toaster />
+      <AutoTour />
     </NetworkStatusProvider>
   );
 }
