@@ -30,6 +30,7 @@ import DbStructureFixPage from "@/pages/db-structure-fix-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
 import HelpPage from "@/pages/help-page";
+import StreetModulesPage from "@/pages/street-modules-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -56,6 +57,7 @@ function Router() {
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
       <ProtectedRoute path="/geo-map" component={GeoMapPage} />
       <ProtectedRoute path="/information" component={InformationPage} />
+      <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />

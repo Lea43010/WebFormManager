@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { InteractiveTour } from './interactive-tour';
+import { useAuth } from '@/hooks/use-auth';
 
 // Interner useLocalStorage Hook für die Tour-Komponente
 function useLocalStorage<T>(key: string, initialValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
@@ -27,9 +28,26 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, React.Dispatch<Re
 }
 
 /**
- * Komponente, die automatisch eine Tour für neue Benutzer startet
+ * Überprüft, ob ein Benutzer als neu registriert gilt
+ * Ein Benutzer gilt als neu registriert, wenn:
+ * 1. Er ein Registrierungsdatum hat
+ * 2. Das Registrierungsdatum weniger als 24 Stunden zurückliegt
+ */
+function isNewlyRegistered(registrationDate: Date | null | undefined): boolean {
+  if (!registrationDate) return false;
+  
+  const regDate = new Date(registrationDate);
+  const now = new Date();
+  const hoursSinceRegistration = (now.getTime() - regDate.getTime()) / (1000 * 60 * 60);
+  
+  return hoursSinceRegistration < 24; // Benutzer gilt als neu, wenn weniger als 24 Stunden seit Registrierung vergangen sind
+}
+
+/**
+ * Komponente, die automatisch eine Tour für neu registrierte Benutzer startet
  */
 export const AutoTour: React.FC = () => {
+  const { user } = useAuth();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [hasSeenTour, setHasSeenTour] = useLocalStorage('hasSeenTour', false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -39,16 +57,22 @@ export const AutoTour: React.FC = () => {
     // Verzögerung hinzufügen, damit die Seite vollständig geladen ist
     const timer = setTimeout(() => {
       setIsLoaded(true);
-      if (!hasSeenTour) {
+      
+      // Tour nur anzeigen, wenn:
+      // 1. Der Benutzer die Tour noch nicht gesehen hat
+      // 2. Der Benutzer neu registriert ist
+      if (!hasSeenTour && user && isNewlyRegistered(user.registrationDate)) {
+        console.log('Starte Tour für neu registrierten Benutzer:', user.username);
         setIsTourOpen(true);
       }
     }, 1500); // 1,5 Sekunden Verzögerung
 
     return () => clearTimeout(timer);
-  }, [hasSeenTour]);
+  }, [hasSeenTour, user]);
 
   const closeTour = () => {
     setIsTourOpen(false);
+    setHasSeenTour(true); // Tour als gesehen markieren
   };
 
   if (!isLoaded) return null;
