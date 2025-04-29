@@ -1,8 +1,8 @@
-import { pgTable, serial, text, timestamp, pgEnum, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enumerationen für Straßenschäden
+// Straßenschaden-Typen als Enum
 export const roadDamageTypeEnum = pgEnum("road_damage_type", [
   "riss",
   "schlagloch",
@@ -13,42 +13,18 @@ export const roadDamageTypeEnum = pgEnum("road_damage_type", [
   "kantenschaden",
   "fugenausbruch",
   "abnutzung",
-  "sonstiges",
+  "sonstiges"
 ]);
 
+// Schadensschweregrad als Enum
 export const damageSeverityEnum = pgEnum("damage_severity", [
   "leicht",
   "mittel",
   "schwer",
-  "kritisch",
+  "kritisch"
 ]);
 
-// Exportiere die Typen für TypeScript
-export type RoadDamageType = z.infer<typeof roadDamageTypeSchema>;
-export type DamageSeverity = z.infer<typeof damageSeveritySchema>;
-
-// Zod-Schemas für Typen-Validierung
-export const roadDamageTypeSchema = z.enum([
-  "riss",
-  "schlagloch",
-  "netzriss",
-  "verformung",
-  "ausbruch",
-  "abplatzung",
-  "kantenschaden",
-  "fugenausbruch",
-  "abnutzung",
-  "sonstiges",
-]);
-
-export const damageSeveritySchema = z.enum([
-  "leicht",
-  "mittel",
-  "schwer",
-  "kritisch",
-]);
-
-// Straßenschaden-Tabelle
+// Tabellendefinition für Straßenschäden
 export const roadDamages = pgTable("tblroad_damages", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull(),
@@ -63,33 +39,26 @@ export const roadDamages = pgTable("tblroad_damages", {
   estimatedRepairCost: integer("estimated_repair_cost"),
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Schemas für API-Operationen
+// Schemas für Zod-Validierung
 export const insertRoadDamageSchema = createInsertSchema(roadDamages, {
-  projectId: z.number().int().positive(),
-  damageType: roadDamageTypeSchema,
-  severity: damageSeveritySchema,
-  position: z.string().min(0).max(500).optional().nullable(),
-  description: z.string().min(1).max(2000),
-  recommendedAction: z.string().min(0).max(2000).optional().nullable(),
-  imageUrl: z.string().min(0).max(500).optional().nullable(),
-  audioUrl: z.string().min(0).max(500).optional().nullable(),
-  audioTranscription: z.string().min(0).max(5000).optional().nullable(),
-  estimatedRepairCost: z.number().int().nonnegative().optional().nullable(),
-  createdBy: z.number().int().positive(),
+  projectId: z.number(),
+  damageType: z.enum(["riss", "schlagloch", "netzriss", "verformung", "ausbruch", "abplatzung", "kantenschaden", "fugenausbruch", "abnutzung", "sonstiges"]),
+  severity: z.enum(["leicht", "mittel", "schwer", "kritisch"]),
+  position: z.string().optional(),
+  description: z.string().min(1, "Beschreibung ist erforderlich"),
+  recommendedAction: z.string().optional(),
+  imageUrl: z.string().optional(),
+  audioUrl: z.string().optional(),
+  audioTranscription: z.string().optional(),
+  estimatedRepairCost: z.number().optional(),
+  createdBy: z.number(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
-// Typen für Frontend/Backend
+// Typen
 export type RoadDamage = typeof roadDamages.$inferSelect;
 export type InsertRoadDamage = z.infer<typeof insertRoadDamageSchema>;
-
-// Typen für Statistik-Antworten
-export type RoadDamageStats = {
-  totalDamages: number;
-  byType: Record<RoadDamageType, number>;
-  bySeverity: Record<DamageSeverity, number>;
-  totalEstimatedCost: number;
-  averageDamagePerKm?: number;
-};
+export type RoadDamageType = typeof roadDamageTypeEnum.enumValues[number];
+export type DamageSeverity = typeof damageSeverityEnum.enumValues[number];

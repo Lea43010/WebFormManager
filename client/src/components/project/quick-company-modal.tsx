@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Dialog, 
@@ -96,6 +97,9 @@ export default function QuickCompanyModal({
     }
   }, [isOpen]);
 
+  // Hook für die Navigation
+  const [, navigate] = useLocation();
+
   // Handler für das Absenden des Formulars
   const onSubmit = async (data: CompanyFormData) => {
     setIsSubmitting(true);
@@ -110,12 +114,19 @@ export default function QuickCompanyModal({
       
       // Zurücksetzen und Schließen des Formulars
       form.reset();
+      // Callback aufrufen, um die neue Firma im Projekt zu verwenden
       onCompanyCreated(newCompany.id);
-      
-      // Weiterleitung zum vollständigen Formular
-      window.location.href = `/companies/edit/${newCompany.id}`;
-      
       onClose();
+      
+      // Optional: In einem separaten useEffect die Navigation durchführen
+      // Dies verhindert 404-Fehler und stellt sicher, dass erst der onClose() ausgeführt wird
+      setTimeout(() => {
+        // Nur navigieren, wenn die aktuelle URL nicht die Projekterstellung ist
+        if (!window.location.pathname.includes('/projects/new') && 
+            !window.location.pathname.includes('/projects/edit')) {
+          navigate(`/companies/edit/${newCompany.id}`);
+        }
+      }, 100);
     } catch (error) {
       console.error("Fehler beim Erstellen der Firma:", error);
       toast({

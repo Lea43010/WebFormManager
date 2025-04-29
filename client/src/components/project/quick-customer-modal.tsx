@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { 
   Dialog, 
   DialogContent, 
@@ -94,6 +95,9 @@ export default function QuickCustomerModal({
     }
   }, [isOpen]);
 
+  // Hook für die Navigation
+  const [, navigate] = useLocation();
+
   // Handler für das Absenden des Formulars
   const onSubmit = async (data: CustomerFormData) => {
     setIsSubmitting(true);
@@ -108,12 +112,19 @@ export default function QuickCustomerModal({
       
       // Zurücksetzen und Schließen des Formulars
       form.reset();
+      // Callback aufrufen, um den neuen Kunden im Projekt zu verwenden
       onCustomerCreated(newCustomer.id);
-      
-      // Weiterleitung zum vollständigen Kundenprofil
-      window.location.href = `/customers/edit/${newCustomer.id}`;
-      
       onClose();
+      
+      // Optional: In einem separaten useEffect die Navigation durchführen
+      // Dies verhindert 404-Fehler und stellt sicher, dass erst der onClose() ausgeführt wird
+      setTimeout(() => {
+        // Nur navigieren, wenn die aktuelle URL nicht die Projekterstellung ist
+        if (!window.location.pathname.includes('/projects/new') && 
+            !window.location.pathname.includes('/projects/edit')) {
+          navigate(`/customers/edit/${newCustomer.id}`);
+        }
+      }, 100);
     } catch (error) {
       console.error("Fehler beim Erstellen des Kunden:", error);
       toast({
