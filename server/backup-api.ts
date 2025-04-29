@@ -6,7 +6,7 @@
  */
 
 import express from 'express';
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
@@ -234,8 +234,9 @@ router.post('/restore/:path(*)', requireAdmin(), (req, res) => {
     const tempDir = path.resolve(process.cwd(), 'temp', 'restore-' + Date.now());
     fs.mkdirSync(tempDir, { recursive: true });
     
-    // Backup entpacken
-    execSync(`tar -xzf "${fullPath}" -C "${tempDir}"`);
+    // Backup entpacken mit Child Process
+    const child_process = require('child_process');
+    child_process.execSync(`tar -xzf "${fullPath}" -C "${tempDir}"`);
     
     // SQL-Datei finden
     const sqlFiles = fs.readdirSync(tempDir).filter(file => file.endsWith('.sql'));
@@ -249,7 +250,7 @@ router.post('/restore/:path(*)', requireAdmin(), (req, res) => {
     const sqlFile = path.join(tempDir, sqlFiles[0]);
     
     // Datenbank wiederherstellen
-    execSync(`PGPASSWORD="${process.env.PGPASSWORD}" psql -h ${process.env.PGHOST} -p ${process.env.PGPORT} -U ${process.env.PGUSER} -d ${process.env.PGDATABASE} -f "${sqlFile}"`, {
+    child_process.execSync(`PGPASSWORD="${process.env.PGPASSWORD}" psql -h ${process.env.PGHOST} -p ${process.env.PGPORT} -U ${process.env.PGUSER} -d ${process.env.PGDATABASE} -f "${sqlFile}"`, {
       env: process.env
     });
     
