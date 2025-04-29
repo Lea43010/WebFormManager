@@ -7,7 +7,7 @@ interface SpeechRecorderProps {
   onResult: (audioBlob: Blob, text: string) => void;
 }
 
-export const SpeechRecorder: React.FC<SpeechRecorderProps> = ({ onResult }) => {
+const SpeechRecorder: React.FC<SpeechRecorderProps> = ({ onResult }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
