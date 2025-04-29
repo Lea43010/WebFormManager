@@ -43,21 +43,6 @@ export default function HomePage() {
   return (
     <DashboardLayout title="Dashboard" tabs={[]}>
       <div className="flex flex-col gap-3 sm:gap-4">
-        {/* Hinweis-Card - kompakt für alle Geräte */}
-        <Card className="bg-amber-50 border-amber-300">
-          <CardHeader className="p-2 sm:pb-2 sm:pt-3 sm:px-3">
-            <CardTitle className="flex items-center gap-1 sm:gap-2 text-amber-800 text-sm sm:text-base md:text-lg">
-              <Info className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-              <span className="line-clamp-2">Reihenfolge der Dateneingabe</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 pb-2 sm:px-3 sm:pb-3">
-            <p className="text-amber-800 text-xs sm:text-sm md:text-base">
-              Um ein neues Projekt anzulegen, müssen Sie zuerst <strong>Unternehmen</strong> und <strong>Kunden</strong> eintragen. 
-              Bitte stellen Sie sicher, dass diese Daten vorhanden sind.
-            </p>
-          </CardContent>
-        </Card>
         
         {/* Hauptbereich - Schnellzugriff auf die wichtigsten Module */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
