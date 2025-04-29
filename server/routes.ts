@@ -349,33 +349,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Nur Administratoren können alle Kunden sehen
-      if (req.user.role === 'administrator') {
-        const customers = await storage.getCustomers();
-        return res.json(customers);
-      }
+      console.log("Benutzerrolle:", req.user.role);
+      console.log("Benutzer-ID:", req.user.id);
       
       // Alle Kunden holen
       const allCustomers = await storage.getCustomers();
+      console.log("Gefundene Kunden:", allCustomers.length);
+      
+      // Debug-Ausgabe für die ersten Kunden
+      if (allCustomers.length > 0) {
+        console.log("Erster Kunde:", JSON.stringify(allCustomers[0]));
+      }
+      
+      // Nur Administratoren können alle Kunden sehen
+      if (req.user.role === 'administrator') {
+        console.log("Administrator-Rolle erkannt, sende alle Kunden zurück");
+        return res.json(allCustomers);
+      }
       
       // Manager können nur ihre eigenen Kunden sehen (die sie erstellt haben)
       if (req.user.role === 'manager') {
-        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-        const customers = allCustomers.filter(customer => customer.created_by === req.user.id);
+        console.log("Manager-Rolle erkannt, filtere Kunden nach created_by");
+        // Umwandlung der Benutzer-ID in eine Zahl für den Vergleich, falls sie als String vorliegt
+        const userId = Number(req.user.id);
+        
+        // Filtere Kunden basierend auf dem created_by-Feld
+        const customers = allCustomers.filter(customer => {
+          const customerCreatedBy = Number(customer.created_by);
+          console.log(`Kunde ${customer.id}: created_by=${customerCreatedBy}, Benutzer-ID=${userId}`);
+          return customerCreatedBy === userId;
+        });
+        
+        console.log(`${customers.length} Kunden gefunden für Manager`);
         return res.json(customers);
       }
       
       // Normale Benutzer können nur Kunden sehen, die mit ihren Projekten verbunden sind oder von ihnen erstellt wurden
       // Holen der Projekte des Benutzers
       const userProjects = await storage.getProjectsByUser(req.user.id);
+      console.log(`${userProjects.length} Projekte gefunden für normalen Benutzer`);
       
       // Kunden filtern, die mit Projekten des Benutzers verbunden sind oder von ihnen erstellt wurden
+      const userId = Number(req.user.id);
       const customers = allCustomers.filter(customer => {
-        return userProjects.some(project => project.customerId === customer.id) || 
-               // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-               customer.created_by === req.user.id;
+        const projectMatch = userProjects.some(project => project.customerId === customer.id);
+        const createdByMatch = Number(customer.created_by) === userId;
+        
+        if (projectMatch) console.log(`Kunde ${customer.id} ist mit einem Projekt des Benutzers verbunden`);
+        if (createdByMatch) console.log(`Kunde ${customer.id} wurde vom Benutzer erstellt`);
+        
+        return projectMatch || createdByMatch;
       });
       
+      console.log(`${customers.length} Kunden gefunden für normalen Benutzer`);
       res.json(customers);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -389,6 +415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      console.log("Benutzerrolle:", req.user.role);
+      console.log("Benutzer-ID:", req.user.id);
+      
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       
@@ -396,32 +425,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
+      console.log("Gefundener Kunde:", JSON.stringify(customer));
+      
       // Administratoren können alle Kunden sehen
       if (req.user.role === 'administrator') {
+        console.log("Administrator-Rolle erkannt, sende Kunde zurück");
         return res.json(customer);
       }
       
       // Manager können nur ihre eigenen Kunden sehen (die sie erstellt haben)
       if (req.user.role === 'manager') {
-        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-        if (customer.created_by === req.user.id) {
+        const userId = Number(req.user.id);
+        const customerCreatedBy = Number(customer.created_by);
+        console.log(`Kunde ${customer.id}: created_by=${customerCreatedBy}, Benutzer-ID=${userId}`);
+        
+        if (customerCreatedBy === userId) {
+          console.log("Manager hat Zugriff auf Kunde (selbst erstellt)");
           return res.json(customer);
         } else {
+          console.log("Manager hat KEINEN Zugriff auf Kunde (nicht selbst erstellt)");
           return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Kunden. Manager können nur ihre eigenen Kunden sehen." });
         }
       }
       
       // Für normale Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist oder von ihnen erstellt wurde
       const userProjects = await storage.getProjectsByUser(req.user.id);
-      const hasAccess = userProjects.some(project => project.customerId === customer.id) || 
-                        // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-                        customer.created_by === req.user.id;
+      console.log(`${userProjects.length} Projekte gefunden für normalen Benutzer`);
       
-      if (hasAccess) {
+      const userId = Number(req.user.id);
+      const customerCreatedBy = Number(customer.created_by);
+      
+      const projectMatch = userProjects.some(project => project.customerId === customer.id);
+      const createdByMatch = customerCreatedBy === userId;
+      
+      if (projectMatch) console.log(`Kunde ${customer.id} ist mit einem Projekt des Benutzers verbunden`);
+      if (createdByMatch) console.log(`Kunde ${customer.id} wurde vom Benutzer erstellt`);
+      
+      if (projectMatch || createdByMatch) {
+        console.log("Benutzer hat Zugriff auf Kunde");
         return res.json(customer);
       }
       
       // Keine Berechtigung
+      console.log("Benutzer hat KEINEN Zugriff auf Kunde");
       return res.status(403).json({ message: "Keine Berechtigung für den Zugriff auf diesen Kunden" });
     } catch (error) {
       console.error("Error fetching customer:", error);
@@ -469,6 +515,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      console.log("Benutzerrolle:", req.user.role);
+      console.log("Benutzer-ID:", req.user.id);
+      
       const id = parseInt(req.params.id);
       const existingCustomer = await storage.getCustomer(id);
       
@@ -476,23 +525,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
+      console.log("Vorhandener Kunde:", JSON.stringify(existingCustomer));
+      
       // Berechtigungsprüfung
       // Administratoren können jeden Kunden bearbeiten
       if (req.user.role !== 'administrator') {
         // Manager können nur ihre eigenen Kunden bearbeiten (die sie erstellt haben)
         if (req.user.role === 'manager') {
-          // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-          if (existingCustomer.created_by !== req.user.id) {
+          const userId = Number(req.user.id);
+          const customerCreatedBy = Number(existingCustomer.created_by);
+          console.log(`Kunde ${existingCustomer.id}: created_by=${customerCreatedBy}, Benutzer-ID=${userId}`);
+          
+          if (customerCreatedBy !== userId) {
+            console.log("Manager hat KEINEN Zugriff auf Kunde (nicht selbst erstellt)");
             return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden. Manager können nur ihre eigenen Kunden bearbeiten." });
           }
         } else {
           // Für normale Benutzer: Prüfen, ob der Kunde mit einem ihrer Projekte verbunden ist oder von ihnen erstellt wurde
           const userProjects = await storage.getProjectsByUser(req.user.id);
-          const hasAccess = userProjects.some(project => project.customerId === existingCustomer.id) ||
-                            // @ts-ignore - Das Feld created_by ist in der Datenbank vorhanden
-                            existingCustomer.created_by === req.user.id;
+          console.log(`${userProjects.length} Projekte gefunden für normalen Benutzer`);
           
-          if (!hasAccess) {
+          const userId = Number(req.user.id);
+          const customerCreatedBy = Number(existingCustomer.created_by);
+          
+          const projectMatch = userProjects.some(project => project.customerId === existingCustomer.id);
+          const createdByMatch = customerCreatedBy === userId;
+          
+          if (projectMatch) console.log(`Kunde ${existingCustomer.id} ist mit einem Projekt des Benutzers verbunden`);
+          if (createdByMatch) console.log(`Kunde ${existingCustomer.id} wurde vom Benutzer erstellt`);
+          
+          if (!projectMatch && !createdByMatch) {
+            console.log("Benutzer hat KEINEN Zugriff auf Kunde");
             return res.status(403).json({ message: "Keine Berechtigung für die Bearbeitung dieses Kunden" });
           }
         }
@@ -506,11 +569,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerPhone: req.body.customerPhone?.toString() || null,
       };
       
+      console.log("Aktualisierungsdaten:", formData);
+      
       // Verwende das Schema ohne transform für partial
       const baseSchema = createInsertSchema(customers);
       const validatedData = baseSchema.partial().parse(formData);
       
+      console.log("Validierte Daten:", validatedData);
+      
       const customer = await storage.updateCustomer(id, validatedData);
+      console.log("Kunde aktualisiert:", customer);
       res.json(customer);
     } catch (error) {
       console.error("Customer update error:", error);
