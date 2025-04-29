@@ -150,6 +150,7 @@ const config = {
   email,
   ai,
   externalServices,
+  backup,
   APP_URL, // Anwendungs-URL für E-Mails und Links
 };
 

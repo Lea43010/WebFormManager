@@ -11,7 +11,8 @@ import cron from 'node-cron';
 import { logger } from './logger';
 import { trialEmailService } from './trial-email-service';
 import config from '../config';
-import { runBackup } from './cron-jobs/backup';
+// Direkter Import der Backup-Funktion
+import * as backupModule from './cron-jobs/backup';
 
 // Logger für dieses Modul erstellen
 const cronLogger = logger.createLogger('cron-jobs');
@@ -26,7 +27,7 @@ export function initCronJobs() {
   cron.schedule('0 3 * * *', () => {
     cronLogger.info('Führe tägliches Backup aus...');
     try {
-      runBackup();
+      backupModule.runBackup();
     } catch (error) {
       cronLogger.error('Fehler bei der Ausführung des täglichen Backups:', error);
     }
@@ -57,14 +58,14 @@ export function initCronJobs() {
   
   // Wenn wir in Entwicklungsumgebung sind und DEBUG_CRON_JOBS aktiviert ist, 
   // führe die Jobs sofort aus (für Debugging)
-  if (config.isDevelopment && process.env.DEBUG_CRON_JOBS === 'true') {
+  if (config.isDevelopment && config.backup.debugCronJobs) {
     cronLogger.info('DEBUG_CRON_JOBS ist aktiviert. Führe Jobs sofort aus...');
     
     // Führe das Backup sofort aus
     setTimeout(() => {
       try {
         cronLogger.info('[DEBUG] Führe sofortiges Backup aus...');
-        runBackup();
+        backupModule.runBackup();
       } catch (error) {
         cronLogger.error('[DEBUG] Fehler bei der Ausführung des sofortigen Backups:', error);
       }
