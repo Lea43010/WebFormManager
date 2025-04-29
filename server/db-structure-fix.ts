@@ -50,6 +50,9 @@ export async function fixDatabaseStructureIssues(): Promise<DbFixResult> {
   try {
     logger.info("Starte Datenbank-Strukturproblembehebung...");
     
+    // Schritt 0: Spezielle Fixes für bekannte Probleme ausführen
+    await fixKnownSpecialCases(result);
+    
     // Schritt 1: Tabellen identifizieren, die keinen Primärschlüssel haben
     await fixMissingPrimaryKeys(result);
     
@@ -72,6 +75,122 @@ export async function fixDatabaseStructureIssues(): Promise<DbFixResult> {
     });
     return result;
   }
+}
+
+/**
+ * Behebt spezielle bekannte Probleme, die in früheren Durchläufen identifiziert wurden
+ */
+async function fixKnownSpecialCases(result: DbFixResult) {
+  try {
+    // 1. Spezialfall: tblpermissions_backup hat bereits eine id-Spalte, braucht aber PRIMARY KEY
+    try {
+      // Prüfen, ob die Tabelle existiert
+      const tableExists = await doesTableExist('tblpermissions_backup');
+      if (tableExists) {
+        // Prüfen, ob ein Primary Key fehlt
+        const hasPrimaryKey = await hasTablePrimaryKey('tblpermissions_backup');
+        if (!hasPrimaryKey) {
+          // PRIMARY KEY direkt auf vorhandene id-Spalte setzen (ohne ALTER TABLE ADD COLUMN)
+          await executeQuery(
+            `ALTER TABLE "tblpermissions_backup" ADD CONSTRAINT "tblpermissions_backup_pkey" PRIMARY KEY (id)`
+          );
+          
+          result.fixes_applied.push({
+            table: 'tblpermissions_backup',
+            issue: 'Primärschlüssel fehlt, aber id-Spalte vorhanden',
+            fix: 'PRIMARY KEY Constraint für vorhandene id-Spalte hinzugefügt',
+            result: 'Erfolgreich'
+          });
+        }
+      }
+    } catch (error) {
+      logger.error("Fehler beim Spezialfix für tblpermissions_backup:", error);
+      result.errors.push({
+        table: 'tblpermissions_backup',
+        issue: 'Primärschlüssel fehlt, aber id-Spalte vorhanden',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+    // 2. Spezialfall: tbluser.created_by verletzt Foreign Key Constraints
+    try {
+      // Zuerst prüfen, ob created_by überhaupt NULL-Werte enthält
+      const nullValues = await executeQuery(
+        `SELECT COUNT(*) as count FROM "tbluser" WHERE "created_by" IS NULL`
+      );
+      
+      if (nullValues[0].count > 0) {
+        // Statt zu löschen, setzen wir NULL-Werte auf einen Standard-Wert (1 = Admin)
+        await executeQuery(
+          `UPDATE "tbluser" SET "created_by" = 1 WHERE "created_by" IS NULL`
+        );
+        
+        // Dann NOT NULL Constraint hinzufügen
+        await executeQuery(
+          `ALTER TABLE "tbluser" ALTER COLUMN "created_by" SET NOT NULL`
+        );
+        
+        result.fixes_applied.push({
+          table: 'tbluser',
+          column: 'created_by',
+          issue: 'Fremdschlüssel enthält NULL-Werte mit Foreign Key Constraints',
+          fix: 'NULL-Werte auf Standard-Admin-Benutzer (ID 1) gesetzt und NOT NULL-Constraint hinzugefügt',
+          result: 'Erfolgreich'
+        });
+      }
+    } catch (error) {
+      logger.error("Fehler beim Spezialfix für tbluser.created_by:", error);
+      result.errors.push({
+        table: 'tbluser',
+        column: 'created_by',
+        issue: 'Fremdschlüssel enthält NULL-Werte mit Foreign Key Constraints',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+    
+  } catch (error) {
+    logger.error("Fehler bei fixKnownSpecialCases:", error);
+    result.errors.push({
+      table: 'global',
+      issue: 'Fehler beim Beheben bekannter Spezialfälle',
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+}
+
+/**
+ * Prüft, ob eine Tabelle existiert
+ */
+async function doesTableExist(tableName: string): Promise<boolean> {
+  const query = `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      AND table_name = $1
+    ) as exists
+  `;
+  
+  const result = await executeQuery(query, [tableName]);
+  return result[0].exists;
+}
+
+/**
+ * Prüft, ob eine Tabelle einen Primärschlüssel hat
+ */
+async function hasTablePrimaryKey(tableName: string): Promise<boolean> {
+  const query = `
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.table_constraints
+      WHERE table_schema = 'public'
+      AND table_name = $1
+      AND constraint_type = 'PRIMARY KEY'
+    ) as has_primary_key
+  `;
+  
+  const result = await executeQuery(query, [tableName]);
+  return result[0].has_primary_key;
 }
 
 /**

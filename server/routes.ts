@@ -16,6 +16,7 @@ import { setupStripeRoutes } from "./stripe-routes";
 import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
+import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
@@ -46,6 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up health check routes
   setupHealthRoutes(app);
+  
+  // Debug-Routen einrichten (ohne Authentifizierung)
+  setupDebugRoutes(app);
   
   // Backup-Routen einrichten
   setupBackupRoutes(app);

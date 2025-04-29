@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, AlertTriangle, CheckCircle, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { Loader2 } from 'lucide-react';
-import DashboardLayout from '@/components/layouts/dashboard-layout';
+import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 
-interface DbFixResult {
+export interface DbFixResult {
   success: boolean;
   fixes_applied: {
     table: string;
@@ -26,172 +26,227 @@ interface DbFixResult {
 }
 
 export default function DbStructureFixPage() {
-  const [result, setResult] = useState<DbFixResult | null>(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleFixDatabaseStructure = async () => {
+  const [result, setResult] = useState<DbFixResult | null>(null);
+  
+  // Status für erweiterte Anzeigen
+  const [showAppliedFixes, setShowAppliedFixes] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+  
+  // Nur Administratoren dürfen auf diese Seite zugreifen
+  React.useEffect(() => {
+    if (user && user.role !== 'administrator') {
+      toast({
+        title: "Zugriff verweigert",
+        description: "Sie haben keine Berechtigung, auf diese Seite zuzugreifen.",
+        variant: "destructive"
+      });
+      setLocation('/');
+    }
+  }, [user, setLocation, toast]);
+  
+  const runDbFix = async () => {
     setLoading(true);
-    setError(null);
+    
     try {
       const response = await apiRequest('POST', '/api/debug/db-structure/fix');
       const data = await response.json();
+      
       setResult(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ein unbekannter Fehler ist aufgetreten');
+      
+      if (data.success) {
+        toast({
+          title: "Reparatur erfolgreich",
+          description: `${data.fixes_applied.length} Probleme wurden behoben.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Reparatur mit Fehlern",
+          description: `${data.errors.length} Fehler sind aufgetreten.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Fehler bei der Datenbankstruktur-Reparatur:", error);
+      toast({
+        title: "Fehler",
+        description: "Bei der Datenbankstruktur-Reparatur ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // Manuell mit dem Skript reparieren, falls API-Route nicht funktioniert
+  const runManualRepair = () => {
+    toast({
+      title: "Hinweis zur manuellen Reparatur",
+      description: "Führen Sie 'npx tsx server/run-db-fixes.ts' in der Kommandozeile aus.",
+    });
+  };
+  
+  if (!user) return null;
+  
   return (
-    <DashboardLayout title="Datenbank-Struktur reparieren" description="Reparieren von Strukturproblemen in der Datenbank">
-      <div className="container mx-auto py-6">
+    <div className="min-h-screen bg-background p-4">
+      <div className="container max-w-screen-lg mx-auto p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Datenbankstruktur-Reparatur</h1>
+          <Button variant="outline" onClick={() => setLocation('/admin')}>
+            Zurück zum Admin-Bereich
+          </Button>
+        </div>
+        
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Datenbank-Struktur reparieren</CardTitle>
+            <CardTitle>Reparatur der Datenbankstruktur</CardTitle>
             <CardDescription>
-              Dieses Tool behebt automatisch Probleme mit der Datenbankstruktur, wie z.B. fehlende
-              Primärschlüssel und NULL-Werte in Fremdschlüsselspalten.
+              Dieses Tool behebt bekannte Datenbankstrukturprobleme, wie fehlende Primärschlüssel
+              und NULL-Werte in Fremdschlüsselspalten.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4">
-              <Alert className="mb-4 border-orange-300 bg-orange-50">
-                <AlertCircle className="h-4 w-4 text-orange-600" />
-                <AlertTitle className="text-orange-600">Achtung!</AlertTitle>
-                <AlertDescription>
-                  Dieser Vorgang kann Daten ändern oder löschen. Es wird empfohlen, vorher eine Sicherung der Datenbank zu erstellen.
-                </AlertDescription>
-              </Alert>
-            </div>
+            <Alert className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Achtung</AlertTitle>
+              <AlertDescription>
+                Diese Operation sollte nur von Administratoren durchgeführt werden. 
+                Stellen Sie sicher, dass Sie ein aktuelles Backup der Datenbank haben.
+              </AlertDescription>
+            </Alert>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col sm:flex-row gap-2 justify-between">
             <Button 
-              onClick={handleFixDatabaseStructure} 
+              onClick={runDbFix} 
               disabled={loading}
               className="w-full sm:w-auto"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                  Reparatur wird durchgeführt...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reparatur läuft...
                 </>
               ) : (
-                'Datenbank-Struktur reparieren'
+                'Datenbankstruktur reparieren'
               )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={runManualRepair}
+              className="w-full sm:w-auto"
+            >
+              Hinweise zur manuellen Reparatur
             </Button>
           </CardFooter>
         </Card>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Fehler</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
+        
         {result && (
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>
-                Ergebnis der Reparatur
+              <CardTitle className="flex items-center">
                 {result.success ? (
-                  <CheckCircle2 className="inline-block ml-2 h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
                 ) : (
-                  <AlertCircle className="inline-block ml-2 h-5 w-5 text-red-600" />
+                  <AlertTriangle className="h-5 w-5 mr-2 text-amber-500" />
                 )}
+                Ergebnis der Reparatur
               </CardTitle>
               <CardDescription>
-                {result.success 
-                  ? `${result.fixes_applied.length} Probleme wurden erfolgreich behoben.` 
-                  : `Es gab Fehler bei der Reparatur. Es wurden ${result.fixes_applied.length} Probleme behoben, aber ${result.errors.length} Fehler aufgetreten.`}
+                {result.success
+                  ? `Die Reparatur wurde erfolgreich durchgeführt. ${result.fixes_applied.length} Probleme wurden behoben.`
+                  : `Die Reparatur wurde mit Fehlern abgeschlossen. ${result.errors.length} Fehler sind aufgetreten.`}
               </CardDescription>
             </CardHeader>
+            
             <CardContent>
-              <Tabs defaultValue="fixes">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="fixes">Behobene Probleme ({result.fixes_applied.length})</TabsTrigger>
-                  <TabsTrigger value="errors">Fehler ({result.errors.length})</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="fixes">
-                  {result.fixes_applied.length === 0 ? (
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertTitle>Keine Probleme behoben</AlertTitle>
-                      <AlertDescription>Es wurden keine Probleme gefunden, die behoben werden mussten.</AlertDescription>
-                    </Alert>
-                  ) : (
-                    <div className="space-y-4">
+              {result.fixes_applied.length > 0 && (
+                <div className="mb-6">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAppliedFixes(!showAppliedFixes)}
+                    className="mb-2 flex items-center justify-between w-full"
+                  >
+                    <span className="flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                      Angewendete Fixes ({result.fixes_applied.length})
+                    </span>
+                    {showAppliedFixes ? <ChevronUp /> : <ChevronDown />}
+                  </Button>
+                  
+                  {showAppliedFixes && (
+                    <div className="rounded-md border p-4 max-h-[400px] overflow-y-auto bg-muted/30">
                       {result.fixes_applied.map((fix, index) => (
-                        <Card key={index}>
-                          <CardHeader className="py-3">
-                            <CardTitle className="text-base">
-                              Tabelle: {fix.table} {fix.column && `(Spalte: ${fix.column})`}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="py-2">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <div className="font-medium">Problem</div>
-                                <div>{fix.issue}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Lösung</div>
-                                <div>{fix.fix}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Ergebnis</div>
-                                <div className="text-green-600">{fix.result}</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <div key={index} className="mb-4 pb-4 border-b last:border-b-0 last:mb-0 last:pb-0">
+                          <h4 className="font-medium">
+                            Tabelle: {fix.table}{fix.column ? `, Spalte: ${fix.column}` : ''}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">Problem: {fix.issue}</p>
+                          <p className="text-sm">Fix: {fix.fix}</p>
+                          <p className="text-sm text-green-600">Ergebnis: {fix.result}</p>
+                        </div>
                       ))}
                     </div>
                   )}
-                </TabsContent>
-                
-                <TabsContent value="errors">
-                  {result.errors.length === 0 ? (
-                    <Alert>
-                      <CheckCircle2 className="h-4 w-4" />
-                      <AlertTitle>Keine Fehler</AlertTitle>
-                      <AlertDescription>Alle Probleme wurden erfolgreich behoben.</AlertDescription>
-                    </Alert>
-                  ) : (
-                    <div className="space-y-4">
+                </div>
+              )}
+              
+              {result.errors.length > 0 && (
+                <div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowErrors(!showErrors)}
+                    className="mb-2 flex items-center justify-between w-full"
+                  >
+                    <span className="flex items-center">
+                      <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+                      Fehler ({result.errors.length})
+                    </span>
+                    {showErrors ? <ChevronUp /> : <ChevronDown />}
+                  </Button>
+                  
+                  {showErrors && (
+                    <div className="rounded-md border border-red-200 p-4 max-h-[400px] overflow-y-auto bg-red-50">
                       {result.errors.map((error, index) => (
-                        <Card key={index}>
-                          <CardHeader className="py-3">
-                            <CardTitle className="text-base">
-                              Tabelle: {error.table} {error.column && `(Spalte: ${error.column})`}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="py-2">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <div className="font-medium">Problem</div>
-                                <div>{error.issue}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Fehler</div>
-                                <div className="text-red-600">{error.error}</div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <div key={index} className="mb-4 pb-4 border-b last:border-b-0 last:mb-0 last:pb-0">
+                          <h4 className="font-medium">
+                            Tabelle: {error.table}{error.column ? `, Spalte: ${error.column}` : ''}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">Problem: {error.issue}</p>
+                          <p className="text-sm text-red-600">Fehler: {error.error}</p>
+                        </div>
                       ))}
                     </div>
                   )}
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Info className="h-5 w-5 mr-2 text-blue-500" />
+              Hinweise
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Die Reparatur behebt fehlende Primärschlüssel in Tabellen.</li>
+              <li>NULL-Werte in Fremdschlüsselspalten werden behoben und NOT NULL Constraints werden hinzugefügt.</li>
+              <li>Eine komplette Dokumentation finden Sie unter <code>docs/db-structure-fixes-report.md</code>.</li>
+              <li>Die Implementierungsdetails finden Sie unter <code>docs/db-structure-fix-implementation.md</code>.</li>
+              <li>Wenn die API-Route nicht funktioniert, können Sie die Reparatur manuell mit <code>npx tsx server/run-db-fixes.ts</code> ausführen.</li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

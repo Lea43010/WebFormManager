@@ -151,14 +151,14 @@
     </head>
     <body>
       <h1>Datenbankstruktur-Qualitätsbericht</h1>
-      <div class="timestamp">Erstellt am 2025-04-27 16:45:11</div>
+      <div class="timestamp">Erstellt am 2025-04-29 12:49:53</div>
       
       <div class="summary">
         <h2>Zusammenfassung der Prüfung</h2>
     
-        <p><span class="summary-count">46</span> Probleme gefunden:</p>
+        <p><span class="summary-count">47</span> Probleme gefunden:</p>
         <ul>
-      <li><span class="summary-count">33</span> Fehler</li><li><span class="summary-count">13</span> Warnungen</li></ul>
+      <li><span class="summary-count">34</span> Fehler</li><li><span class="summary-count">13</span> Warnungen</li></ul>
       <h3>Angewandte Qualitätsregeln</h3>
       <ul class="rules-list">
     
@@ -199,7 +199,7 @@
             <div class="category-header">
               <div class="category-name">Datenintegrität</div>
               <div class="badges">
-        <span class="badge badge-error">29 Fehler</span>
+        <span class="badge badge-error">30 Fehler</span>
               </div>
             </div>
             <ul class="issue-list">
@@ -213,6 +213,9 @@
             <li class="issue error">
               <div class="issue-message">Tabelle 'tblBedarfKapa' hat keinen Primärschlüssel</div>
           <div class="issue-details">Betrifft: <span class="table-column">tblBedarfKapa</span></div></li>
+            <li class="issue error">
+              <div class="issue-message">ID-Spalte 'entity_id' in Tabelle 'tblactivity_logs' erlaubt NULL-Werte</div>
+          <div class="issue-details">Betrifft: <span class="table-column">tblactivity_logs</span>.<span class="table-column">entity_id</span></div></li>
             <li class="issue error">
               <div class="issue-message">ID-Spalte 'project_id' in Tabelle 'tblattachment' erlaubt NULL-Werte</div>
           <div class="issue-details">Betrifft: <span class="table-column">tblattachment</span>.<span class="table-column">project_id</span></div></li>
