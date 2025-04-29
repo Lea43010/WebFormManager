@@ -18,6 +18,7 @@ import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
+import { registerRoadDamageAPI } from "./road-damage-api"; // Straßenschaden-API
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
@@ -93,6 +94,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Datenqualitäts-API-Routen einrichten
   app.use('/api', dataQualityApiRouter);
+  
+  // Straßenschaden-API-Routen einrichten
+  registerRoadDamageAPI(app);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
