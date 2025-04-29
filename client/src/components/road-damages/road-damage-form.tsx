@@ -29,7 +29,7 @@ import { Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { SpeechRecorder } from "./speech-recorder";
+import SpeechRecorder from "./speech-recorder";
 import { 
   roadDamageSeverityEnum, 
   roadDamageTypeEnum, 
@@ -40,12 +40,13 @@ import { cn } from "@/lib/utils";
 
 interface RoadDamageFormProps {
   projectId: number;
+  userId?: number;
   onSuccess?: () => void;
   initialData?: any;
   isEdit?: boolean;
 }
 
-export function RoadDamageForm({ projectId, onSuccess, initialData, isEdit = false }: RoadDamageFormProps) {
+export function RoadDamageForm({ projectId, userId, onSuccess, initialData, isEdit = false }: RoadDamageFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
