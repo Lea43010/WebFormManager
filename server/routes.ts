@@ -3095,8 +3095,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Spezielle Debug-Endpunkte ohne Authentifizierung
   // Diese Endpunkte sind immer verfügbar, für Entwicklungs- und Testzwecke
-  {
-    app.get("/api/debug/db-structure/report", async (req, res, next) => {
+  app.get("/api/debug/db-structure/report", async (req, res, next) => {
       try {
         // Direkte Verwendung von checkDatabaseStructure ohne Authentifizierungsprüfung
         const dbStructureReport = await checkDatabaseStructure();
@@ -3106,73 +3105,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
         next(error);
       }
     });
+
+
     
-    // Importiere separat den DataQualityChecker, falls er noch nicht verfügbar ist
-    let dataQualityCheckerInstance: any;
-    try {
-      // Dynamischer Import, um Probleme mit Modulabhängigkeiten zu vermeiden
-      import('./data-quality-checker').then(module => {
-        dataQualityCheckerInstance = module.dataQualityChecker;
-        console.log("DataQualityChecker erfolgreich importiert");
-      }).catch(err => {
-        console.error("Fehler beim Import von DataQualityChecker:", err);
-      });
-    } catch (error) {
-      console.error("Fehler beim dynamischen Import des DataQualityChecker:", error);
-    }
-    
-    app.get("/api/debug/data-quality/report", async (req, res, next) => {
-      try {
-        if (!dataQualityCheckerInstance) {
-          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
-        }
-        
-        const issues = await dataQualityCheckerInstance.runChecks();
-        res.json(issues);
-      } catch (error) {
-        console.error("Error in debug data quality report:", error);
-        next(error);
-      }
+  // Importiere separat den DataQualityChecker, falls er noch nicht verfügbar ist
+  let dataQualityCheckerInstance: any;
+  try {
+    // Dynamischer Import, um Probleme mit Modulabhängigkeiten zu vermeiden
+    import('./data-quality-checker').then(module => {
+      dataQualityCheckerInstance = module.dataQualityChecker;
+      console.log("DataQualityChecker erfolgreich importiert");
+    }).catch(err => {
+      console.error("Fehler beim Import von DataQualityChecker:", err);
     });
-    
-    app.get("/api/debug/data-quality/html-report", async (req, res, next) => {
-      try {
-        if (!dataQualityCheckerInstance) {
-          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
-        }
-        
-        await dataQualityCheckerInstance.runChecks();
-        const htmlReport = await dataQualityCheckerInstance.generateHtmlReport();
-        
-        // Als HTML-Dokument senden
-        res.setHeader('Content-Type', 'text/html');
-        res.send(htmlReport);
-      } catch (error) {
-        console.error("Error in debug HTML report:", error);
-        next(error);
-      }
-    });
-    
-    // JSON-Bericht-Endpunkt
-    app.get("/api/debug/data-quality/json-report", async (req, res, next) => {
-      try {
-        if (!dataQualityCheckerInstance) {
-          return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
-        }
-        
-        await dataQualityCheckerInstance.runChecks();
-        const jsonReport = await dataQualityCheckerInstance.generateJsonReport();
-        
-        // Als JSON senden
-        res.json(jsonReport);
-      } catch (error) {
-        console.error("Error in debug JSON report:", error);
-        next(error);
-      }
-    });
-    
-    console.log('[DEBUG] Debug-API-Endpunkte für Datenbankstrukturprüfung aktiviert.');
+  } catch (error) {
+    console.error("Fehler beim dynamischen Import des DataQualityChecker:", error);
   }
+    
+  app.get("/api/debug/data-quality/report", async (req, res, next) => {
+    try {
+      if (!dataQualityCheckerInstance) {
+        return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+      }
+      
+      const issues = await dataQualityCheckerInstance.runChecks();
+      res.json(issues);
+    } catch (error) {
+      console.error("Error in debug data quality report:", error);
+      next(error);
+    }
+    });
+    
+  app.get("/api/debug/data-quality/html-report", async (req, res, next) => {
+    try {
+      if (!dataQualityCheckerInstance) {
+        return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+      }
+      
+      await dataQualityCheckerInstance.runChecks();
+      const htmlReport = await dataQualityCheckerInstance.generateHtmlReport();
+      
+      // Als HTML-Dokument senden
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlReport);
+    } catch (error) {
+      console.error("Error in debug HTML report:", error);
+      next(error);
+    }
+  });
+    
+  // JSON-Bericht-Endpunkt
+  app.get("/api/debug/data-quality/json-report", async (req, res, next) => {
+    try {
+      if (!dataQualityCheckerInstance) {
+        return res.status(500).json({ error: "DataQualityChecker nicht verfügbar" });
+      }
+      
+      await dataQualityCheckerInstance.runChecks();
+      const jsonReport = await dataQualityCheckerInstance.generateJsonReport();
+      
+      // Als JSON senden
+      res.json(jsonReport);
+    } catch (error) {
+      console.error("Error in debug JSON report:", error);
+      next(error);
+    }
+  });
+
+  // Endpunkt zur automatischen Behebung von Datenbankstrukturproblemen
+  app.post("/api/debug/db-structure/fix", async (req, res, next) => {
+    try {
+      logger.info("API-Aufruf zum Beheben der Datenbankstrukturprobleme");
+      
+      // Importiere die Funktion zur Behebung der Datenbankstrukturprobleme
+      const { fixDatabaseStructureIssues } = await import('./db-structure-fix');
+      
+      // Führe die Funktion aus
+      const result = await fixDatabaseStructureIssues();
+      
+      // Rückgabe der Ergebnisse
+      res.json(result);
+    } catch (error) {
+      logger.error("Fehler bei der Behebung der Datenbankstrukturprobleme:", error);
+      next(error);
+    }
+  });
+    
+  console.log('[DEBUG] Debug-API-Endpunkte für Datenbankstrukturprüfung aktiviert.');
   
   // Statische HTML-Dateien im public-Verzeichnis zuerst prüfen (vor allen anderen Routen)
   // Dies MUSS am Anfang der Funktion stehen, damit es andere Routen überschreiben kann

@@ -90,14 +90,6 @@ export default function DashboardLayout({
             <div className="max-w-7xl mx-auto px-responsive">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-responsive">
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{title}</h1>
-                {location !== "/" && (
-                  <a href="/" className="inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-medium text-gray-600 hover:text-primary min-touch-target">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Zurück zur Übersicht
-                  </a>
-                )}
               </div>
               {description && (
                 <p className="mt-1 text-xs sm:text-sm text-gray-600">{description}</p>
