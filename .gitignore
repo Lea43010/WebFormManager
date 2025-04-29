@@ -3,5 +3,16 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
-*.tar.gz.git-credentials
+*.tar.gz
+.git-credentials
 .gitconfig
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+temp/
+nohup.out
+*.log
+*.backup
+backup.dump
