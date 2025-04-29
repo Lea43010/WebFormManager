@@ -1,507 +1,433 @@
-import { useState } from "react";
-import {
-  BarChart3,
-  FileText,
-  FilterX,
-  ImageIcon,
-  Loader2,
-  Search,
-  Trash2,
-} from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { useRoadDamages } from "@/hooks/use-road-damages";
-import { 
-  RoadDamage, 
-  RoadDamageType, 
-  DamageSeverity 
-} from "../../../shared/schema-road-damage";
-
-const damageSeverityLabels = {
-  leicht: "Leicht",
-  mittel: "Mittel",
-  schwer: "Schwer",
-  kritisch: "Kritisch",
-};
-
-const damageSeverityColors = {
-  leicht: "bg-green-100 text-green-800 border-green-200",
-  mittel: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  schwer: "bg-orange-100 text-orange-800 border-orange-200",
-  kritisch: "bg-red-100 text-red-800 border-red-200",
-};
-
-const damageTypeLabels = {
-  riss: "Riss",
-  schlagloch: "Schlagloch",
-  netzriss: "Netzriss",
-  verformung: "Verformung",
-  ausbruch: "Ausbruch",
-  abplatzung: "Abplatzung",
-  kantenschaden: "Kantenschaden",
-  fugenausbruch: "Fugenausbruch",
-  abnutzung: "Abnutzung",
-  sonstiges: "Sonstiges",
-};
+import { Loader2, Edit, Trash2, Image, MapPin, FileAudio, Filter } from "lucide-react";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { roadDamageSeverityEnum, roadDamageTypeEnum, repairStatusEnum } from "@/schema/road-damage-schema";
+import { RoadDamageForm } from "./road-damage-form";
 
 interface RoadDamageListProps {
   projectId: number;
 }
 
 export function RoadDamageList({ projectId }: RoadDamageListProps) {
-  const [selectedDamage, setSelectedDamage] = useState<RoadDamage | null>(null);
-  const [filterType, setFilterType] = useState<RoadDamageType | "">("");
-  const [filterSeverity, setFilterSeverity] = useState<DamageSeverity | "">("");
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const { 
-    roadDamages, 
-    roadDamageStats,
-    isLoading, 
-    deleteRoadDamageMutation 
-  } = useRoadDamages(projectId);
-  
   const { toast } = useToast();
-  
+  const [selectedDamage, setSelectedDamage] = useState<any>(null);
+  const [viewImageDialog, setViewImageDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState(false);
+  const [filters, setFilters] = useState({
+    severity: "",
+    damageType: "",
+    repairStatus: "",
+    search: ""
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Daten abrufen
+  const { data: roadDamages, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["/api/projects", projectId, "road-damages"],
+    queryFn: async () => {
+      const response = await fetch(`/api/projects/${projectId}/road-damages`);
+      if (!response.ok) {
+        throw new Error(`Fehler beim Abrufen der Straßenschäden: ${response.statusText}`);
+      }
+      return await response.json();
+    }
+  });
+
+  // Schaden löschen
   const handleDelete = async (id: number) => {
+    if (!confirm("Sind Sie sicher, dass Sie diesen Straßenschaden löschen möchten?")) {
+      return;
+    }
+
     try {
-      await deleteRoadDamageMutation.mutateAsync(id);
+      const response = await fetch(`/api/road-damages/${id}`, {
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        throw new Error(`Fehler beim Löschen: ${response.statusText}`);
+      }
+
       toast({
         title: "Straßenschaden gelöscht",
-        description: "Der Straßenschaden wurde erfolgreich gelöscht.",
+        description: "Der Straßenschaden wurde erfolgreich gelöscht."
       });
+      
+      refetch();
     } catch (error) {
-      console.error("Fehler beim Löschen:", error);
+      console.error("Fehler beim Löschen des Straßenschadens:", error);
       toast({
         title: "Fehler beim Löschen",
         description: "Der Straßenschaden konnte nicht gelöscht werden.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-  
-  const filteredDamages = roadDamages?.filter((damage) => {
-    // Typ-Filter
-    if (filterType && damage.damageType !== filterType) {
-      return false;
-    }
+
+  // Bild anzeigen
+  const showImage = (damage: any) => {
+    setSelectedDamage(damage);
+    setViewImageDialog(true);
+  };
+
+  // Bearbeiten Dialog öffnen
+  const openEditDialog = (damage: any) => {
+    setSelectedDamage(damage);
+    setEditDialog(true);
+  };
+
+  // Filter anwenden
+  const applyFilters = (damages: any[]) => {
+    if (!damages) return [];
     
-    // Schweregrad-Filter
-    if (filterSeverity && damage.severity !== filterSeverity) {
-      return false;
+    return damages.filter(damage => {
+      // Textsuche
+      if (filters.search && !damage.title.toLowerCase().includes(filters.search.toLowerCase()) && 
+          !damage.location?.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !damage.description?.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+      
+      // Schweregrad
+      if (filters.severity && damage.severity !== filters.severity) {
+        return false;
+      }
+      
+      // Schadenstyp
+      if (filters.damageType && damage.damageType !== filters.damageType) {
+        return false;
+      }
+      
+      // Reparaturstatus
+      if (filters.repairStatus && damage.repairStatus !== filters.repairStatus) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // Formatierung der Werte
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case "gering": return "bg-blue-100 text-blue-800";
+      case "mittel": return "bg-yellow-100 text-yellow-800";
+      case "hoch": return "bg-orange-100 text-orange-800";
+      case "kritisch": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
-    
-    // Suche
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        damage.description?.toLowerCase().includes(query) ||
-        damage.position?.toLowerCase().includes(query) ||
-        damage.recommendedAction?.toLowerCase().includes(query)
-      );
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "offen": return "bg-red-100 text-red-800";
+      case "geplant": return "bg-blue-100 text-blue-800";
+      case "in_bearbeitung": return "bg-yellow-100 text-yellow-800";
+      case "abgeschlossen": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
     }
-    
-    return true;
-  });
-  
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    try {
+      return format(new Date(dateString), "dd.MM.yyyy", { locale: de });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  // Filter zurücksetzen
+  const resetFilters = () => {
+    setFilters({
+      severity: "",
+      damageType: "",
+      repairStatus: "",
+      search: ""
+    });
+  };
+
+  const filteredDamages = applyFilters(roadDamages || []);
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
+      <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
+
+  if (isError) {
+    return (
+      <div className="p-4 border border-red-300 bg-red-50 rounded-md text-red-800">
+        <p>Fehler beim Laden der Daten: {error instanceof Error ? error.message : "Unbekannter Fehler"}</p>
+        <Button onClick={() => refetch()} variant="outline" className="mt-2">
+          Erneut versuchen
+        </Button>
+      </div>
+    );
+  }
+
+  if (!roadDamages || roadDamages.length === 0) {
+    return (
+      <div className="p-4 border rounded-md bg-gray-50 text-center">
+        <p className="mb-2">Keine Straßenschäden für dieses Projekt vorhanden.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {roadDamageStats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">
-                {roadDamageStats.totalDamages}
-              </CardTitle>
-              <CardDescription>Erfasste Schäden</CardDescription>
-            </CardHeader>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">
-                {roadDamageStats.byType.schlagloch + roadDamageStats.byType.ausbruch}
-              </CardTitle>
-              <CardDescription>Schlaglöcher & Ausbrüche</CardDescription>
-            </CardHeader>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">
-                {roadDamageStats.bySeverity.kritisch}
-              </CardTitle>
-              <CardDescription>Kritische Schäden</CardDescription>
-            </CardHeader>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-2xl font-bold">
-                {roadDamageStats.totalEstimatedCost > 0
-                  ? `${roadDamageStats.totalEstimatedCost.toLocaleString()} €`
-                  : "---"}
-              </CardTitle>
-              <CardDescription>Geschätzte Reparaturkosten</CardDescription>
-            </CardHeader>
-          </Card>
+    <div className="space-y-4">
+      {/* Filter */}
+      <div className="flex justify-between items-center mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2"
+        >
+          <Filter className="h-4 w-4" />
+          {showFilters ? "Filter ausblenden" : "Filter anzeigen"}
+        </Button>
+        <div className="text-sm text-muted-foreground">
+          {filteredDamages.length} von {roadDamages.length} Einträgen
         </div>
-      )}
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Straßenschäden</CardTitle>
-          <CardDescription>
-            Übersicht aller erfassten Straßenschäden für dieses Projekt
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <Input
-                placeholder="Nach Beschreibung oder Position suchen..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+      </div>
+
+      {showFilters && (
+        <div className="bg-gray-50 p-4 rounded-md space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Input 
+                placeholder="Suche nach Titel, Standort..." 
+                value={filters.search}
+                onChange={(e) => setFilters({...filters, search: e.target.value})}
                 className="w-full"
               />
             </div>
-            <div className="flex gap-2">
-              <Select
-                value={filterType}
-                onValueChange={(value) => setFilterType(value as RoadDamageType | "")}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Schadenstyp" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Alle Typen</SelectItem>
-                  {Object.keys(damageTypeLabels).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {damageTypeLabels[type as keyof typeof damageTypeLabels]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select
-                value={filterSeverity}
-                onValueChange={(value) => setFilterSeverity(value as DamageSeverity | "")}
-              >
-                <SelectTrigger className="w-[180px]">
+            <div>
+              <Select value={filters.severity} onValueChange={(value) => setFilters({...filters, severity: value})}>
+                <SelectTrigger>
                   <SelectValue placeholder="Schweregrad" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Alle Schweregrade</SelectItem>
-                  {Object.keys(damageSeverityLabels).map((severity) => (
+                  {roadDamageSeverityEnum.map((severity) => (
                     <SelectItem key={severity} value={severity}>
-                      {damageSeverityLabels[severity as keyof typeof damageSeverityLabels]}
+                      {severity.charAt(0).toUpperCase() + severity.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              
-              {(filterType || filterSeverity || searchQuery) && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    setFilterType("");
-                    setFilterSeverity("");
-                    setSearchQuery("");
-                  }}
-                >
-                  <FilterX className="h-4 w-4" />
-                </Button>
-              )}
+            </div>
+            <div>
+              <Select value={filters.damageType} onValueChange={(value) => setFilters({...filters, damageType: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Schadenstyp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Alle Typen</SelectItem>
+                  {roadDamageTypeEnum.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Select value={filters.repairStatus} onValueChange={(value) => setFilters({...filters, repairStatus: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Alle Status</SelectItem>
+                  {repairStatusEnum.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
-          {filteredDamages && filteredDamages.length > 0 ? (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Typ</TableHead>
-                    <TableHead>Schweregrad</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Beschreibung</TableHead>
-                    <TableHead>Erstellt am</TableHead>
-                    <TableHead className="text-right">Aktionen</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDamages.map((damage) => (
-                    <TableRow key={damage.id}>
-                      <TableCell>
-                        {damageTypeLabels[damage.damageType as keyof typeof damageTypeLabels]}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            damageSeverityColors[
-                              damage.severity as keyof typeof damageSeverityColors
-                            ]
-                          }
-                        >
-                          {
-                            damageSeverityLabels[
-                              damage.severity as keyof typeof damageSeverityLabels
-                            ]
-                          }
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{damage.position || "---"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {damage.description}
-                      </TableCell>
-                      <TableCell>
-                        {damage.createdAt
-                          ? format(new Date(damage.createdAt), "dd.MM.yyyy", {
-                              locale: de,
-                            })
-                          : "---"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Sheet>
-                            <SheetTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setSelectedDamage(damage)}
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            </SheetTrigger>
-                            <SheetContent side="right" className="sm:max-w-lg">
-                              {selectedDamage && (
-                                <>
-                                  <SheetHeader>
-                                    <SheetTitle>Straßenschaden Details</SheetTitle>
-                                    <SheetDescription>
-                                      Detaillierte Informationen zum ausgewählten Straßenschaden
-                                    </SheetDescription>
-                                  </SheetHeader>
-                                  <div className="py-6 space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                      <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                          Schadenstyp
-                                        </h4>
-                                        <p>
-                                          {
-                                            damageTypeLabels[
-                                              selectedDamage.damageType as keyof typeof damageTypeLabels
-                                            ]
-                                          }
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                          Schweregrad
-                                        </h4>
-                                        <Badge
-                                          variant="outline"
-                                          className={
-                                            damageSeverityColors[
-                                              selectedDamage.severity as keyof typeof damageSeverityColors
-                                            ]
-                                          }
-                                        >
-                                          {
-                                            damageSeverityLabels[
-                                              selectedDamage.severity as keyof typeof damageSeverityLabels
-                                            ]
-                                          }
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                    
-                                    {selectedDamage.imageUrl && (
-                                      <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                          Schadensbild
-                                        </h4>
-                                        <div className="w-full h-48 rounded-md border flex items-center justify-center overflow-hidden">
-                                          <img
-                                            src={selectedDamage.imageUrl}
-                                            alt="Schadensbild"
-                                            className="object-cover h-full w-full"
-                                          />
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    <div>
-                                      <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                        Position
-                                      </h4>
-                                      <p>{selectedDamage.position || "Keine Angabe"}</p>
-                                    </div>
-                                    
-                                    <div>
-                                      <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                        Beschreibung
-                                      </h4>
-                                      <p className="whitespace-pre-wrap">
-                                        {selectedDamage.description}
-                                      </p>
-                                    </div>
-                                    
-                                    {selectedDamage.recommendedAction && (
-                                      <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                          Empfohlene Maßnahme
-                                        </h4>
-                                        <p className="whitespace-pre-wrap">
-                                          {selectedDamage.recommendedAction}
-                                        </p>
-                                      </div>
-                                    )}
-                                    
-                                    {selectedDamage.audioTranscription && (
-                                      <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                          Sprachaufnahme (Transkript)
-                                        </h4>
-                                        <div className="bg-gray-50 p-3 rounded border">
-                                          <p className="whitespace-pre-wrap italic text-sm">
-                                            "{selectedDamage.audioTranscription}"
-                                          </p>
-                                        </div>
-                                      </div>
-                                    )}
-                                    
-                                    <div>
-                                      <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                                        Erfasst am
-                                      </h4>
-                                      <p>
-                                        {selectedDamage.createdAt
-                                          ? format(
-                                              new Date(selectedDamage.createdAt),
-                                              "dd.MM.yyyy HH:mm",
-                                              { locale: de }
-                                            )
-                                          : "Unbekannt"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <SheetFooter>
-                                    <SheetClose asChild>
-                                      <Button type="submit">Schließen</Button>
-                                    </SheetClose>
-                                  </SheetFooter>
-                                </>
-                              )}
-                            </SheetContent>
-                          </Sheet>
-                          
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="icon">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Straßenschaden löschen
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Sind Sie sicher, dass Sie diesen Straßenschaden löschen möchten?
-                                  Diese Aktion kann nicht rückgängig gemacht werden.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(damage.id)}
-                                >
-                                  Löschen
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="py-12 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                <Search className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium">Keine Straßenschäden gefunden</h3>
-              <p className="text-muted-foreground mt-1">
-                {filterType || filterSeverity || searchQuery
-                  ? "Versuchen Sie, die Filter anzupassen oder einen anderen Suchbegriff zu verwenden."
-                  : "Für dieses Projekt wurden noch keine Straßenschäden erfasst."}
-              </p>
-            </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={resetFilters}>
+              Filter zurücksetzen
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabelle */}
+      <div className="overflow-x-auto border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Titel</TableHead>
+              <TableHead>Standort</TableHead>
+              <TableHead>Schweregrad</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Fälligkeitsdatum</TableHead>
+              <TableHead>Kosten</TableHead>
+              <TableHead>Medien</TableHead>
+              <TableHead>Aktionen</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredDamages.map((damage) => (
+              <TableRow key={damage.id}>
+                <TableCell className="font-medium">{damage.title}</TableCell>
+                <TableCell>{damage.location || "-"}</TableCell>
+                <TableCell>
+                  {damage.severity ? (
+                    <Badge variant="outline" className={getSeverityColor(damage.severity)}>
+                      {damage.severity.charAt(0).toUpperCase() + damage.severity.slice(1)}
+                    </Badge>
+                  ) : "-"}
+                </TableCell>
+                <TableCell>{damage.damageType ? damage.damageType.charAt(0).toUpperCase() + damage.damageType.slice(1) : "-"}</TableCell>
+                <TableCell>
+                  {damage.repairStatus ? (
+                    <Badge variant="outline" className={getStatusColor(damage.repairStatus)}>
+                      {damage.repairStatus.replace('_', ' ').charAt(0).toUpperCase() + damage.repairStatus.replace('_', ' ').slice(1)}
+                    </Badge>
+                  ) : "-"}
+                </TableCell>
+                <TableCell>{damage.repairDueDate ? formatDate(damage.repairDueDate) : "-"}</TableCell>
+                <TableCell>{damage.estimatedRepairCost ? formatCurrency(damage.estimatedRepairCost) : "-"}</TableCell>
+                <TableCell>
+                  <div className="flex space-x-1">
+                    {damage.imageUrl && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => showImage(damage)}
+                        className="h-8 w-8"
+                      >
+                        <Image className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {damage.coordinates && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                      >
+                        <MapPin className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {damage.voiceNoteUrl && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => window.open(damage.voiceNoteUrl, '_blank')}
+                      >
+                        <FileAudio className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => openEditDialog(damage)}
+                      className="h-8 w-8"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(damage.id)}
+                      className="h-8 w-8 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Bild anzeigen Dialog */}
+      <Dialog open={viewImageDialog} onOpenChange={setViewImageDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{selectedDamage?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="p-2">
+            {selectedDamage?.imageUrl && (
+              <img 
+                src={selectedDamage.imageUrl} 
+                alt={selectedDamage.title}
+                className="max-h-[70vh] w-auto mx-auto border rounded-md" 
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bearbeiten Dialog */}
+      <Dialog open={editDialog} onOpenChange={setEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Straßenschaden bearbeiten</DialogTitle>
+          </DialogHeader>
+          {selectedDamage && (
+            <RoadDamageForm 
+              projectId={projectId} 
+              initialData={selectedDamage}
+              isEdit={true}
+              onSuccess={() => {
+                setEditDialog(false);
+                refetch();
+                toast({
+                  title: "Straßenschaden aktualisiert",
+                  description: "Die Änderungen wurden erfolgreich gespeichert."
+                });
+              }}
+            />
           )}
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

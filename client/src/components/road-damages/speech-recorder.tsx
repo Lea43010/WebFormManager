@@ -1,215 +1,176 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, StopCircle, Play, Loader2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Mic, Square, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SpeechRecorderProps {
-  onRecordingComplete: (blob: Blob) => void;
-  isProcessing: boolean;
+  onResult: (audioBlob: Blob, text: string) => void;
 }
 
-/**
- * Komponente zur Aufnahme von Sprachmemos für die Straßenschaden-Erfassung
- */
-export function SpeechRecorder({ onRecordingComplete, isProcessing }: SpeechRecorderProps) {
+export const SpeechRecorder: React.FC<SpeechRecorderProps> = ({ onResult }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [permissionError, setPermissionError] = useState<string | null>(null);
-  
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<number | null>(null);
-  
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
+
+  // Stoppe die Aufnahme, wenn die Komponente unmountet
   useEffect(() => {
-    // Bereinigen, wenn die Komponente unmontiert wird
     return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
       }
-      
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
-  }, [audioUrl]);
-  
+  }, [isRecording]);
+
   const startRecording = async () => {
+    audioChunksRef.current = [];
+    setRecordingSeconds(0);
+
     try {
-      setPermissionError(null);
-      
-      // Mikrofonzugriff anfordern
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // MediaRecorder mit der richtigen MIME-Unterstützung initialisieren
-      const mimeType = "audio/webm";
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      
-      // Ereignishandler für Datenchunks
-      mediaRecorder.ondataavailable = (event) => {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
-      };
-      
-      // Ereignishandler für Aufnahmeende
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        const audioUrl = URL.createObjectURL(audioBlob);
+      });
+
+      mediaRecorder.addEventListener("stop", () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        processAudio(audioBlob);
         
-        setAudioBlob(audioBlob);
-        setAudioUrl(audioUrl);
-        setIsRecording(false);
-        
-        // Streams stoppen
+        // Stoppe alle Tracks im Stream
         stream.getTracks().forEach(track => track.stop());
-      };
-      
-      // Aufnahme starten
-      audioChunksRef.current = [];
+      });
+
+      // Starte die Aufnahme
       mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      
       setIsRecording(true);
-      setAudioBlob(null);
-      setAudioUrl(null);
-      setRecordingTime(0);
-      
-      // Timer für die Aufnahmezeit starten
-      timerRef.current = window.setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+
+      // Starte den Timer
+      timerRef.current = setInterval(() => {
+        setRecordingSeconds(prev => prev + 1);
       }, 1000);
+
     } catch (error) {
-      console.error("Fehler beim Starten der Aufnahme:", error);
-      setPermissionError(
-        "Mikrofon-Zugriff wurde verweigert oder ist nicht verfügbar. Bitte erteilen Sie die Berechtigung in Ihren Browser-Einstellungen."
-      );
+      console.error("Fehler beim Zugriff auf das Mikrofon:", error);
+      toast({
+        title: "Mikrofon nicht verfügbar",
+        description: "Bitte erlauben Sie den Zugriff auf das Mikrofon oder überprüfen Sie die Geräteeinstellungen.",
+        variant: "destructive",
+      });
     }
   };
-  
+
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      setIsRecording(false);
       
+      // Stoppe den Timer
       if (timerRef.current) {
-        window.clearInterval(timerRef.current);
+        clearInterval(timerRef.current);
         timerRef.current = null;
       }
     }
   };
-  
-  const handleSubmit = () => {
-    if (audioBlob) {
-      onRecordingComplete(audioBlob);
+
+  const processAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+    
+    try {
+      // Anfrage an Speech-to-Text-Service senden
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      
+      const response = await fetch('/api/speech-to-text', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server antwortete mit Status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Falls erfolgreich, das Ergebnis zurückgeben
+      if (data.text) {
+        onResult(audioBlob, data.text);
+        toast({
+          title: "Aufnahme erfolgreich transkribiert",
+          description: `Die Aufnahme wurde erfolgreich in Text umgewandelt.`,
+        });
+      } else {
+        throw new Error('Keine Transkription erhalten');
+      }
+    } catch (error) {
+      console.error("Fehler bei der Spracherkennung:", error);
+      toast({
+        title: "Fehler bei der Spracherkennung",
+        description: "Die Aufnahme konnte nicht in Text umgewandelt werden. Die Audiodatei wird trotzdem gespeichert.",
+        variant: "destructive",
+      });
+      
+      // Dennoch die Audiodatei zurückgeben, auch wenn die Transkription fehlschlägt
+      onResult(audioBlob, "");
+    } finally {
+      setIsProcessing(false);
     }
   };
-  
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-  
+
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        {permissionError && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Fehler bei Mikrofonzugriff</AlertTitle>
-            <AlertDescription>{permissionError}</AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex flex-col items-center space-y-4">
-          <div className="text-center mb-2">
-            {isRecording ? (
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-2 animate-pulse">
-                  <Mic className="h-8 w-8 text-red-500" />
-                </div>
-                <div className="text-lg font-semibold">{formatTime(recordingTime)}</div>
-                <div className="text-sm text-gray-500">Aufnahme läuft...</div>
-              </div>
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
-                <Mic className="h-8 w-8 text-gray-400" />
-              </div>
-            )}
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
-            {!isRecording ? (
-              <Button 
-                type="button" 
-                onClick={startRecording}
-                disabled={isProcessing}
-                className="flex-1"
-                variant="outline"
-              >
-                <Mic className="mr-2 h-4 w-4" />
-                Aufnahme starten
-              </Button>
-            ) : (
-              <Button 
-                type="button" 
-                onClick={stopRecording} 
-                variant="destructive"
-                className="flex-1"
-              >
-                <StopCircle className="mr-2 h-4 w-4" />
-                Aufnahme beenden
-              </Button>
-            )}
-            
-            {audioUrl && (
-              <div className="flex-1 flex space-x-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    const audio = new Audio(audioUrl);
-                    audio.play();
-                  }}
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  Wiedergeben
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  onClick={handleSubmit}
-                  disabled={isProcessing}
-                  className="flex-1"
-                >
-                  {isProcessing ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    "Auswerten"
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          {audioUrl && !isProcessing && (
-            <div className="text-sm text-gray-500 text-center mt-2">
-              Klicken Sie auf "Auswerten", um die Sprachaufnahme zu analysieren
-            </div>
+    <div className="flex items-center gap-2">
+      {isRecording ? (
+        <>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={stopRecording}
+            className="flex gap-2 items-center"
+          >
+            <Square className="h-4 w-4" />
+            <span>Aufnahme stoppen</span>
+            <span className="ml-1 text-xs">({formatTime(recordingSeconds)})</span>
+          </Button>
+        </>
+      ) : (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={startRecording}
+          disabled={isProcessing}
+          className="flex gap-2 items-center"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verarbeite...</span>
+            </>
+          ) : (
+            <>
+              <Mic className="h-4 w-4" />
+              <span>Spracheingabe</span>
+            </>
           )}
-          
-          {isProcessing && (
-            <div className="text-sm text-center text-gray-700 mt-2">
-              <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-              Sprachaufnahme wird analysiert...
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </Button>
+      )}
+    </div>
   );
-}
+};
+
+export default SpeechRecorder;

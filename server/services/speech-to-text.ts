@@ -1,178 +1,132 @@
+import { Express, Request, Response } from "express";
+import multer from "multer";
 import fs from "fs";
 import path from "path";
-import { promisify } from "util";
-import { randomUUID } from "crypto";
-import OpenAI from "openai";
+import { exec } from "child_process";
+import util from "util";
+import logger from "../logger";
 
-// Prüfen, ob der OpenAI API-Schlüssel vorhanden ist
-if (!process.env.OPENAI_API_KEY) {
-  console.warn("[Warnung] OPENAI_API_KEY ist nicht gesetzt. Spracherkennung wird nicht funktionieren.");
+// Promisify exec
+const execAsync = util.promisify(exec);
+
+// Konfiguration für die Spracherkennung
+const tempDir = path.join(process.cwd(), "temp");
+
+// Stellen Sie sicher, dass das temporäre Verzeichnis existiert
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
 }
 
-// OpenAI Instanz erstellen
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Multer-Konfiguration für den Audioempfang
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, tempDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `speech-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
 });
 
-// Verzeichnis für temporäre Audiodateien
-const tempDir = path.join(process.cwd(), "temp", "audio");
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB Limit
+}).single('audio');
 
-// Sicherstellen, dass das Temp-Verzeichnis existiert
-try {
-  fs.mkdirSync(tempDir, { recursive: true });
-} catch (error) {
-  console.error("Fehler beim Erstellen des temporären Verzeichnisses:", error);
-}
-
-// Promisify für asynchrone Dateioperationen
-const writeFileAsync = promisify(fs.writeFile);
-const unlinkAsync = promisify(fs.unlink);
-
-/**
- * Schnittstelle für das Ergebnis der Sprachanalyse
- */
-export interface SpeechAnalysisResult {
-  transcription: string;
-  analyzedData: {
-    damageType?: string;
-    severity?: string;
-    position?: string;
-    description?: string;
-    recommendedAction?: string;
-    estimatedCost?: number;
-  };
-  confidence: number;
-}
-
-/**
- * Speichert eine Audiodatei temporär
- */
-export async function saveTempAudioFile(audioBuffer: Buffer): Promise<string> {
-  const filename = `${randomUUID()}.webm`;
-  const filepath = path.join(tempDir, filename);
+// Funktion zum Konvertieren der Audio-Datei von WebM zu WAV
+async function convertWebmToWav(inputPath: string): Promise<string> {
+  const outputPath = inputPath.replace(path.extname(inputPath), '.wav');
   
-  await writeFileAsync(filepath, audioBuffer);
-  return filepath;
+  try {
+    // ffmpeg muss auf dem System installiert sein
+    await execAsync(`ffmpeg -i ${inputPath} -acodec pcm_s16le -ar 16000 -ac 1 ${outputPath}`);
+    return outputPath;
+  } catch (error) {
+    logger.error(`Fehler bei der Audiokonvertierung: ${error}`);
+    throw new Error('Fehler bei der Audiokonvertierung');
+  }
 }
 
-/**
- * Transkribiert eine Audiodatei zu Text mit OpenAI Whisper
- */
-export async function transcribeAudio(audioFilePath: string): Promise<string> {
+// Funktion zur Spracherkennung (hier mit Whisper-Modell über die OpenAI API)
+async function transcribeAudio(audioPath: string): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY ist nicht gesetzt');
+  }
+
   try {
-    const readStream = fs.createReadStream(audioFilePath);
-    
-    const transcription = await openai.audio.transcriptions.create({
-      file: readStream,
+    // Wir verwenden die OpenAI API, um die Audiodatei zu transkribieren
+    const { default: OpenAI } = await import('openai');
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
+    const audioFile = fs.createReadStream(audioPath);
+    const response = await openai.audio.transcriptions.create({
+      file: audioFile,
       model: "whisper-1",
-      language: "de",
+      language: "de", // Deutsch als Sprache festlegen
+      response_format: "json"
     });
-    
-    return transcription.text;
+
+    return response.text;
   } catch (error) {
-    console.error("Fehler bei der Transkription:", error);
-    throw new Error("Spracherkennung fehlgeschlagen");
+    logger.error(`Fehler bei der Spracherkennung: ${error}`);
+    throw new Error('Fehler bei der Spracherkennung');
   }
 }
 
-/**
- * Analysiert den transkribierten Text und extrahiert relevante Informationen
- */
-export async function analyzeTranscription(transcription: string): Promise<SpeechAnalysisResult> {
-  try {
-    // Stellen Sie sicher, dass der transcription-Text nicht leer ist
-    if (!transcription || transcription.trim() === "") {
-      throw new Error("Die Transkription ist leer");
-    }
-    
-    // Systemanweisung für GPT, um Straßenschäden zu analysieren
-    const systemPrompt = `
-    Du bist ein Experte für Straßenbau und Straßenschäden. Analysiere die folgende Beschreibung eines Straßenschadens und extrahiere alle relevanten Informationen.
-    Rückgabeformat: JSON mit folgenden Eigenschaften:
-    - damageType: einer der folgenden Werte: "riss", "schlagloch", "netzriss", "verformung", "ausbruch", "abplatzung", "kantenschaden", "fugenausbruch", "abnutzung", "sonstiges"
-    - severity: einer der folgenden Werte: "leicht", "mittel", "schwer", "kritisch"
-    - position: Standort des Schadens (wenn angegeben)
-    - description: detaillierte Beschreibung des Schadens
-    - recommendedAction: empfohlene Maßnahmen zur Behebung (wenn ableitbar)
-    - estimatedCost: geschätzte Reparaturkosten in Euro (wenn ableitbar, sonst null)
-    - confidence: Zahl zwischen 0 und 1, die das Vertrauen in die Analyse angibt
-
-    Falls ein Wert nicht aus dem Text abgeleitet werden kann, setze ihn auf null.
-    Antworte NUR mit dem JSON-Objekt ohne weitere Erklärungen.
-    `;
-    
-    // GPT-Anfrage erstellen
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // Fortgeschrittenes Modell für bessere Analyse
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: transcription },
-      ],
-      temperature: 0.3, // Niedrige Temperatur für deterministischere Antworten
-      response_format: { type: "json_object" }, // Format als JSON anfordern
-    });
-    
-    // Antwort extrahieren und parsen
-    const responseText = completion.choices[0].message.content;
-    
-    if (!responseText) {
-      throw new Error("Keine Antwort von der KI erhalten");
-    }
-    
-    const result = JSON.parse(responseText);
-    
-    // Rückgabeformat zusammenstellen
-    return {
-      transcription,
-      analyzedData: {
-        damageType: result.damageType || "sonstiges",
-        severity: result.severity || "mittel",
-        position: result.position || null,
-        description: result.description || transcription,
-        recommendedAction: result.recommendedAction || null,
-        estimatedCost: result.estimatedCost || null,
-      },
-      confidence: result.confidence || 0.5,
-    };
-  } catch (error) {
-    console.error("Fehler bei der Analyse der Transkription:", error);
-    
-    // Fallback-Rückgabe mit der Transkription als Beschreibung
-    return {
-      transcription,
-      analyzedData: {
-        damageType: "sonstiges",
-        severity: "mittel",
-        description: transcription,
-      },
-      confidence: 0.1,
-    };
-  } finally {
-    // Hier keine Bereinigung, da wir nur mit Text arbeiten
-  }
-}
-
-/**
- * Prozessiert eine Audiodatei und gibt die analysierte Spracherkennung zurück
- */
-export async function processAudio(audioFilePath: string): Promise<SpeechAnalysisResult> {
-  try {
-    // Audiodatei transkribieren
-    const transcription = await transcribeAudio(audioFilePath);
-    
-    // Transkription analysieren
-    const analysis = await analyzeTranscription(transcription);
-    
-    return analysis;
-  } catch (error) {
-    console.error("Fehler bei der Audioverarbeitung:", error);
-    throw new Error("Audioverarbeitung fehlgeschlagen");
-  } finally {
-    // Temporäre Datei bereinigen
+// Bereinigen der temporären Dateien
+function cleanupTempFiles(files: string[]) {
+  files.forEach(file => {
     try {
-      await unlinkAsync(audioFilePath);
-    } catch (cleanupError) {
-      console.error("Fehler beim Bereinigen der temporären Datei:", cleanupError);
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+      }
+    } catch (error) {
+      logger.warn(`Fehler beim Bereinigen temporärer Dateien: ${error}`);
     }
-  }
+  });
+}
+
+// API-Route für Spracherkennung
+export function setupSpeechToTextRoute(app: Express) {
+  app.post('/api/speech-to-text', (req: Request, res: Response) => {
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ error: 'Fehler beim Hochladen der Audiodatei', details: err.message });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'Keine Audiodatei gefunden' });
+      }
+
+      const filesToCleanup: string[] = [req.file.path];
+
+      try {
+        let audioPath = req.file.path;
+        
+        // Wenn es sich um eine webm-Datei handelt, konvertieren wir sie zu WAV
+        if (req.file.mimetype === 'audio/webm' || path.extname(req.file.path) === '.webm') {
+          const wavPath = await convertWebmToWav(req.file.path);
+          filesToCleanup.push(wavPath);
+          audioPath = wavPath;
+        }
+
+        // Spracherkennung durchführen
+        const text = await transcribeAudio(audioPath);
+
+        // Erfolgreiche Antwort
+        res.json({ text });
+      } catch (error: any) {
+        logger.error(`Fehler bei der Sprachverarbeitung: ${error}`);
+        res.status(500).json({ 
+          error: 'Fehler bei der Sprachverarbeitung', 
+          details: error.message 
+        });
+      } finally {
+        // Temporäre Dateien bereinigen
+        cleanupTempFiles(filesToCleanup);
+      }
+    });
+  });
 }

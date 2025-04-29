@@ -1,7 +1,10 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,317 +24,499 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { TabsContent } from "@/components/ui/tabs";
-import { 
-  roadDamageTypeEnum, 
-  damageSeverityEnum,
-  insertRoadDamageSchema
-} from "../../../shared/schema-road-damage";
+import { Calendar } from "@/components/ui/calendar";
+import { Loader2, Calendar as CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 import { SpeechRecorder } from "./speech-recorder";
-import { useRoadDamages } from "@/hooks/use-road-damages";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save } from "lucide-react";
-
-const damageSeverityLabels = {
-  leicht: "Leicht - visuell erkennbar, keine sofortige Gefahr",
-  mittel: "Mittel - deutliche Beeinträchtigung, mittelfristig zu reparieren",
-  schwer: "Schwer - erhebliche Beeinträchtigung, zeitnah zu reparieren",
-  kritisch: "Kritisch - unmittelbare Gefahr, sofortige Maßnahmen erforderlich",
-};
-
-const damageTypeLabels = {
-  riss: "Riss - Einzelne Risse in der Fahrbahnoberfläche",
-  schlagloch: "Schlagloch - Loch in der Fahrbahnoberfläche",
-  netzriss: "Netzriss - Netzartige Rissbildung",
-  verformung: "Verformung - Wellenbildung oder Absenkung",
-  ausbruch: "Ausbruch - Ausgebrochene Teile der Fahrbahnoberfläche",
-  abplatzung: "Abplatzung - Oberflächliche Materialablösungen",
-  kantenschaden: "Kantenschaden - Beschädigung an Fahrbahnkanten",
-  fugenausbruch: "Fugenausbruch - Beschädigung an Fugen",
-  abnutzung: "Abnutzung - Oberflächenverschleiß",
-  sonstiges: "Sonstiges - Andere Schadensarten",
-};
-
-// Create form schema based on road damage schema
-const formSchema = insertRoadDamageSchema;
+import { 
+  roadDamageSeverityEnum, 
+  roadDamageTypeEnum, 
+  repairStatusEnum, 
+  insertRoadDamageSchema 
+} from "@/schema/road-damage-schema";
+import { cn } from "@/lib/utils";
 
 interface RoadDamageFormProps {
   projectId: number;
-  userId: number;
   onSuccess?: () => void;
+  initialData?: any;
+  isEdit?: boolean;
 }
 
-export function RoadDamageForm({ projectId, userId, onSuccess }: RoadDamageFormProps) {
-  const [isSprachaufnahme, setIsSprachaufnahme] = useState(false);
-  const { createRoadDamageMutation, speechRecognitionMutation } = useRoadDamages(projectId);
+export function RoadDamageForm({ projectId, onSuccess, initialData, isEdit = false }: RoadDamageFormProps) {
   const { toast } = useToast();
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
+  const [speechToTextResult, setSpeechToTextResult] = useState<string>("");
+
+  const form = useForm({
+    resolver: zodResolver(insertRoadDamageSchema),
     defaultValues: {
-      projectId,
-      createdBy: userId,
-      damageType: "sonstiges",
-      severity: "mittel",
-      description: "",
-      position: "",
-      recommendedAction: "",
+      projectId: projectId,
+      title: initialData?.title || "",
+      description: initialData?.description || "",
+      severity: initialData?.severity || undefined,
+      damageType: initialData?.damageType || undefined,
+      location: initialData?.location || "",
+      coordinates: initialData?.coordinates || undefined,
+      areaSize: initialData?.areaSize || undefined,
+      repairStatus: initialData?.repairStatus || "offen",
+      estimatedRepairCost: initialData?.estimatedRepairCost || undefined,
+      repairDueDate: initialData?.repairDueDate ? new Date(initialData.repairDueDate) : undefined,
+      repairPriority: initialData?.repairPriority || 5,
+      imageUrl: initialData?.imageUrl || "",
+      voiceNoteUrl: initialData?.voiceNoteUrl || "",
+      createdBy: user?.id,
+      assignedTo: initialData?.assignedTo || undefined,
     },
   });
-  
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+
+  // Wenn Speech-to-Text-Ergebnis vorliegt, in die Beschreibung einfügen
+  useEffect(() => {
+    if (speechToTextResult) {
+      const currentDescription = form.getValues("description") || "";
+      form.setValue("description", currentDescription + " " + speechToTextResult);
+    }
+  }, [speechToTextResult, form]);
+
+  // Mutation für das Erstellen eines neuen Straßenschadens
+  const createMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      const response = await apiRequest("POST", "/api/road-damages", formData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Straßenschaden erfolgreich erstellt",
+        description: "Der Straßenschaden wurde erfolgreich in die Datenbank eingetragen.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "road-damages"] });
+      if (onSuccess) onSuccess();
+      form.reset();
+      setImagePreviewUrl("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Erstellen des Straßenschadens",
+        description: error.message || "Ein unbekannter Fehler ist aufgetreten.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation für das Aktualisieren eines bestehenden Straßenschadens
+  const updateMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      const response = await apiRequest("PUT", `/api/road-damages/${initialData.id}`, formData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Straßenschaden aktualisiert",
+        description: "Die Änderungen wurden erfolgreich gespeichert.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "road-damages"] });
+      if (onSuccess) onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Aktualisieren des Straßenschadens",
+        description: error.message || "Ein unbekannter Fehler ist aufgetreten.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Funktion zum Hochladen eines Bildes
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("image", file);
+
     try {
-      await createRoadDamageMutation.mutateAsync(values);
-      form.reset({
-        projectId,
-        createdBy: userId,
-        damageType: "sonstiges",
-        severity: "mittel",
-        description: "",
-        position: "",
-        recommendedAction: "",
+      const response = await apiRequest("POST", "/api/road-damages/upload-image", formData, {
+        headers: {
+          // Keine Content-Type-Header hier setzen - wird automatisch von fetch für FormData gesetzt
+        },
       });
-      
-      toast({
-        title: "Straßenschaden erfasst",
-        description: "Der Straßenschaden wurde erfolgreich gespeichert.",
-      });
-      
-      if (onSuccess) {
-        onSuccess();
-      }
+      const data = await response.json();
+      return data.imageUrl;
     } catch (error) {
-      console.error("Fehler beim Speichern:", error);
+      console.error("Fehler beim Hochladen des Bildes:", error);
       toast({
-        title: "Fehler beim Speichern",
-        description: "Der Straßenschaden konnte nicht gespeichert werden.",
+        title: "Fehler beim Hochladen des Bildes",
+        description: "Das Bild konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  // Funktion zum Hochladen einer Audionotiz
+  const handleSpeechResult = async (audioBlob: Blob, text: string) => {
+    setSpeechToTextResult(text);
+    
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "speech.webm");
+
+    try {
+      const response = await apiRequest("POST", "/api/road-damages/upload-audio", formData, {
+        headers: {
+          // Keine Content-Type-Header hier setzen - wird automatisch von fetch für FormData gesetzt
+        },
+      });
+      const data = await response.json();
+      form.setValue("voiceNoteUrl", data.audioUrl);
+    } catch (error) {
+      console.error("Fehler beim Hochladen der Audionotiz:", error);
+      toast({
+        title: "Fehler beim Hochladen der Audionotiz",
+        description: "Die Audionotiz konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut.",
         variant: "destructive",
       });
     }
   };
-  
-  const handleSpeechRecording = async (blob: Blob) => {
+
+  const onSubmit = async (data: any) => {
+    setLoading(true);
     try {
-      const response = await speechRecognitionMutation.mutateAsync({
-        audioBlob: blob,
-        projectId,
-        createdBy: userId,
-      });
-      
-      toast({
-        title: "Spracherkennung erfolgreich",
-        description: "Die Sprachaufnahme wurde erfolgreich analysiert und der Straßenschaden gespeichert.",
-      });
-      
-      if (onSuccess) {
-        onSuccess();
+      // Bild hochladen, falls vorhanden
+      if (imageFile) {
+        const imageUrl = await uploadImage(imageFile);
+        if (imageUrl) {
+          data.imageUrl = imageUrl;
+        }
+      }
+
+      // Speichern oder aktualisieren
+      if (isEdit && initialData) {
+        await updateMutation.mutateAsync(data);
+      } else {
+        await createMutation.mutateAsync(data);
       }
     } catch (error) {
-      console.error("Fehler bei der Spracherkennung:", error);
-      toast({
-        title: "Fehler bei der Spracherkennung",
-        description: "Die Sprachaufnahme konnte nicht verarbeitet werden.",
-        variant: "destructive",
-      });
+      console.error("Fehler beim Speichern des Straßenschadens:", error);
+    } finally {
+      setLoading(false);
     }
   };
-  
+
+  // Handler für Bildauswahl
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      
+      // Vorschau erstellen
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Neuen Straßenschaden erfassen</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Button
-              type="button"
-              variant={isSprachaufnahme ? "default" : "outline"}
-              onClick={() => setIsSprachaufnahme(true)}
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Projektreferenz (versteckt) */}
+          <input type="hidden" {...form.register("projectId")} />
+          
+          {/* Titel */}
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Titel *</FormLabel>
+                <FormControl>
+                  <Input placeholder="z.B. Schlagloch Hauptstraße" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Beschreibung */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Beschreibung</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Detaillierte Beschreibung des Schadens"
+                    {...field}
+                    className="min-h-[100px]"
+                  />
+                </FormControl>
+                <FormMessage />
+                <div className="mt-2">
+                  <SpeechRecorder onResult={handleSpeechResult} />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          {/* Schadensschwere und -typ nebeneinander */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="severity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Schweregrad</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Bitte wählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roadDamageSeverityEnum.map((severity) => (
+                        <SelectItem key={severity} value={severity}>
+                          {severity.charAt(0).toUpperCase() + severity.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="damageType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Schadenstyp</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Bitte wählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roadDamageTypeEnum.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Standort */}
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Standort</FormLabel>
+                <FormControl>
+                  <Input placeholder="z.B. Kreuzung Hauptstraße/Gartenweg" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Größe und Priorität nebeneinander */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="areaSize"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Größe (m²)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      min="0"
+                      placeholder="z.B. 2.5" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="repairPriority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priorität (1-10)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      max="10" 
+                      step="1"
+                      placeholder="z.B. 5" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription>1 = niedrig, 10 = hoch</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Status und geschätzte Kosten nebeneinander */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="repairStatus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Bitte wählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {repairStatusEnum.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="estimatedRepairCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Geschätzte Kosten (€)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      min="0"
+                      placeholder="z.B. 1500.00" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Reparatur-Fälligkeitsdatum */}
+          <FormField
+            control={form.control}
+            name="repairDueDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Fälligkeitsdatum für Reparatur</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: de })
+                        ) : (
+                          <span>Datum auswählen</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date("1900-01-01")}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Bildupload */}
+          <FormItem>
+            <FormLabel>Bild</FormLabel>
+            <FormControl>
+              <div className="space-y-2">
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                  className="w-full cursor-pointer"
+                />
+                {(imagePreviewUrl || initialData?.imageUrl) && (
+                  <div className="mt-2 border rounded-md overflow-hidden">
+                    <img 
+                      src={imagePreviewUrl || initialData?.imageUrl} 
+                      alt="Vorschau" 
+                      className="object-cover max-h-48 w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+
+          {/* Submit Button */}
+          <div className="flex justify-end pt-4">
+            <Button 
+              type="submit" 
+              disabled={loading || createMutation.isPending || updateMutation.isPending}
             >
-              Sprachaufnahme
-            </Button>
-            <Button
-              type="button"
-              variant={!isSprachaufnahme ? "default" : "outline"}
-              onClick={() => setIsSprachaufnahme(false)}
-            >
-              Formular
+              {(loading || createMutation.isPending || updateMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isEdit ? "Aktualisieren" : "Speichern"}
             </Button>
           </div>
-          
-          {isSprachaufnahme ? (
-            <div className="mb-6">
-              <div className="mb-4">
-                <Label htmlFor="sprachhinweis">Sprachaufnahme</Label>
-                <p className="text-sm text-gray-500 mb-4">
-                  Beschreiben Sie den Straßenschaden mit Ihrer Stimme. Nennen Sie den Schadenstyp, 
-                  die Schwere, die genaue Position und weitere Details. Die KI wird diese 
-                  Informationen auswerten und automatisch als Straßenschaden erfassen.
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Beispiel: "An der Kreuzung Hauptstraße/Bergweg befindet sich ein Schlagloch 
-                  mit etwa 30 cm Durchmesser und 5 cm Tiefe. Der Schaden ist mittelgroß und 
-                  stellt eine Gefahr für Radfahrer dar. Eine Reparatur sollte innerhalb der 
-                  nächsten zwei Wochen erfolgen."
-                </p>
-              </div>
-              
-              <SpeechRecorder
-                onRecordingComplete={handleSpeechRecording}
-                isProcessing={speechRecognitionMutation.isPending}
-              />
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="damageType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Schadenstyp</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Schadenstyp auswählen" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.keys(damageTypeLabels).map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {damageTypeLabels[type as keyof typeof damageTypeLabels]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Wählen Sie die Art des Straßenschadens aus.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="severity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Schweregrad</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Schweregrad auswählen" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.keys(damageSeverityLabels).map((severity) => (
-                              <SelectItem key={severity} value={severity}>
-                                {damageSeverityLabels[severity as keyof typeof damageSeverityLabels]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Wie schwerwiegend ist der Schaden?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Position</FormLabel>
-                      <FormControl>
-                        <Input placeholder="z.B. Kreuzung Hauptstraße/Bergweg" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Beschreiben Sie die genaue Position des Schadens
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Beschreibung</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Detaillierte Beschreibung des Schadens"
-                          className="resize-none min-h-[120px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Detaillierte Beschreibung des Schadens, inklusive Größe, Tiefe und andere relevante Eigenschaften.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="recommendedAction"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Empfohlene Maßnahme</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Empfohlene Reparaturmaßnahmen"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Optionale Beschreibung der empfohlenen Reparaturmaßnahmen und Dringlichkeit.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button
-                  type="submit"
-                  disabled={createRoadDamageMutation.isPending}
-                  className="w-full"
-                >
-                  {createRoadDamageMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Wird gespeichert...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Straßenschaden speichern
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </form>
+      </Form>
+    </div>
   );
 }
