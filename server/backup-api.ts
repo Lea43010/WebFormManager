@@ -20,7 +20,7 @@ const router = express.Router();
 
 /**
  * Manuelles Backup auslösen
- * POST /api/backup/create
+ * POST /api/admin/backups/create
  * Erfordert Admin-Rechte
  */
 router.post('/create', requireAdmin(), (req, res) => {
@@ -67,10 +67,10 @@ router.post('/create', requireAdmin(), (req, res) => {
 
 /**
  * Liste aller Backups abrufen
- * GET /api/backup/list
+ * GET /api/admin/backups (ohne Pfadzusatz)
  * Erfordert Admin-Rechte
  */
-router.get('/list', requireAdmin(), (req, res) => {
+router.get('/', requireAdmin(), (req, res) => {
   const backupDir = path.resolve(process.cwd(), 'backup');
   
   if (!fs.existsSync(backupDir)) {
@@ -114,6 +114,205 @@ router.get('/list', requireAdmin(), (req, res) => {
     return res.status(500).json({ 
       success: false, 
       message: `Fehler beim Abrufen der Backup-Liste: ${error.message}` 
+    });
+  }
+});
+
+/**
+ * Status des Backup-Dienstes abrufen
+ * GET /api/admin/backups/service-status
+ * Erfordert Admin-Rechte
+ */
+router.get('/service-status', requireAdmin(), (req, res) => {
+  const backupConfig: {
+    active: boolean;
+    scheduleTime: string;
+    retentionDays: number;
+    backupDir: string;
+    lastBackup: string | null;
+  } = {
+    active: true,
+    scheduleTime: '3:00 Uhr',
+    retentionDays: 30,
+    backupDir: './backup',
+    lastBackup: null
+  };
+  
+  // Versuche, das Datum des letzten Backups zu ermitteln
+  try {
+    const backupDir = path.resolve(process.cwd(), 'backup');
+    if (fs.existsSync(backupDir)) {
+      const dateDirs = fs.readdirSync(backupDir)
+        .filter(dir => /^\d{4}-\d{2}-\d{2}$/.test(dir))
+        .sort((a, b) => b.localeCompare(a)); // Neueste zuerst
+      
+      if (dateDirs.length > 0) {
+        const newestDir = path.join(backupDir, dateDirs[0]);
+        const files = fs.readdirSync(newestDir)
+          .filter(file => file.endsWith('.tar.gz'))
+          .map(file => {
+            const filePath = path.join(newestDir, file);
+            return {
+              path: filePath,
+              mtime: fs.statSync(filePath).mtime
+            };
+          })
+          .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+        
+        if (files.length > 0) {
+          backupConfig.lastBackup = files[0].mtime.toISOString();
+        }
+      }
+    }
+  } catch (error) {
+    backupLogger.error('Fehler beim Ermitteln des letzten Backups:', error);
+  }
+  
+  return res.status(200).json(backupConfig);
+});
+
+/**
+ * Backup-Datei herunterladen
+ * GET /api/admin/backups/download/:filename
+ * Erfordert Admin-Rechte
+ */
+router.get('/download/:path(*)', requireAdmin(), (req, res) => {
+  const filePath = req.params.path;
+  
+  // Sicherheitsprüfung: Pfad darf nicht außerhalb des Backup-Verzeichnisses führen
+  if (filePath.includes('..') || !filePath.startsWith('backup/')) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Ungültiger Dateipfad' 
+    });
+  }
+  
+  const fullPath = path.resolve(process.cwd(), filePath);
+  
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'Backup-Datei nicht gefunden' 
+    });
+  }
+  
+  // Datei zum Download senden
+  res.download(fullPath);
+});
+
+/**
+ * Backup-Datei wiederherstellen
+ * POST /api/admin/backups/restore/:filename
+ * Erfordert Admin-Rechte
+ */
+router.post('/restore/:path(*)', requireAdmin(), (req, res) => {
+  const filePath = req.params.path;
+  
+  // Sicherheitsprüfung: Pfad darf nicht außerhalb des Backup-Verzeichnisses führen
+  if (filePath.includes('..') || !filePath.startsWith('backup/')) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Ungültiger Dateipfad' 
+    });
+  }
+  
+  const fullPath = path.resolve(process.cwd(), filePath);
+  
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'Backup-Datei nicht gefunden' 
+    });
+  }
+  
+  // Hier würden wir die Wiederherstellung des Backups durchführen
+  // Dies ist eine komplexe Operation, die das Entpacken der Backup-Datei
+  // und das Wiederherstellen der Datenbank erfordert
+  
+  // Beispielimplementierung:
+  try {
+    const tempDir = path.resolve(process.cwd(), 'temp', 'restore-' + Date.now());
+    fs.mkdirSync(tempDir, { recursive: true });
+    
+    // Backup entpacken
+    execSync(`tar -xzf "${fullPath}" -C "${tempDir}"`);
+    
+    // SQL-Datei finden
+    const sqlFiles = fs.readdirSync(tempDir).filter(file => file.endsWith('.sql'));
+    if (sqlFiles.length === 0) {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Keine SQL-Datei im Backup gefunden' 
+      });
+    }
+    
+    const sqlFile = path.join(tempDir, sqlFiles[0]);
+    
+    // Datenbank wiederherstellen
+    execSync(`PGPASSWORD="${process.env.PGPASSWORD}" psql -h ${process.env.PGHOST} -p ${process.env.PGPORT} -U ${process.env.PGUSER} -d ${process.env.PGDATABASE} -f "${sqlFile}"`, {
+      env: process.env
+    });
+    
+    // Aufräumen
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Backup erfolgreich wiederhergestellt'
+    });
+  } catch (error: any) {
+    backupLogger.error('Fehler bei der Wiederherstellung des Backups:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: `Fehler bei der Wiederherstellung des Backups: ${error.message}` 
+    });
+  }
+});
+
+/**
+ * Backup-Datei löschen
+ * DELETE /api/admin/backups/:filename
+ * Erfordert Admin-Rechte
+ */
+router.delete('/:path(*)', requireAdmin(), (req, res) => {
+  const filePath = req.params.path;
+  
+  // Sicherheitsprüfung: Pfad darf nicht außerhalb des Backup-Verzeichnisses führen
+  if (filePath.includes('..') || !filePath.startsWith('backup/')) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Ungültiger Dateipfad' 
+    });
+  }
+  
+  const fullPath = path.resolve(process.cwd(), filePath);
+  
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).json({ 
+      success: false, 
+      message: 'Backup-Datei nicht gefunden' 
+    });
+  }
+  
+  try {
+    fs.unlinkSync(fullPath);
+    
+    // Wenn Verzeichnis leer ist, auch das entfernen
+    const dirPath = path.dirname(fullPath);
+    const remainingFiles = fs.readdirSync(dirPath);
+    if (remainingFiles.length === 0) {
+      fs.rmdirSync(dirPath);
+    }
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Backup erfolgreich gelöscht'
+    });
+  } catch (error: any) {
+    backupLogger.error('Fehler beim Löschen des Backups:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: `Fehler beim Löschen des Backups: ${error.message}` 
     });
   }
 });
