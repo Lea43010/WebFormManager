@@ -339,50 +339,60 @@ export class DatabaseStorage implements IStorage {
   
   // Customer operations
   async getCustomers(): Promise<Customer[]> {
-    return await db.select({
-      id: customers.id,
-      projectId: customers.projectId,
-      customerId: customers.customerId,
-      customerType: customers.customerType,
-      firstName: customers.firstName,
-      lastName: customers.lastName,
-      street: customers.street,
-      houseNumber: customers.houseNumber,
-      addressLine2: customers.addressLine2,
-      postalCode: customers.postalCode,
-      city: customers.city,
-      cityPart: customers.cityPart,
-      state: customers.state,
-      country: customers.country,
-      customerPhone: customers.customerPhone,
-      customerEmail: customers.customerEmail,
-      geodate: customers.geodate,
-      created_by: customers.created_by
-    }).from(customers) as Customer[];
+    // Verwenden einer direkten SQL-Abfrage, um Probleme mit Spaltenreferenzen zu vermeiden
+    const result = await db.execute(
+      sql`SELECT 
+        id, 
+        project_id as "projectId", 
+        customer_id as "customerId", 
+        customer_type as "customerType", 
+        first_name as "firstName", 
+        last_name as "lastName", 
+        street, 
+        house_number as "houseNumber", 
+        address_line_2 as "addressLine2", 
+        postal_code as "postalCode", 
+        city, 
+        city_part as "cityPart", 
+        state, 
+        country, 
+        customer_phone as "customerPhone", 
+        customer_email as "customerEmail", 
+        geodate, 
+        created_by 
+      FROM tblcustomer`
+    );
+    
+    return result.rows as Customer[];
   }
   
   async getCustomer(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select({
-      id: customers.id,
-      projectId: customers.projectId,
-      customerId: customers.customerId,
-      customerType: customers.customerType,
-      firstName: customers.firstName,
-      lastName: customers.lastName,
-      street: customers.street,
-      houseNumber: customers.houseNumber,
-      addressLine2: customers.addressLine2,
-      postalCode: customers.postalCode,
-      city: customers.city,
-      cityPart: customers.cityPart,
-      state: customers.state,
-      country: customers.country,
-      customerPhone: customers.customerPhone,
-      customerEmail: customers.customerEmail,
-      geodate: customers.geodate,
-      created_by: customers.created_by
-    }).from(customers).where(eq(customers.id, id)) as Customer[];
-    return customer;
+    // Verwenden einer direkten SQL-Abfrage, um Probleme mit Spaltenreferenzen zu vermeiden
+    const result = await db.execute(
+      sql`SELECT 
+        id, 
+        project_id as "projectId", 
+        customer_id as "customerId", 
+        customer_type as "customerType", 
+        first_name as "firstName", 
+        last_name as "lastName", 
+        street, 
+        house_number as "houseNumber", 
+        address_line_2 as "addressLine2", 
+        postal_code as "postalCode", 
+        city, 
+        city_part as "cityPart", 
+        state, 
+        country, 
+        customer_phone as "customerPhone", 
+        customer_email as "customerEmail", 
+        geodate, 
+        created_by 
+      FROM tblcustomer 
+      WHERE id = ${id}`
+    );
+    
+    return result.rows[0] as Customer;
   }
   
   // Funktion zum Ermitteln der nächsten verfügbaren Kundennummer
