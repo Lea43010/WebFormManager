@@ -67,6 +67,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login-Protokoll-Routen einrichten
   setupLoginLogsRoutes(app);
   
+  // Datenqualitäts-API-Routen einrichten
+  app.use('/api', dataQualityApiRouter);
+  
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

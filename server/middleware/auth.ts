@@ -1,13 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Middleware zur Überprüfung, ob der Benutzer authentifiziert ist
-export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
+export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Nicht authentifiziert' });
   }
-  
-  return res.status(401).json({ 
-    success: false, 
-    message: 'Nicht authentifiziert' 
-  });
-}
+  next();
+};

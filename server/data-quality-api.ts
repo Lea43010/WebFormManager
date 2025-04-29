@@ -3,10 +3,20 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { isAdmin } from './middleware/role-check';
-import { pool } from './db';
 import { isAuthenticated } from './middleware/auth';
+import pg from 'pg';
 
 const router = Router();
+
+// Verbindung zur Datenbank herstellen
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Hilfsfunktion für Datenbankabfragen
+const query = async (text: string, params?: any[]): Promise<pg.QueryResult> => {
+  return pool.query(text, params);
+};
 
 // Sicherstellen, dass das Verzeichnis existiert
 const REPORT_DIR = path.resolve(process.cwd(), 'data_quality_reports');
@@ -48,7 +58,7 @@ router.post('/data-quality/run', isAuthenticated, isAdmin, async (req: Request, 
     let runId: number | null = null;
     try {
       // Prüfe, ob die Tabelle existiert (könnte in einer Migration hinzugefügt werden)
-      const result = await db.query(`
+      const result = await query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables 
           WHERE table_schema = 'public' 
@@ -57,7 +67,7 @@ router.post('/data-quality/run', isAuthenticated, isAdmin, async (req: Request, 
       `);
       
       if (result.rows[0].exists) {
-        const insertResult = await db.query(`
+        const insertResult = await query(`
           INSERT INTO data_quality_runs 
           (started_at, started_by, table_name, status, parameters) 
           VALUES 
@@ -99,7 +109,7 @@ router.post('/data-quality/run', isAuthenticated, isAdmin, async (req: Request, 
       // Aktualisiere den Run-Status, wenn eine ID vorhanden ist
       if (runId !== null) {
         try {
-          await db.query(`
+          await query(`
             UPDATE data_quality_runs 
             SET 
               ended_at = NOW(), 
@@ -246,7 +256,7 @@ router.delete('/data-quality/reports/:filename', isAuthenticated, isAdmin, (req:
 router.get('/data-quality/tables', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
   try {
     // Tabellen aus der Datenbank abrufen
-    const result = await db.query(`
+    const result = await query(`
       SELECT table_name, 
              (SELECT COUNT(*) FROM information_schema.columns WHERE table_name=t.table_name) AS column_count
       FROM information_schema.tables t

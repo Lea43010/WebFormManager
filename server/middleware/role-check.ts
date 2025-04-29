@@ -1,41 +1,37 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Middleware zur Überprüfung, ob der Benutzer Administrator ist
-export function isAdmin(req: Request, res: Response, next: NextFunction) {
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.isAuthenticated()) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Nicht authentifiziert' 
+    return res.status(401).json({ message: 'Nicht authentifiziert' });
+  }
+  
+  const user = req.user as any;
+  if (user.role !== 'administrator') {
+    console.log(`Zugriff verweigert für Benutzer mit Rolle: ${user.role}`);
+    return res.status(403).json({ 
+      message: 'Keine ausreichenden Berechtigungen', 
+      userRole: user.role,
+      requiredRole: 'administrator'
     });
   }
   
-  // @ts-ignore - Die Eigenschaft role existiert in req.user, auch wenn TypeScript das nicht kennt
-  if (req.user && req.user.role === 'administrator') {
-    return next();
-  }
-  
-  return res.status(403).json({ 
-    success: false, 
-    message: 'Keine Berechtigung. Diese Funktion erfordert Administrator-Rechte.' 
-  });
-}
+  next();
+};
 
-// Middleware zur Überprüfung, ob der Benutzer Manager oder Administrator ist
-export function isManagerOrAdmin(req: Request, res: Response, next: NextFunction) {
+export const isManager = (req: Request, res: Response, next: NextFunction) => {
   if (!req.isAuthenticated()) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Nicht authentifiziert' 
+    return res.status(401).json({ message: 'Nicht authentifiziert' });
+  }
+  
+  const user = req.user as any;
+  if (user.role !== 'administrator' && user.role !== 'manager') {
+    console.log(`Zugriff verweigert für Benutzer mit Rolle: ${user.role}`);
+    return res.status(403).json({ 
+      message: 'Keine ausreichenden Berechtigungen', 
+      userRole: user.role,
+      requiredRole: 'manager oder administrator'
     });
   }
   
-  // @ts-ignore - Die Eigenschaft role existiert in req.user, auch wenn TypeScript das nicht kennt
-  if (req.user && (req.user.role === 'administrator' || req.user.role === 'manager')) {
-    return next();
-  }
-  
-  return res.status(403).json({ 
-    success: false, 
-    message: 'Keine Berechtigung. Diese Funktion erfordert Manager- oder Administrator-Rechte.' 
-  });
-}
+  next();
+};
