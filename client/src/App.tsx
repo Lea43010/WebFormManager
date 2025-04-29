@@ -16,6 +16,7 @@ import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
 import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
+import GeoKartenPage from "@/pages/geo-karten"; // Neue Bayern-Karten Seite
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import SimpleLoginPage from "@/pages/simple-login";
@@ -56,6 +57,7 @@ function Router() {
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
       <ProtectedRoute path="/geo-map" component={GeoMapPage} />
+      <ProtectedRoute path="/geo-karten" component={GeoKartenPage} />
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
