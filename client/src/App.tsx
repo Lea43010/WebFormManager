@@ -16,7 +16,7 @@ import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
 import AttachmentPage from "@/pages/attachment-page";
 import GeoMapPage from "@/pages/geo-map-page";
-import GeoKartenPage from "@/pages/geo-karten-neu"; // Neue Bayern-Karten Seite
+import GeoKartenPage from "@/pages/geo-karten-neu"; // Neue Bayern-Karten Seite mit korrigiertem Import
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import SimpleLoginPage from "@/pages/simple-login";
