@@ -126,6 +126,16 @@ const backup = {
   maxBackups: parseInt(process.env.MAX_BACKUPS || '10', 10),
   retentionDays: parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10),
   debugCronJobs: process.env.DEBUG_CRON_JOBS === 'true',
+  github: {
+    enabled: process.env.GITHUB_BACKUP_ENABLED === 'true' || true,
+    token: process.env.GITHUB_TOKEN,
+    owner: process.env.GITHUB_REPO_OWNER,
+    repo: process.env.GITHUB_REPO_NAME || 'bau-structura-backups',
+    branch: process.env.GITHUB_REPO_BRANCH || 'main',
+    backupPath: process.env.GITHUB_BACKUP_PATH || 'backups',
+    encryptBackups: process.env.GITHUB_ENCRYPT_BACKUPS === 'true' || false,
+    encryptionKey: process.env.GITHUB_BACKUP_ENCRYPTION_KEY,
+  }
 };
 
 // Anwendungs-URL
