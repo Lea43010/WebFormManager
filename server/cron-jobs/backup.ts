@@ -1,90 +1,169 @@
 /**
- * Automatisches Backup-Skript
+ * Backup-Cron-Job mit GitHub-Integration für Bau-Structura
+ * 
+ * Führt regelmäßige Backups der Datenbank und Konfigurationsdateien durch
+ * und speichert sie sowohl lokal als auch optional in einem GitHub-Repository.
  */
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import fs from 'fs';
 import path from 'path';
+import fs from 'fs';
 import { logger } from '../logger';
+import config from '../../config';
+import { 
+  uploadBackupToGitHub, 
+  ensureGitHubBackupRepository, 
+  githubBackupConfig 
+} from '../github-backup';
 
-// Logger für Backup-Aufgaben
+// Logger für Backup-Operationen
 const backupLogger = logger.createLogger('backup');
 
-// Maximale Anzahl der zu behaltenden Backups 
-const MAX_BACKUPS = 10;
+// Hilfsfunktionen
+const execPromise = promisify(exec);
+const fsPromises = fs.promises;
 
-// Hilfsfunktion für asynchrone Prozessausführung
-const execAsync = promisify(exec);
+// Backup-Verzeichnis (mit Konfiguration aus config.ts)
+const backupDir = config.backup.directory || './backup';
 
 /**
- * Führt das Backup-Skript aus und protokolliert die Ergebnisse
+ * Führt ein Backup der Anwendung aus und speichert es lokal
+ * und optional in GitHub
  */
-export function runBackup(): void {
-  // Pfad zum Backup-Skript
-  const backupScriptPath = path.resolve(process.cwd(), 'backup-script.sh');
-  
-  // Prüfen, ob das Skript existiert
-  if (!fs.existsSync(backupScriptPath)) {
-    backupLogger.error('Backup-Skript nicht gefunden:', backupScriptPath);
-    return;
-  }
-  
-  backupLogger.info('Starte automatisches Backup...');
-  
-  // Skript ausführen
-  execAsync(backupScriptPath)
-    .then(({stdout, stderr}) => {
-      if (stderr && !stderr.includes('NOTICE:') && !stderr.includes('INFO:')) {
-        backupLogger.error('Fehler beim Backup:', stderr);
-        return;
+export async function runBackup() {
+  try {
+    backupLogger.info('Starte Backup-Prozess...');
+
+    // Sicherstellen, dass das Backup-Verzeichnis existiert
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+      backupLogger.info(`Backup-Verzeichnis erstellt: ${backupDir}`);
+    }
+
+    // Aktuelle Zeit für Backup-Namen
+    const now = new Date();
+    const datePrefix = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const timePrefix = now.toISOString().slice(11, 19).replace(/:/g, '-'); // HH-MM-SS
+    const timestamp = `${datePrefix}_${timePrefix}`;
+    const backupFilename = `bau-structura-backup-${timestamp}.tar.gz`;
+    const backupPath = path.join(backupDir, backupFilename);
+
+    // Backup-Skript ausführen
+    backupLogger.info('Führe Backup-Skript aus...');
+    const backupScriptPath = path.join(process.cwd(), 'backup-script.sh');
+    
+    // Prüfen, ob das Backup-Skript existiert
+    if (!fs.existsSync(backupScriptPath)) {
+      throw new Error(`Backup-Skript nicht gefunden: ${backupScriptPath}`);
+    }
+
+    // Skript ausführen
+    const { stdout, stderr } = await execPromise(backupScriptPath);
+    
+    if (stderr && !stderr.includes('NOTICE:') && !stderr.includes('INFO:')) {
+      backupLogger.warn(`Warnungen beim Ausführen des Backup-Skripts: ${stderr}`);
+    }
+    
+    backupLogger.info(`Backup-Skript erfolgreich ausgeführt: ${stdout.trim()}`);
+    
+    // Extrahieren des Backup-Pfads aus der Ausgabe
+    const backupPathMatch = stdout.match(/Backup erstellt: (.*)/);
+    const actualBackupPath = backupPathMatch ? backupPathMatch[1] : backupPath;
+    
+    // Prüfen, ob die Backup-Datei existiert
+    if (!fs.existsSync(actualBackupPath)) {
+      throw new Error(`Backup-Datei wurde nicht erstellt: ${actualBackupPath}`);
+    }
+    
+    backupLogger.info(`Lokales Backup erstellt: ${actualBackupPath}`);
+    
+    // GitHub-Integration, wenn konfiguriert
+    if (config.backup.github && config.backup.github.enabled) {
+      try {
+        backupLogger.info('Starte GitHub-Integration für Backup...');
+        
+        // Stellen Sie sicher, dass das Repository existiert
+        await ensureGitHubBackupRepository();
+        
+        // Upload des Backups zu GitHub
+        const uploadResult = await uploadBackupToGitHub(actualBackupPath);
+        
+        if (uploadResult) {
+          backupLogger.info('Backup erfolgreich zu GitHub hochgeladen');
+        } else {
+          backupLogger.error('Fehler beim Hochladen des Backups zu GitHub');
+        }
+      } catch (githubError) {
+        // Lokales Backup ist bereits erstellt, also nur Fehler protokollieren
+        backupLogger.error('Fehler bei der GitHub-Integration:', githubError);
       }
-      
-      // Erfolg protokollieren
-      const backupFile = stdout.trim().replace('Backup erstellt: ', '');
-      backupLogger.info('Automatisches Backup erfolgreich abgeschlossen:', backupFile);
-      
-      // Alte Backups bereinigen
-      cleanupOldBackups();
-    })
-    .catch(error => {
-      backupLogger.error('Fehler bei der Ausführung des Backup-Skripts:', error);
-    });
+    } else {
+      backupLogger.info('GitHub-Integration ist deaktiviert, überspringe Upload');
+    }
+    
+    // Bereinige alte Backups
+    await cleanupOldBackups();
+    
+    backupLogger.info('Backup-Prozess abgeschlossen');
+    return { success: true, path: actualBackupPath };
+  } catch (error) {
+    backupLogger.error('Fehler beim Ausführen des Backups:', error);
+    return { success: false, error: (error as Error).message };
+  }
 }
 
 /**
- * Bereinigt alte Backups und behält nur die neuesten MAX_BACKUPS
+ * Bereinigt alte Backup-Dateien basierend auf der Konfiguration
  */
-function cleanupOldBackups(): void {
-  const backupRoot = path.resolve(process.cwd(), 'backup');
-  
-  // Prüfen, ob das Backup-Verzeichnis existiert
-  if (!fs.existsSync(backupRoot)) {
-    return;
-  }
-  
+async function cleanupOldBackups() {
   try {
-    // Alle Datumsordner finden
-    const dateDirs = fs.readdirSync(backupRoot)
-      .filter(dir => /^\d{4}-\d{2}-\d{2}$/.test(dir))
-      .sort((a, b) => b.localeCompare(a)); // Neueste zuerst
+    // Überprüfe die Konfiguration für die maximale Anzahl von Backups
+    const maxBackups = config.backup.maxBackups || 10;
+    const retentionDays = config.backup.retentionDays || 30;
     
-    // Wenn zu viele Datumsordner vorhanden sind, die ältesten löschen
-    if (dateDirs.length > MAX_BACKUPS) {
-      const dirsToDelete = dateDirs.slice(MAX_BACKUPS);
-      
-      dirsToDelete.forEach(dir => {
-        const dirPath = path.join(backupRoot, dir);
-        backupLogger.info(`Lösche alten Backup-Ordner: ${dirPath}`);
-        
-        try {
-          fs.rmSync(dirPath, { recursive: true, force: true });
-        } catch (error) {
-          backupLogger.error(`Fehler beim Löschen des alten Backup-Ordners ${dirPath}:`, error);
-        }
-      });
+    backupLogger.info(`Beginne mit der Bereinigung alter Backups (behalte max ${maxBackups} Dateien oder ${retentionDays} Tage)...`);
+    
+    // Alle Backup-Dateien auflisten
+    const files = await fsPromises.readdir(backupDir);
+    const backupFiles = files.filter(file => file.startsWith('bau-structura-backup-') && file.endsWith('.tar.gz'));
+    
+    // Dateien mit Statistiken sammeln
+    const backupInfos = await Promise.all(
+      backupFiles.map(async file => {
+        const filePath = path.join(backupDir, file);
+        const stats = await fsPromises.stat(filePath);
+        return {
+          filename: file,
+          path: filePath,
+          size: stats.size,
+          createdAt: stats.mtime.getTime()
+        };
+      })
+    );
+    
+    // Nach Datum sortieren (neueste zuerst)
+    backupInfos.sort((a, b) => b.createdAt - a.createdAt);
+    
+    // Cutoff-Datum für die Aufbewahrung (jetzt - retentionDays)
+    const cutoffDate = Date.now() - (retentionDays * 24 * 60 * 60 * 1000);
+    
+    // Zu löschende Dateien sammeln (älter als Aufbewahrungszeitraum oder über maxBackups)
+    const filesToDelete = backupInfos.filter((file, index) => {
+      return index >= maxBackups || file.createdAt < cutoffDate;
+    });
+    
+    // Lösche alte Dateien
+    for (const file of filesToDelete) {
+      backupLogger.info(`Lösche altes Backup: ${file.filename}`);
+      await fsPromises.unlink(file.path);
     }
+    
+    backupLogger.info(`Bereinigung abgeschlossen. ${filesToDelete.length} alte Backups gelöscht.`);
   } catch (error) {
     backupLogger.error('Fehler bei der Bereinigung alter Backups:', error);
   }
 }
+
+// Standard-Export
+export default { runBackup, cleanupOldBackups };

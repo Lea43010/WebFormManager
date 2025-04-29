@@ -12,7 +12,7 @@ import { logger } from './logger';
 import { trialEmailService } from './trial-email-service';
 import config from '../config';
 // Direkter Import der Backup-Funktion
-import * as backupModule from './cron-jobs/backup';
+import backupModule from './cron-jobs/backup';
 
 // Logger für dieses Modul erstellen
 const cronLogger = logger.createLogger('cron-jobs');
