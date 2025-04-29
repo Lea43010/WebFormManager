@@ -24,6 +24,7 @@ import DeploymentDocsPage from "@/pages/admin/deployment-docs";
 import UserManagementPage from "@/pages/admin/user-management";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
+import DataQualityDashboard from "@/pages/data-quality-dashboard";
 import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import DbStructureFixPage from "@/pages/db-structure-fix-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
@@ -55,6 +56,7 @@ function Router() {
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/data-quality" component={DataQualityPage} />
+      <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <AdminProtectedRoute path="/db-structure-quality-debug" component={DbStructureQualityPage} />
       <AdminProtectedRoute path="/db-structure-fix" component={DbStructureFixPage} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />

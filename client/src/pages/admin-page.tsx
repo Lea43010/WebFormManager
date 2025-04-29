@@ -52,6 +52,13 @@ export default function AdminPage() {
                 Datenqualität
               </TabsTrigger>
               
+              <TabsTrigger value="dataquality_dashboard" className="flex items-center" asChild>
+                <Link href="/admin/data-quality-dashboard">
+                  <BarChart className="h-4 w-4 mr-2" />
+                  Datenqualität-Dashboard
+                </Link>
+              </TabsTrigger>
+              
               <TabsTrigger value="emails" className="flex items-center" asChild>
                 <a href="/admin/emails">
                   <Mail className="h-4 w-4 mr-2" />

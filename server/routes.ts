@@ -3116,6 +3116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
     
+  // Datenqualitäts-API-Routen einbinden
+  app.use('/api', dataQualityApiRouter);
+  
   // Importiere separat den DataQualityChecker, falls er noch nicht verfügbar ist
   let dataQualityCheckerInstance: any;
   try {

@@ -2,8 +2,26 @@ import { Request, Response, Router } from 'express';
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { isAdmin } from './middleware/role-check';
-import { isAuthenticated } from './middleware/auth';
+// Für die Rollen- und Authentifizierungsprüfung
+// In einer realen Umgebung sollten diese Module korrekt importiert werden
+const requireAdmin = () => (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Nicht authentifiziert" });
+  }
+  
+  if (req.user.role !== 'administrator') {
+    return res.status(403).json({ message: "Keine Berechtigung, nur für Administratoren" });
+  }
+  
+  next();
+};
+
+const isAuthenticated = (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Nicht authentifiziert" });
+  }
+  next();
+};
 import pg from 'pg';
 
 const router = Router();
@@ -25,7 +43,7 @@ if (!fs.existsSync(REPORT_DIR)) {
 }
 
 // Datenqualitätsprüfung starten
-router.post('/data-quality/run', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+router.post('/data-quality/run', isAuthenticated, requireAdmin(), async (req: Request, res: Response) => {
   const { table, profile = true, outliers = true, validate = true, limit } = req.body;
   
   try {
@@ -148,7 +166,7 @@ router.post('/data-quality/run', isAuthenticated, isAdmin, async (req: Request, 
 });
 
 // Liste der vorhandenen Berichte abrufen
-router.get('/data-quality/reports', isAuthenticated, isAdmin, (req: Request, res: Response) => {
+router.get('/data-quality/reports', isAuthenticated, requireAdmin(), (req: Request, res: Response) => {
   try {
     if (!fs.existsSync(REPORT_DIR)) {
       return res.status(200).json({
@@ -192,7 +210,7 @@ router.get('/data-quality/reports', isAuthenticated, isAdmin, (req: Request, res
 });
 
 // Einen bestimmten Bericht abrufen
-router.get('/data-quality/reports/:filename', isAuthenticated, isAdmin, (req: Request, res: Response) => {
+router.get('/data-quality/reports/:filename', isAuthenticated, requireAdmin(), (req: Request, res: Response) => {
   try {
     const { filename } = req.params;
     const filePath = path.join(REPORT_DIR, filename);
@@ -223,7 +241,7 @@ router.get('/data-quality/reports/:filename', isAuthenticated, isAdmin, (req: Re
 });
 
 // Einen bestimmten Bericht löschen
-router.delete('/data-quality/reports/:filename', isAuthenticated, isAdmin, (req: Request, res: Response) => {
+router.delete('/data-quality/reports/:filename', isAuthenticated, requireAdmin(), (req: Request, res: Response) => {
   try {
     const { filename } = req.params;
     const filePath = path.join(REPORT_DIR, filename);
@@ -253,7 +271,7 @@ router.delete('/data-quality/reports/:filename', isAuthenticated, isAdmin, (req:
 });
 
 // Liste der verfügbaren Tabellen in der Datenbank abrufen
-router.get('/data-quality/tables', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+router.get('/data-quality/tables', isAuthenticated, requireAdmin(), async (req: Request, res: Response) => {
   try {
     // Tabellen aus der Datenbank abrufen
     const result = await query(`
