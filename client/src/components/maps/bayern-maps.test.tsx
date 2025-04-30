@@ -4,54 +4,46 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import BayernMaps from './bayern-maps';
 
-// Mock für die IFrame-Inhalte
-jest.mock('react-iframe', () => {
-  return {
-    __esModule: true,
-    default: ({ url, ...props }: { url: string }) => (
-      <div data-testid="mock-iframe" data-url={url} {...props}>
-        Mocked IFrame Content
-      </div>
-    ),
-  };
-});
-
 describe('BayernMaps Component', () => {
   it('sollte den BayernAtlas standardmäßig anzeigen, wenn kein Tab übergeben wird', () => {
     render(<BayernMaps />);
     
-    const iframe = screen.getByTestId('mock-iframe');
-    expect(iframe).toHaveAttribute('data-url', expect.stringContaining('geoportal.bayern.de'));
+    // Prüfen, ob der BayernAtlas-Link vorhanden ist
+    const atlasLink = screen.getByText(/BayernAtlas öffnen/i);
+    expect(atlasLink).toBeInTheDocument();
+    expect(atlasLink).toHaveAttribute('href', 'https://geoportal.bayern.de/bayernatlas/');
   });
 
   it('sollte den DenkmalAtlas anzeigen, wenn "denkmalatlas" als defaultTab gesetzt ist', () => {
     render(<BayernMaps defaultTab="denkmalatlas" />);
     
-    const iframe = screen.getByTestId('mock-iframe');
-    expect(iframe).toHaveAttribute('data-url', expect.stringContaining('geoportal.bayern.de/denkmalatlas'));
+    // Prüfen, ob der DenkmalAtlas-Link vorhanden ist
+    const denkmalLink = screen.getByText(/DenkmalAtlas öffnen/i);
+    expect(denkmalLink).toBeInTheDocument();
+    expect(denkmalLink).toHaveAttribute('href', 'https://geoportal.bayern.de/denkmalatlas/');
   });
 
   it('sollte zwischen BayernAtlas und DenkmalAtlas wechseln können', async () => {
     const user = userEvent.setup();
     render(<BayernMaps />);
     
-    // Initial sollte BayernAtlas angezeigt werden
-    let iframe = screen.getByTestId('mock-iframe');
-    expect(iframe).toHaveAttribute('data-url', expect.stringContaining('geoportal.bayern.de'));
+    // Initial sollte BayernAtlas aktiv sein
+    expect(screen.getByText(/BayernAtlas öffnen/i)).toBeInTheDocument();
     
     // Auf den DenkmalAtlas Tab klicken
     const denkmalTab = screen.getByRole('tab', { name: /denkmal/i });
     await user.click(denkmalTab);
     
     // Jetzt sollte der DenkmalAtlas angezeigt werden
-    iframe = screen.getByTestId('mock-iframe');
-    expect(iframe).toHaveAttribute('data-url', expect.stringContaining('geoportal.bayern.de/denkmalatlas'));
+    expect(screen.getByText(/DenkmalAtlas öffnen/i)).toBeInTheDocument();
   });
 
   it('sollte die Überschrift und Beschreibung korrekt anzeigen', () => {
     render(<BayernMaps />);
     
-    expect(screen.getByText(/bayernatlas/i)).toBeInTheDocument();
-    expect(screen.getByText(/geoportal des freistaats bayern/i)).toBeInTheDocument();
+    // Der Titel sollte korrekt angezeigt werden
+    expect(screen.getByText(/Bayerische Geo-Informationen/i)).toBeInTheDocument();
+    // Eine der Beschreibungstexte sollte sichtbar sein
+    expect(screen.getByText(/Informationen zu geografischen Standorten in Bayern/i)).toBeInTheDocument();
   });
 });
