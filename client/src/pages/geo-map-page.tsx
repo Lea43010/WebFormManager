@@ -1088,17 +1088,6 @@ export default function GeoMapPage() {
         <h1 className="text-2xl font-bold ml-2">Geo-Informationen</h1>
       </div>
       
-      {/* Hinweis auf Bautagebuch als zentrale Dokumentationslösung */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <div className="flex-1">
-          <h3 className="text-lg font-medium flex items-center text-blue-700 mb-2">
-            <Info className="h-5 w-5 mr-1" /> Bautagebuch-Dokumentation
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            Nutzen Sie das Bautagebuch für die zentrale Dokumentation aller relevanten Bauprojektaktivitäten!
-          </p>
-        </div>
-      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
