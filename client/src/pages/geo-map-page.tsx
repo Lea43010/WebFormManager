@@ -1097,7 +1097,7 @@ export default function GeoMapPage() {
           <Card className="h-[calc(100vh-120px)] flex flex-col">
             {/* Bayern-Karten Tabs */}
             <div className="p-4 border-b">
-              <Tabs defaultValue="strassenplanung" value={bayernTabValue} onValueChange={setBayernTabValue} className="w-full">
+              <Tabs defaultValue="strassenplanung" value={bayernTabValue} onValueChange={(value) => setBayernTabValue(value as "strassenplanung" | "bayernatlas" | "denkmalatlas")} className="w-full">
                 <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
                   <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
@@ -1311,6 +1311,7 @@ export default function GeoMapPage() {
               )}
             </CardHeader>
             
+            {/* CardContent für den Karteninhalt */}
             <CardContent className="flex-grow p-0 relative">
               {bayernTabValue === "strassenplanung" && (
                 <>
