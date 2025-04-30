@@ -17,7 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { MAPBOX_TOKEN } from "@/config/mapbox";
+// Direktes Mapbox-Token für zuverlässiges Laden
+const MAPBOX_TOKEN = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
 
 
 // Leaflet imports mit dynamic import um SSR-Probleme zu vermeiden
