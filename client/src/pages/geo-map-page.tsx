@@ -1098,12 +1098,6 @@ export default function GeoMapPage() {
             Nutzen Sie das Bautagebuch für die zentrale Dokumentation aller relevanten Bauprojektaktivitäten!
           </p>
         </div>
-        <div className="flex gap-3 items-center">
-          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => setLocation("/construction-diary-debug")}>
-            <FileText className="h-4 w-4 mr-2" />
-            Zum Bautagebuch
-          </Button>
-        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
