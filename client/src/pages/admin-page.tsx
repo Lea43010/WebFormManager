@@ -102,35 +102,13 @@ export default function AdminPage() {
                   <span>Datenqualität</span>
                 </CardTitle>
                 <CardDescription className="text-indigo-600">
-                  Datenqualitätsberichte, Analysen und Fehlerbehebung
+                  Berichte, Analysen, Automatisierung und Fehlerbehebung
                 </CardDescription>
               </CardHeader>
               <CardFooter className="p-4 pt-0 flex justify-center">
                 <Button 
                   variant="default" 
                   className="bg-indigo-600 hover:bg-indigo-700 w-full" 
-                  onClick={() => navigate("/admin/data-quality")}
-                >
-                  Öffnen
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            {/* Datenqualität-Dashboard */}
-            <Card className="bg-gradient-to-br from-violet-50 to-violet-100 border-violet-200 hover:shadow-md transition-shadow">
-              <CardHeader className="p-4">
-                <CardTitle className="text-violet-800 text-base flex items-center gap-2">
-                  <Settings className="h-5 w-5 shrink-0" />
-                  <span>Datenqualität-Dashboard</span>
-                </CardTitle>
-                <CardDescription className="text-violet-600">
-                  Erweiterte Datenqualitätsanalysen und Automatisierung
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="p-4 pt-0 flex justify-center">
-                <Button 
-                  variant="default" 
-                  className="bg-violet-600 hover:bg-violet-700 w-full" 
                   onClick={() => navigate("/admin/data-quality-dashboard")}
                 >
                   Öffnen
