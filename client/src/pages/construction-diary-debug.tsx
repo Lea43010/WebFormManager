@@ -582,12 +582,10 @@ export default function ConstructionDiaryDebugPage() {
             <p className="text-gray-500 mb-4">
               Für dieses Projekt wurden noch keine Bautagebuch-Einträge erstellt.
             </p>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setIsNewEntryDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ersten Eintrag erstellen
-              </Button>
-            </DialogTrigger>
+            <Button variant="outline" onClick={() => setIsNewEntryDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ersten Eintrag erstellen
+            </Button>
           </div>
         ) : (
           <Table>
