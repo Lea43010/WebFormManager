@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { 
   Card, 
   CardContent, 
@@ -55,7 +56,7 @@ interface BackupInfo {
   status: "success" | "failed" | "in-progress";
 }
 
-export default function BackupStatus() {
+export default function BackupStatusPage() {
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -263,33 +264,34 @@ export default function BackupStatus() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Backup-Status</h1>
-          <p className="text-muted-foreground">
-            Überwachung und Verwaltung der Systembackups
-          </p>
+    <DashboardLayout title="Backup-Status" description="Überwachung und Verwaltung der Systembackups">
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Backup-Verwaltung</h2>
+            <p className="text-muted-foreground">
+              Erstellen und verwalten Sie Ihre Systembackups
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={refreshBackupStatus}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Aktualisieren
+            </Button>
+            <Button 
+              className="flex items-center gap-2"
+              onClick={createManualBackup}
+            >
+              <Save className="h-4 w-4" />
+              Manuelles Backup
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={refreshBackupStatus}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Aktualisieren
-          </Button>
-          <Button 
-            className="flex items-center gap-2"
-            onClick={createManualBackup}
-          >
-            <Save className="h-4 w-4" />
-            Manuelles Backup
-          </Button>
-        </div>
-      </div>
 
       {/* Backup-Übersicht */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -495,5 +497,6 @@ export default function BackupStatus() {
         </CardContent>
       </Card>
     </div>
+    </DashboardLayout>
   );
 }

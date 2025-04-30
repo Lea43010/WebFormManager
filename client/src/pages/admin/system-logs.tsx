@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { 
   Card, 
   CardContent, 
@@ -55,7 +56,7 @@ interface LogEntry {
   details?: string;
 }
 
-export default function SystemLogs() {
+export default function SystemLogsPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("activity");
   const [filterLevel, setFilterLevel] = useState<string | null>(null);
