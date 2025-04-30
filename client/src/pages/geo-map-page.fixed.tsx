@@ -1,29 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { SpeechToText } from "@/components/ui/speech-to-text";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File, Loader2, 
-         Building, AlertCircle } from "lucide-react";
+import { 
+  Map as MapIcon, ArrowLeft, MapPin, 
+  Layers, Calculator, Download, AlertCircle 
+} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useLocation, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
+
 // Direktes Mapbox-Token für zuverlässiges Laden
 const MAPBOX_TOKEN = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
 
-
-// Leaflet imports mit dynamic import um SSR-Probleme zu vermeiden
+// Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -48,14 +45,140 @@ const belastungsklassenColors = {
   Bk100: "#e74c3c", // Rot - höchste Belastung
   Bk32: "#e67e22",  // Orange
   Bk10: "#f39c12",  // Helleres Orange
-  "Bk3,2": "#2ecc71", // Grün
-  "Bk1,8": "#3498db", // Blau  
-  "Bk1,0": "#9b59b6", // Lila
-  "Bk0,3": "#1abc9c", // Türkis - geringste Belastung
-  default: "#95a5a6"  // Grau für unklassifizierte
+  Bk3: "#f1c40f",   // Gelb
+  Bk1: "#2ecc71",   // Grün
+  Bk0_3: "#3498db", // Blau - niedrigste Belastung
+  none: "#95a5a6"   // Grau - keine Belastungsklasse
 };
 
-// Typen für Baumaschinen und Empfehlungen
+// Konstanten für Straßentypen und deren Standardbreiten
+const roadWidthPresets = {
+  Autobahn: 12.5,
+  Bundesstraße: 7.5,
+  Landstraße: 6.5,
+  Kreisstraße: 5.5,
+  Gemeindestraße: 5.0,
+  Benutzerdefiniert: 0, // Wird durch user-input überschrieben
+};
+
+// Belastungsklassen nach RStO 12
+const belastungsklassen = [
+  { 
+    klasse: "Bk100", 
+    beanspruchung: "sehr stark",
+    beispiel: "Autobahnen, Bundesstraßen (hochbelastet)", 
+    bauklasse: "SV",
+    dickeAsphaltbauweise: "77 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "18 cm",
+    dickeFrostschutzschicht1: "55 cm"
+  },
+  { 
+    klasse: "Bk32", 
+    beanspruchung: "stark",
+    beispiel: "Bundesstraßen, Hauptverkehrsstraßen", 
+    bauklasse: "I",
+    dickeAsphaltbauweise: "74 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "14 cm",
+    dickeFrostschutzschicht1: "56 cm"
+  },
+  { 
+    klasse: "Bk10", 
+    beanspruchung: "mittel",
+    beispiel: "Landstraßen, Kreisstraßen", 
+    bauklasse: "II",
+    dickeAsphaltbauweise: "71 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "14 cm",
+    dickeFrostschutzschicht1: "53 cm"
+  },
+  { 
+    klasse: "Bk3", 
+    beanspruchung: "gering",
+    beispiel: "Gemeindestraßen, Anliegerstraßen", 
+    bauklasse: "III",
+    dickeAsphaltbauweise: "67 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "10 cm",
+    dickeFrostschutzschicht1: "53 cm",
+    dickeSchotterTragschicht: "20 cm", // Alternative mit Schottertragschicht
+    dickeFrostschutzschicht2: "42 cm"
+  },
+  { 
+    klasse: "Bk1", 
+    beanspruchung: "sehr gering",
+    beispiel: "Wohnstraßen, Parkplätze", 
+    bauklasse: "IV",
+    dickeAsphaltbauweise: "63 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "8 cm",
+    dickeFrostschutzschicht1: "51 cm",
+    dickeSchotterTragschicht: "15 cm", // Alternative mit Schottertragschicht
+    dickeFrostschutzschicht2: "43 cm"
+  },
+  { 
+    klasse: "Bk0_3", 
+    beanspruchung: "minimal",
+    beispiel: "Feldwege, Zufahrten", 
+    bauklasse: "V",
+    dickeAsphaltbauweise: "57 cm",
+    dickeAsphaltdecke: "4 cm",
+    dickeAsphaltTragschicht: "6 cm",
+    dickeFrostschutzschicht1: "47 cm",
+    dickeSchotterTragschicht: "15 cm", // Alternative mit Schottertragschicht
+    dickeFrostschutzschicht2: "37 cm"
+  },
+];
+
+// Empfohlene Baumaschinen für verschiedene Belastungsklassen
+const baumaschinen: Baumaschine[] = [
+  {
+    name: "Tandemwalze BW 154",
+    beschreibung: "Ideale Verdichtung für alle Asphaltschichten",
+    eignung: ["Bk100", "Bk32", "Bk10", "Bk3", "Bk1", "Bk0_3"],
+    tagesmiete: 380,
+    leistung: 4500
+  },
+  {
+    name: "Fertiger Super 1800-3i",
+    beschreibung: "Leistungsstarker Asphaltfertiger für hochbelastete Straßen",
+    eignung: ["Bk100", "Bk32"],
+    bildUrl: "/assets/fertiger.jpg",
+    tagesmiete: 1200,
+    leistung: 6000
+  },
+  {
+    name: "Straßenfräse W 100 F",
+    beschreibung: "Kompakte Kaltfräse für präzise Arbeiten",
+    eignung: ["Bk10", "Bk3", "Bk1"],
+    tagesmiete: 850,
+    leistung: 3200
+  },
+  {
+    name: "Radlader 950 GC",
+    beschreibung: "Vielseitiger Radlader für Material-Handling",
+    eignung: ["Bk100", "Bk32", "Bk10", "Bk3", "Bk1", "Bk0_3"],
+    tagesmiete: 450,
+    leistung: 5000
+  },
+  {
+    name: "Kompaktfertiger BF 300",
+    beschreibung: "Kleiner Fertiger für schmalere Projekte",
+    eignung: ["Bk1", "Bk0_3"],
+    tagesmiete: 650,
+    leistung: 2500
+  }
+];
+
+// Material-Basiskosten pro m²
+const baseMaterialCosts: MaterialCosts = {
+  asphaltdecke: 28.50,     // €/m² für Asphaltdeckschicht
+  asphalttragschicht: 22.00,  // €/m² für Asphalttragschicht
+  frostschutzschicht: 12.50,  // €/m² für Frostschutzschicht
+  schottertragschicht: 15.00  // €/m² für Schottertragschicht (falls verwendet)
+};
+
 interface Baumaschine {
   name: string;
   beschreibung: string;
@@ -64,156 +187,6 @@ interface Baumaschine {
   tagesmiete: number; // Euro pro Tag
   leistung: number; // m²/Tag
 }
-
-const baumaschinen: Baumaschine[] = [
-  {
-    name: "Straßenfertiger (klein)",
-    beschreibung: "Für kleinere Straßenbauarbeiten und Reparaturen",
-    eignung: ["Bk0,3", "Bk1,0", "Bk1,8"],
-    tagesmiete: 850,
-    leistung: 500
-  },
-  {
-    name: "Straßenfertiger (mittel)",
-    beschreibung: "Für mittlere Straßenbauarbeiten und Landstraßen",
-    eignung: ["Bk1,8", "Bk3,2", "Bk10"],
-    tagesmiete: 1200,
-    leistung: 800
-  },
-  {
-    name: "Straßenfertiger (groß)",
-    beschreibung: "Für große Bundesstraßen und Autobahnen",
-    eignung: ["Bk10", "Bk32", "Bk100"],
-    tagesmiete: 2400,
-    leistung: 1500
-  },
-  {
-    name: "Walze (7t)",
-    beschreibung: "Verdichtung von Asphalt und Schotter",
-    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2"],
-    tagesmiete: 350,
-    leistung: 1200
-  },
-  {
-    name: "Walze (12t)",
-    beschreibung: "Schwere Verdichtung für stark belastete Straßen",
-    eignung: ["Bk3,2", "Bk10", "Bk32", "Bk100"],
-    tagesmiete: 550,
-    leistung: 1600
-  },
-  {
-    name: "Bagger (Raupe)",
-    beschreibung: "Für Erdarbeiten und Bodenaushub",
-    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2", "Bk10", "Bk32", "Bk100"],
-    tagesmiete: 750,
-    leistung: 400
-  },
-  {
-    name: "Radlader",
-    beschreibung: "Transport von Material auf der Baustelle",
-    eignung: ["Bk0,3", "Bk1,0", "Bk1,8", "Bk3,2", "Bk10", "Bk32", "Bk100"],
-    tagesmiete: 650,
-    leistung: 600
-  },
-  {
-    name: "Fräse (klein)",
-    beschreibung: "Entfernung bestehender Asphaltdecken",
-    eignung: ["Bk0,3", "Bk1,0", "Bk1,8"],
-    tagesmiete: 950,
-    leistung: 350
-  },
-  {
-    name: "Fräse (groß)",
-    beschreibung: "Großflächige Entfernung bestehender Straßenbeläge",
-    eignung: ["Bk3,2", "Bk10", "Bk32", "Bk100"],
-    tagesmiete: 1800,
-    leistung: 700
-  }
-];
-
-// Straßentyp-Presets mit Breiten
-const roadWidthPresets = {
-  "Autobahn": 12.5,
-  "Bundesstraße": 7.5,
-  "Landstraße": 6.5,
-  "Kreisstraße": 5.5,
-  "Gemeindestraße": 5.0,
-  "Benutzerdefiniert": 0 // Wird dynamisch gesetzt
-};
-
-// RStO 12 Belastungsklassen
-const belastungsklassen = [
-  {
-    klasse: "Bk100",
-    beanspruchung: "Außerordentliche Beanspruchung",
-    beispiel: "Autobahnen, Industriestraßen",
-    bauklasse: "SV",
-    dickeAsphaltbauweise: "65-85",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "22",
-    dickeFrostschutzschicht1: "59" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk32",
-    beanspruchung: "Sehr starke Beanspruchung",
-    beispiel: "Hauptverkehrsstraßen, Industriestraßen",
-    bauklasse: "I",
-    dickeAsphaltbauweise: "65-79",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "18",
-    dickeFrostschutzschicht1: "57" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk10", 
-    beanspruchung: "Starke Beanspruchung",
-    beispiel: "Hauptverkehrsstraßen, Gewerbestraßen",
-    bauklasse: "II",
-    dickeAsphaltbauweise: "63-77",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "14",
-    dickeFrostschutzschicht1: "59" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk3,2",
-    beanspruchung: "Mittlere Beanspruchung",
-    beispiel: "Sammlerstraßen, Gewerbestraßen",
-    bauklasse: "III",
-    dickeAsphaltbauweise: "59-74",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "14",
-    dickeFrostschutzschicht1: "56" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk1,8",
-    beanspruchung: "Geringe Beanspruchung",
-    beispiel: "Wohnsammelstraßen",
-    bauklasse: "IV",
-    dickeAsphaltbauweise: "57-73",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "10",
-    dickeFrostschutzschicht1: "59" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk1,0",
-    beanspruchung: "Sehr geringe Beanspruchung",
-    beispiel: "Wohnstraßen, landwirtschaftliche Wege",
-    bauklasse: "V",
-    dickeAsphaltbauweise: "53-66",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "8",
-    dickeFrostschutzschicht1: "54" // Variante 1 ohne Schottertragschicht
-  },
-  {
-    klasse: "Bk0,3",
-    beanspruchung: "Minimale Beanspruchung",
-    beispiel: "Wohnwege, Parkplätze",
-    bauklasse: "VI",
-    dickeAsphaltbauweise: "52-63",
-    dickeAsphaltdecke: "4",
-    dickeAsphaltTragschicht: "6",
-    dickeFrostschutzschicht1: "53" // Variante 1 ohne Schottertragschicht
-  }
-];
 
 type BelastungsklasseInfo = {
   klasse: string;
@@ -262,77 +235,6 @@ interface MarkerInfo {
   };
 }
 
-function calculateDistance(
-  lat1: number, lon1: number, 
-  lat2: number, lon2: number
-): number {
-  const R = 6371; // Radius der Erde in Kilometern
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c; // Entfernung in km
-  return distance;
-}
-
-function calculateRouteDistances(markers: MarkerInfo[]): {total: number, segments: number[]} {
-  let total = 0;
-  const segments: number[] = [];
-  
-  for (let i = 0; i < markers.length - 1; i++) {
-    const distance = calculateDistance(
-      markers[i].position[0], markers[i].position[1],
-      markers[i+1].position[0], markers[i+1].position[1]
-    );
-    
-    total += distance;
-    segments.push(distance);
-  }
-  
-  return { total, segments };
-}
-
-function optimizeRouteOrder(markers: MarkerInfo[]): MarkerInfo[] {
-  if (markers.length <= 2) return [...markers];
-  
-  // Startpunkt beibehalten
-  const start = markers[0];
-  let remainingPoints = markers.slice(1);
-  const optimizedRoute = [start];
-  
-  let currentPoint = start;
-  
-  // Greedy-Algorithmus: Immer zum nächsten Punkt gehen
-  while (remainingPoints.length > 0) {
-    let minDistance = Infinity;
-    let closestIndex = -1;
-    
-    for (let i = 0; i < remainingPoints.length; i++) {
-      const distance = calculateDistance(
-        currentPoint.position[0], currentPoint.position[1],
-        remainingPoints[i].position[0], remainingPoints[i].position[1]
-      );
-      
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = i;
-      }
-    }
-    
-    if (closestIndex !== -1) {
-      const nextPoint = remainingPoints[closestIndex];
-      optimizedRoute.push(nextPoint);
-      currentPoint = nextPoint;
-      remainingPoints.splice(closestIndex, 1);
-    }
-  }
-  
-  return optimizedRoute;
-}
-
 interface MaterialCosts {
   asphaltdecke: number;     // Kosten pro m² für Asphaltdecke
   asphalttragschicht: number;  // Kosten pro m² für Asphalttragschicht
@@ -340,108 +242,196 @@ interface MaterialCosts {
   schottertragschicht?: number; // Kosten pro m² für Schottertragschicht (optional)
 }
 
-// Basismaterialkosten pro m² in Euro (beispielhafte Werte)
-const baseMaterialCosts: MaterialCosts = {
-  asphaltdecke: 42.50,      // Kosten pro m² für 4cm Asphaltdecke
-  asphalttragschicht: 26.75, // Kosten pro m² pro 1cm Dicke
-  frostschutzschicht: 18.50, // Kosten pro m² pro 1cm Dicke
-  schottertragschicht: 22.30 // Kosten pro m² pro 1cm Dicke
-};
-
-function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
-  return belastungsklassen.find(klasse => klasse.klasse === klasseId);
+// Funktion zum Berechnen der Distanz zwischen zwei Punkten
+function calculateDistance(
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
+): number {
+  const R = 6371; // Erdradius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distanz in km
 }
 
-function calculateMaterialCosts(
-  distanceKm: number, 
-  width: number, 
-  belastungsklasse: string
-): { 
-  total: number, 
-  materials: {
-    name: string,
-    thickness: number, // Dicke in cm
-    area: number, // Fläche in m²
-    costPerSqm: number, // Kosten pro m²
-    totalCost: number // Gesamtkosten für diese Schicht
-  }[]
-} {
-  // Default-Werte für den Fall, dass keine Belastungsklasse angegeben wurde
-  let asphaltdeckeDicke = 4; // cm
-  let asphalttragschichtDicke = 12; // cm
-  let frostschutzschichtDicke = 40; // cm
-  
-  // Wenn eine Belastungsklasse angegeben wurde, verwende die entsprechenden Werte
-  const klasseInfo = getKlasseInfo(belastungsklasse);
-  if (klasseInfo) {
-    asphaltdeckeDicke = parseInt(klasseInfo.dickeAsphaltdecke);
-    asphalttragschichtDicke = parseInt(klasseInfo.dickeAsphaltTragschicht);
-    frostschutzschichtDicke = parseInt(klasseInfo.dickeFrostschutzschicht1);
+// Funktion zum Berechnen der Routen-Entfernungen
+function calculateRouteDistances(markers: MarkerInfo[]): {total: number, segments: number[]} {
+  if (markers.length < 2) {
+    return { total: 0, segments: [] };
   }
   
-  // Berechne die Gesamtfläche in m²
-  const areaInSqm = distanceKm * 1000 * width; // Fläche in m²
+  const segments: number[] = [];
+  let totalDistance = 0;
   
-  // Berechne die Kosten für die einzelnen Schichten
-  const asphaltdeckeKosten = areaInSqm * baseMaterialCosts.asphaltdecke;
-  const asphalttragschichtKosten = areaInSqm * (baseMaterialCosts.asphalttragschicht * asphalttragschichtDicke / 10);
-  const frostschutzschichtKosten = areaInSqm * (baseMaterialCosts.frostschutzschicht * frostschutzschichtDicke / 10);
+  for (let i = 0; i < markers.length - 1; i++) {
+    const distance = calculateDistance(
+      markers[i].position[0], 
+      markers[i].position[1],
+      markers[i+1].position[0],
+      markers[i+1].position[1]
+    );
+    segments.push(distance);
+    totalDistance += distance;
+  }
   
-  const materials = [
-    {
-      name: "Asphaltdecke",
-      thickness: asphaltdeckeDicke,
-      area: areaInSqm,
-      costPerSqm: baseMaterialCosts.asphaltdecke,
-      totalCost: asphaltdeckeKosten
-    },
-    {
-      name: "Asphalttragschicht",
-      thickness: asphalttragschichtDicke,
-      area: areaInSqm,
-      costPerSqm: baseMaterialCosts.asphalttragschicht * asphalttragschichtDicke / 10,
-      totalCost: asphalttragschichtKosten
-    },
-    {
-      name: "Frostschutzschicht",
-      thickness: frostschutzschichtDicke,
-      area: areaInSqm,
-      costPerSqm: baseMaterialCosts.frostschutzschicht * frostschutzschichtDicke / 10,
-      totalCost: frostschutzschichtKosten
+  return { total: totalDistance, segments };
+}
+
+// Funktion zum Finden der optimalen Reihenfolge der Marker (einfache Nearest-Neighbor-Heuristik)
+function optimizeRouteOrder(markers: MarkerInfo[]): MarkerInfo[] {
+  if (markers.length <= 2) return markers;
+  
+  const optimizedRoute: MarkerInfo[] = [markers[0]]; // Starte mit dem ersten Marker
+  const unvisited = markers.slice(1);
+  
+  while (unvisited.length > 0) {
+    const currentMarker = optimizedRoute[optimizedRoute.length - 1];
+    let nearestIdx = 0;
+    let minDistance = Number.MAX_VALUE;
+    
+    // Finde den nächsten unbesuchten Marker
+    for (let i = 0; i < unvisited.length; i++) {
+      const distance = calculateDistance(
+        currentMarker.position[0],
+        currentMarker.position[1],
+        unvisited[i].position[0],
+        unvisited[i].position[1]
+      );
+      
+      if (distance < minDistance) {
+        nearestIdx = i;
+        minDistance = distance;
+      }
     }
-  ];
+    
+    // Füge den nächsten Marker zur optimierten Route hinzu
+    optimizedRoute.push(unvisited[nearestIdx]);
+    // Entferne den besuchten Marker aus der unbesuchten Liste
+    unvisited.splice(nearestIdx, 1);
+  }
   
-  // Berechne die Gesamtkosten
-  const totalCost = materials.reduce((sum, material) => sum + material.totalCost, 0);
+  return optimizedRoute;
+}
+
+// Funktion zum Ermitteln der Belastungsklasseninformationen
+function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
+  return belastungsklassen.find(k => k.klasse === klasseId);
+}
+
+// Materialkosten berechnen basierend auf Strecke, Breite und Belastungsklasse
+function calculateMaterialCosts(
+  distance: number, // Streckenlänge in km
+  width: number,    // Straßenbreite in m
+  belastungsklasseId: string
+): { materials: any[], total: number } {
+  // Fläche in m²
+  const area = distance * 1000 * width;
+  
+  // Klasseninformationen abrufen
+  const klasseInfo = getKlasseInfo(belastungsklasseId);
+  if (!klasseInfo || belastungsklasseId === "none") {
+    return { materials: [], total: 0 };
+  }
+  
+  // Materialdicken extrahieren und in Meter umrechnen (von cm)
+  const deckschichtDicke = parseFloat(klasseInfo.dickeAsphaltdecke) / 100;
+  const tragschichtDicke = parseFloat(klasseInfo.dickeAsphaltTragschicht) / 100;
+  
+  // Entscheiden, ob wir die Variante mit oder ohne Schottertragschicht verwenden
+  const useSGT = !!klasseInfo.dickeSchotterTragschicht;
+  
+  // Welche Frostschutzschicht verwenden wir?
+  const frostschutzDicke = useSGT ? 
+    parseFloat(klasseInfo.dickeFrostschutzschicht2 || "0") / 100 : 
+    parseFloat(klasseInfo.dickeFrostschutzschicht1) / 100;
+  
+  // Optional: Dicke der Schottertragschicht
+  const schotterDicke = useSGT ? parseFloat(klasseInfo.dickeSchotterTragschicht || "0") / 100 : 0;
+  
+  // Materialkosten berechnen
+  const materialCosts = [];
+  let totalCost = 0;
+  
+  // Asphaltdeckschicht
+  const deckschichtCost = area * deckschichtDicke * 100 * baseMaterialCosts.asphaltdecke;
+  materialCosts.push({
+    name: "Asphaltdeckschicht",
+    thickness: klasseInfo.dickeAsphaltdecke,
+    area: area * deckschichtDicke * 100, // Volumen in m³, konvertiert zu Fläche mit 1cm Dicke
+    costPerSqm: baseMaterialCosts.asphaltdecke,
+    totalCost: deckschichtCost
+  });
+  totalCost += deckschichtCost;
+  
+  // Asphalttragschicht
+  const tragschichtCost = area * tragschichtDicke * 100 * baseMaterialCosts.asphalttragschicht;
+  materialCosts.push({
+    name: "Asphalttragschicht",
+    thickness: klasseInfo.dickeAsphaltTragschicht,
+    area: area * tragschichtDicke * 100,
+    costPerSqm: baseMaterialCosts.asphalttragschicht,
+    totalCost: tragschichtCost
+  });
+  totalCost += tragschichtCost;
+  
+  // Frostschutzschicht
+  const frostschutzCost = area * frostschutzDicke * 100 * baseMaterialCosts.frostschutzschicht;
+  materialCosts.push({
+    name: "Frostschutzschicht",
+    thickness: useSGT ? klasseInfo.dickeFrostschutzschicht2 : klasseInfo.dickeFrostschutzschicht1,
+    area: area * frostschutzDicke * 100,
+    costPerSqm: baseMaterialCosts.frostschutzschicht,
+    totalCost: frostschutzCost
+  });
+  totalCost += frostschutzCost;
+  
+  // Optional: Schottertragschicht
+  if (useSGT && baseMaterialCosts.schottertragschicht) {
+    const schotterCost = area * schotterDicke * 100 * baseMaterialCosts.schottertragschicht;
+    materialCosts.push({
+      name: "Schottertragschicht",
+      thickness: klasseInfo.dickeSchotterTragschicht,
+      area: area * schotterDicke * 100,
+      costPerSqm: baseMaterialCosts.schottertragschicht,
+      totalCost: schotterCost
+    });
+    totalCost += schotterCost;
+  }
   
   return {
-    total: totalCost,
-    materials
+    materials: materialCosts,
+    total: totalCost
   };
 }
 
+// Funktion zum Erstellen eines benutzerdefinierten Icons basierend auf der Belastungsklasse
 function createCustomIcon(belastungsklasse?: string): L.Icon {
-  // Standard-Farbe für unklassifizierte Marker
-  let color = belastungsklassenColors.default;
+  const color = belastungsklasse ? belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors] : belastungsklassenColors.none;
   
-  // Wenn eine Belastungsklasse angegeben wurde, verwende die entsprechende Farbe
-  if (belastungsklasse && belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors]) {
-    color = belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors];
-  }
-
-  return new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-    // Iconfarbe überschreiben mit der entsprechenden Belastungsklassenfarbe
-    className: 'custom-marker-icon',
-    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="
+        background-color: ${color};
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 4px rgba(0,0,0,0.5);
+      "></div>
+    `,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
   });
 }
 
+// Component für Click-Events auf der Karte
 interface MapClickerProps {
   onMarkerAdd: (lat: number, lng: number) => void;
   selectedBelastungsklasse: string;
@@ -450,15 +440,15 @@ interface MapClickerProps {
 function MapClicker({ onMarkerAdd, selectedBelastungsklasse }: MapClickerProps) {
   const map = useMapEvents({
     click: (e) => {
-      // Vereinfacht: Alle Klicks auf die Karte erlauben
-      console.log("Kartenklick erkannt an Position:", e.latlng);
+      console.log("Karte wurde angeklickt bei:", e.latlng);
       onMarkerAdd(e.latlng.lat, e.latlng.lng);
-    }
+    },
   });
   
   return null;
 }
 
+// Component für Events auf der Karte
 interface MapEventsProps {
   onMoveEnd: (map: L.Map) => void;
 }
@@ -479,7 +469,7 @@ function MapEvents({ onMoveEnd }: MapEventsProps) {
   return null;
 }
 
-// Komponente zur Kontrolle der Karte und zum Zentrieren auf einen bestimmten Marker
+// Component für Karten-Steuerung (z.B. Auto-Panning zu neuen Markern)
 interface MapControlProps {
   position: [number, number] | null;
   zoomLevel?: number;
@@ -490,595 +480,437 @@ function MapControl({ position, zoomLevel = 15 }: MapControlProps) {
   
   useEffect(() => {
     if (position) {
-      console.log("Zentriere Karte auf Position:", position);
-      map.flyTo(position, zoomLevel, {
-        animate: true,
-        duration: 1.5 // Animation in Sekunden
-      });
+      map.setView(position, zoomLevel);
     }
   }, [map, position, zoomLevel]);
   
   return null;
 }
 
+// Haupt-Component
 export default function GeoMapPage() {
-  const [, setLocation] = useLocation();
-  const [markers, setMarkers] = useState<MarkerInfo[]>([]);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([51.1657, 10.4515]); // Deutschland
-  const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  // State für Karten-Tabs und Marker
   const [bayernTabValue, setBayernTabValue] = useState<"strassenplanung" | "bayernatlas" | "denkmalatlas">("strassenplanung");
-  const mapRef = useRef<HTMLDivElement>(null);
-  const materialCostsRef = useRef<HTMLDivElement>(null);
-  const routeDataRef = useRef<HTMLDivElement>(null);
-  const exportMapRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("map");
+  const [markers, setMarkers] = useState<MarkerInfo[]>([]);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
+  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState("none");
+  const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
+  const [searchLat, setSearchLat] = useState<number | null>(null);
+  const [searchLng, setSearchLng] = useState<number | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([48.137154, 11.576124]); // München
   
-  // PDF Export Funktion
-  const exportToPdf = async () => {
-    if (!mapRef.current || markers.length < 1) {
-      alert("Bitte fügen Sie zuerst Marker hinzu");
-      return;
-    }
+  // State für Materialkosten
+  const [roadWidth, setRoadWidth] = useState<number>(7.5); // Standard: 7.5m
+  const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Bundesstraße");
+  
+  // State für Datei-Uploads
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Refs für die Karte und Exportfunktionen
+  const mapRef = useRef<HTMLDivElement>(null);
+  const routeDataRef = useRef<HTMLDivElement>(null);
+  const materialCostsRef = useRef<HTMLDivElement>(null);
+  
+  // Funktion zum Hinzufügen eines neuen Markers
+  const addMarker = useCallback(async (lat: number, lng: number) => {
+    console.log(`Füge Marker bei ${lat}, ${lng} hinzu`);
     
     try {
-      setIsExporting(true);
+      // Reverse Geocoding mit Mapbox API
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&country=de&language=de`
+      );
       
-      // Timestamp für Dateinamen
-      const date = new Date();
-      const dateStr = date.toISOString().split('T')[0];
-      const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-');
-      const fileName = `Baustellen-Karte_${dateStr}_${timeStr}.pdf`;
-      
-      // PDF vorbereiten (A4 Querformat)
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      // Titel
-      pdf.setFontSize(18);
-      pdf.text('Baustellen-Projektdokumentation', pdfWidth / 2, 15, { align: 'center' });
-      pdf.setFontSize(12);
-      pdf.text(`Erstellt am: ${date.toLocaleString('de-DE')}`, pdfWidth / 2, 22, { align: 'center' });
-      
-      // Karte (wenn mapRef.current gesetzt ist)
-      if (mapRef.current) {
-        const mapCanvas = await html2canvas(mapRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false
-        });
-        
-        const mapImgData = mapCanvas.toDataURL('image/jpeg', 0.8);
-        const mapAspectRatio = mapCanvas.width / mapCanvas.height;
-        
-        // Map positionieren (linke Hälfte)
-        const mapWidth = pdfWidth * 0.55;
-        const mapHeight = mapWidth / mapAspectRatio;
-        pdf.addImage(mapImgData, 'JPEG', 10, 30, mapWidth, mapHeight);
+      if (!response.ok) {
+        throw new Error("Fehler bei der Adressauflösung");
       }
       
-      // Standorte/Marker in Tabelle (rechts oben)
-      pdf.setFontSize(12);
-      pdf.text('Standorte', pdfWidth * 0.7, 35, { align: 'center' });
-      pdf.setFontSize(8);
+      const data = await response.json();
       
-      let yPos = 40;
-      markers.forEach((marker, index) => {
-        pdf.text(`${index + 1}. ${marker.name || `Standort ${index + 1}`}`, pdfWidth * 0.6, yPos);
-        yPos += 5;
-        if (marker.strasse) {
-          pdf.text(`   ${marker.strasse} ${marker.hausnummer}, ${marker.plz} ${marker.ort}`, pdfWidth * 0.6, yPos);
-          yPos += 5;
+      // Default-Werte
+      let strasse = "";
+      let hausnummer = "";
+      let plz = "";
+      let ort = "";
+      let markerName = `Standort ${markers.length + 1}`;
+      
+      // Adressen aus der Mapbox-Antwort extrahieren
+      if (data.features && data.features.length > 0) {
+        // Straße aus dem ersten Feature (meist die genaueste Position)
+        const streetFeature = data.features.find((f: any) => f.place_type.includes("address"));
+        if (streetFeature) {
+          strasse = streetFeature.text;
+          
+          // Hausnummer extrahieren (falls vorhanden)
+          const addressMatch = streetFeature.address?.match(/^(\d+.*)/);
+          if (addressMatch) {
+            hausnummer = addressMatch[1];
+          }
         }
+        
+        // PLZ und Ort aus den Context-Elementen
+        for (const feature of data.features) {
+          if (feature.place_type.includes("postcode") && !plz) {
+            plz = feature.text;
+          }
+          if ((feature.place_type.includes("place") || feature.place_type.includes("locality")) && !ort) {
+            ort = feature.text;
+          }
+        }
+        
+        // Marker-Namen aus den verfügbaren Informationen erstellen
+        if (strasse && hausnummer && ort) {
+          markerName = `${strasse} ${hausnummer}, ${ort}`;
+        } else if (strasse && ort) {
+          markerName = `${strasse}, ${ort}`;
+        } else if (ort) {
+          markerName = ort;
+        }
+      }
+      
+      const newMarker: MarkerInfo = {
+        position: [lat, lng],
+        name: markerName,
+        belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+        strasse,
+        hausnummer,
+        plz,
+        ort,
+        notes: ""
+      };
+      
+      setMarkers([...markers, newMarker]);
+      setSelectedMarkerIndex(markers.length);
+      setLastAddedMarkerPosition([lat, lng]);
+      
+    } catch (error) {
+      console.error("Fehler beim Hinzufügen des Markers:", error);
+      alert("Es konnte keine Adresse für diesen Standort ermittelt werden. Der Marker wird ohne Adressinformationen hinzugefügt.");
+      
+      const newMarker: MarkerInfo = {
+        position: [lat, lng],
+        name: `Standort ${markers.length + 1}`,
+        belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+      };
+      
+      setMarkers([...markers, newMarker]);
+      setSelectedMarkerIndex(markers.length);
+      setLastAddedMarkerPosition([lat, lng]);
+    }
+  }, [markers, selectedBelastungsklasse]);
+  
+  // Funktion zum Exportieren der Streckendaten als PDF
+  const exportToPdf = useCallback(async () => {
+    if (isExporting || !routeDataRef.current || !materialCostsRef.current) return;
+    
+    setIsExporting(true);
+    
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Titel und Datum hinzufügen
+      pdf.setFontSize(18);
+      pdf.text('Bau-Structura Streckenbericht', 105, 20, { align: 'center' });
+      pdf.setFontSize(12);
+      const today = new Date().toLocaleDateString('de-DE');
+      pdf.text(`Erstellt am: ${today}`, 105, 30, { align: 'center' });
+      
+      // Standorte auflisten
+      pdf.setFontSize(14);
+      pdf.text('Markierte Standorte', 15, 45);
+      pdf.setFontSize(10);
+      
+      let y = 55;
+      markers.forEach((marker, idx) => {
+        pdf.text(`${idx + 1}. ${marker.name || 'Unbenannter Standort'}`, 20, y);
+        pdf.text(`Position: ${marker.position[0].toFixed(5)}, ${marker.position[1].toFixed(5)}`, 30, y + 5);
         if (marker.belastungsklasse) {
-          pdf.text(`   Belastungsklasse: ${marker.belastungsklasse}`, pdfWidth * 0.6, yPos);
-          yPos += 5;
+          pdf.text(`Belastungsklasse: ${marker.belastungsklasse}`, 30, y + 10);
         }
-        yPos += 2;
+        y += 15;
+        
+        // Seitenumbruch bei Bedarf
+        if (y > 270) {
+          pdf.addPage();
+          y = 20;
+        }
       });
       
-      // Streckendaten (rechts mitte)
-      const routeDistances = calculateRouteDistances(markers);
-      const totalKm = routeDistances.total;
+      // Streckeninformationen hinzufügen
+      const routeDataCanvas = await html2canvas(routeDataRef.current);
+      const routeDataImgData = routeDataCanvas.toDataURL('image/png');
+      pdf.addImage(routeDataImgData, 'PNG', 15, y, 180, 20);
+      y += 25;
       
-      yPos += 5;
-      pdf.setFontSize(12);
-      pdf.text('Streckendaten', pdfWidth * 0.7, yPos, { align: 'center' });
-      pdf.setFontSize(8);
-      
-      yPos += 7;
-      pdf.text(`Gesamtstrecke: ${totalKm.toFixed(2)} km`, pdfWidth * 0.6, yPos);
-      
-      // Wenn eine Belastungsklasse und Straßenbreite ausgewählt ist, zeige Materialkosten
-      if (selectedBelastungsklasse !== "none" && roadWidth > 0) {
-        // Materialkosten (rechts unten)
-        const costs = calculateMaterialCosts(totalKm, roadWidth, selectedBelastungsklasse);
+      // Materialkosten hinzufügen
+      if (selectedBelastungsklasse !== 'none') {
+        pdf.setFontSize(14);
+        pdf.text('Materialkosten', 15, y);
+        y += 10;
         
-        yPos += 10;
-        pdf.setFontSize(12);
-        pdf.text('Materialkosten', pdfWidth * 0.7, yPos, { align: 'center' });
-        pdf.setFontSize(8);
-        
-        yPos += 7;
-        pdf.text(`Belastungsklasse: ${selectedBelastungsklasse}`, pdfWidth * 0.6, yPos);
-        yPos += 5;
-        pdf.text(`Straßenbreite: ${roadWidth.toFixed(1)} m`, pdfWidth * 0.6, yPos);
-        yPos += 5;
-        pdf.text(`Gesamtfläche: ${(totalKm * 1000 * roadWidth).toFixed(0)} m²`, pdfWidth * 0.6, yPos);
-        
-        yPos += 7;
-        pdf.text('Schicht', pdfWidth * 0.6, yPos);
-        pdf.text('Dicke (cm)', pdfWidth * 0.7, yPos);
-        pdf.text('Kosten (€)', pdfWidth * 0.8, yPos);
-        
-        costs.materials.forEach((material, i) => {
-          yPos += 5;
-          pdf.text(material.name, pdfWidth * 0.6, yPos);
-          pdf.text(material.thickness.toString(), pdfWidth * 0.7, yPos);
-          pdf.text(material.totalCost.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          }), pdfWidth * 0.8, yPos);
-        });
-        
-        yPos += 7;
-        pdf.setFontSize(10);
-        pdf.text('Gesamtkosten:', pdfWidth * 0.6, yPos);
-        pdf.text(costs.total.toLocaleString('de-DE', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }) + ' €', pdfWidth * 0.8, yPos);
+        const materialCostsCanvas = await html2canvas(materialCostsRef.current);
+        const materialCostsImgData = materialCostsCanvas.toDataURL('image/png');
+        pdf.addImage(materialCostsImgData, 'PNG', 15, y, 180, 80);
       }
       
-      // Fußzeile
-      pdf.setFontSize(8);
-      pdf.text('Automatisch erstellt mit der Bau - Structura App', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
-      
       // PDF speichern
-      pdf.save(fileName);
+      pdf.save('strassenbau-planung.pdf');
     } catch (error) {
-      console.error('Fehler beim PDF-Export:', error);
+      console.error('Fehler beim Exportieren als PDF:', error);
       alert('Beim Exportieren ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [isExporting, markers, selectedBelastungsklasse]);
   
-  // State-Update-Log für Debugging
-  useEffect(() => {
-    console.log("Marker wurden aktualisiert:", markers);
-  }, [markers]);
-  const [tempLocation, setTempLocation] = useState<[number, number] | null>(null);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number>(-1);
-  const [activeTab, setActiveTab] = useState<string>("map");
-  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("none");
-  
-  // Koordinateneingabe
-  const [searchLat, setSearchLat] = useState<number | null>(null);
-  const [searchLng, setSearchLng] = useState<number | null>(null);
-  
-  // Diese Konstante wurde entfernt, um die Adress-zu-Koordinaten-Funktionalität zu vereinfachen
-  
-  // Standort-Dialog
-  const [newLocationDialogOpen, setNewLocationDialogOpen] = useState<boolean>(false);
-  const [locationName, setLocationName] = useState<string>("");
-  const [locationInfo, setLocationInfo] = useState<{ 
-    strasse: string; 
-    hausnummer: string; 
-    plz: string; 
-    ort: string;
-  }>({ strasse: "", hausnummer: "", plz: "", ort: "" });
-  const [locationNotes, setLocationNotes] = useState<string>("");
-  
-  // Bildupload und Analyse
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  
-  // Materialkostenberechnung
-  const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Bundesstraße");
-  const [roadWidth, setRoadWidth] = useState<number>(roadWidthPresets[selectedRoadPreset as keyof typeof roadWidthPresets]);
-  const [showCostEstimation, setShowCostEstimation] = useState<boolean>(false);
-  
-  useEffect(() => {
-    // Wenn die Belastungsklasse geändert wird, setze den Straßentyp automatisch
-    if (selectedBelastungsklasse === "Bk100") {
-      setSelectedRoadPreset("Autobahn");
-      setRoadWidth(roadWidthPresets["Autobahn" as keyof typeof roadWidthPresets]);
-    } else if (selectedBelastungsklasse === "Bk32" || selectedBelastungsklasse === "Bk10") {
-      setSelectedRoadPreset("Bundesstraße");
-      setRoadWidth(roadWidthPresets["Bundesstraße" as keyof typeof roadWidthPresets]);
-    } else if (selectedBelastungsklasse === "Bk3,2" || selectedBelastungsklasse === "Bk1,8") {
-      setSelectedRoadPreset("Landstraße");
-      setRoadWidth(roadWidthPresets["Landstraße" as keyof typeof roadWidthPresets]);
-    } else if (selectedBelastungsklasse === "Bk1,0") {
-      setSelectedRoadPreset("Kreisstraße");
-      setRoadWidth(roadWidthPresets["Kreisstraße" as keyof typeof roadWidthPresets]);
-    } else if (selectedBelastungsklasse === "Bk0,3") {
-      setSelectedRoadPreset("Gemeindestraße");
-      setRoadWidth(roadWidthPresets["Gemeindestraße" as keyof typeof roadWidthPresets]);
-    }
-  }, [selectedBelastungsklasse]);
-  
-  const addMarker = useCallback((lat: number, lng: number) => {
-    console.log("addMarker aufgerufen mit:", lat, lng);
-    
-    // Reverse Geocoding verwenden, um Adresse zu ermitteln
-    fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&country=de&types=address&language=de`
-    )
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Fehler bei der Adresssuche");
-        }
-        return response.json();
-      })
-      .then(data => {
-        let strasse = "";
-        let hausnummer = "";
-        let plz = "";
-        let ort = "";
-        let markerName = `Standort ${markers.length + 1}`;
-        
-        if (data.features && data.features.length > 0) {
-          const addressInfo = data.features[0];
-          
-          // Adresskomponenten extrahieren
-          if (addressInfo.text) {
-            // Mapbox liefert oft Straße und Hausnummer zusammen im "text"-Feld
-            const addressParts = addressInfo.text.split(' ');
-            
-            // Letztes Element könnte die Hausnummer sein, wenn es numerisch ist
-            const lastPart = addressParts[addressParts.length - 1];
-            if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
-              hausnummer = lastPart;
-              strasse = addressParts.slice(0, -1).join(' ');
-            } else {
-              strasse = addressInfo.text;
-            }
-          }
-          
-          if (addressInfo.context) {
-            // Mapbox liefert Postleitzahl und Ort in context-Array
-            for (const context of addressInfo.context) {
-              if (context.id.startsWith('postcode')) {
-                plz = context.text;
-              } else if (context.id.startsWith('place')) {
-                ort = context.text;
-              }
-            }
-          }
-          
-          // Einen aussagekräftigen Namen für den Marker generieren
-          if (strasse && hausnummer && ort) {
-            markerName = `${strasse} ${hausnummer}, ${ort}`;
-          } else if (strasse && ort) {
-            markerName = `${strasse}, ${ort}`;
-          } else if (ort) {
-            markerName = ort;
-          }
-        }
-        
-        const newMarkerPosition: [number, number] = [lat, lng];
-        const newMarker: MarkerInfo = {
-          position: newMarkerPosition,
-          name: markerName,
-          belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-          strasse: strasse,
-          hausnummer: hausnummer,
-          plz: plz,
-          ort: ort,
-          notes: ""
-        };
-        
-        console.log("Füge neuen Marker hinzu:", newMarker);
-        setMarkers([...markers, newMarker]);
-        setSelectedMarkerIndex(markers.length);
-        
-        // Setze den letzten hinzugefügten Marker für das Auto-Panning
-        setLastAddedMarkerPosition(newMarkerPosition);
-      })
-      .catch(error => {
-        console.error("Fehler beim Reverse Geocoding:", error);
-        
-        // Fallback: Marker ohne Adressinformationen hinzufügen
-        const newMarkerPosition: [number, number] = [lat, lng];
-        const newMarker: MarkerInfo = {
-          position: newMarkerPosition,
-          name: `Standort ${markers.length + 1}`,
-          belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-          strasse: "",
-          hausnummer: "",
-          plz: "",
-          ort: "",
-          notes: ""
-        };
-        
-        setMarkers([...markers, newMarker]);
-        setSelectedMarkerIndex(markers.length);
-        setLastAddedMarkerPosition(newMarkerPosition);
-      });
-  }, [markers, selectedBelastungsklasse]);
-  
-  const saveLocation = () => {
-    if (!tempLocation) return;
-    
-    const newMarker: MarkerInfo = {
-      position: tempLocation,
-      name: locationName || `Standort ${markers.length + 1}`,
-      belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-      strasse: locationInfo.strasse,
-      hausnummer: locationInfo.hausnummer,
-      plz: locationInfo.plz,
-      ort: locationInfo.ort,
-      notes: locationNotes
-    };
-    
-    setMarkers([...markers, newMarker]);
-    setSelectedMarkerIndex(markers.length);
-    setNewLocationDialogOpen(false);
-    
-    // Setze den letzten hinzugefügten Marker für das Auto-Panning
-    setLastAddedMarkerPosition(tempLocation);
-    
-    // Reset the form
-    setLocationName("");
-    setLocationNotes("");
-  };
-  
-  const deleteMarker = (index: number) => {
-    const newMarkers = [...markers];
-    newMarkers.splice(index, 1);
-    setMarkers(newMarkers);
-    
-    if (selectedMarkerIndex === index) {
-      setSelectedMarkerIndex(-1);
-    } else if (selectedMarkerIndex > index) {
-      setSelectedMarkerIndex(selectedMarkerIndex - 1);
-    }
-  };
-  
+  // Funktion zur Oberflächenanalyse
   const analyzeSurface = useCallback(async (index: number, file: File) => {
+    const marker = markers[index];
+    if (!marker) return;
+    
+    setIsUploading(true);
+    setUploadProgress(10);
+    
     try {
-      setIsUploading(true);
-      setUploadProgress(0);
+      // URL für das Bild generieren
+      const imageUrl = URL.createObjectURL(file);
+      setUploadProgress(30);
       
-      // Simuliere Fortschritt
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress > 90 ? 90 : newProgress;
-        });
-      }, 100);
+      // Hier käme die eigentliche Analyse über eine API
+      // Stattdessen verwenden wir simulierte Ergebnisse
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setUploadProgress(70);
       
-      // HIER EIGENTLICH: Bild hochladen und analysieren lassen
-      // Simuliere Verzögerung für die Demo
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simuliere verschiedene Ergebnisse basierend auf dem aktuellen Index
+      const belastungsklasseOptions = ["Bk3", "Bk10", "Bk32"];
+      const asphalttypOptions = [
+        "Asphaltbeton AC 11 DS", 
+        "Splittmastixasphalt SMA 11 S",
+        "Gussasphalt MA 11 S"
+      ];
       
-      clearInterval(progressInterval);
-      setUploadProgress(100);
+      const randomIndex = Math.floor(Math.random() * belastungsklasseOptions.length);
       
-      // Beispiel-Analyseergebnis (würde eigentlich vom Backend kommen)
-      const newMarkers = [...markers];
-      const analysisResult = {
-        imageUrl: URL.createObjectURL(file),
-        belastungsklasse: selectedBelastungsklasse === "none" ? "Bk3,2" : selectedBelastungsklasse, // Beispiel
-        asphalttyp: "Asphaltbeton (AB)",
-        confidence: 87,
-        analyseDetails: "Asphalt zeigt typische Merkmale für mittlere Belastung. Empfehlung: Bauklasse III nach RStO 12.",
-        visualizationUrl: "/rsto-viz-example.png", // Beispielbild
+      // Simulierter Analyse-Bericht
+      const surfaceAnalysis = {
+        imageUrl,
+        belastungsklasse: belastungsklasseOptions[randomIndex],
+        asphalttyp: asphalttypOptions[randomIndex],
+        confidence: 75 + Math.floor(Math.random() * 20),
+        analyseDetails: "Bildanalyse ergab Anzeichen von typischen Verschleißmustern für mittelstark frequentierte Straßen. Die Oberflächenstruktur zeigt Merkmale von Standardmischgut mit üblicher Körnung.",
         timestamp: Date.now()
       };
       
-      newMarkers[index] = {
-        ...newMarkers[index],
-        surfaceAnalysis: analysisResult
-      };
-      
-      setMarkers(newMarkers);
-      
-    } catch (err) {
-      console.error("Fehler bei der Analyse:", err);
-      alert("Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-    } finally {
-      setIsUploading(false);
-    }
-  }, [markers, selectedBelastungsklasse]);
-  
-  const analyzeGround = useCallback(async (index: number, file: File) => {
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      // Simuliere Fortschritt
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = prev + 5;
-          return newProgress > 90 ? 90 : newProgress;
-        });
-      }, 100);
-      
-      // HIER EIGENTLICH: Bild hochladen und analysieren lassen
-      // Simuliere Verzögerung für die Demo
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      clearInterval(progressInterval);
+      await new Promise(resolve => setTimeout(resolve, 500));
       setUploadProgress(100);
       
-      // Beispiel-Analyseergebnis (würde eigentlich vom Backend kommen)
-      const newMarkers = [...markers];
-      const analysisResult = {
-        imageUrl: URL.createObjectURL(file),
-        belastungsklasse: "Bk3,2", // Empfohlene Belastungsklasse basierend auf Bodentyp
-        bodenklasse: "Sand",
-        bodentragfaehigkeitsklasse: "F1",
-        confidence: 84,
-        analyseDetails: "Sandiger Boden mit guter Tragfähigkeit. Empfehlung: Belastungsklasse 3,2 und Bauklasse III.",
-        visualizationUrl: "/rsto-viz-example.png", // Beispielbild
-        timestamp: Date.now()
+      // Marker-Array aktualisieren
+      const updatedMarkers = [...markers];
+      updatedMarkers[index] = {
+        ...marker,
+        surfaceAnalysis
       };
+      setMarkers(updatedMarkers);
       
-      newMarkers[index] = {
-        ...newMarkers[index],
-        groundAnalysis: analysisResult
-      };
-      
-      setMarkers(newMarkers);
-      
-    } catch (err) {
-      console.error("Fehler bei der Analyse:", err);
+    } catch (error) {
+      console.error("Fehler bei der Oberflächenanalyse:", error);
       alert("Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
     } finally {
       setIsUploading(false);
     }
   }, [markers]);
   
+  // Funktion zur Bodenanalyse
+  const analyzeGround = useCallback(async (index: number, file: File) => {
+    const marker = markers[index];
+    if (!marker) return;
+    
+    setIsUploading(true);
+    setUploadProgress(10);
+    
+    try {
+      // URL für das Bild generieren
+      const imageUrl = URL.createObjectURL(file);
+      setUploadProgress(30);
+      
+      // Hier käme die eigentliche Analyse über eine API
+      // Stattdessen verwenden wir simulierte Ergebnisse
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setUploadProgress(70);
+      
+      // Simuliere verschiedene Ergebnisse basierend auf dem aktuellen Index
+      const bodenklasseOptions = ["Sand", "Kies-Sand-Gemisch", "Lehmiger Kies"];
+      const tragfaehigkeitsOptions = ["F1", "F2", "F3"];
+      const belastungsklasseOptions = ["Bk1", "Bk3", "Bk10"];
+      
+      const randomIndex = Math.floor(Math.random() * bodenklasseOptions.length);
+      
+      // Simulierter Analyse-Bericht
+      const groundAnalysis = {
+        imageUrl,
+        bodenklasse: bodenklasseOptions[randomIndex],
+        bodentragfaehigkeitsklasse: tragfaehigkeitsOptions[randomIndex],
+        belastungsklasse: belastungsklasseOptions[randomIndex],
+        confidence: 70 + Math.floor(Math.random() * 20),
+        analyseDetails: "Analyse zeigt einen gut verdichteten Untergrund mit mittlerer Tragfähigkeit. Basierend auf visuellen Merkmalen wird eine passende Frost-Tauwechsel-Beständigkeit angenommen.",
+        timestamp: Date.now()
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setUploadProgress(100);
+      
+      // Marker-Array aktualisieren
+      const updatedMarkers = [...markers];
+      updatedMarkers[index] = {
+        ...marker,
+        groundAnalysis
+      };
+      setMarkers(updatedMarkers);
+      
+    } catch (error) {
+      console.error("Fehler bei der Bodenanalyse:", error);
+      alert("Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
+    } finally {
+      setIsUploading(false);
+    }
+  }, [markers]);
+  
+  // Rendering-Funktion für Marker-Popups
   const renderMarkerPopup = (marker: MarkerInfo, index: number) => {
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium">{marker.name || `Standort ${index + 1}`}</h3>
-          <div className="flex space-x-1">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => {
-                setSelectedMarkerIndex(index);
-              }}
-            >
-              <Info className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="h-6 w-6 p-0 text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Möchten Sie den Standort "${marker.name || `Standort ${index + 1}`}" wirklich löschen?`)) {
-                  deleteMarker(index);
-                }
-              }}
-            >
-              <div className="h-4 w-4 text-red-500">❌</div>
-            </Button>
-          </div>
-        </div>
-        
-        <div className="text-xs text-muted-foreground">
-          <div>
-            Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
-          </div>
-          
-          {marker.strasse && (
-            <div>
-              Adresse: {marker.strasse} {marker.hausnummer}, {marker.plz} {marker.ort}
-            </div>
-          )}
-          
+      <div className="text-sm">
+        <div className="font-medium mb-2 text-base">
+          {marker.name || `Standort ${index + 1}`}
           {marker.belastungsklasse && (
-            <div className="mt-1">
-              <span className="font-semibold">Belastungsklasse:</span> {marker.belastungsklasse}
-            </div>
-          )}
-          
-          {marker.notes && (
-            <div className="mt-1 text-xs">
-              <span className="font-semibold">Notizen:</span> {marker.notes}
-            </div>
+            <Badge className="ml-2" variant="outline">
+              {marker.belastungsklasse}
+            </Badge>
           )}
         </div>
         
-        <div className="flex flex-col space-y-1 pt-1">
-          <div className="flex justify-between items-center text-xs">
-            <span>Oberflächenanalyse:</span>
-            <label className="cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-md px-2 py-1 text-[10px]">
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    analyzeSurface(index, e.target.files[0]);
-                  }
-                }}
-              />
-              <Camera className="h-3 w-3 inline mr-1" /> Bild aufnehmen
-            </label>
+        {(marker.strasse || marker.plz || marker.ort) && (
+          <div className="mb-2 text-muted-foreground">
+            {marker.strasse} {marker.hausnummer}<br />
+            {marker.plz} {marker.ort}
           </div>
-          
-          {marker.surfaceAnalysis?.imageUrl && (
-            <div className="text-xs space-y-1">
-              <img 
-                src={marker.surfaceAnalysis.imageUrl} 
-                alt="Oberflächenanalyse" 
-                className="w-full h-24 object-cover rounded-md"
-              />
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                <span className="text-muted-foreground">Belastungsklasse:</span>
-                <span className="font-medium">{marker.surfaceAnalysis.belastungsklasse}</span>
-                
-                <span className="text-muted-foreground">Asphalttyp:</span>
-                <span className="font-medium">{marker.surfaceAnalysis.asphalttyp}</span>
-                
-                <span className="text-muted-foreground">Konfidenz:</span>
-                <span className="font-medium">{marker.surfaceAnalysis.confidence}%</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground">
-                {marker.surfaceAnalysis.analyseDetails}
-              </div>
-            </div>
-          )}
+        )}
+        
+        <div>
+          <Label htmlFor={`notes-${index}`} className="text-xs mb-1">Notizen</Label>
+          <Textarea 
+            id={`notes-${index}`}
+            className="min-h-[80px] text-xs"
+            placeholder="Notizen zu diesem Standort eingeben..."
+            value={marker.notes || ""}
+            onChange={(e) => {
+              const newMarkers = [...markers];
+              newMarkers[index] = {
+                ...marker,
+                notes: e.target.value
+              };
+              setMarkers(newMarkers);
+            }}
+          />
         </div>
         
-        <div className="flex flex-col space-y-1 pt-1">
-          <div className="flex justify-between items-center text-xs">
-            <span>Bodenanalyse:</span>
-            <label className="cursor-pointer bg-primary/10 hover:bg-primary/20 text-primary font-medium rounded-md px-2 py-1 text-[10px]">
-              <input 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    analyzeGround(index, e.target.files[0]);
-                  }
-                }}
-              />
-              <Camera className="h-3 w-3 inline mr-1" /> Bild aufnehmen
-            </label>
-          </div>
+        <div className="mt-2 flex gap-1">
+          <input
+            type="file"
+            id={`surface-analysis-${index}`}
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                analyzeSurface(index, e.target.files[0]);
+              }
+            }}
+          />
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-xs h-8 gap-1"
+            onClick={() => document.getElementById(`surface-analysis-${index}`)?.click()}
+          >
+            <Image className="h-3 w-3" /> Oberflächenanalyse
+          </Button>
           
-          {marker.groundAnalysis?.imageUrl && (
-            <div className="text-xs space-y-1">
-              <img 
-                src={marker.groundAnalysis.imageUrl} 
-                alt="Bodenanalyse" 
-                className="w-full h-24 object-cover rounded-md"
-              />
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                <span className="text-muted-foreground">Bodenklasse:</span>
-                <span className="font-medium">{marker.groundAnalysis.bodenklasse}</span>
-                
-                <span className="text-muted-foreground">Tragfähigkeitsklasse:</span>
-                <span className="font-medium">{marker.groundAnalysis.bodentragfaehigkeitsklasse}</span>
-                
-                <span className="text-muted-foreground">Empf. Belastungsklasse:</span>
-                <span className="font-medium">{marker.groundAnalysis.belastungsklasse}</span>
-                
-                <span className="text-muted-foreground">Konfidenz:</span>
-                <span className="font-medium">{marker.groundAnalysis.confidence}%</span>
-              </div>
-              <div className="text-[10px] text-muted-foreground">
-                {marker.groundAnalysis.analyseDetails}
-              </div>
-            </div>
-          )}
+          <input
+            type="file"
+            id={`ground-analysis-${index}`}
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                analyzeGround(index, e.target.files[0]);
+              }
+            }}
+          />
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-xs h-8 gap-1"
+            onClick={() => document.getElementById(`ground-analysis-${index}`)?.click()}
+          >
+            <MapPin className="h-3 w-3" /> Bodenanalyse
+          </Button>
         </div>
+        
+        {marker.surfaceAnalysis?.imageUrl && (
+          <div className="text-xs space-y-1 mt-3">
+            <div className="font-medium">Oberflächenanalyse:</div>
+            <img 
+              src={marker.surfaceAnalysis.imageUrl} 
+              alt="Oberflächenanalyse" 
+              className="w-full h-24 object-cover rounded-md"
+            />
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+              <span className="text-muted-foreground">Asphalttyp:</span>
+              <span className="font-medium">{marker.surfaceAnalysis.asphalttyp}</span>
+              
+              <span className="text-muted-foreground">Belastungsklasse:</span>
+              <span className="font-medium">{marker.surfaceAnalysis.belastungsklasse}</span>
+              
+              <span className="text-muted-foreground">Konfidenz:</span>
+              <span className="font-medium">{marker.surfaceAnalysis.confidence}%</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {marker.surfaceAnalysis.analyseDetails}
+            </div>
+          </div>
+        )}
+        
+        {marker.groundAnalysis?.imageUrl && (
+          <div className="text-xs space-y-1">
+            <img 
+              src={marker.groundAnalysis.imageUrl} 
+              alt="Bodenanalyse" 
+              className="w-full h-24 object-cover rounded-md"
+            />
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+              <span className="text-muted-foreground">Bodenklasse:</span>
+              <span className="font-medium">{marker.groundAnalysis.bodenklasse}</span>
+              
+              <span className="text-muted-foreground">Tragfähigkeitsklasse:</span>
+              <span className="font-medium">{marker.groundAnalysis.bodentragfaehigkeitsklasse}</span>
+              
+              <span className="text-muted-foreground">Empf. Belastungsklasse:</span>
+              <span className="font-medium">{marker.groundAnalysis.belastungsklasse}</span>
+              
+              <span className="text-muted-foreground">Konfidenz:</span>
+              <span className="font-medium">{marker.groundAnalysis.confidence}%</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {marker.groundAnalysis.analyseDetails}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
-
+  
   return (
     <>
     <div className="container mx-auto">
@@ -1088,9 +920,8 @@ export default function GeoMapPage() {
             <ArrowLeft className="h-4 w-4" /> Zurück
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold ml-2">Geo-Informationen</h1>
+        <div className="ml-2 text-xl font-semibold">Geo-Karten</div>
       </div>
-      
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
@@ -1623,12 +1454,12 @@ export default function GeoMapPage() {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
-
     </>
   );
 }
