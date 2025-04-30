@@ -23,6 +23,9 @@ import SimpleLoginPage from "@/pages/simple-login";
 import AdminPage from "@/pages/admin-page";
 import DeploymentDocsPage from "@/pages/admin/deployment-docs";
 import UserManagementPage from "@/pages/admin/user-management";
+import BackupStatusPage from "@/pages/admin/backup-status";
+// Import-Korrektur für SystemLogs-Komponente
+import SystemLogsPage from "./pages/admin/system-logs";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
 import DataQualityDashboard from "@/pages/data-quality-dashboard";
@@ -52,6 +55,8 @@ function Router() {
       <AdminProtectedRoute path="/admin/deployment-docs" component={DeploymentDocsPage} />
       <AdminProtectedRoute path="/admin/users" component={UserManagementPage} />
       <AdminProtectedRoute path="/admin/emails" component={AdminEmailsPage} />
+      <AdminProtectedRoute path="/admin/backup-status" component={BackupStatusPage} />
+      <AdminProtectedRoute path="/admin/logs" component={SystemLogsPage} />
       
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
@@ -62,9 +67,8 @@ function Router() {
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/data-quality" component={DataQualityPage} />
+      <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
-      <AdminProtectedRoute path="/db-structure-quality-debug" component={DbStructureQualityPage} />
-      <AdminProtectedRoute path="/db-structure-fix" component={DbStructureFixPage} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <ProtectedRoute path="/help" component={HelpPage} />
       <Route path="/auth" component={AuthPage} />

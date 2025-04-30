@@ -1,109 +1,189 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserManagement } from "@/components/admin/user-management";
-import BackupManagement from "@/components/admin/backup-management";
-import { DataQualityManagement } from "@/components/admin/data-quality-management";
-import { SystemLogs } from "@/components/admin/system-logs";
-import TrialManagement from "@/components/admin/trial-management";
+import { 
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import { 
   ShieldAlert, Users, Database, BarChart, Settings, FileCode, 
   Mail, ActivityIcon, Clock, ServerCrash, HardDrive, CloudUpload
 } from 'lucide-react';
-import { Link } from "wouter";
-import { useState, useEffect } from "react";
-import BackupStatus from "@/components/admin/backup-status";
 
 export default function AdminPage() {
   const { user } = useAuth();
+  const [location, navigate] = useLocation();
 
   // Nur Administratoren können Login-Logs sehen
   const isAdmin = user?.role === 'administrator';
-  
-  // State für die aktive Kategorie
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
           <ShieldAlert className="h-8 w-8 mr-2 text-primary" />
           <h1 className="text-4xl font-bold">Administration</h1>
         </div>
       </div>
       
-      <Tabs defaultValue="users" className="space-y-4">
-        {/* Hauptnavigation mit Kategorien */}
-        <TabsList className="grid grid-cols-4 md:grid-cols-7 gap-2 text-xs md:text-sm">
-          <TabsTrigger value="users" className="flex items-center gap-1 px-2 md:px-3 h-9">
-            <Users className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">Benutzer</span>
-          </TabsTrigger>
-          
-          {isAdmin && (
-            <>
-              <TabsTrigger value="systemlogs" className="flex items-center gap-1 px-2 md:px-3 h-9">
-                <ActivityIcon className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Logs</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="trials" className="flex items-center gap-1 px-2 md:px-3 h-9">
-                <Clock className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Testphasen</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="backups" className="flex items-center gap-1 px-2 md:px-3 h-9">
-                <Database className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Backup</span>
-              </TabsTrigger>
-
-              <TabsTrigger value="backup_status" className="flex items-center gap-1 px-2 md:px-3 h-9">
-                <ServerCrash className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Backup-Status</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="dataquality" className="flex items-center gap-1 px-2 md:px-3 h-9">
-                <BarChart className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Datenqualität</span>
-              </TabsTrigger>
-              
-              <TabsTrigger value="emails" className="flex items-center gap-1 px-2 md:px-3 h-9" asChild>
-                <a href="/admin/emails">
-                  <Mail className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">E-Mails</span>
-                </a>
-              </TabsTrigger>
-            </>
-          )}
-        </TabsList>
-        
-        <TabsContent value="users" className="space-y-4">
-          <UserManagement />
-        </TabsContent>
-        
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {isAdmin && (
           <>
-            <TabsContent value="systemlogs" className="space-y-4">
-              <SystemLogs />
-            </TabsContent>
+            {/* Benutzerverwaltung & Testphasen */}
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-blue-800 text-base flex items-center gap-2">
+                  <Users className="h-5 w-5 shrink-0" />
+                  <span>Benutzerverwaltung</span>
+                </CardTitle>
+                <CardDescription className="text-blue-600">
+                  Benutzer, Berechtigungen und Abonnements verwalten
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-blue-600 hover:bg-blue-700 w-full" 
+                  onClick={() => navigate("/admin/users")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
 
-            <TabsContent value="trials" className="space-y-4">
-              <TrialManagement />
-            </TabsContent>
-
-            <TabsContent value="backups" className="space-y-4">
-              <BackupManagement />
-            </TabsContent>
+            {/* System-Logs */}
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-purple-800 text-base flex items-center gap-2">
+                  <ActivityIcon className="h-5 w-5 shrink-0" />
+                  <span>System-Logs</span>
+                </CardTitle>
+                <CardDescription className="text-purple-600">
+                  Systemaktivitäten und Ereignisprotokolle
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-purple-600 hover:bg-purple-700 w-full" 
+                  onClick={() => navigate("/admin/logs")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
             
-            <TabsContent value="backup_status" className="space-y-4">
-              <BackupStatus />
-            </TabsContent>
+            {/* Backup-System */}
+            <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-teal-800 text-base flex items-center gap-2">
+                  <HardDrive className="h-5 w-5 shrink-0" />
+                  <span>Backup-System</span>
+                </CardTitle>
+                <CardDescription className="text-teal-600">
+                  Backups erstellen, verwalten und Status überwachen
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-teal-600 hover:bg-teal-700 w-full" 
+                  onClick={() => navigate("/admin/backup-status")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
             
-            <TabsContent value="dataquality" className="space-y-4">
-              <DataQualityManagement />
-            </TabsContent>
+            {/* Datenqualität */}
+            <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-indigo-800 text-base flex items-center gap-2">
+                  <BarChart className="h-5 w-5 shrink-0" />
+                  <span>Datenqualität</span>
+                </CardTitle>
+                <CardDescription className="text-indigo-600">
+                  Datenqualitätsberichte, Analysen und Fehlerbehebung
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-indigo-600 hover:bg-indigo-700 w-full" 
+                  onClick={() => navigate("/admin/data-quality")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Datenqualität-Dashboard */}
+            <Card className="bg-gradient-to-br from-violet-50 to-violet-100 border-violet-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-violet-800 text-base flex items-center gap-2">
+                  <Settings className="h-5 w-5 shrink-0" />
+                  <span>Datenqualität-Dashboard</span>
+                </CardTitle>
+                <CardDescription className="text-violet-600">
+                  Erweiterte Datenqualitätsanalysen und Automatisierung
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-violet-600 hover:bg-violet-700 w-full" 
+                  onClick={() => navigate("/admin/data-quality-dashboard")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* E-Mail-Verwaltung */}
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-red-800 text-base flex items-center gap-2">
+                  <Mail className="h-5 w-5 shrink-0" />
+                  <span>E-Mail-Verwaltung</span>
+                </CardTitle>
+                <CardDescription className="text-red-600">
+                  E-Mail-Vorlagen und Sendeprotokolle
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-red-600 hover:bg-red-700 w-full" 
+                  onClick={() => navigate("/admin/emails")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Deployment-Docs */}
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-slate-800 text-base flex items-center gap-2">
+                  <FileCode className="h-5 w-5 shrink-0" />
+                  <span>Deployment</span>
+                </CardTitle>
+                <CardDescription className="text-slate-600">
+                  Deployment-Anleitungen und Status
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-slate-600 hover:bg-slate-700 w-full" 
+                  onClick={() => navigate("/admin/deployment-docs")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
           </>
         )}
-      </Tabs>
+      </div>
     </div>
   );
 }
