@@ -131,6 +131,16 @@ const belastungsklassen = [
   },
 ];
 
+// Typdefinitionen
+interface Baumaschine {
+  name: string;
+  beschreibung: string;
+  eignung: string[]; // Geeignet für diese Belastungsklassen
+  bildUrl?: string;
+  tagesmiete: number; // Euro pro Tag
+  leistung: number; // m²/Tag
+}
+
 // Empfohlene Baumaschinen für verschiedene Belastungsklassen
 const baumaschinen: Baumaschine[] = [
   {
@@ -178,15 +188,6 @@ const baseMaterialCosts: MaterialCosts = {
   frostschutzschicht: 12.50,  // €/m² für Frostschutzschicht
   schottertragschicht: 15.00  // €/m² für Schottertragschicht (falls verwendet)
 };
-
-interface Baumaschine {
-  name: string;
-  beschreibung: string;
-  eignung: string[]; // Geeignet für diese Belastungsklassen
-  bildUrl?: string;
-  tagesmiete: number; // Euro pro Tag
-  leistung: number; // m²/Tag
-}
 
 type BelastungsklasseInfo = {
   klasse: string;
@@ -471,795 +472,746 @@ function MapEvents({ onMoveEnd }: MapEventsProps) {
 
 // Component für Karten-Steuerung (z.B. Auto-Panning zu neuen Markern)
 interface MapControlProps {
-  position: [number, number] | null;
-  zoomLevel?: number;
+  position: [number, number];
 }
 
-function MapControl({ position, zoomLevel = 15 }: MapControlProps) {
+function MapControl({ position }: MapControlProps) {
   const map = useMap();
   
   useEffect(() => {
     if (position) {
-      map.setView(position, zoomLevel);
+      map.setView(position, map.getZoom());
     }
-  }, [map, position, zoomLevel]);
+  }, [map, position]);
   
   return null;
 }
 
-// Haupt-Component
 export default function GeoMapPage() {
-  // State für Karten-Tabs und Marker
-  const [bayernTabValue, setBayernTabValue] = useState<"strassenplanung" | "bayernatlas" | "denkmalatlas">("strassenplanung");
-  const [activeTab, setActiveTab] = useState("map");
+  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("Bk100");
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
-  const [selectedMarkerIndex, setSelectedMarkerIndex] = useState<number | null>(null);
-  const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState("none");
-  const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
-  const [searchLat, setSearchLat] = useState<number | null>(null);
-  const [searchLng, setSearchLng] = useState<number | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([48.137154, 11.576124]); // München
+  const [editMarker, setEditMarker] = useState<MarkerInfo | null>(null);
+  const [currentEditIndex, setCurrentEditIndex] = useState<number | null>(null);
+  const [roadType, setRoadType] = useState("Bundesstraße"); // Default-Straßentyp
+  const [roadWidth, setRoadWidth] = useState<number>(roadWidthPresets.Bundesstraße); // Default-Straßenbreite
+  const [customRoadWidth, setCustomRoadWidth] = useState<number>(0);
+  const [optimizeRoute, setOptimizeRoute] = useState<boolean>(false);
+  const [bayernTabValue, setBayernTabValue] = useState<string>("strassenplanung"); // Default-Tab
   
-  // State für Materialkosten
-  const [roadWidth, setRoadWidth] = useState<number>(7.5); // Standard: 7.5m
-  const [selectedRoadPreset, setSelectedRoadPreset] = useState<string>("Bundesstraße");
+  // PDF Export Status
+  const [exportingPDF, setExportingPDF] = useState<boolean>(false);
+  const [exportProgress, setExportProgress] = useState<number>(0);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   
-  // State für Datei-Uploads
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isExporting, setIsExporting] = useState(false);
-  
-  // Refs für die Karte und Exportfunktionen
-  const mapRef = useRef<HTMLDivElement>(null);
-  const routeDataRef = useRef<HTMLDivElement>(null);
-  const materialCostsRef = useRef<HTMLDivElement>(null);
-  
-  // Funktion zum Hinzufügen eines neuen Markers
-  const addMarker = useCallback(async (lat: number, lng: number) => {
-    console.log(`Füge Marker bei ${lat}, ${lng} hinzu`);
-    
-    try {
-      // Reverse Geocoding mit Mapbox API
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&country=de&language=de`
-      );
-      
-      if (!response.ok) {
-        throw new Error("Fehler bei der Adressauflösung");
+  // Init-Hooks, die ausgeführt werden, wenn die Komponente geladen wird
+  useEffect(() => {
+    // Bei Bedarf Daten aus localStorage laden
+    const savedMarkers = localStorage.getItem('geoMapMarkers');
+    if (savedMarkers) {
+      try {
+        setMarkers(JSON.parse(savedMarkers));
+      } catch (e) {
+        console.error("Fehler beim Laden der gespeicherten Marker:", e);
       }
-      
-      const data = await response.json();
-      
-      // Default-Werte
-      let strasse = "";
-      let hausnummer = "";
-      let plz = "";
-      let ort = "";
-      let markerName = `Standort ${markers.length + 1}`;
-      
-      // Adressen aus der Mapbox-Antwort extrahieren
-      if (data.features && data.features.length > 0) {
-        // Straße aus dem ersten Feature (meist die genaueste Position)
-        const streetFeature = data.features.find((f: any) => f.place_type.includes("address"));
-        if (streetFeature) {
-          strasse = streetFeature.text;
-          
-          // Hausnummer extrahieren (falls vorhanden)
-          const addressMatch = streetFeature.address?.match(/^(\d+.*)/);
-          if (addressMatch) {
-            hausnummer = addressMatch[1];
-          }
-        }
-        
-        // PLZ und Ort aus den Context-Elementen
-        for (const feature of data.features) {
-          if (feature.place_type.includes("postcode") && !plz) {
-            plz = feature.text;
-          }
-          if ((feature.place_type.includes("place") || feature.place_type.includes("locality")) && !ort) {
-            ort = feature.text;
-          }
-        }
-        
-        // Marker-Namen aus den verfügbaren Informationen erstellen
-        if (strasse && hausnummer && ort) {
-          markerName = `${strasse} ${hausnummer}, ${ort}`;
-        } else if (strasse && ort) {
-          markerName = `${strasse}, ${ort}`;
-        } else if (ort) {
-          markerName = ort;
-        }
-      }
-      
-      const newMarker: MarkerInfo = {
-        position: [lat, lng],
-        name: markerName,
-        belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-        strasse,
-        hausnummer,
-        plz,
-        ort,
-        notes: ""
-      };
-      
-      setMarkers([...markers, newMarker]);
-      setSelectedMarkerIndex(markers.length);
-      setLastAddedMarkerPosition([lat, lng]);
-      
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen des Markers:", error);
-      alert("Es konnte keine Adresse für diesen Standort ermittelt werden. Der Marker wird ohne Adressinformationen hinzugefügt.");
-      
-      const newMarker: MarkerInfo = {
-        position: [lat, lng],
-        name: `Standort ${markers.length + 1}`,
-        belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-      };
-      
-      setMarkers([...markers, newMarker]);
-      setSelectedMarkerIndex(markers.length);
-      setLastAddedMarkerPosition([lat, lng]);
     }
-  }, [markers, selectedBelastungsklasse]);
+  }, []);
   
-  // Funktion zum Exportieren der Streckendaten als PDF
-  const exportToPdf = useCallback(async () => {
-    if (isExporting || !routeDataRef.current || !materialCostsRef.current) return;
+  // Wenn sich roadType ändert, roadWidth entsprechend anpassen
+  useEffect(() => {
+    if (roadType !== "Benutzerdefiniert") {
+      setRoadWidth(roadWidthPresets[roadType as keyof typeof roadWidthPresets]);
+    } else {
+      setRoadWidth(customRoadWidth);
+    }
+  }, [roadType, customRoadWidth]);
+  
+  // Marker in localStorage speichern, wenn sie sich ändern
+  useEffect(() => {
+    localStorage.setItem('geoMapMarkers', JSON.stringify(markers));
+  }, [markers]);
+  
+  // Callback für das Hinzufügen eines neuen Markers
+  const handleAddMarker = useCallback((lat: number, lng: number) => {
+    const newMarker: MarkerInfo = {
+      position: [lat, lng],
+      belastungsklasse: selectedBelastungsklasse,
+    };
     
-    setIsExporting(true);
+    setMarkers(prev => [...prev, newMarker]);
+    
+    // Bearbeitung des neuen Markers starten
+    setCurrentEditIndex(markers.length);
+    setEditMarker(newMarker);
+  }, [markers.length, selectedBelastungsklasse]);
+  
+  // Callback für das Aktualisieren eines Markers
+  const handleUpdateMarker = useCallback(() => {
+    if (editMarker && currentEditIndex !== null) {
+      setMarkers(prev => {
+        const newMarkers = [...prev];
+        newMarkers[currentEditIndex] = editMarker;
+        return newMarkers;
+      });
+      setEditMarker(null);
+      setCurrentEditIndex(null);
+    }
+  }, [editMarker, currentEditIndex]);
+  
+  // Callback für das Löschen eines Markers
+  const handleDeleteMarker = useCallback((index: number) => {
+    setMarkers(prev => prev.filter((_, i) => i !== index));
+    
+    // Wenn der zu löschende Marker gerade bearbeitet wird, Bearbeitung abbrechen
+    if (currentEditIndex === index) {
+      setEditMarker(null);
+      setCurrentEditIndex(null);
+    }
+    // Indizes für nachfolgende Marker anpassen
+    else if (currentEditIndex !== null && currentEditIndex > index) {
+      setCurrentEditIndex(currentEditIndex - 1);
+    }
+  }, [currentEditIndex]);
+  
+  // Callback für Änderung der Marker-Details
+  const handleEditMarkerChange = useCallback((field: string, value: string) => {
+    if (editMarker) {
+      setEditMarker(prev => {
+        if (!prev) return null;
+        
+        // Einfache Felder
+        if (field === 'name' || field === 'strasse' || field === 'hausnummer' || 
+            field === 'plz' || field === 'ort' || field === 'notes' || field === 'belastungsklasse') {
+          return { ...prev, [field]: value };
+        }
+        
+        return prev;
+      });
+    }
+  }, [editMarker]);
+  
+  // Funktion zum Optimieren der Route (TSP-Heuristik)
+  const handleOptimizeRoute = useCallback(() => {
+    if (markers.length <= 2) return; // Keine Optimierung nötig für 0, 1 oder 2 Marker
+    
+    // Optimierte Route berechnen und Marker aktualisieren
+    const optimizedMarkers = optimizeRouteOrder([...markers]);
+    setMarkers(optimizedMarkers);
+  }, [markers]);
+  
+  // Funktion zum Exportieren als PDF
+  const handleExportPDF = useCallback(async () => {
+    if (!mapContainerRef.current) return;
+    
+    setExportingPDF(true);
+    setExportProgress(10);
     
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      // Titel und Datum hinzufügen
-      pdf.setFontSize(18);
-      pdf.text('Bau-Structura Streckenbericht', 105, 20, { align: 'center' });
-      pdf.setFontSize(12);
-      const today = new Date().toLocaleDateString('de-DE');
-      pdf.text(`Erstellt am: ${today}`, 105, 30, { align: 'center' });
-      
-      // Standorte auflisten
-      pdf.setFontSize(14);
-      pdf.text('Markierte Standorte', 15, 45);
-      pdf.setFontSize(10);
-      
-      let y = 55;
-      markers.forEach((marker, idx) => {
-        pdf.text(`${idx + 1}. ${marker.name || 'Unbenannter Standort'}`, 20, y);
-        pdf.text(`Position: ${marker.position[0].toFixed(5)}, ${marker.position[1].toFixed(5)}`, 30, y + 5);
-        if (marker.belastungsklasse) {
-          pdf.text(`Belastungsklasse: ${marker.belastungsklasse}`, 30, y + 10);
-        }
-        y += 15;
-        
-        // Seitenumbruch bei Bedarf
-        if (y > 270) {
-          pdf.addPage();
-          y = 20;
-        }
+      // Zuerst die Karte als Canvas rendern
+      const canvas = await html2canvas(mapContainerRef.current, {
+        scale: 2, // Höhere Qualität
+        useCORS: true, // Für Tile-Layer von externen Quellen
+        allowTaint: true,
+        backgroundColor: null,
       });
       
-      // Streckeninformationen hinzufügen
-      const routeDataCanvas = await html2canvas(routeDataRef.current);
-      const routeDataImgData = routeDataCanvas.toDataURL('image/png');
-      pdf.addImage(routeDataImgData, 'PNG', 15, y, 180, 20);
-      y += 25;
+      setExportProgress(50);
       
-      // Materialkosten hinzufügen
-      if (selectedBelastungsklasse !== 'none') {
-        pdf.setFontSize(14);
-        pdf.text('Materialkosten', 15, y);
-        y += 10;
+      // Ein neues PDF-Dokument erstellen
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+      });
+      
+      // Seitengröße anpassen
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Canvas-Seitenverhältnis beibehalten
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+      const imgWidth = canvasWidth * ratio;
+      const imgHeight = canvasHeight * ratio;
+      
+      // Bild zur Mitte der Seite ausrichten
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = (pdfHeight - imgHeight) / 2;
+      
+      // Bild aus dem Canvas in das PDF einfügen
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      
+      setExportProgress(80);
+      
+      // Materialliste hinzufügen, wenn Marker vorhanden sind
+      if (markers.length > 1) {
+        pdf.addPage();
         
-        const materialCostsCanvas = await html2canvas(materialCostsRef.current);
-        const materialCostsImgData = materialCostsCanvas.toDataURL('image/png');
-        pdf.addImage(materialCostsImgData, 'PNG', 15, y, 180, 80);
+        // Titel für die Materialliste
+        pdf.setFontSize(16);
+        pdf.text('Streckendaten und Materialliste', 14, 20);
+        
+        // Informationen zur Strecke
+        pdf.setFontSize(12);
+        const { total, segments } = calculateRouteDistances(markers);
+        pdf.text(`Gesamte Streckenlänge: ${total.toFixed(2)} km`, 14, 30);
+        pdf.text(`Straßenbreite: ${roadWidth} m`, 14, 36);
+        pdf.text(`Gewählte Belastungsklasse: ${selectedBelastungsklasse}`, 14, 42);
+        
+        // Wenn Marker mit unterschiedlichen Belastungsklassen vorhanden sind
+        const uniqueKlassen = Array.from(new Set(markers.filter(m => m.belastungsklasse).map(m => m.belastungsklasse)));
+        if (uniqueKlassen.length > 1) {
+          pdf.text('Hinweis: Die Strecke enthält Abschnitte mit unterschiedlichen Belastungsklassen.', 14, 48);
+          pdf.text('Die Materialberechnung basiert auf der global gewählten Belastungsklasse.', 14, 54);
+        }
+        
+        // Materialliste
+        const { materials, total: totalCost } = calculateMaterialCosts(total, roadWidth, selectedBelastungsklasse);
+        
+        pdf.text('Benötigte Materialien:', 14, 64);
+        
+        let yPos = 70;
+        materials.forEach((material: any) => {
+          pdf.text(`${material.name} (${material.thickness}):`, 14, yPos);
+          pdf.text(`Fläche: ${material.area.toFixed(2)} m²`, 28, yPos + 6);
+          pdf.text(`Kosten pro m²: ${material.costPerSqm.toFixed(2)} €`, 28, yPos + 12);
+          pdf.text(`Gesamtkosten: ${material.totalCost.toFixed(2)} €`, 28, yPos + 18);
+          yPos += 24;
+        });
+        
+        pdf.text(`Gesamte Materialkosten: ${totalCost.toFixed(2)} €`, 14, yPos + 6);
       }
       
+      setExportProgress(95);
+      
       // PDF speichern
-      pdf.save('strassenbau-planung.pdf');
+      pdf.save('strassenplanung.pdf');
+      
     } catch (error) {
-      console.error('Fehler beim Exportieren als PDF:', error);
-      alert('Beim Exportieren ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+      console.error("Fehler beim Exportieren als PDF:", error);
     } finally {
-      setIsExporting(false);
+      setExportingPDF(false);
+      setExportProgress(0);
     }
-  }, [isExporting, markers, selectedBelastungsklasse]);
+  }, [markers, roadWidth, selectedBelastungsklasse]);
   
-  // Funktion zur Oberflächenanalyse
-  const analyzeSurface = useCallback(async (index: number, file: File) => {
-    const marker = markers[index];
-    if (!marker) return;
-    
-    setIsUploading(true);
-    setUploadProgress(10);
-    
-    try {
-      // URL für das Bild generieren
-      const imageUrl = URL.createObjectURL(file);
-      setUploadProgress(30);
-      
-      // Hier käme die eigentliche Analyse über eine API
-      // Stattdessen verwenden wir simulierte Ergebnisse
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setUploadProgress(70);
-      
-      // Simuliere verschiedene Ergebnisse basierend auf dem aktuellen Index
-      const belastungsklasseOptions = ["Bk3", "Bk10", "Bk32"];
-      const asphalttypOptions = [
-        "Asphaltbeton AC 11 DS", 
-        "Splittmastixasphalt SMA 11 S",
-        "Gussasphalt MA 11 S"
-      ];
-      
-      const randomIndex = Math.floor(Math.random() * belastungsklasseOptions.length);
-      
-      // Simulierter Analyse-Bericht
-      const surfaceAnalysis = {
-        imageUrl,
-        belastungsklasse: belastungsklasseOptions[randomIndex],
-        asphalttyp: asphalttypOptions[randomIndex],
-        confidence: 75 + Math.floor(Math.random() * 20),
-        analyseDetails: "Bildanalyse ergab Anzeichen von typischen Verschleißmustern für mittelstark frequentierte Straßen. Die Oberflächenstruktur zeigt Merkmale von Standardmischgut mit üblicher Körnung.",
-        timestamp: Date.now()
+  // Marker-Position aktualisieren per Drag-and-Drop
+  const handleUpdateMarkerPosition = useCallback((index: number, lat: number, lng: number) => {
+    setMarkers(prev => {
+      const newMarkers = [...prev];
+      newMarkers[index] = {
+        ...newMarkers[index],
+        position: [lat, lng]
       };
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setUploadProgress(100);
-      
-      // Marker-Array aktualisieren
-      const updatedMarkers = [...markers];
-      updatedMarkers[index] = {
-        ...marker,
-        surfaceAnalysis
-      };
-      setMarkers(updatedMarkers);
-      
-    } catch (error) {
-      console.error("Fehler bei der Oberflächenanalyse:", error);
-      alert("Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-    } finally {
-      setIsUploading(false);
-    }
+      return newMarkers;
+    });
+  }, []);
+  
+  // Polyline für die Streckenvisualisierung erstellen
+  const polyline = React.useMemo(() => {
+    const positions = markers.map(marker => marker.position);
+    return positions.length > 1 ? positions : [];
   }, [markers]);
   
-  // Funktion zur Bodenanalyse
-  const analyzeGround = useCallback(async (index: number, file: File) => {
-    const marker = markers[index];
-    if (!marker) return;
-    
-    setIsUploading(true);
-    setUploadProgress(10);
-    
-    try {
-      // URL für das Bild generieren
-      const imageUrl = URL.createObjectURL(file);
-      setUploadProgress(30);
-      
-      // Hier käme die eigentliche Analyse über eine API
-      // Stattdessen verwenden wir simulierte Ergebnisse
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setUploadProgress(70);
-      
-      // Simuliere verschiedene Ergebnisse basierend auf dem aktuellen Index
-      const bodenklasseOptions = ["Sand", "Kies-Sand-Gemisch", "Lehmiger Kies"];
-      const tragfaehigkeitsOptions = ["F1", "F2", "F3"];
-      const belastungsklasseOptions = ["Bk1", "Bk3", "Bk10"];
-      
-      const randomIndex = Math.floor(Math.random() * bodenklasseOptions.length);
-      
-      // Simulierter Analyse-Bericht
-      const groundAnalysis = {
-        imageUrl,
-        bodenklasse: bodenklasseOptions[randomIndex],
-        bodentragfaehigkeitsklasse: tragfaehigkeitsOptions[randomIndex],
-        belastungsklasse: belastungsklasseOptions[randomIndex],
-        confidence: 70 + Math.floor(Math.random() * 20),
-        analyseDetails: "Analyse zeigt einen gut verdichteten Untergrund mit mittlerer Tragfähigkeit. Basierend auf visuellen Merkmalen wird eine passende Frost-Tauwechsel-Beständigkeit angenommen.",
-        timestamp: Date.now()
-      };
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setUploadProgress(100);
-      
-      // Marker-Array aktualisieren
-      const updatedMarkers = [...markers];
-      updatedMarkers[index] = {
-        ...marker,
-        groundAnalysis
-      };
-      setMarkers(updatedMarkers);
-      
-    } catch (error) {
-      console.error("Fehler bei der Bodenanalyse:", error);
-      alert("Bei der Bildanalyse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-    } finally {
-      setIsUploading(false);
-    }
+  // Streckeninformationen berechnen
+  const { total, segments } = React.useMemo(() => {
+    return calculateRouteDistances(markers);
   }, [markers]);
   
-  // Rendering-Funktion für Marker-Popups
-  const renderMarkerPopup = (marker: MarkerInfo, index: number) => {
-    return (
-      <div className="text-sm">
-        <div className="font-medium mb-2 text-base">
-          {marker.name || `Standort ${index + 1}`}
-          {marker.belastungsklasse && (
-            <Badge className="ml-2" variant="outline">
-              {marker.belastungsklasse}
-            </Badge>
-          )}
-        </div>
-        
-        {(marker.strasse || marker.plz || marker.ort) && (
-          <div className="mb-2 text-muted-foreground">
-            {marker.strasse} {marker.hausnummer}<br />
-            {marker.plz} {marker.ort}
-          </div>
-        )}
-        
-        <div>
-          <Label htmlFor={`notes-${index}`} className="text-xs mb-1">Notizen</Label>
-          <Textarea 
-            id={`notes-${index}`}
-            className="min-h-[80px] text-xs"
-            placeholder="Notizen zu diesem Standort eingeben..."
-            value={marker.notes || ""}
-            onChange={(e) => {
-              const newMarkers = [...markers];
-              newMarkers[index] = {
-                ...marker,
-                notes: e.target.value
-              };
-              setMarkers(newMarkers);
-            }}
-          />
-        </div>
-        
-        <div className="mt-2 flex gap-1">
-          <input
-            type="file"
-            id={`surface-analysis-${index}`}
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                analyzeSurface(index, e.target.files[0]);
-              }
-            }}
-          />
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-xs h-8 gap-1"
-            onClick={() => document.getElementById(`surface-analysis-${index}`)?.click()}
-          >
-            <Camera className="h-3 w-3" /> Oberflächenanalyse
-          </Button>
-          
-          <input
-            type="file"
-            id={`ground-analysis-${index}`}
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                analyzeGround(index, e.target.files[0]);
-              }
-            }}
-          />
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="text-xs h-8 gap-1"
-            onClick={() => document.getElementById(`ground-analysis-${index}`)?.click()}
-          >
-            <MapPin className="h-3 w-3" /> Bodenanalyse
-          </Button>
-        </div>
-        
-        {marker.surfaceAnalysis?.imageUrl && (
-          <div className="text-xs space-y-1 mt-3">
-            <div className="font-medium">Oberflächenanalyse:</div>
-            <img 
-              src={marker.surfaceAnalysis.imageUrl} 
-              alt="Oberflächenanalyse" 
-              className="w-full h-24 object-cover rounded-md"
-            />
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              <span className="text-muted-foreground">Asphalttyp:</span>
-              <span className="font-medium">{marker.surfaceAnalysis.asphalttyp}</span>
-              
-              <span className="text-muted-foreground">Belastungsklasse:</span>
-              <span className="font-medium">{marker.surfaceAnalysis.belastungsklasse}</span>
-              
-              <span className="text-muted-foreground">Konfidenz:</span>
-              <span className="font-medium">{marker.surfaceAnalysis.confidence}%</span>
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {marker.surfaceAnalysis.analyseDetails}
-            </div>
-          </div>
-        )}
-        
-        {marker.groundAnalysis?.imageUrl && (
-          <div className="text-xs space-y-1">
-            <img 
-              src={marker.groundAnalysis.imageUrl} 
-              alt="Bodenanalyse" 
-              className="w-full h-24 object-cover rounded-md"
-            />
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              <span className="text-muted-foreground">Bodenklasse:</span>
-              <span className="font-medium">{marker.groundAnalysis.bodenklasse}</span>
-              
-              <span className="text-muted-foreground">Tragfähigkeitsklasse:</span>
-              <span className="font-medium">{marker.groundAnalysis.bodentragfaehigkeitsklasse}</span>
-              
-              <span className="text-muted-foreground">Empf. Belastungsklasse:</span>
-              <span className="font-medium">{marker.groundAnalysis.belastungsklasse}</span>
-              
-              <span className="text-muted-foreground">Konfidenz:</span>
-              <span className="font-medium">{marker.groundAnalysis.confidence}%</span>
-            </div>
-            <div className="text-[10px] text-muted-foreground">
-              {marker.groundAnalysis.analyseDetails}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+  // Materialkosten berechnen
+  const { materials, total: totalCost } = React.useMemo(() => {
+    return calculateMaterialCosts(total, roadWidth, selectedBelastungsklasse);
+  }, [total, roadWidth, selectedBelastungsklasse]);
   
+  // Markerposition für Auto-Zentrierung der Map
+  const mapCenterPosition = React.useMemo(() => {
+    if (editMarker) {
+      return editMarker.position;
+    }
+    if (markers.length > 0) {
+      return markers[markers.length - 1].position;
+    }
+    return [49.44, 11.07] as [number, number]; // Default: Nürnberg
+  }, [markers, editMarker]);
+  
+  // Empfohlene Baumaschinen basierend auf der gewählten Belastungsklasse
+  const empfohleneBaumaschinen = React.useMemo(() => {
+    if (selectedBelastungsklasse === "none") return [];
+    return baumaschinen.filter(m => m.eignung.includes(selectedBelastungsklasse));
+  }, [selectedBelastungsklasse]);
+  
+  // JSX für die Hauptkomponente
   return (
-    <>
-    <div className="container mx-auto">
-      <div className="flex items-center mb-4">
-        <Link to="/">
-          <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Zurück
-          </Button>
-        </Link>
-        <div className="ml-2 text-xl font-semibold">Geo-Karten</div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <Card className="h-[calc(100vh-120px)] flex flex-col">
-            <CardHeader className="p-4">
-              {/* Bayern-Karten Tabs */}
-              <Tabs defaultValue="strassenplanung" value={bayernTabValue} onValueChange={(value) => setBayernTabValue(value as "strassenplanung" | "bayernatlas" | "denkmalatlas")} className="w-full">
-                <TabsList className="w-full grid grid-cols-3">
-                  <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
-                  <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
-                  <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-              {/* Belastungsklasse-Auswahl - nur für Straßenplanung Tab anzeigen */}
-              {bayernTabValue === "strassenplanung" && (
-                <div className="p-2 mt-4 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-between">
-                  <div className="font-medium flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-gray-500" /> 
-                    <span>Belastungsklasse (optional):</span>
-                  </div>
-                  <Select 
-                    value={selectedBelastungsklasse}
-                    onValueChange={setSelectedBelastungsklasse}
+    <div className="container mx-auto mt-4">
+      <Card className="shadow-md border-border/40">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2">
+            <div>
+              <CardTitle className="text-2xl flex items-center">
+                <MapIcon className="w-6 h-6 mr-2" /> Geo-Karten
+              </CardTitle>
+              <CardDescription className="mt-1.5">
+                Straßenplanung, Belastungsanalyse und Kartendarstellung
+              </CardDescription>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1"
+                asChild
+              >
+                <Link href="/">
+                  <ArrowLeft className="h-4 w-4" /> Zurück
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-[600px]">
+            {/* Linke Spalte - Optionen */}
+            <Card className="lg:col-span-1 bg-background shadow border-border/40">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <Tabs
+                    value={bayernTabValue}
+                    onValueChange={setBayernTabValue}
+                    className="w-full"
                   >
-                    <SelectTrigger className="h-9 border-gray-300 bg-white w-72">
-                      <SelectValue placeholder="Optional: Belastungsklasse wählen..." />
-                    </SelectTrigger>
-                    <SelectContent className="z-[9999]">
-                      <SelectItem value="none">Keine Klassifizierung</SelectItem>
-                      {belastungsklassen.map((klasse) => (
-                        <SelectItem key={klasse.klasse} value={klasse.klasse}>
-                          {klasse.klasse} - {klasse.beispiel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Kartenmodus-Tabs - nur für Straßenplanung anzeigen */}
-              {bayernTabValue === "strassenplanung" && (
-                <div className="mt-4">
-                  <Tabs defaultValue="map" value={activeTab} onValueChange={setActiveTab}>
-                    <div className="flex justify-between items-center">
-                      <TabsList>
-                        <TabsTrigger value="map" className="text-xs">
-                          <MapIcon className="h-4 w-4 mr-1" /> Karte
-                        </TabsTrigger>
-                        <TabsTrigger value="hybrid" className="text-xs">
-                          <Layers className="h-4 w-4 mr-1" /> Satellit
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      <div className="flex items-center space-x-2">
-                        {/* Direkte Koordinateneingabe und Adressumrechner-Dialog */}
-                        <div className="flex space-x-1">
-                          <Input 
-                            type="number"
-                            placeholder="Breite (z.B. 48.13)"
-                            className="h-8 text-xs w-24"
-                            value={searchLat || ""}
-                            onChange={(e) => setSearchLat(parseFloat(e.target.value) || null)}
-                            min="-90"
-                            max="90"
-                            step="0.00001"
-                          />
-                          <Input 
-                            type="number"
-                            placeholder="Länge (z.B. 11.57)"
-                            className="h-8 text-xs w-24"
-                            value={searchLng || ""}
-                            onChange={(e) => setSearchLng(parseFloat(e.target.value) || null)}
-                            min="-180"
-                            max="180"
-                            step="0.00001"
-                          />
-                          <Button
-                            variant="outline"
-                            className="h-8 text-xs px-2"
-                            onClick={() => {
-                              const address = prompt("Geben Sie eine Adresse ein (z.B. Berlin):");
-                              if (address && address.trim()) {
-                                // Direkte Geocoding-Anfrage mit MapBox API
-                                fetch(
-                                  `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-                                    address
-                                  )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
-                                )
-                                  .then(response => {
-                                    if (!response.ok) {
-                                      throw new Error("Fehler bei der Adresssuche");
-                                    }
-                                    return response.json();
-                                  })
-                                  .then(data => {
-                                    if (data.features && data.features.length > 0) {
-                                      // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
-                                      const [lng, lat] = data.features[0].center;
-                                      setSearchLat(lat);
-                                      setSearchLng(lng);
-                                      setMapCenter([lat, lng]);
-                                      
-                                      // Automatisch einen Marker an dieser Position hinzufügen mit Adressinformationen
-                                      const newMarkerPosition: [number, number] = [lat, lng];
-                                      
-                                      // Adressinformationen aus der Mapbox-Antwort extrahieren
-                                      let strasse = "";
-                                      let hausnummer = "";
-                                      let plz = "";
-                                      let ort = "";
-                                      let markerName = `Standort ${markers.length + 1}`;
-                                      
-                                      // Feature-Objekt enthält die Adressinformationen
-                                      if (data.features && data.features[0]) {
-                                        const feature = data.features[0];
-                                        
-                                        // Straße und Hausnummer aus dem text-Feld extrahieren
-                                        if (feature.text) {
-                                          const addressParts = feature.text.split(' ');
-                                          const lastPart = addressParts[addressParts.length - 1];
-                                          if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
-                                            hausnummer = lastPart;
-                                            strasse = addressParts.slice(0, -1).join(' ');
-                                          } else {
-                                            strasse = feature.text;
-                                          }
-                                        }
-                                        
-                                        // PLZ und Ort aus dem context-Array extrahieren
-                                        if (feature.context) {
-                                          for (const context of feature.context) {
-                                            if (context.id.startsWith('postcode')) {
-                                              plz = context.text;
-                                            } else if (context.id.startsWith('place')) {
-                                              ort = context.text;
-                                            }
-                                          }
-                                        }
-                                        
-                                        // Marker-Namen aus den Adresskomponenten generieren
-                                        if (strasse && hausnummer && ort) {
-                                          markerName = `${strasse} ${hausnummer}, ${ort}`;
-                                        } else if (strasse && ort) {
-                                          markerName = `${strasse}, ${ort}`;
-                                        } else if (ort) {
-                                          markerName = ort;
-                                        }
-                                      }
-                                      
-                                      const newMarker: MarkerInfo = {
-                                        position: newMarkerPosition,
-                                        name: markerName,
-                                        belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-                                        strasse: strasse,
-                                        hausnummer: hausnummer,
-                                        plz: plz,
-                                        ort: ort,
-                                        notes: ""
-                                      };
-                                      setMarkers([...markers, newMarker]);
-                                      setSelectedMarkerIndex(markers.length);
-                                      
-                                      // Setze den letzten hinzugefügten Marker für das Auto-Panning
-                                      setLastAddedMarkerPosition(newMarkerPosition);
-                                      
-                                      // Erfolgsmeldung anzeigen
-                                      alert(`Marker wurde gesetzt: ${markerName}`);
-                                    } else {
-                                      alert("Keine Ergebnisse für diese Adresse gefunden.");
-                                    }
-                                  })
-                                  .catch(err => {
-                                    console.error("Fehler bei der Adresssuche:", err);
-                                    alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-                                  });
-                              }
-                            }}
-                          >
-                            <MapPin className="h-3 w-3 mr-1" />
-                            Adresse suchen
-                          </Button>
-                          <Button
-                            className="h-8 text-xs px-2"
-                            onClick={() => {
-                              if (searchLat === null || searchLng === null) {
-                                alert("Bitte geben Sie gültige Koordinaten ein");
-                                return;
-                              }
+                    <TabsList className="grid grid-cols-3 mb-2">
+                      <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
+                      <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
+                      <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="mt-4">
+                      {/* Diese Steuerelemente nur anzeigen, wenn der Tab "Straßenplanung" aktiv ist */}
+                      {bayernTabValue === "strassenplanung" && (
+                        <div>
+                          <div className="space-y-4 pb-4">
+                            <div>
+                              <Label htmlFor="strassentyp">Straßentyp</Label>
+                              <Select defaultValue={roadType} onValueChange={value => setRoadType(value)}>
+                                <SelectTrigger id="strassentyp">
+                                  <SelectValue placeholder="Straßentyp wählen" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Autobahn">Autobahn</SelectItem>
+                                  <SelectItem value="Bundesstraße">Bundesstraße</SelectItem>
+                                  <SelectItem value="Landstraße">Landstraße</SelectItem>
+                                  <SelectItem value="Kreisstraße">Kreisstraße</SelectItem>
+                                  <SelectItem value="Gemeindestraße">Gemeindestraße</SelectItem>
+                                  <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {roadType === "Benutzerdefiniert" && (
+                              <div>
+                                <Label htmlFor="custom-width">Straßenbreite (m)</Label>
+                                <Input 
+                                  id="custom-width"
+                                  type="number"
+                                  min="2"
+                                  max="30"
+                                  step="0.1"
+                                  value={customRoadWidth || ""}
+                                  onChange={(e) => setCustomRoadWidth(parseFloat(e.target.value))}
+                                  placeholder="Breite in Metern"
+                                />
+                              </div>
+                            )}
+                            
+                            <div>
+                              <Label htmlFor="belastungsklasse">Belastungsklasse</Label>
+                              <Select defaultValue={selectedBelastungsklasse} onValueChange={value => setSelectedBelastungsklasse(value)}>
+                                <SelectTrigger id="belastungsklasse">
+                                  <SelectValue placeholder="Belastungsklasse wählen" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Bk100">
+                                    <span className="font-medium">Bk100</span> - Sehr starke Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="Bk32">
+                                    <span className="font-medium">Bk32</span> - Starke Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="Bk10">
+                                    <span className="font-medium">Bk10</span> - Mittlere Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="Bk3">
+                                    <span className="font-medium">Bk3</span> - Geringe Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="Bk1">
+                                    <span className="font-medium">Bk1</span> - Sehr geringe Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="Bk0_3">
+                                    <span className="font-medium">Bk0.3</span> - Minimale Beanspruchung
+                                  </SelectItem>
+                                  <SelectItem value="none">
+                                    <span className="font-medium">Keine</span> - Nur Standort markieren
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          {/* Belastungsklasse-Informationen */}
+                          {selectedBelastungsklasse !== "none" && (
+                            <div className="space-y-4 border p-4 rounded-md bg-muted/50">
+                              <h3 className="text-sm font-semibold">Belastungsklasse: {selectedBelastungsklasse}</h3>
                               
-                              console.log("Gehe zu Button geklickt, Koordinaten:", searchLat, searchLng);
+                              {/* RStO-Aufbau-Visualisierung */}
+                              <div className="relative h-24 border rounded-md bg-background overflow-hidden">
+                                {getKlasseInfo(selectedBelastungsklasse) && (
+                                  <>
+                                    {/* Asphaltdeckschicht */}
+                                    <div className="absolute top-0 left-0 right-0 h-[15%] bg-gray-800">
+                                      <span className="absolute left-2 text-[10px] text-white">
+                                        Asphaltdecke ({getKlasseInfo(selectedBelastungsklasse)?.dickeAsphaltdecke})
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Asphalttragschicht */}
+                                    <div className="absolute top-[15%] left-0 right-0 h-[25%] bg-gray-600">
+                                      <span className="absolute left-2 text-[10px] text-white">
+                                        Asphalttragschicht ({getKlasseInfo(selectedBelastungsklasse)?.dickeAsphaltTragschicht})
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Optional: Schottertragschicht, falls vorhanden */}
+                                    {getKlasseInfo(selectedBelastungsklasse)?.dickeSchotterTragschicht && (
+                                      <div className="absolute top-[40%] left-0 right-0 h-[20%] bg-amber-700">
+                                        <span className="absolute left-2 text-[10px] text-white">
+                                          Schottertragschicht ({getKlasseInfo(selectedBelastungsklasse)?.dickeSchotterTragschicht})
+                                        </span>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Frostschutzschicht */}
+                                    <div 
+                                      className="absolute left-0 right-0 bg-blue-300" 
+                                      style={{
+                                        top: getKlasseInfo(selectedBelastungsklasse)?.dickeSchotterTragschicht ? "60%" : "40%",
+                                        height: getKlasseInfo(selectedBelastungsklasse)?.dickeSchotterTragschicht ? "40%" : "60%"
+                                      }}
+                                    >
+                                      <span className="absolute left-2 text-[10px]">
+                                        Frostschutzschicht ({
+                                          getKlasseInfo(selectedBelastungsklasse)?.dickeSchotterTragschicht 
+                                            ? getKlasseInfo(selectedBelastungsklasse)?.dickeFrostschutzschicht2 
+                                            : getKlasseInfo(selectedBelastungsklasse)?.dickeFrostschutzschicht1
+                                        })
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                               
-                              // Breiten- und Längengrad direkt verwenden
-                              setMapCenter([searchLat, searchLng]);
+                              {/* Weitere Informationen zur Belastungsklasse */}
+                              {getKlasseInfo(selectedBelastungsklasse) && (
+                                <div className="text-xs space-y-2">
+                                  <div className="flex justify-between">
+                                    <span>Bauklasse:</span>
+                                    <span className="font-medium">{getKlasseInfo(selectedBelastungsklasse)?.bauklasse}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Beanspruchung:</span>
+                                    <span className="font-medium">{getKlasseInfo(selectedBelastungsklasse)?.beanspruchung}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Beispielanwendung:</span>
+                                    <span className="font-medium">{getKlasseInfo(selectedBelastungsklasse)?.beispiel}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Gesamtstärke:</span>
+                                    <span className="font-medium">{getKlasseInfo(selectedBelastungsklasse)?.dickeAsphaltbauweise}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Streckeninformationen anzeigen, wenn mindestens 2 Marker vorhanden sind */}
+                          {markers.length >= 2 && (
+                            <div className="mt-4 border p-4 rounded-md bg-muted/50 space-y-2">
+                              <h3 className="text-sm font-semibold">Streckeninformationen</h3>
                               
-                              // Den addMarker-Callback verwenden, der bereits Reverse-Geocoding implementiert
-                              addMarker(searchLat, searchLng);
-                            }}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Gehe zu
-                          </Button>
+                              {/* Streckenlänge */}
+                              {(() => {
+                                const { total, segments } = calculateRouteDistances(markers);
+                                return (
+                                  <>
+                                    <div className="flex justify-between text-sm">
+                                      <span>Gesamtstrecke:</span>
+                                      <span className="font-medium">{total.toFixed(2)} km</span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Einzelabschnitte: {segments.map(s => s.toFixed(2)).join(' km, ')} km
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                              
+                              {/* Straßenbreite */}
+                              <div className="flex justify-between text-sm">
+                                <span>Straßenbreite:</span>
+                                <span className="font-medium">{roadWidth.toFixed(1)} m</span>
+                              </div>
+                              
+                              {/* Gesamtfläche */}
+                              <div className="flex justify-between text-sm">
+                                <span>Gesamtfläche:</span>
+                                <span className="font-medium">{(total * 1000 * roadWidth).toFixed(0)} m²</span>
+                              </div>
+                              
+                              {/* Kostenübersicht */}
+                              {selectedBelastungsklasse !== "none" && (
+                                <div className="mt-2 pt-2 border-t border-border">
+                                  <h4 className="text-sm font-semibold mb-2">Materialkosten (geschätzt)</h4>
+                                  
+                                  {materials.map((material: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between text-xs mb-1">
+                                      <span>{material.name}:</span>
+                                      <span>{material.totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
+                                    </div>
+                                  ))}
+                                  
+                                  <div className="flex justify-between text-sm mt-2 pt-2 border-t border-border font-medium">
+                                    <span>Gesamtkosten:</span>
+                                    <span>{totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</span>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Buttons für Streckenoptimierung und Export */}
+                              <div className="flex flex-col gap-2 mt-4">
+                                <Button 
+                                  variant="secondary" 
+                                  size="sm"
+                                  onClick={handleOptimizeRoute}
+                                  disabled={markers.length < 3}
+                                >
+                                  <Layers className="w-4 h-4 mr-1" /> Route optimieren
+                                </Button>
+                                
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={handleExportPDF}
+                                  disabled={exportingPDF || markers.length === 0}
+                                >
+                                  <Download className="w-4 h-4 mr-1" /> Als PDF exportieren
+                                </Button>
+                                
+                                {exportingPDF && (
+                                  <div className="mt-2">
+                                    <Progress value={exportProgress} className="h-2" />
+                                    <p className="text-xs text-center mt-1">PDF wird erstellt...</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      )}
                     </div>
                   </Tabs>
-                </div>
-              )}
-            </CardHeader>
-            
-            {/* CardContent für den Karteninhalt */}
-            <CardContent className="flex-grow p-0 relative">
-              {/* BayernAtlas Tab */}
-              {bayernTabValue === "bayernatlas" && (
-                <div className="h-full w-full p-4">
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="flex-grow p-0 relative">
+                {/* Die Karte nur anzeigen, wenn der "Strassenplanung"-Tab aktiv ist */}
+                {bayernTabValue === "bayernatlas" && (
                   <BayernMaps defaultTab="bayernatlas" />
-                </div>
-              )}
-              
-              {/* DenkmalAtlas Tab */}
-              {bayernTabValue === "denkmalatlas" && (
-                <div className="h-full w-full p-4">
-                  <BayernMaps defaultTab="denkmalatlas" />
-                </div>
-              )}
-              
-              {/* Strassenplanung Tab mit Leaflet-Karte */}
-              {bayernTabValue === "strassenplanung" && (
-                <>
-                  {isUploading && (
-                    <div className="absolute top-2 right-2 z-20 bg-white dark:bg-gray-900 p-2 rounded-md shadow-md w-64">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium">Analysiere Bild...</span>
-                        <span className="text-xs">{Math.round(uploadProgress)}%</span>
-                      </div>
-                      <Progress value={uploadProgress} className="h-2" />
-                    </div>
-                  )}
+                )}
                 
-                  <div className="h-full w-full">
-                    <div ref={mapRef} style={{ height: '100%', width: '100%' }}>
-                      <MapContainer 
-                        center={mapCenter} 
-                        zoom={13} 
-                        style={{ height: '100%', width: '100%' }}
-                      >
-                        {/* Map Event Handler Component */}
-                        <MapEvents onMoveEnd={(map) => {
-                          const center = map.getCenter();
-                          setMapCenter([center.lat, center.lng]);
-                        }} />
-                        
-                        {/* Auto-Panning zu neuen Markern */}
-                        <MapControl position={lastAddedMarkerPosition} zoomLevel={15} />
-                        <LayersControl position="topright">
-                          <LayersControl.BaseLayer checked={activeTab === "map"} name="OpenStreetMap">
-                            <TileLayer
-                              url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                              attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
-                            />
-                          </LayersControl.BaseLayer>
-                          
-                          <LayersControl.BaseLayer checked={activeTab === "hybrid"} name="Satellite">
-                            <TileLayer
-                              url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                              attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
-                            />
-                          </LayersControl.BaseLayer>
-                        </LayersControl>
-                        
-                        {/* Marker anzeigen */}
-                        {markers.map((marker, idx) => {
-                          console.log(`Rendering marker ${idx} at position:`, marker.position);
-                          return (
-                            <Marker 
-                              key={`marker-${idx}-${marker.position[0]}-${marker.position[1]}`}
-                              position={marker.position}
-                              icon={createCustomIcon(marker.belastungsklasse)}
-                              eventHandlers={{
-                                click: () => {
-                                  console.log(`Marker ${idx} clicked`);
-                                  setSelectedMarkerIndex(idx);
-                                }
-                              }}
-                            >
-                              <LeafletTooltip direction="top" offset={[0, -20]}>
-                                {marker.name || `Standort ${idx + 1}`}
-                              </LeafletTooltip>
-                              <Popup maxWidth={300}>
-                                {renderMarkerPopup(marker, idx)}
-                              </Popup>
-                            </Marker>
-                          );
-                        })}
-                        
-                        {/* Route anzeigen - verbesserte Darstellung */}
-                        {markers.length >= 2 && (
-                          <>
-                            {/* Hauptlinie (dicker, auffälliger) */}
-                            <Polyline 
-                              positions={markers.map(m => m.position)}
-                              color="#3388ff"
-                              weight={5}
-                              opacity={0.8}
-                            />
-                            {/* Dekorative Linie (gestrichelt) für besseren visuellen Effekt */}
-                            <Polyline 
-                              positions={markers.map(m => m.position)}
-                              color="#ffffff"
-                              weight={2}
-                              opacity={0.6}
-                              dashArray="5, 10"
-                            />
-                          </>
-                        )}
-                        
-                        {/* Marker-Klick-Handler */}
-                        <MapClicker
-                          onMarkerAdd={addMarker}
-                          selectedBelastungsklasse={selectedBelastungsklasse}
-                        />
-                      </MapContainer>
+                {bayernTabValue === "denkmalatlas" && (
+                  <BayernMaps defaultTab="denkmalatlas" />
+                )}
+                
+                {/* Belastungsklassen-Legende am unteren Rand */}
+                {bayernTabValue === "strassenplanung" && (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-90 shadow-md rounded-md p-2 z-[1000] text-xs">
+                    <div className="font-medium mb-1">Belastungsklassen:</div>
+                    <div className="grid grid-cols-3 gap-x-1 gap-y-1">
+                      {Object.entries(belastungsklassenColors).map(([klasse, color]) => {
+                        if (klasse === "none") return null;
+                        return (
+                          <div key={klasse} className="flex items-center gap-1">
+                            <div style={{ backgroundColor: color }} className="w-3 h-3 rounded-full"></div>
+                            <span>{klasse}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Rechte Seitenleiste nur anzeigen, wenn der Straßenplanung-Tab aktiv ist */}
-        {bayernTabValue === "strassenplanung" && (
-          <div>
-            <Card className="h-[calc(100vh-120px)] overflow-y-auto">
-              <CardHeader className="pb-2">
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Mittlere Spalte - Karte */}
+            <Card className="lg:col-span-2 bg-background shadow border-border/40 flex flex-col">
+              <CardHeader className="pb-0">
                 <CardTitle className="text-lg flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-primary" /> 
+                  <MapIcon className="w-5 h-5 mr-2" /> 
+                  Kartenansicht
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="flex-grow p-0 relative">
+                {/* Nur die Karte anzeigen, wenn der "Strassenplanung"-Tab aktiv ist */}
+                {bayernTabValue === "strassenplanung" && (
+                  <div className="h-full relative" style={{ minHeight: '500px' }} ref={mapContainerRef}>
+                    <MapContainer
+                      center={mapCenterPosition}
+                      zoom={13}
+                      style={{ height: '100%', width: '100%', minHeight: '500px' }}
+                      attributionControl={false}
+                    >
+                      <TileLayer
+                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                        tileSize={512}
+                        zoomOffset={-1}
+                        detectRetina={true}
+                        maxZoom={22}
+                      />
+                      <LayersControl position="topright">
+                        <LayersControl.BaseLayer checked name="Straßenkarte">
+                          <TileLayer
+                            url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                            tileSize={512}
+                            zoomOffset={-1}
+                            detectRetina={true}
+                            maxZoom={22}
+                          />
+                        </LayersControl.BaseLayer>
+                        <LayersControl.BaseLayer name="Satellit">
+                          <TileLayer
+                            url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                            tileSize={512}
+                            zoomOffset={-1}
+                            detectRetina={true}
+                            maxZoom={22}
+                          />
+                        </LayersControl.BaseLayer>
+                        <LayersControl.BaseLayer name="Topographie">
+                          <TileLayer
+                            url={`https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                            tileSize={512}
+                            zoomOffset={-1}
+                            detectRetina={true}
+                            maxZoom={22}
+                          />
+                        </LayersControl.BaseLayer>
+                      </LayersControl>
+                      
+                      {/* Event-Listener für Klicks auf die Karte */}
+                      <MapClicker
+                        onMarkerAdd={handleAddMarker}
+                        selectedBelastungsklasse={selectedBelastungsklasse}
+                      />
+                      
+                      {/* Auto-Panning zu neuen Markern */}
+                      <MapControl position={mapCenterPosition} />
+                      
+                      {/* Marker anzeigen */}
+                      {markers.map((marker, index) => (
+                        <Marker
+                          key={`marker-${index}`}
+                          position={marker.position}
+                          icon={createCustomIcon(marker.belastungsklasse)}
+                          draggable={true}
+                          eventHandlers={{
+                            dragend: (e) => {
+                              const { lat, lng } = e.target.getLatLng();
+                              handleUpdateMarkerPosition(index, lat, lng);
+                            },
+                          }}
+                        >
+                          <Popup>
+                            <div className="p-1">
+                              <h3 className="font-medium">
+                                {marker.name || `Punkt ${index + 1}`}
+                                {marker.belastungsklasse && marker.belastungsklasse !== "none" && (
+                                  <Badge className="ml-2" variant="outline">{marker.belastungsklasse}</Badge>
+                                )}
+                              </h3>
+                              
+                              {(marker.strasse || marker.hausnummer || marker.plz || marker.ort) && (
+                                <p className="text-sm mt-1">
+                                  {marker.strasse} {marker.hausnummer}<br />
+                                  {marker.plz} {marker.ort}
+                                </p>
+                              )}
+                              
+                              {marker.notes && (
+                                <p className="text-xs mt-1 italic">{marker.notes}</p>
+                              )}
+                              
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs py-0 h-7 px-2"
+                                  onClick={() => {
+                                    setEditMarker({...marker});
+                                    setCurrentEditIndex(index);
+                                  }}
+                                >
+                                  Bearbeiten
+                                </Button>
+                                
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="text-xs py-0 h-7 px-2"
+                                  onClick={() => handleDeleteMarker(index)}
+                                >
+                                  Löschen
+                                </Button>
+                              </div>
+                            </div>
+                          </Popup>
+                          <LeafletTooltip direction="top" offset={[0, -10]} permanent={false}>
+                            {marker.name || `Punkt ${index + 1}`}
+                          </LeafletTooltip>
+                        </Marker>
+                      ))}
+                      
+                      {/* Polyline für die Streckenvisualisierung */}
+                      {polyline.length > 1 && (
+                        <Polyline
+                          positions={polyline}
+                          color={
+                            selectedBelastungsklasse === "none"
+                              ? belastungsklassenColors.none
+                              : belastungsklassenColors[selectedBelastungsklasse as keyof typeof belastungsklassenColors]
+                          }
+                          weight={5}
+                          opacity={0.7}
+                        />
+                      )}
+                    </MapContainer>
+                    
+                    {/* Infos zur Karte am unteren Rand */}
+                    <div className="absolute bottom-4 left-4 right-4 text-xs flex justify-between text-gray-600">
+                      <span>Klick auf die Karte zum Markieren | Drag & Drop zum Verschieben</span>
+                      <span>Belastungsklasse: {selectedBelastungsklasse}</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Detaillierte Informationen für Standorte und empfohlene Baumaschinen */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            {/* Standorte und Streckendaten */}
+            <Card className="bg-background shadow border-border/40">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <MapPin className="w-5 h-5 mr-2" />
                   Standorte und Streckendaten
                 </CardTitle>
                 <CardDescription>
@@ -1268,198 +1220,307 @@ export default function GeoMapPage() {
               </CardHeader>
               <CardContent className="space-y-4">
               {markers.length > 0 ? (
-                <>
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Markierte Standorte ({markers.length})</h3>
-                    <div className="space-y-2 text-sm max-h-40 overflow-y-auto">
-                      {markers.map((marker, idx) => (
-                        <div 
-                          key={`sidebar-marker-${idx}`} 
-                          className={`p-2 rounded-md border ${selectedMarkerIndex === idx ? 'bg-primary/10 border-primary' : 'bg-card hover:bg-muted/50 border-border'}`}
-                          onClick={() => setSelectedMarkerIndex(idx)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{marker.name || `Standort ${idx + 1}`}</span>
-                            <Badge variant={marker.belastungsklasse ? "default" : "outline"}>
-                              {marker.belastungsklasse || "Keine Klasse"}
-                            </Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
+                <div>
+                  <div className="text-sm mb-4">
+                    <div className="font-medium">Gesamtzahl der Standorte: {markers.length}</div>
+                    {markers.length > 1 && (
+                      <div className="mt-1">Streckenlänge: {total.toFixed(2)} km</div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Markierte Standorte:</h3>
+                    
+                    <div className="border rounded-md">
+                      {markers.map((marker, index) => (
+                        <div key={index} className={`p-3 ${index !== markers.length - 1 ? 'border-b' : ''}`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium flex items-center">
+                                <span
+                                  className="w-3 h-3 rounded-full mr-2 inline-block"
+                                  style={{ 
+                                    backgroundColor: marker.belastungsklasse 
+                                      ? belastungsklassenColors[marker.belastungsklasse as keyof typeof belastungsklassenColors] 
+                                      : belastungsklassenColors.none 
+                                  }}
+                                ></span>
+                                {marker.name || `Punkt ${index + 1}`}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Position: {marker.position[0].toFixed(5)}, {marker.position[1].toFixed(5)}
+                              </div>
+                              {(marker.strasse || marker.hausnummer || marker.plz || marker.ort) && (
+                                <div className="text-xs mt-1">
+                                  {marker.strasse} {marker.hausnummer}, {marker.plz} {marker.ort}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => {
+                                  setEditMarker({...marker});
+                                  setCurrentEditIndex(index);
+                                }}
+                              >
+                                <span className="sr-only">Bearbeiten</span>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  className="h-4 w-4"
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/>
+                                </svg>
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteMarker(index)}
+                              >
+                                <span className="sr-only">Löschen</span>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  className="h-4 w-4"
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 6h18"/>
+                                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                  <line x1="10" x2="10" y1="11" y2="17"/>
+                                  <line x1="14" x2="14" y1="11" y2="17"/>
+                                </svg>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
-                  {markers.length >= 2 && (
-                    <div className="border-t pt-3">
-                      <h3 className="text-sm font-medium mb-2 flex items-center">
-                        <Calculator className="h-4 w-4 mr-1 text-primary" /> 
-                        Strecken- und Materialberechnung
-                      </h3>
-                      
-                      {/* Streckenberechnung */}
-                      <div className="space-y-1 mb-3" ref={routeDataRef}>
-                        {(() => {
-                          const { total, segments } = calculateRouteDistances(markers);
-                          return (
-                            <>
-                              <div className="flex justify-between text-sm">
-                                <span>Gesamtstrecke:</span>
-                                <span className="font-medium">{total.toFixed(2)} km</span>
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Einzelabschnitte: {segments.map(s => s.toFixed(2)).join(' km, ')} km
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      
-                      {/* Materialkosten */}
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor="roadWidth" className="text-xs">Straßenbreite (m)</Label>
-                            <Input 
-                              id="roadWidth"
-                              type="number"
-                              min={1}
-                              max={25}
-                              step={0.1}
-                              value={roadWidth}
-                              onChange={(e) => setRoadWidth(parseFloat(e.target.value))}
-                              className="h-8 text-xs"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="roadType" className="text-xs">Straßentyp</Label>
-                            <Select 
-                              value={selectedRoadPreset}
-                              onValueChange={(value) => {
-                                setSelectedRoadPreset(value);
-                                if (value !== "Benutzerdefiniert") {
-                                  setRoadWidth(roadWidthPresets[value as keyof typeof roadWidthPresets]);
-                                }
-                              }}
-                            >
-                              <SelectTrigger id="roadType" className="h-8 text-xs">
-                                <SelectValue placeholder="Typ wählen" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Autobahn">Autobahn (12.5m)</SelectItem>
-                                <SelectItem value="Bundesstraße">Bundesstraße (7.5m)</SelectItem>
-                                <SelectItem value="Landstraße">Landstraße (6.5m)</SelectItem>
-                                <SelectItem value="Kreisstraße">Kreisstraße (5.5m)</SelectItem>
-                                <SelectItem value="Gemeindestraße">Gemeindestraße (5.0m)</SelectItem>
-                                <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        {/* Kostenanzeige */}
-                        {(() => {
-                          const { total: distance } = calculateRouteDistances(markers);
-                          if (selectedBelastungsklasse === "none") {
-                            return (
-                              <Alert variant="destructive" className="mt-2 py-2">
-                                <AlertTitle className="text-xs font-medium">Bitte Belastungsklasse wählen</AlertTitle>
-                                <AlertDescription className="text-xs">
-                                  Um Materialkosten zu berechnen, wählen Sie eine Belastungsklasse aus dem Dropdown-Menü über der Karte.
-                                </AlertDescription>
-                              </Alert>
-                            );
-                          }
-                          
-                          const costInfo = calculateMaterialCosts(distance, roadWidth, selectedBelastungsklasse);
-                          
-                          return (
-                            <div className="bg-muted/30 rounded-md p-2 text-xs" ref={materialCostsRef}>
-                              <div className="flex justify-between items-center mb-1">
-                                <h4 className="font-medium">Materialkosten (Schätzung)</h4>
-                                <Button
-                                  size="sm"
-                                  className="h-7 px-2 gap-1"
-                                  onClick={exportToPdf}
-                                  disabled={isExporting || markers.length < 1}
-                                >
-                                  <Download className="h-3 w-3 mr-1" /> 
-                                  Als PDF
-                                </Button>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground">
-                                  <div className="col-span-5">Material</div>
-                                  <div className="col-span-1">Dicke</div>
-                                  <div className="col-span-2">Fläche</div>
-                                  <div className="col-span-2">€/m²</div>
-                                  <div className="col-span-2">Gesamt</div>
-                                </div>
-                                
-                                {costInfo.materials.map((material, i) => (
-                                  <div key={`material-${i}`} className="grid grid-cols-12 gap-2 text-xs">
-                                    <div className="col-span-5 truncate">{material.name}</div>
-                                    <div className="col-span-1 text-center">{material.thickness}</div>
-                                    <div className="col-span-2">{Math.round(material.area).toLocaleString()} m²</div>
-                                    <div className="col-span-2">{material.costPerSqm.toFixed(2)} €</div>
-                                    <div className="col-span-2 font-medium">{Math.round(material.totalCost).toLocaleString()} €</div>
-                                  </div>
-                                ))}
-                                
-                                <Separator />
-                                
-                                <div className="grid grid-cols-12 gap-2 text-xs font-bold">
-                                  <div className="col-span-10 text-right">Gesamtkosten:</div>
-                                  <div className="col-span-2">{Math.round(costInfo.total).toLocaleString()} €</div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        
-                        {/* Empfohlene Baumaschinen */}
-                        {selectedBelastungsklasse !== "none" && (
-                          <div className="mt-4">
-                            <h4 className="text-xs font-medium mb-1">Empfohlene Baumaschinen</h4>
-                            <div className="space-y-2">
-                              {baumaschinen
-                                .filter(maschine => maschine.eignung.includes(selectedBelastungsklasse))
-                                .map((maschine, i) => (
-                                  <div key={`maschine-${i}`} className="bg-card p-2 rounded-md text-xs">
-                                    <div className="font-medium">{maschine.name}</div>
-                                    <div className="text-muted-foreground text-xs mt-0.5">{maschine.beschreibung}</div>
-                                    <div className="grid grid-cols-2 gap-1 mt-1 text-xs">
-                                      <div>Tagesmiete: <span className="font-medium">{maschine.tagesmiete} €</span></div>
-                                      <div>Leistung: <span className="font-medium">{maschine.leistung} m²/Tag</span></div>
-                                    </div>
-                                  </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="rounded-full bg-muted p-3 mb-3">
-                    <MapPin className="h-6 w-6 text-muted-foreground" />
-                  </div>
+                <div className="text-center py-8">
+                  <MapPin className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
                   <h3 className="text-lg font-medium">Keine Standorte markiert</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Klicken Sie auf die Karte, um Standorte zu markieren und Materialberechnungen durchzuführen.
+                    Klicken Sie auf die Karte, um Standorte zu markieren und eine Strecke zu planen.
                   </p>
                 </div>
               )}
               </CardContent>
             </Card>
+            
+            {/* Empfohlene Baumaschinen für die gewählte Belastungsklasse */}
+            <Card className="bg-background shadow border-border/40">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <Layers className="w-5 h-5 mr-2" />
+                  Empfohlene Baumaschinen
+                </CardTitle>
+                <CardDescription>
+                  Basierend auf der gewählten Belastungsklasse {selectedBelastungsklasse}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedBelastungsklasse === "none" ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Keine Belastungsklasse ausgewählt</AlertTitle>
+                    <AlertDescription>
+                      Bitte wählen Sie eine Belastungsklasse, um passende Baumaschinen angezeigt zu bekommen.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="space-y-4">
+                    {empfohleneBaumaschinen.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {empfohleneBaumaschinen.map((maschine, idx) => (
+                          <div key={idx} className="border rounded-md p-3 flex flex-col h-full">
+                            <div className="font-medium">{maschine.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {maschine.beschreibung}
+                            </div>
+                            <div className="mt-2 text-sm space-y-1">
+                              <div className="flex justify-between">
+                                <span>Tagesmiete:</span>
+                                <span className="font-medium">{maschine.tagesmiete} €</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Leistung:</span>
+                                <span className="font-medium">{maschine.leistung} m²/Tag</span>
+                              </div>
+                            </div>
+                            
+                            {markers.length > 1 && (
+                              <div className="mt-4 text-sm">
+                                <Separator className="my-2" />
+                                <div className="flex justify-between">
+                                  <span>Projektfläche:</span>
+                                  <span className="font-medium">{(total * 1000 * roadWidth).toFixed(0)} m²</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Geschätzte Dauer:</span>
+                                  <span className="font-medium">
+                                    {Math.ceil((total * 1000 * roadWidth) / maschine.leistung)} Tage
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Mietkosten Projekt:</span>
+                                  <span className="font-medium">
+                                    {Math.ceil((total * 1000 * roadWidth) / maschine.leistung) * maschine.tagesmiete} €
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Keine passenden Baumaschinen</AlertTitle>
+                        <AlertDescription>
+                          Für die gewählte Belastungsklasse konnten keine passenden Baumaschinen gefunden werden.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        )}
-      </div>
+          
+          {/* Marker-Bearbeitungsdialog */}
+          {editMarker && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1001] p-4">
+              <Card className="w-full max-w-md">
+                <CardHeader>
+                  <CardTitle>
+                    {currentEditIndex !== null && currentEditIndex < markers.length ? 'Marker bearbeiten' : 'Neuer Marker'}
+                  </CardTitle>
+                  <CardDescription>
+                    Position: {editMarker.position[0].toFixed(5)}, {editMarker.position[1].toFixed(5)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="marker-name">Name</Label>
+                    <Input
+                      id="marker-name"
+                      value={editMarker.name || ''}
+                      onChange={(e) => handleEditMarkerChange('name', e.target.value)}
+                      placeholder="z.B. Start, Ziel, Checkpoint"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="marker-strasse">Straße</Label>
+                      <Input
+                        id="marker-strasse"
+                        value={editMarker.strasse || ''}
+                        onChange={(e) => handleEditMarkerChange('strasse', e.target.value)}
+                        placeholder="Straßenname"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="marker-hausnummer">Hausnummer</Label>
+                      <Input
+                        id="marker-hausnummer"
+                        value={editMarker.hausnummer || ''}
+                        onChange={(e) => handleEditMarkerChange('hausnummer', e.target.value)}
+                        placeholder="Nr."
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="marker-plz">PLZ</Label>
+                      <Input
+                        id="marker-plz"
+                        value={editMarker.plz || ''}
+                        onChange={(e) => handleEditMarkerChange('plz', e.target.value)}
+                        placeholder="Postleitzahl"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="marker-ort">Ort</Label>
+                      <Input
+                        id="marker-ort"
+                        value={editMarker.ort || ''}
+                        onChange={(e) => handleEditMarkerChange('ort', e.target.value)}
+                        placeholder="Ortsname"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="marker-belastungsklasse">Belastungsklasse</Label>
+                    <Select 
+                      defaultValue={editMarker.belastungsklasse || "none"}
+                      onValueChange={(value) => handleEditMarkerChange('belastungsklasse', value)}
+                    >
+                      <SelectTrigger id="marker-belastungsklasse">
+                        <SelectValue placeholder="Belastungsklasse wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Bk100">Bk100 - Sehr stark</SelectItem>
+                        <SelectItem value="Bk32">Bk32 - Stark</SelectItem>
+                        <SelectItem value="Bk10">Bk10 - Mittel</SelectItem>
+                        <SelectItem value="Bk3">Bk3 - Gering</SelectItem>
+                        <SelectItem value="Bk1">Bk1 - Sehr gering</SelectItem>
+                        <SelectItem value="Bk0_3">Bk0.3 - Minimal</SelectItem>
+                        <SelectItem value="none">Keine</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="marker-notes">Notizen</Label>
+                    <Textarea
+                      id="marker-notes"
+                      value={editMarker.notes || ''}
+                      onChange={(e) => handleEditMarkerChange('notes', e.target.value)}
+                      placeholder="Optionale Notizen zum Standort"
+                      rows={3}
+                    />
+                  </div>
+                </CardContent>
+                <div className="flex justify-end gap-2 p-4 pt-0">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditMarker(null);
+                      setCurrentEditIndex(null);
+                    }}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button onClick={handleUpdateMarker}>
+                    Speichern
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
-    </>
   );
 }

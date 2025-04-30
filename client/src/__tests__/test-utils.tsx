@@ -12,11 +12,10 @@ jest.mock('wouter', () => ({
     <a href={to}>{children}</a>
   ),
   useLocation: () => ['/test-location', mockLocation],
-  useRoute: () => [true, { params: {} }],
-  useParams: () => ({}),
   useRoute: (pattern: string) => {
     return [pattern === '/test-location', { params: {} }];
-  }
+  },
+  useParams: () => ({})
 }));
 
 // Erweiterte Renderer-Optionen für die Bereitstellung von Mock-Providern

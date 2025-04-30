@@ -1,7 +1,9 @@
-// Grundeinstellungen für die Jest-Tests
+// Global Jest setup Datei
 import '@testing-library/jest-dom';
 
-// Mock für die Browser-Umgebung
+// Globale Mock-Definitionen für Tests
+
+// Mock für Window-Objekte
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
@@ -16,15 +18,47 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mocks für Browser APIs hinzufügen
-global.URL.createObjectURL = jest.fn();
-global.URL.revokeObjectURL = jest.fn();
+// Mock für den Storage
+const localStorageMock = (function() {
+  let store: Record<string, string> = {};
+  return {
+    getItem(key: string) {
+      return store[key] || null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value.toString();
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+    clear() {
+      store = {};
+    }
+  };
+})();
 
-// React console.error in Tests zu Fehlern machen
-const originalConsoleError = console.error;
-console.error = (...args) => {
-  if (/Warning.*not wrapped in act/.test(args[0])) {
-    return;
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+});
+
+// Mock für Leaflet und Mapbox
+jest.mock('leaflet', () => ({
+  map: jest.fn(),
+  tileLayer: jest.fn(),
+  marker: jest.fn(),
+  circle: jest.fn(),
+  DivIcon: jest.fn().mockImplementation(() => ({})),
+  Icon: {
+    Default: {
+      prototype: {
+        _getIconUrl: jest.fn()
+      },
+      mergeOptions: jest.fn()
+    }
   }
-  originalConsoleError(...args);
-};
+}));
+
+// Bereinige eventuelle Timer nach jedem Test
+afterEach(() => {
+  jest.useRealTimers();
+});
