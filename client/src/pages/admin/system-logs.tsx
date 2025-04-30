@@ -224,41 +224,42 @@ export default function SystemLogsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Systemlogs</h1>
-          <p className="text-muted-foreground">
-            Überwachung der Systemaktivitäten und Benutzerinteraktionen
-          </p>
+    <DashboardLayout title="Systemlogs" description="Überwachung der Systemaktivitäten und Benutzerinteraktionen">
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">Log-Verwaltung</h2>
+            <p className="text-muted-foreground">
+              Verwalten und analysieren Sie die Systemlogs
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={refreshLogs}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Aktualisieren
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={exportLogs}
+            >
+              <Download className="h-4 w-4" />
+              Exportieren
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={refreshLogs}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Aktualisieren
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={exportLogs}
-          >
-            <Download className="h-4 w-4" />
-            Exportieren
-          </Button>
-        </div>
-      </div>
 
-      <Tabs 
-        defaultValue="activity" 
-        value={activeTab} 
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
+        <Tabs 
+          defaultValue="activity" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="space-y-4"
+        >
         <TabsList>
           <TabsTrigger value="activity" className="flex items-center gap-2">
             <ActivityIcon className="h-4 w-4" />
@@ -410,5 +411,6 @@ export default function SystemLogsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  </DashboardLayout>
   );
 }

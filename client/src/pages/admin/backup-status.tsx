@@ -497,6 +497,6 @@ export default function BackupStatusPage() {
         </CardContent>
       </Card>
     </div>
-    </DashboardLayout>
+  </DashboardLayout>
   );
 }
