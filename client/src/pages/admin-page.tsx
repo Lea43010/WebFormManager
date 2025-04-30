@@ -5,14 +5,22 @@ import { DataQualityManagement } from "@/components/admin/data-quality-managemen
 import { SystemLogs } from "@/components/admin/system-logs";
 import TrialManagement from "@/components/admin/trial-management";
 import { useAuth } from "@/hooks/use-auth";
-import { ShieldAlert, Users, Database, BarChart, Settings, FileCode, Mail, ActivityIcon, Clock } from 'lucide-react';
+import { 
+  ShieldAlert, Users, Database, BarChart, Settings, FileCode, 
+  Mail, ActivityIcon, Clock, ServerCrash, HardDrive, CloudUpload
+} from 'lucide-react';
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import BackupStatus from "@/components/admin/backup-status";
 
 export default function AdminPage() {
   const { user } = useAuth();
 
   // Nur Administratoren können Login-Logs sehen
   const isAdmin = user?.role === 'administrator';
+  
+  // State für die aktive Kategorie
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   return (
     <div className="container mx-auto py-10">
@@ -24,52 +32,44 @@ export default function AdminPage() {
       </div>
       
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users" className="flex items-center">
-            <Users className="h-4 w-4 mr-2" />
-            Benutzerverwaltung
+        {/* Hauptnavigation mit Kategorien */}
+        <TabsList className="grid grid-cols-4 md:grid-cols-7 gap-2 text-xs md:text-sm">
+          <TabsTrigger value="users" className="flex items-center gap-1 px-2 md:px-3 h-9">
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Benutzer</span>
           </TabsTrigger>
           
           {isAdmin && (
             <>
-              <TabsTrigger value="systemlogs" className="flex items-center">
-                <ActivityIcon className="h-4 w-4 mr-2" />
-                System-Logs
+              <TabsTrigger value="systemlogs" className="flex items-center gap-1 px-2 md:px-3 h-9">
+                <ActivityIcon className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Logs</span>
               </TabsTrigger>
               
-              <TabsTrigger value="trials" className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                Testphasen
+              <TabsTrigger value="trials" className="flex items-center gap-1 px-2 md:px-3 h-9">
+                <Clock className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Testphasen</span>
               </TabsTrigger>
               
-              <TabsTrigger value="backups" className="flex items-center">
-                <Database className="h-4 w-4 mr-2" />
-                Datensicherung
-              </TabsTrigger>
-              
-              <TabsTrigger value="dataquality" className="flex items-center">
-                <BarChart className="h-4 w-4 mr-2" />
-                Datenqualität
-              </TabsTrigger>
-              
-              <TabsTrigger value="dataquality_dashboard" className="flex items-center" asChild>
-                <Link href="/admin/data-quality-dashboard">
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Datenqualität-Dashboard
-                </Link>
-              </TabsTrigger>
-              
-              <TabsTrigger value="emails" className="flex items-center" asChild>
-                <a href="/admin/emails">
-                  <Mail className="h-4 w-4 mr-2" />
-                  E-Mails
-                </a>
+              <TabsTrigger value="backups" className="flex items-center gap-1 px-2 md:px-3 h-9">
+                <Database className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Backup</span>
               </TabsTrigger>
 
-              <TabsTrigger value="deployment" className="flex items-center" asChild>
-                <a href="/admin/deployment-docs">
-                  <FileCode className="h-4 w-4 mr-2" />
-                  Deployment
+              <TabsTrigger value="backup_status" className="flex items-center gap-1 px-2 md:px-3 h-9">
+                <ServerCrash className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Backup-Status</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="dataquality" className="flex items-center gap-1 px-2 md:px-3 h-9">
+                <BarChart className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Datenqualität</span>
+              </TabsTrigger>
+              
+              <TabsTrigger value="emails" className="flex items-center gap-1 px-2 md:px-3 h-9" asChild>
+                <a href="/admin/emails">
+                  <Mail className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">E-Mails</span>
                 </a>
               </TabsTrigger>
             </>
@@ -92,6 +92,10 @@ export default function AdminPage() {
 
             <TabsContent value="backups" className="space-y-4">
               <BackupManagement />
+            </TabsContent>
+            
+            <TabsContent value="backup_status" className="space-y-4">
+              <BackupStatus />
             </TabsContent>
             
             <TabsContent value="dataquality" className="space-y-4">
