@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export function BayernMaps() {
-  const [activeTab, setActiveTab] = useState("bayernatlas");
+interface BayernMapsProps {
+  defaultTab?: "bayernatlas" | "denkmalatlas";
+}
+
+export function BayernMaps({ defaultTab = "bayernatlas" }: BayernMapsProps) {
+  const [activeTab, setActiveTab] = useState<"bayernatlas" | "denkmalatlas">(defaultTab);
+  
+  useEffect(() => {
+    // Wenn sich der defaultTab ändert, aktualisiere den aktiven Tab
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   return (
     <Card className="w-full">
@@ -25,7 +34,11 @@ export function BayernMaps() {
           </AlertDescription>
         </Alert>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value: any) => setActiveTab(value as "bayernatlas" | "denkmalatlas")} 
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
             <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>

@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, Map as MapIcon, FileText, ExternalLink, Info, ArrowLeft, MapPin, Ruler, 
-         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File, Loader2 } from "lucide-react";
+         Layers, Search, ChevronDown, Camera, Upload, Image, Calculator, Asterisk, Download, File, Loader2, 
+         Building, AlertCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import BayernMaps from "@/components/maps/bayern-maps";
 // Direktes Mapbox-Token für zuverlässiges Laden
 const MAPBOX_TOKEN = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
 
@@ -505,6 +507,7 @@ export default function GeoMapPage() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([51.1657, 10.4515]); // Deutschland
   const [lastAddedMarkerPosition, setLastAddedMarkerPosition] = useState<[number, number] | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [bayernTabValue, setBayernTabValue] = useState<"strassenplanung" | "bayernatlas" | "denkmalatlas">("strassenplanung");
   const mapRef = useRef<HTMLDivElement>(null);
   const materialCostsRef = useRef<HTMLDivElement>(null);
   const routeDataRef = useRef<HTMLDivElement>(null);
@@ -1092,8 +1095,31 @@ export default function GeoMapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <Card className="h-[calc(100vh-120px)] flex flex-col">
+            {/* Bayern-Karten Tabs */}
+            <div className="p-4 border-b">
+              <Tabs defaultValue="strassenplanung" value={bayernTabValue} onValueChange={setBayernTabValue} className="w-full">
+                <TabsList className="w-full grid grid-cols-3">
+                  <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
+                  <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
+                  <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="strassenplanung">
+                  {/* Straßenplanung Inhalt - bleibt leer, da der Inhalt bereits unten angezeigt wird */}
+                </TabsContent>
+                
+                <TabsContent value="bayernatlas" className="mt-4">
+                  <BayernMaps />
+                </TabsContent>
+                
+                <TabsContent value="denkmalatlas" className="mt-4">
+                  <BayernMaps defaultTab="denkmalatlas" />
+                </TabsContent>
+              </Tabs>
+            </div>
+            
             {/* Belastungsklasse-Auswahl als separater Button über der Karte */}
-            <div className="p-2 mx-4 mt-4 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-between">
+            <div className="p-2 mx-4 mt-2 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-between">
               <div className="font-medium flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-gray-500" /> 
                 <span>Belastungsklasse (optional):</span>
@@ -1117,269 +1143,274 @@ export default function GeoMapPage() {
             </div>
             
             <CardHeader className="pb-0">
-              <Tabs defaultValue="map" value={activeTab} onValueChange={setActiveTab}>
-                <div className="flex justify-between items-center">
-                  <TabsList>
-                    <TabsTrigger value="map" className="text-xs">
-                      <MapIcon className="h-4 w-4 mr-1" /> Karte
-                    </TabsTrigger>
-                    <TabsTrigger value="hybrid" className="text-xs">
-                      <Layers className="h-4 w-4 mr-1" /> Satellit
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <div className="flex items-center space-x-2">
+              {bayernTabValue === "strassenplanung" && (
+                <Tabs defaultValue="map" value={activeTab} onValueChange={setActiveTab}>
+                  <div className="flex justify-between items-center">
+                    <TabsList>
+                      <TabsTrigger value="map" className="text-xs">
+                        <MapIcon className="h-4 w-4 mr-1" /> Karte
+                      </TabsTrigger>
+                      <TabsTrigger value="hybrid" className="text-xs">
+                        <Layers className="h-4 w-4 mr-1" /> Satellit
+                      </TabsTrigger>
+                    </TabsList>
                     
-                    {/* Direkte Koordinateneingabe und Adressumrechner-Dialog */}
-                    <div className="flex space-x-1">
-                      <Input 
-                        type="number"
-                        placeholder="Breite (z.B. 48.13)"
-                        className="h-8 text-xs w-24"
-                        value={searchLat || ""}
-                        onChange={(e) => setSearchLat(parseFloat(e.target.value) || null)}
-                        min="-90"
-                        max="90"
-                        step="0.00001"
-                      />
-                      <Input 
-                        type="number"
-                        placeholder="Länge (z.B. 11.57)"
-                        className="h-8 text-xs w-24"
-                        value={searchLng || ""}
-                        onChange={(e) => setSearchLng(parseFloat(e.target.value) || null)}
-                        min="-180"
-                        max="180"
-                        step="0.00001"
-                      />
-                      <Button
-                        variant="outline"
-                        className="h-8 text-xs px-2"
-                        onClick={() => {
-                          const address = prompt("Geben Sie eine Adresse ein (z.B. Berlin):");
-                          if (address && address.trim()) {
-                            // Direkte Geocoding-Anfrage mit MapBox API
-                            fetch(
-                              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-                                address
-                              )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
-                            )
-                              .then(response => {
-                                if (!response.ok) {
-                                  throw new Error("Fehler bei der Adresssuche");
-                                }
-                                return response.json();
-                              })
-                              .then(data => {
-                                if (data.features && data.features.length > 0) {
-                                  // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
-                                  const [lng, lat] = data.features[0].center;
-                                  setSearchLat(lat);
-                                  setSearchLng(lng);
-                                  setMapCenter([lat, lng]);
-                                  
-                                  // Automatisch einen Marker an dieser Position hinzufügen mit Adressinformationen
-                                  const newMarkerPosition: [number, number] = [lat, lng];
-                                  
-                                  // Adressinformationen aus der Mapbox-Antwort extrahieren
-                                  let strasse = "";
-                                  let hausnummer = "";
-                                  let plz = "";
-                                  let ort = "";
-                                  let markerName = `Standort ${markers.length + 1}`;
-                                  
-                                  // Feature-Objekt enthält die Adressinformationen
-                                  if (data.features && data.features[0]) {
-                                    const feature = data.features[0];
+                    <div className="flex items-center space-x-2">
+                      {/* Direkte Koordinateneingabe und Adressumrechner-Dialog */}
+                      <div className="flex space-x-1">
+                        <Input 
+                          type="number"
+                          placeholder="Breite (z.B. 48.13)"
+                          className="h-8 text-xs w-24"
+                          value={searchLat || ""}
+                          onChange={(e) => setSearchLat(parseFloat(e.target.value) || null)}
+                          min="-90"
+                          max="90"
+                          step="0.00001"
+                        />
+                        <Input 
+                          type="number"
+                          placeholder="Länge (z.B. 11.57)"
+                          className="h-8 text-xs w-24"
+                          value={searchLng || ""}
+                          onChange={(e) => setSearchLng(parseFloat(e.target.value) || null)}
+                          min="-180"
+                          max="180"
+                          step="0.00001"
+                        />
+                        <Button
+                          variant="outline"
+                          className="h-8 text-xs px-2"
+                          onClick={() => {
+                            const address = prompt("Geben Sie eine Adresse ein (z.B. Berlin):");
+                            if (address && address.trim()) {
+                              // Direkte Geocoding-Anfrage mit MapBox API
+                              fetch(
+                                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+                                  address
+                                )}.json?access_token=${MAPBOX_TOKEN}&country=de&limit=1`
+                              )
+                                .then(response => {
+                                  if (!response.ok) {
+                                    throw new Error("Fehler bei der Adresssuche");
+                                  }
+                                  return response.json();
+                                })
+                                .then(data => {
+                                  if (data.features && data.features.length > 0) {
+                                    // Mapbox gibt [lng, lat] zurück, wir brauchen [lat, lng]
+                                    const [lng, lat] = data.features[0].center;
+                                    setSearchLat(lat);
+                                    setSearchLng(lng);
+                                    setMapCenter([lat, lng]);
                                     
-                                    // Straße und Hausnummer aus dem text-Feld extrahieren
-                                    if (feature.text) {
-                                      const addressParts = feature.text.split(' ');
-                                      const lastPart = addressParts[addressParts.length - 1];
-                                      if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
-                                        hausnummer = lastPart;
-                                        strasse = addressParts.slice(0, -1).join(' ');
-                                      } else {
-                                        strasse = feature.text;
-                                      }
-                                    }
+                                    // Automatisch einen Marker an dieser Position hinzufügen mit Adressinformationen
+                                    const newMarkerPosition: [number, number] = [lat, lng];
                                     
-                                    // PLZ und Ort aus dem context-Array extrahieren
-                                    if (feature.context) {
-                                      for (const context of feature.context) {
-                                        if (context.id.startsWith('postcode')) {
-                                          plz = context.text;
-                                        } else if (context.id.startsWith('place')) {
-                                          ort = context.text;
+                                    // Adressinformationen aus der Mapbox-Antwort extrahieren
+                                    let strasse = "";
+                                    let hausnummer = "";
+                                    let plz = "";
+                                    let ort = "";
+                                    let markerName = `Standort ${markers.length + 1}`;
+                                    
+                                    // Feature-Objekt enthält die Adressinformationen
+                                    if (data.features && data.features[0]) {
+                                      const feature = data.features[0];
+                                      
+                                      // Straße und Hausnummer aus dem text-Feld extrahieren
+                                      if (feature.text) {
+                                        const addressParts = feature.text.split(' ');
+                                        const lastPart = addressParts[addressParts.length - 1];
+                                        if (/^\d+[a-zA-Z]?$/.test(lastPart)) {
+                                          hausnummer = lastPart;
+                                          strasse = addressParts.slice(0, -1).join(' ');
+                                        } else {
+                                          strasse = feature.text;
                                         }
                                       }
+                                      
+                                      // PLZ und Ort aus dem context-Array extrahieren
+                                      if (feature.context) {
+                                        for (const context of feature.context) {
+                                          if (context.id.startsWith('postcode')) {
+                                            plz = context.text;
+                                          } else if (context.id.startsWith('place')) {
+                                            ort = context.text;
+                                          }
+                                        }
+                                      }
+                                      
+                                      // Marker-Namen aus den Adresskomponenten generieren
+                                      if (strasse && hausnummer && ort) {
+                                        markerName = `${strasse} ${hausnummer}, ${ort}`;
+                                      } else if (strasse && ort) {
+                                        markerName = `${strasse}, ${ort}`;
+                                      } else if (ort) {
+                                        markerName = ort;
+                                      }
                                     }
                                     
-                                    // Marker-Namen aus den Adresskomponenten generieren
-                                    if (strasse && hausnummer && ort) {
-                                      markerName = `${strasse} ${hausnummer}, ${ort}`;
-                                    } else if (strasse && ort) {
-                                      markerName = `${strasse}, ${ort}`;
-                                    } else if (ort) {
-                                      markerName = ort;
-                                    }
+                                    const newMarker: MarkerInfo = {
+                                      position: newMarkerPosition,
+                                      name: markerName,
+                                      belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
+                                      strasse: strasse,
+                                      hausnummer: hausnummer,
+                                      plz: plz,
+                                      ort: ort,
+                                      notes: ""
+                                    };
+                                    setMarkers([...markers, newMarker]);
+                                    setSelectedMarkerIndex(markers.length);
+                                    
+                                    // Setze den letzten hinzugefügten Marker für das Auto-Panning
+                                    setLastAddedMarkerPosition(newMarkerPosition);
+                                    
+                                    // Erfolgsmeldung anzeigen
+                                    alert(`Marker wurde gesetzt: ${markerName}`);
+                                  } else {
+                                    alert("Keine Ergebnisse für diese Adresse gefunden.");
                                   }
-                                  
-                                  const newMarker: MarkerInfo = {
-                                    position: newMarkerPosition,
-                                    name: markerName,
-                                    belastungsklasse: selectedBelastungsklasse !== "none" ? selectedBelastungsklasse : undefined,
-                                    strasse: strasse,
-                                    hausnummer: hausnummer,
-                                    plz: plz,
-                                    ort: ort,
-                                    notes: ""
-                                  };
-                                  setMarkers([...markers, newMarker]);
-                                  setSelectedMarkerIndex(markers.length);
-                                  
-                                  // Setze den letzten hinzugefügten Marker für das Auto-Panning
-                                  setLastAddedMarkerPosition(newMarkerPosition);
-                                  
-                                  // Erfolgsmeldung anzeigen
-                                  alert(`Marker wurde gesetzt: ${markerName}`);
-                                } else {
-                                  alert("Keine Ergebnisse für diese Adresse gefunden.");
-                                }
-                              })
-                              .catch(err => {
-                                console.error("Fehler bei der Adresssuche:", err);
-                                alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
-                              });
-                          }
-                        }}
-                      >
-                        <MapPin className="h-3 w-3 mr-1" />
-                        Adresse suchen
-                      </Button>
-                      <Button
-                        className="h-8 text-xs px-2"
-                        onClick={() => {
-                          if (searchLat === null || searchLng === null) {
-                            alert("Bitte geben Sie gültige Koordinaten ein");
-                            return;
-                          }
-                          
-                          console.log("Gehe zu Button geklickt, Koordinaten:", searchLat, searchLng);
-                          
-                          // Breiten- und Längengrad direkt verwenden
-                          setMapCenter([searchLat, searchLng]);
-                          
-                          // Den addMarker-Callback verwenden, der bereits Reverse-Geocoding implementiert
-                          addMarker(searchLat, searchLng);
-                        }}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Gehe zu
-                      </Button>
+                                })
+                                .catch(err => {
+                                  console.error("Fehler bei der Adresssuche:", err);
+                                  alert("Bei der Adresssuche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
+                                });
+                            }
+                          }}
+                        >
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Adresse suchen
+                        </Button>
+                        <Button
+                          className="h-8 text-xs px-2"
+                          onClick={() => {
+                            if (searchLat === null || searchLng === null) {
+                              alert("Bitte geben Sie gültige Koordinaten ein");
+                              return;
+                            }
+                            
+                            console.log("Gehe zu Button geklickt, Koordinaten:", searchLat, searchLng);
+                            
+                            // Breiten- und Längengrad direkt verwenden
+                            setMapCenter([searchLat, searchLng]);
+                            
+                            // Den addMarker-Callback verwenden, der bereits Reverse-Geocoding implementiert
+                            addMarker(searchLat, searchLng);
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Gehe zu
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Tabs>
+                </Tabs>
+              )}
             </CardHeader>
             
             <CardContent className="flex-grow p-0 relative">
-              {isUploading && (
-                <div className="absolute top-2 right-2 z-20 bg-white dark:bg-gray-900 p-2 rounded-md shadow-md w-64">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium">Analysiere Bild...</span>
-                    <span className="text-xs">{Math.round(uploadProgress)}%</span>
-                  </div>
-                  <Progress value={uploadProgress} className="h-2" />
-                </div>
-              )}
-            
-              <div className="h-full w-full">
-                <div ref={mapRef} style={{ height: '100%', width: '100%' }}>
-                  <MapContainer 
-                    center={mapCenter} 
-                    zoom={13} 
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                  {/* Map Event Handler Component */}
-                  <MapEvents onMoveEnd={(map) => {
-                    const center = map.getCenter();
-                    setMapCenter([center.lat, center.lng]);
-                  }} />
-                  
-                  {/* Auto-Panning zu neuen Markern */}
-                  <MapControl position={lastAddedMarkerPosition} zoomLevel={15} />
-                  <LayersControl position="topright">
-                    <LayersControl.BaseLayer checked={activeTab === "map"} name="OpenStreetMap">
-                      <TileLayer
-                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                        attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
-                      />
-                    </LayersControl.BaseLayer>
-                    
-                    <LayersControl.BaseLayer checked={activeTab === "hybrid"} name="Satellite">
-                      <TileLayer
-                        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                        attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
-                      />
-                    </LayersControl.BaseLayer>
-                  </LayersControl>
-                  
-                  {/* Marker anzeigen */}
-                  {markers.map((marker, idx) => {
-                    console.log(`Rendering marker ${idx} at position:`, marker.position);
-                    return (
-                      <Marker 
-                        key={`marker-${idx}-${marker.position[0]}-${marker.position[1]}`}
-                        position={marker.position}
-                        icon={createCustomIcon(marker.belastungsklasse)}
-                        eventHandlers={{
-                          click: () => {
-                            console.log(`Marker ${idx} clicked`);
-                            setSelectedMarkerIndex(idx);
-                          }
-                        }}
-                      >
-                        <LeafletTooltip direction="top" offset={[0, -20]}>
-                          {marker.name || `Standort ${idx + 1}`}
-                        </LeafletTooltip>
-                        <Popup maxWidth={300}>
-                          {renderMarkerPopup(marker, idx)}
-                        </Popup>
-                      </Marker>
-                    );
-                  })}
-                  
-                  {/* Route anzeigen - verbesserte Darstellung */}
-                  {markers.length >= 2 && (
-                    <>
-                      {/* Hauptlinie (dicker, auffälliger) */}
-                      <Polyline 
-                        positions={markers.map(m => m.position)}
-                        color="#3388ff"
-                        weight={5}
-                        opacity={0.8}
-                      />
-                      {/* Dekorative Linie (gestrichelt) für besseren visuellen Effekt */}
-                      <Polyline 
-                        positions={markers.map(m => m.position)}
-                        color="#ffffff"
-                        weight={2}
-                        opacity={0.6}
-                        dashArray="5, 10"
-                      />
-                    </>
+              {bayernTabValue === "strassenplanung" && (
+                <>
+                  {isUploading && (
+                    <div className="absolute top-2 right-2 z-20 bg-white dark:bg-gray-900 p-2 rounded-md shadow-md w-64">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium">Analysiere Bild...</span>
+                        <span className="text-xs">{Math.round(uploadProgress)}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
+                    </div>
                   )}
-                  
-                  {/* Marker-Klick-Handler */}
-                  <MapClicker
-                    onMarkerAdd={addMarker}
-                    selectedBelastungsklasse={selectedBelastungsklasse}
-                  />
-                </MapContainer>
-              </div>
-            </div>
+                
+                  <div className="h-full w-full">
+                    <div ref={mapRef} style={{ height: '100%', width: '100%' }}>
+                      <MapContainer 
+                        center={mapCenter} 
+                        zoom={13} 
+                        style={{ height: '100%', width: '100%' }}
+                      >
+                        {/* Map Event Handler Component */}
+                        <MapEvents onMoveEnd={(map) => {
+                          const center = map.getCenter();
+                          setMapCenter([center.lat, center.lng]);
+                        }} />
+                        
+                        {/* Auto-Panning zu neuen Markern */}
+                        <MapControl position={lastAddedMarkerPosition} zoomLevel={15} />
+                        <LayersControl position="topright">
+                          <LayersControl.BaseLayer checked={activeTab === "map"} name="OpenStreetMap">
+                            <TileLayer
+                              url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                              attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
+                            />
+                          </LayersControl.BaseLayer>
+                          
+                          <LayersControl.BaseLayer checked={activeTab === "hybrid"} name="Satellite">
+                            <TileLayer
+                              url={`https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                              attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
+                            />
+                          </LayersControl.BaseLayer>
+                        </LayersControl>
+                        
+                        {/* Marker anzeigen */}
+                        {markers.map((marker, idx) => {
+                          console.log(`Rendering marker ${idx} at position:`, marker.position);
+                          return (
+                            <Marker 
+                              key={`marker-${idx}-${marker.position[0]}-${marker.position[1]}`}
+                              position={marker.position}
+                              icon={createCustomIcon(marker.belastungsklasse)}
+                              eventHandlers={{
+                                click: () => {
+                                  console.log(`Marker ${idx} clicked`);
+                                  setSelectedMarkerIndex(idx);
+                                }
+                              }}
+                            >
+                              <LeafletTooltip direction="top" offset={[0, -20]}>
+                                {marker.name || `Standort ${idx + 1}`}
+                              </LeafletTooltip>
+                              <Popup maxWidth={300}>
+                                {renderMarkerPopup(marker, idx)}
+                              </Popup>
+                            </Marker>
+                          );
+                        })}
+                        
+                        {/* Route anzeigen - verbesserte Darstellung */}
+                        {markers.length >= 2 && (
+                          <>
+                            {/* Hauptlinie (dicker, auffälliger) */}
+                            <Polyline 
+                              positions={markers.map(m => m.position)}
+                              color="#3388ff"
+                              weight={5}
+                              opacity={0.8}
+                            />
+                            {/* Dekorative Linie (gestrichelt) für besseren visuellen Effekt */}
+                            <Polyline 
+                              positions={markers.map(m => m.position)}
+                              color="#ffffff"
+                              weight={2}
+                              opacity={0.6}
+                              dashArray="5, 10"
+                            />
+                          </>
+                        )}
+                        
+                        {/* Marker-Klick-Handler */}
+                        <MapClicker
+                          onMarkerAdd={addMarker}
+                          selectedBelastungsklasse={selectedBelastungsklasse}
+                        />
+                      </MapContainer>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
