@@ -5,7 +5,7 @@ import { errorHandler, notFoundHandler } from "./error-handler";
 import { setupHealthRoutes } from "./health";
 import { setupApiDocs } from "./api-docs";
 import { setupApiTests } from "./api-test";
-import { setupBackupRoutes } from "./backup";
+import { setupBackupRoutes, initBackupSystem } from "./backup";
 import { initCronJobs } from "./cron-jobs";
 import config from "../config";
 import { logger } from "./logger";
@@ -106,6 +106,14 @@ app.use((req, res, next) => {
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
+      
+      // Initialisiere das Backup-System mit GitHub-Integration
+      try {
+        initBackupSystem();
+        logger.info('Backup-System erfolgreich initialisiert');
+      } catch (error) {
+        logger.error('Fehler beim Initialisieren des Backup-Systems:', error);
+      }
       
       // Initialisiere die Cron-Jobs für wiederkehrende Aufgaben
       try {

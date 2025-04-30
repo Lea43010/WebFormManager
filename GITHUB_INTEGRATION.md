@@ -12,6 +12,20 @@ Diese Datei wurde erstellt, um die erfolgreiche Einrichtung der GitHub-Integrati
 
 - Push- und Pull-Operationen sind möglich
 - Automatische Authentifizierung bei Git-Operationen
+- **NEU:** Automatische Backup-Speicherung in GitHub-Repository
+- **NEU:** Offsite-Backup-Zugriff auch bei Serverausfall
+
+## Backup-System
+
+Das Backup-System der Bau-Structura App wurde um GitHub-Integration erweitert:
+
+- Automatisches Hochladen täglicher Datenbank-Backups zu GitHub
+- Admin-Interface zum Verwalten von GitHub-Backups
+- Wiederherstellung von Backups aus GitHub
+- Detaillierte Konfigurationsoptionen für Repository und Backup-Pfad
+
+Für detaillierte Informationen zur Backup-Integration siehe:
+[Ausführliche Dokumentation der GitHub-Backup-Integration](docs/GITHUB_BACKUP_INTEGRATION.md)
 
 ## Test
 
