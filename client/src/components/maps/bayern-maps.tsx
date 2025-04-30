@@ -32,45 +32,91 @@ export function BayernMaps() {
           </TabsList>
           <TabsContent value="bayernatlas" className="mt-4">
             <div className="space-y-4">
-              <div className="iframe-container h-[600px] w-full border border-border rounded-md">
-                <iframe 
-                  className="w-full h-full"
-                  src="https://atlas.bayern.de/?redirect=true&r=0&l_v=true%2Cfalse%2Ctrue%2Ctrue%2Ctrue%2Ctrue&c=628139%2C5475730&t=ba&z=13&l=vt_luftbild%2Cda4e50de-e3de-4a62-9ebc-ae7e0dab935f%2C6f5a389c-4ef3-4b5a-9916-475fd5c5962b%2C044eccef-ab23-478c-8f17-e2182559d036%2Cd0e7d4ea-62d8-46a0-a54a-09654530beed%2C9d0e3859-be17-4a40-b439-1ba19b45fbb8&l_o=1%2C1%2C0.55%2C0.85%2C0.8%2C0.45"
-                  allowFullScreen
-                  title="BayernAtlas"
-                />
-              </div>
-              <div className="text-sm">
-                <a 
-                  href="https://atlas.bayern.de/?redirect=true&r=0&l_v=true%2Cfalse%2Ctrue%2Ctrue%2Ctrue%2Ctrue&c=628139%2C5475730&t=ba&z=13&l=vt_luftbild%2Cda4e50de-e3de-4a62-9ebc-ae7e0dab935f%2C6f5a389c-4ef3-4b5a-9916-475fd5c5962b%2C044eccef-ab23-478c-8f17-e2182559d036%2Cd0e7d4ea-62d8-46a0-a54a-09654530beed%2C9d0e3859-be17-4a40-b439-1ba19b45fbb8&l_o=1%2C1%2C0.55%2C0.85%2C0.8%2C0.45"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  BayernAtlas in neuem Tab öffnen
-                </a>
+              <div className="space-y-6 bg-muted/60 p-6 rounded-md border">
+                <div className="text-center">
+                  <div className="flex justify-center">
+                    <img 
+                      src="https://geoportal.bayern.de/bayernatlas/assets/img/bayernAtlas_logo_new.svg" 
+                      alt="BayernAtlas Logo" 
+                      className="h-12 my-4"
+                    />
+                  </div>
+                  <p className="text-sm mb-6 text-muted-foreground">
+                    Der BayernAtlas ermöglicht es Ihnen, Informationen zu geografischen Standorten in Bayern zu erhalten. 
+                    Die Karte kann aufgrund von Sicherheitseinstellungen möglicherweise nicht direkt eingebettet werden.
+                  </p>
+                  
+                  <p className="text-sm mb-2 font-medium">Funktionen des BayernAtlas:</p>
+                  <ul className="text-sm text-muted-foreground mb-4 list-disc pl-5 text-left">
+                    <li>Detaillierte Standortinformationen zu Baugrundstücken</li>
+                    <li>Luftbildanzeige und topografische Karten</li>
+                    <li>Übersicht von Bauleitplanungen</li>
+                    <li>Vermessungsdaten und Grundstücksinformationen</li>
+                    <li>Höhenprofile für Bauprojekte</li>
+                  </ul>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <a 
+                    href="https://geoportal.bayern.de/bayernatlas/"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-primary bg-primary text-white rounded-md hover:bg-primary/90 transition"
+                  >
+                    BayernAtlas öffnen
+                  </a>
+                  <a 
+                    href="https://atlas.bayern.de/?redirect=true&r=0&l_v=true%2Cfalse%2Ctrue%2Ctrue%2Ctrue%2Ctrue&c=628139%2C5475730&t=ba&z=13&l=vt_luftbild"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-primary/40 text-primary rounded-md hover:bg-primary/10 transition"
+                  >
+                    Direkt zum Luftbild
+                  </a>
+                </div>
               </div>
             </div>
           </TabsContent>
           <TabsContent value="denkmalatlas" className="mt-4">
             <div className="space-y-4">
-              <div className="iframe-container h-[600px] w-full border border-border rounded-md">
-                <iframe 
-                  className="w-full h-full"
-                  src="https://geoportal.bayern.de/denkmalatlas/"
-                  allowFullScreen
-                  title="DenkmalAtlas"
-                />
-              </div>
-              <div className="text-sm">
-                <a 
-                  href="https://geoportal.bayern.de/denkmalatlas/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  DenkmalAtlas in neuem Tab öffnen
-                </a>
+              <div className="space-y-6 bg-muted/60 p-6 rounded-md border">
+                <div className="text-center">
+                  <div className="flex justify-center">
+                    <div className="h-12 my-4 font-bold text-xl">DenkmalAtlas Bayern</div>
+                  </div>
+                  <p className="text-sm mb-6 text-muted-foreground">
+                    Der DenkmalAtlas Bayern bietet Informationen zu denkmalgeschützten Objekten und historischen Stätten im Freistaat Bayern.
+                    Die Karte kann aufgrund von Sicherheitseinstellungen möglicherweise nicht direkt eingebettet werden.
+                  </p>
+                  
+                  <p className="text-sm mb-2 font-medium">Funktionen des DenkmalAtlas:</p>
+                  <ul className="text-sm text-muted-foreground mb-4 list-disc pl-5 text-left">
+                    <li>Umfassende Informationen zu Baudenkmälern</li>
+                    <li>Suche nach denkmalgeschützten Objekten</li>
+                    <li>Detaillierte Beschreibungen und historische Daten</li>
+                    <li>Informationen zu Denkmalschutzauflagen für Bauprojekte</li>
+                    <li>Übersicht von Ensembles und Denkmalbereichen</li>
+                  </ul>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <a 
+                    href="https://geoportal.bayern.de/denkmalatlas/"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-primary bg-primary text-white rounded-md hover:bg-primary/90 transition"
+                  >
+                    DenkmalAtlas öffnen
+                  </a>
+                  <a 
+                    href="https://www.blfd.bayern.de/"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-4 py-2 border border-primary/40 text-primary rounded-md hover:bg-primary/10 transition"
+                  >
+                    Bayerisches Landesamt für Denkmalpflege
+                  </a>
+                </div>
               </div>
             </div>
           </TabsContent>
