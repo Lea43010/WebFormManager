@@ -1098,7 +1098,7 @@ export default function GeoMapPage() {
           </p>
         </div>
         <div className="flex gap-3 items-center">
-          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => window.location.href = "/construction-diary"}>
+          <Button className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-auto" onClick={() => navigate("/construction-diary-debug")}>
             <FileText className="h-4 w-4 mr-2" />
             Zum Bautagebuch
           </Button>
