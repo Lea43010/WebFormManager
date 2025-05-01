@@ -956,45 +956,8 @@ export default function GeoMapPage() {
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
-      // Manuelle Zeichnung der Verbindungslinien im PDF
-      if (markers.length > 1) {
-        try {
-          // Polylinien im PDF zeichnen
-          pdf.setDrawColor(0, 102, 255); // #0066ff
-          pdf.setLineWidth(0.75); // Angepasste Linienbreite für PDF
-          
-          // Einfacher Ansatz: Zeichne die Verbindungslinien als gerade Linien zwischen den Markern
-          // Dies verteilt die Marker horizontal gleichmäßig über die Karte
-          
-          // Abstand zwischen den Markern
-          const markerSpacing = imgWidth / (markers.length + 1);
-          
-          // Position und Größe der Marker
-          const markerSize = 12;
-          const markerY = y + imgHeight / 2;
-          
-          // Position für jeden Marker berechnen
-          const positions = markers.map((_, index) => {
-            return {
-              x: x + markerSpacing * (index + 1),
-              y: markerY
-            };
-          });
-          
-          // Linien zwischen den Markern zeichnen
-          for (let i = 0; i < positions.length - 1; i++) {
-            pdf.line(
-              positions[i].x, 
-              positions[i].y, 
-              positions[i+1].x, 
-              positions[i+1].y
-            );
-          }
-        } catch (error) {
-          console.error("Fehler beim Zeichnen der Polylinien im PDF:", error);
-          // Fehler beim Zeichnen unterdrücken, aber protokollieren
-        }
-      }
+      // Keine manuellen Verbindungslinien im PDF, wie vom Nutzer gewünscht
+      // So werden nur die Marker angezeigt, ohne Verbindungslinien
       
       setExportProgress(70);
       
