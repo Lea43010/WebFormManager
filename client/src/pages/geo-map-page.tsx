@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Map as MapIcon, ArrowLeft, MapPin, Camera,
   Layers, Calculator, Download, AlertCircle, Route,
-  Search, Loader2, HelpCircle
+  Search, Loader2, HelpCircle, Pencil, Trash2, X, Building
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -1988,7 +1988,14 @@ export default function GeoMapPage() {
                           <Button 
                             className="w-full mt-3" 
                             size="sm"
-                            onClick={() => handleSaveMarkerEdit()}
+                            onClick={() => {
+                              if (currentEditIndex !== -1) {
+                                const updatedMarkers = [...markers];
+                                updatedMarkers[currentEditIndex] = editMarker;
+                                setMarkers(updatedMarkers);
+                                setCurrentEditIndex(-1);
+                              }
+                            }}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-2">
                               <polyline points="20 6 9 17 4 12"></polyline>
