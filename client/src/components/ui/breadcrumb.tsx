@@ -40,17 +40,19 @@ const BreadcrumbItem = React.forwardRef<
 BreadcrumbItem.displayName = "BreadcrumbItem"
 
 const BreadcrumbLink = React.forwardRef<
-  HTMLAnchorElement,
-  React.ComponentPropsWithoutRef<"a"> & {
-    asChild?: boolean
+  HTMLAnchorElement | HTMLSpanElement,
+  (React.ComponentPropsWithoutRef<"a"> | React.ComponentPropsWithoutRef<"span">) & {
+    asChild?: boolean;
+    useDivInsteadOfAnchor?: boolean;
   }
->(({ asChild, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : "a"
+>(({ asChild, className, useDivInsteadOfAnchor = false, ...props }, ref) => {
+  // Verwende Slot wenn asChild, oder span wenn useDivInsteadOfAnchor, sonst "a"
+  const Comp = asChild ? Slot : useDivInsteadOfAnchor ? "span" : "a";
 
   return (
     <Comp
       ref={ref}
-      className={cn("transition-colors hover:text-foreground", className)}
+      className={cn("transition-colors hover:text-foreground cursor-pointer", className)}
       {...props}
     />
   )

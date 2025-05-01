@@ -19,7 +19,7 @@ export default function GeoKartenPage() {
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem>
-                      <BreadcrumbLink>
+                      <BreadcrumbLink useDivInsteadOfAnchor asChild>
                         <Link to="/">Dashboard</Link>
                       </BreadcrumbLink>
                     </BreadcrumbItem>
