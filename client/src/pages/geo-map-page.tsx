@@ -581,16 +581,54 @@ export default function GeoMapPage() {
   
   // Init-Hooks, die ausgeführt werden, wenn die Komponente geladen wird
   useEffect(() => {
-    // Bei Bedarf Daten aus localStorage laden
+    // Bei Bedarf Daten aus localStorage laden, wenn kein Projekt geladen ist
     const savedMarkers = localStorage.getItem('geoMapMarkers');
-    if (savedMarkers) {
+    if (savedMarkers && !projectId) {
       try {
         setMarkers(JSON.parse(savedMarkers));
       } catch (e) {
         console.error("Fehler beim Laden der gespeicherten Marker:", e);
       }
     }
-  }, []);
+  }, [projectId]);
+  
+  // Wenn ein Projekt geladen wird und Koordinaten hat, diese als Marker setzen
+  useEffect(() => {
+    if (project && project.projectLatitude && project.projectLongitude) {
+      // Marker aus dem Projekt erstellen
+      const projectMarker: MarkerInfo = {
+        position: [project.projectLatitude, project.projectLongitude],
+        belastungsklasse: "Bk32", // Standardwert
+        name: project.projectName || `Projekt #${project.id}`,
+        notes: `Projekt: ${project.projectName || `#${project.id}`}`,
+      };
+      
+      // Adressinformationen hinzufügen, wenn vorhanden
+      if (project.projectAddress) {
+        const addressParts = project.projectAddress.split(", ");
+        if (addressParts.length >= 2) {
+          projectMarker.strasse = addressParts[0];
+          
+          const plzStadt = addressParts[1].split(" ");
+          if (plzStadt.length >= 2) {
+            projectMarker.plz = plzStadt[0];
+            projectMarker.ort = plzStadt.slice(1).join(" ");
+          }
+        }
+      }
+      
+      // Marker setzen und Karte zur Position zentrieren
+      setMarkers([projectMarker]);
+      setSelectedProject(project);
+      
+      // Mit kleiner Verzögerung zur Position zentrieren (warten bis Map geladen ist)
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.setView([project.projectLatitude, project.projectLongitude], 15);
+        }
+      }, 500);
+    }
+  }, [project]);
   
   // Wenn sich roadType ändert, roadWidth entsprechend anpassen
   useEffect(() => {
