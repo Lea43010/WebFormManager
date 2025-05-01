@@ -1,0 +1,41 @@
+ompakteres Layout
+
+Momentan wirkt die Ansicht sehr langgezogen. Elemente wie „Streckeninformationen“ und „Materialkosten“ könnten nebeneinander dargestellt werden, um Platz zu sparen und Informationen schneller zu erfassen.
+
+Interaktive Elemente verbessern
+
+Der Hinweistext könnte ausgeblendet werden und stattdessen über ein Info-Symbol („i“-Icon) oder Tooltip sichtbar gemacht werden, um dauerhaft Platz zu sparen.
+
+Klarere visuelle Trennung der Sektionen
+
+Ein klarer visueller Trenner (z.B. dezente horizontale Linien oder Farbabgrenzungen) zwischen den Sektionen wie „Belastungsklasse“, „Streckeninformationen“ und „Materialkosten“ würde die Übersichtlichkeit verbessern.
+
+Optimierung der Farbgestaltung
+
+Die Balkengrafik (Schichtenaufbau der Straße) könnte deutlicher beschriftet werden, z.B. indem Beschriftungen direkt in die Farbflächen integriert oder näher angeordnet werden, sodass sofort klar ist, welche Farbe zu welcher Schicht gehört.
+
+Reduktion der Schriftgröße oder dynamische Anpassung
+
+Für die mobilfreundliche Nutzung könnten Schriftgröße und Abstand dynamisch angepasst werden, um Scrollen zu reduzieren.
+
+Aktionsbuttons prominenter gestalten
+
+Buttons wie „Route optimieren“ und „Als PDF exportieren“ sollten deutlicher hervorgehoben werden, z.B. mit Farbe, Icons oder größeren Schaltflächen, da diese wahrscheinlich zentrale Aktionen für den Nutzer darstellen.
+
+Zusammenfassung der wichtigsten Eckdaten ganz oben
+
+Wichtige Werte wie Gesamtstrecke, Gesamtfläche und Gesamtkosten könnten in einer zusammenfassenden Übersicht an oberster Stelle hervorgehoben werden, sodass Nutzer auf einen Blick die wichtigsten Informationen sehen.
+
+Bearbeitungsmodus klarer abgrenzen
+
+Der Abschnitt „Standort bearbeiten“ könnte optisch stärker vom Rest getrennt sein, um deutlich zu machen, dass es sich um eine Bearbeitungs- bzw. Eingabemaske handelt.
+
+Diese Maßnahmen würden die Übersichtlichkeit und Nutzbarkeit deutlich verbessern, insbesondere für Nutzer, die häufig mit diesem Tool arbeiten und schnelle Entscheidungen treffen müssen.
+
+
+
+
+
+
+
+

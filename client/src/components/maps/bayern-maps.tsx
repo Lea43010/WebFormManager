@@ -6,15 +6,25 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface BayernMapsProps {
   defaultTab?: "bayernatlas" | "denkmalatlas";
+  tabValue?: string; // Zusätzliche Prop für die Kompatibilität mit geo-map-page.tsx
 }
 
-export function BayernMaps({ defaultTab = "bayernatlas" }: BayernMapsProps) {
-  const [activeTab, setActiveTab] = useState<"bayernatlas" | "denkmalatlas">(defaultTab);
+export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsProps) {
+  // Verwende tabValue, wenn vorhanden, andernfalls defaultTab
+  const initialTab = (tabValue === "bayernatlas" || tabValue === "denkmalatlas") 
+    ? tabValue 
+    : defaultTab;
+    
+  const [activeTab, setActiveTab] = useState<"bayernatlas" | "denkmalatlas">(initialTab);
   
   useEffect(() => {
-    // Wenn sich der defaultTab ändert, aktualisiere den aktiven Tab
-    setActiveTab(defaultTab);
-  }, [defaultTab]);
+    // Wenn sich defaultTab oder tabValue ändert, aktualisiere den aktiven Tab
+    if (tabValue === "bayernatlas" || tabValue === "denkmalatlas") {
+      setActiveTab(tabValue);
+    } else if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab, tabValue]);
 
   return (
     <Card className="w-full">
