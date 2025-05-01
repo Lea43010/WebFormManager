@@ -1045,23 +1045,7 @@ export default function GeoMapPage() {
                     </div>
                   )}
 
-                  {/* Belastungsklassen-Legende am unteren Rand (mit angepasster Position) */}
-                  {bayernTabValue === "strassenplanung" && (
-                    <div className="absolute bottom-20 left-4 w-auto max-w-[260px] bg-white bg-opacity-90 shadow-md rounded-md p-2 z-[1000] text-xs">
-                      <div className="font-medium mb-1">Belastungsklassen:</div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                        {Object.entries(belastungsklassenColors).map(([klasse, color]) => {
-                          if (klasse === "none") return null;
-                          return (
-                            <div key={klasse} className="flex items-center gap-1">
-                              <div style={{ backgroundColor: color }} className="w-3 h-3 rounded-full"></div>
-                              <span>{klasse}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  {/* Belastungsklassen-Legende wurde entfernt */}
                 </CardContent>
               </Card>
             </div>
