@@ -1586,10 +1586,14 @@ export default function GeoMapPage() {
                         >
                           <Popup>
                             <div className="p-1">
-                              <h3 className="font-medium text-sm">{marker.name || `Standort ${index + 1}`}</h3>
+                              <h3 className="font-medium text-sm">
+                                {marker.strasse 
+                                  ? `${marker.strasse} ${marker.hausnummer || ''}` 
+                                  : marker.name || `Standort ${index + 1}`}
+                              </h3>
                               
                               {marker.strasse && (
-                                <p className="text-xs">{marker.strasse} {marker.hausnummer}, {marker.plz} {marker.ort}</p>
+                                <p className="text-xs">{marker.plz} {marker.ort}</p>
                               )}
                               
                               {marker.belastungsklasse && marker.belastungsklasse !== "none" && (
@@ -1775,11 +1779,13 @@ export default function GeoMapPage() {
                               ></div>
                               <div>
                                 <div className="font-medium text-sm">
-                                  {marker.name || `Standort ${index + 1}`}
+                                  {marker.strasse ? 
+                                    `${marker.strasse} ${marker.hausnummer || ''}` : 
+                                    marker.name || `Standort ${index + 1}`}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   {marker.strasse ? 
-                                    `${marker.strasse} ${marker.hausnummer || ''}, ${marker.plz || ''} ${marker.ort || ''}` : 
+                                    `${marker.plz || ''} ${marker.ort || ''}` : 
                                     `${marker.position[0].toFixed(4)}, ${marker.position[1].toFixed(4)}`}
                                 </div>
                               </div>
