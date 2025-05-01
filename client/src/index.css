@@ -33,6 +33,16 @@
   }
 }
 
+/* Verbesserungen für Leaflet Polyline-Pfade - bessere SVG-Darstellung für den Export */
+.map-polyline-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+  fill: none;
+  pointer-events: auto;
+}
+
 .green-emoji {
   filter: hue-rotate(90deg) saturate(1.5);
 }
