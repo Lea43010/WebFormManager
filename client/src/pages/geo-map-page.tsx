@@ -1567,6 +1567,8 @@ export default function GeoMapPage() {
                         </LayersControl.BaseLayer>
                       </LayersControl>
                       
+
+                      
                       {/* Marker auf der Karte */}
                       {markers.map((marker, index) => (
                         <Marker 
@@ -1639,6 +1641,7 @@ export default function GeoMapPage() {
                           color="#0066ff"
                           weight={4}
                           opacity={0.7}
+                          dashArray={showGuides ? "5, 10" : undefined}
                         >
                           <LeafletTooltip sticky>Gesamtlänge: {total.toFixed(2)} km</LeafletTooltip>
                         </Polyline>
