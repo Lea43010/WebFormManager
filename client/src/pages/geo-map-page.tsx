@@ -1661,10 +1661,15 @@ export default function GeoMapPage() {
                       {markers.length > 1 && (
                         <Polyline 
                           positions={markers.map(m => m.position)}
-                          color="#0066ff"
-                          weight={4}
-                          opacity={0.7}
-                          dashArray={showGuides ? "5, 10" : undefined}
+                          pathOptions={{
+                            color: '#0066ff',
+                            weight: 4,
+                            opacity: 0.7,
+                            dashArray: showGuides ? "5, 10" : undefined,
+                            className: 'map-polyline-path', // CSS-Klasse für bessere Druckunterstützung
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                          }}
                         >
                           <LeafletTooltip sticky>Gesamtlänge: {total.toFixed(2)} km</LeafletTooltip>
                         </Polyline>
