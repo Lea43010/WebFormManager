@@ -825,6 +825,18 @@ export default function GeoMapPage() {
     setExportProgress(10);
     
     try {
+      // Aktuellen Benutzer abrufen für den Bericht
+      const userResponse = await fetch('/api/user');
+      const userData = await userResponse.json();
+      const username = userData?.username || 'Unbekannter Benutzer';
+      
+      // Aktuelles Datum formatieren
+      const currentDate = new Date().toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      
       // Zuerst die Karte als Canvas rendern
       const canvas = await html2canvas(mapContainerRef.current, {
         scale: 2, // Höhere Qualität
@@ -833,11 +845,11 @@ export default function GeoMapPage() {
         backgroundColor: null,
       });
       
-      setExportProgress(50);
+      setExportProgress(40);
       
       // Ein neues PDF-Dokument erstellen
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait', // Von landscape zu portrait geändert für besseres Layout
         unit: 'mm',
       });
       
@@ -845,66 +857,213 @@ export default function GeoMapPage() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Canvas-Seitenverhältnis beibehalten
+      // Header erstellen mit Projektinformationen
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Bau-Structura Straßenplanung', pdfWidth / 2, 15, { align: 'center' });
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Erstellt von Informationen
+      pdf.text(`Erstellt von: ${username}`, 14, 25);
+      pdf.text(`Datum: ${currentDate}`, 14, 30);
+      
+      // Projektinformationen
+      if (selectedProject) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Projektinformationen:', 14, 40);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Projektname: ${selectedProject.projectName || `Projekt #${selectedProject.id}`}`, 14, 45);
+        
+        // Adressinformationen
+        if (selectedProject.projectAddress) {
+          pdf.text(`Adresse: ${selectedProject.projectAddress}`, 14, 50);
+        }
+        
+        // Kundeninformationen hinzufügen, falls vorhanden
+        if (selectedProject.customerName) {
+          pdf.text(`Kunde: ${selectedProject.customerName}`, 14, 55);
+        }
+      }
+      
+      // Kartenheader
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Kartenansicht:', 14, 65);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Canvas-Seitenverhältnis beibehalten, aber kompakter
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+      // Kleineres Bildformat für die Karte verwenden, um mehr Platz für Text zu haben
+      const maxImgWidth = pdfWidth - 28; // Rand beidseitig
+      const maxImgHeight = 100; // Begrenzte Höhe
+      const ratio = Math.min(maxImgWidth / canvasWidth, maxImgHeight / canvasHeight);
       const imgWidth = canvasWidth * ratio;
       const imgHeight = canvasHeight * ratio;
       
-      // Bild zur Mitte der Seite ausrichten
+      // Bild zur Mitte horizontal ausrichten
       const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
+      const y = 70; // Position nach dem Header
       
       // Bild aus dem Canvas in das PDF einfügen
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
-      setExportProgress(80);
+      setExportProgress(70);
       
-      // Materialliste hinzufügen, wenn Marker vorhanden sind
-      if (markers.length > 1) {
+      // Standortinformationen
+      const startY = y + imgHeight + 10;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Standortinformationen:', 14, startY);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Liste der Standorte
+      let locationY = startY + 5;
+      
+      if (markers.length > 0) {
+        // Tabellenkopf
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(14, locationY, pdfWidth - 28, 7, 'F');
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Nr.', 15, locationY + 5);
+        pdf.text('Adresse', 25, locationY + 5);
+        pdf.text('Belastungskl.', pdfWidth - 50, locationY + 5);
+        pdf.setFont('helvetica', 'normal');
+        
+        locationY += 10;
+        
+        // Marker-Daten in tabellarischer Form
+        markers.forEach((marker, index) => {
+          const addressText = marker.strasse ? 
+            `${marker.strasse}${marker.hausnummer ? ' ' + marker.hausnummer : ''}, ${marker.plz || ''} ${marker.ort || ''}` : 
+            `Lat: ${marker.position[0].toFixed(5)}, Lng: ${marker.position[1].toFixed(5)}`;
+          
+          pdf.text(`${index+1}.`, 15, locationY);
+          
+          // Adresstext - muss eventuell umgebrochen werden wenn zu lang
+          if (addressText.length > 50) {
+            const wrappedText = pdf.splitTextToSize(addressText, pdfWidth - 95);
+            pdf.text(wrappedText, 25, locationY);
+            // Wenn Text umgebrochen wird, mehr Platz einplanen
+            locationY += (wrappedText.length - 1) * 5;
+          } else {
+            pdf.text(addressText, 25, locationY);
+          }
+          
+          pdf.text(marker.belastungsklasse || 'N/A', pdfWidth - 50, locationY);
+          locationY += 7;
+          
+          // Seitenumbruch einfügen, wenn wir ans Ende der Seite kommen
+          if (locationY > pdfHeight - 20) {
+            pdf.addPage();
+            locationY = 20;
+          }
+        });
+      } else {
+        pdf.text('Keine Standorte markiert.', 14, locationY + 5);
+        locationY += 10;
+      }
+      
+      // Wenn die Seite schon voll ist, neue Seite für die Materialliste einfügen
+      if (locationY > pdfHeight - 70) {
         pdf.addPage();
-        
-        // Titel für die Materialliste
-        pdf.setFontSize(16);
-        pdf.text('Streckendaten und Materialliste', 14, 20);
-        
+        locationY = 20;
+      }
+      
+      // Streckendaten und Materialliste
+      if (markers.length > 1) {
         // Informationen zur Strecke
-        pdf.setFontSize(12);
+        locationY += 10;
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Streckendaten:', 14, locationY);
+        pdf.setFont('helvetica', 'normal');
+        
         const { total, segments } = calculateRouteDistances(markers);
-        pdf.text(`Gesamte Streckenlänge: ${total.toFixed(2)} km`, 14, 30);
-        pdf.text(`Straßenbreite: ${roadWidth} m`, 14, 36);
-        pdf.text(`Gewählte Belastungsklasse: ${selectedBelastungsklasse}`, 14, 42);
+        locationY += 7;
+        pdf.text(`Gesamte Streckenlänge: ${total.toFixed(2)} km`, 14, locationY);
+        locationY += 7;
+        pdf.text(`Straßenbreite: ${roadWidth} m`, 14, locationY);
+        locationY += 7;
+        pdf.text(`Gewählte Belastungsklasse: ${selectedBelastungsklasse}`, 14, locationY);
         
         // Wenn Marker mit unterschiedlichen Belastungsklassen vorhanden sind
         const uniqueKlassen = Array.from(new Set(markers.filter(m => m.belastungsklasse).map(m => m.belastungsklasse)));
         if (uniqueKlassen.length > 1) {
-          pdf.text('Hinweis: Die Strecke enthält Abschnitte mit unterschiedlichen Belastungsklassen.', 14, 48);
-          pdf.text('Die Materialberechnung basiert auf der global gewählten Belastungsklasse.', 14, 54);
+          locationY += 7;
+          pdf.text('Hinweis: Die Strecke enthält Abschnitte mit unterschiedlichen Belastungsklassen.', 14, locationY);
+          locationY += 7;
+          pdf.text('Die Materialberechnung basiert auf der global gewählten Belastungsklasse.', 14, locationY);
         }
         
         // Materialliste
+        locationY += 12;
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Benötigte Materialien:', 14, locationY);
+        pdf.setFont('helvetica', 'normal');
+        
         const { materials, total: totalCost } = calculateMaterialCosts(total, roadWidth, selectedBelastungsklasse);
         
-        pdf.text('Benötigte Materialien:', 14, 64);
+        // Tabellenkopf für Materialien
+        locationY += 7;
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(14, locationY, pdfWidth - 28, 7, 'F');
         
-        let yPos = 70;
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Material', 15, locationY + 5);
+        pdf.text('Fläche (m²)', pdfWidth - 85, locationY + 5);
+        pdf.text('Preis/m²', pdfWidth - 55, locationY + 5);
+        pdf.text('Gesamt (€)', pdfWidth - 30, locationY + 5);
+        pdf.setFont('helvetica', 'normal');
+        
+        locationY += 10;
+        
+        // Materialtabelle
         materials.forEach((material: any) => {
-          pdf.text(`${material.name} (${material.thickness}):`, 14, yPos);
-          pdf.text(`Fläche: ${material.area.toFixed(2)} m²`, 28, yPos + 6);
-          pdf.text(`Kosten pro m²: ${material.costPerSqm.toFixed(2)} €`, 28, yPos + 12);
-          pdf.text(`Gesamtkosten: ${material.totalCost.toFixed(2)} €`, 28, yPos + 18);
-          yPos += 24;
+          const materialName = `${material.name} (${material.thickness})`;
+          pdf.text(materialName, 15, locationY);
+          pdf.text(material.area.toFixed(2), pdfWidth - 85, locationY, { align: 'left' });
+          pdf.text(material.costPerSqm.toFixed(2) + ' €', pdfWidth - 55, locationY, { align: 'left' });
+          pdf.text(material.totalCost.toFixed(2) + ' €', pdfWidth - 30, locationY, { align: 'left' });
+          locationY += 7;
+          
+          // Seitenumbruch wenn nötig
+          if (locationY > pdfHeight - 20) {
+            pdf.addPage();
+            locationY = 20;
+          }
         });
         
-        pdf.text(`Gesamte Materialkosten: ${totalCost.toFixed(2)} €`, 14, yPos + 6);
+        // Gesamtkosten mit Linie und fett
+        locationY += 5;
+        pdf.line(pdfWidth - 90, locationY - 2, pdfWidth - 14, locationY - 2);
+        locationY += 5;
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Gesamte Materialkosten:', pdfWidth - 90, locationY);
+        pdf.text(totalCost.toFixed(2) + ' €', pdfWidth - 30, locationY, { align: 'left' });
+      }
+      
+      // Fußzeile
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'italic');
+      const pageCount = pdf.getNumberOfPages();
+      
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.text(`Bau-Structura | Erstellt am ${currentDate} | Seite ${i} von ${pageCount}`, pdfWidth / 2, pdfHeight - 10, {
+          align: 'center'
+        });
       }
       
       setExportProgress(95);
       
-      // PDF speichern
-      pdf.save('strassenplanung.pdf');
+      // PDF speichern mit Projektname (falls vorhanden)
+      const fileName = selectedProject ? 
+        `Straßenplanung_${selectedProject.projectName || 'Projekt_' + selectedProject.id}.pdf` : 
+        'Straßenplanung.pdf';
+      
+      pdf.save(fileName);
       
     } catch (error) {
       console.error("Fehler beim Exportieren als PDF:", error);
@@ -912,7 +1071,7 @@ export default function GeoMapPage() {
       setExportingPDF(false);
       setExportProgress(0);
     }
-  }, [markers, roadWidth, selectedBelastungsklasse]);
+  }, [markers, roadWidth, selectedBelastungsklasse, selectedProject]);
   
   // Marker-Position aktualisieren per Drag-and-Drop
   const handleUpdateMarkerPosition = useCallback((index: number, lat: number, lng: number) => {
