@@ -851,35 +851,29 @@ export default function GeoMapPage() {
               </Button>
             </div>
           </div>
+          
+          {/* Tabs direkt unter der Hauptüberschrift */}
+          <Tabs
+            value={bayernTabValue}
+            onValueChange={setBayernTabValue}
+            className="w-full mt-4"
+          >
+            <TabsList className="grid grid-cols-3">
+              <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
+              <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
+              <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-[600px]">
-            {/* Linke Spalte - Optionen */}
-            <div className="lg:col-span-1">
-              <Card className="bg-background shadow border-border/40">
-                <CardHeader>
-                  <Tabs
-                    value={bayernTabValue}
-                    onValueChange={setBayernTabValue}
-                    className="w-full"
-                  >
-                    <TabsList className="grid grid-cols-3 mb-2">
-                      <TabsTrigger value="strassenplanung">Straßenplanung</TabsTrigger>
-                      <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
-                      <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </CardHeader>
-                
-                <CardContent className="flex-grow p-4 relative">
-                  {/* Tab Inhalte */}
-                  {bayernTabValue === "bayernatlas" && (
-                    <BayernMaps defaultTab="bayernatlas" />
-                  )}
-                  
-                  {bayernTabValue === "denkmalatlas" && (
-                    <BayernMaps defaultTab="denkmalatlas" />
-                  )}
+          {/* Bayern- und DenkmalAtlas-Inhalte */}
+          {bayernTabValue === "bayernatlas" && (
+            <BayernMaps defaultTab="bayernatlas" />
+          )}
+          
+          {bayernTabValue === "denkmalatlas" && (
+            <BayernMaps defaultTab="denkmalatlas" />
+          )}
                   
                   {bayernTabValue === "strassenplanung" && (
                     <div className="space-y-4 pb-4">
