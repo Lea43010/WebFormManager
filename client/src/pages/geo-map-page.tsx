@@ -640,72 +640,119 @@ export default function GeoMapPage() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Canvas-Seitenverhältnis beibehalten, aber auf 70% der ursprünglichen Größe reduzieren
+      // Canvas-Seitenverhältnis beibehalten, aber auf 65% der ursprünglichen Größe reduzieren
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const sizeReduction = 0.7; // Karte auf 70% verkleinern
+      const sizeReduction = 0.65; // Karte auf 65% verkleinern
       const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight) * sizeReduction;
       const imgWidth = canvasWidth * ratio;
       const imgHeight = canvasHeight * ratio;
       
-      // Bild zur Mitte der Seite ausrichten
+      // Projekttitel und Datum zum PDF hinzufügen (vor dem Bild)
+      pdf.setFontSize(16);
+      pdf.text('Bau - Structura: Straßenplanung', 14, 15);
+      
+      // Benutzerinformationen
+      pdf.setFontSize(10);
+      const currentDate = new Date().toLocaleDateString('de-DE');
+      const currentTime = new Date().toLocaleTimeString('de-DE');
+      pdf.text(`Erstellt am: ${currentDate} um ${currentTime} Uhr`, 14, 25);
+      
+      // Streckendaten - Tabellen-Header
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(14, 32, pdfWidth - 28, 7, 'F');
+      pdf.setFont("helvetica", "bold");
+      pdf.text('Projektinformationen', 16, 37);
+      pdf.setFont("helvetica", "normal");
+      
+      // Streckendaten als Tabelle
+      let yPos = 42;
+      const { total, segments } = calculateRouteDistances(markers);
+      pdf.text(`Gesamte Streckenlänge:`, 16, yPos);
+      pdf.text(`${total.toFixed(2)} km`, 85, yPos);
+      yPos += 7;
+      
+      pdf.text(`Straßenbreite:`, 16, yPos);
+      pdf.text(`${roadWidth} m`, 85, yPos);
+      yPos += 7;
+      
+      pdf.text(`Belastungsklasse:`, 16, yPos);
+      pdf.text(`${selectedBelastungsklasse}`, 85, yPos);
+      yPos += 7;
+      
+      // Materialdaten - Tabellen-Header
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(14, yPos, pdfWidth - 28, 7, 'F');
+      pdf.setFont("helvetica", "bold");
+      pdf.text('Materialinformationen', 16, yPos + 5);
+      pdf.setFont("helvetica", "normal");
+      yPos += 12;
+      
+      // Materialdaten als Tabelle, wenn Marker vorhanden sind
+      if (markers.length > 1) {
+        const { materials, total: totalCost } = calculateMaterialCosts(total, roadWidth, selectedBelastungsklasse);
+        
+        // Tabellen-Header
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(16, yPos - 5, 60, 6, 'F');
+        pdf.rect(76, yPos - 5, 30, 6, 'F');
+        pdf.rect(106, yPos - 5, 40, 6, 'F');
+        pdf.rect(146, yPos - 5, 40, 6, 'F');
+        
+        pdf.setFont("helvetica", "bold");
+        pdf.text('Material', 18, yPos);
+        pdf.text('Fläche (m²)', 78, yPos);
+        pdf.text('Preis/m²', 108, yPos);
+        pdf.text('Gesamt (€)', 148, yPos);
+        pdf.setFont("helvetica", "normal");
+        
+        yPos += 8;
+        
+        // Materialzeilen
+        materials.forEach((material: any, index: number) => {
+          if (index % 2 === 0) {
+            pdf.setFillColor(250, 250, 250);
+            pdf.rect(16, yPos - 5, 170, 6, 'F');
+          }
+          
+          pdf.text(`${material.name} (${material.thickness})`, 18, yPos);
+          pdf.text(`${material.area.toFixed(2)}`, 78, yPos);
+          pdf.text(`${material.costPerSqm.toFixed(2)} €`, 108, yPos);
+          pdf.text(`${material.totalCost.toFixed(2)} €`, 148, yPos);
+          
+          yPos += 8;
+        });
+        
+        // Gesamtkosten
+        pdf.setFillColor(240, 240, 240);
+        pdf.rect(16, yPos - 5, 170, 6, 'F');
+        pdf.setFont("helvetica", "bold");
+        pdf.text('Gesamte Materialkosten:', 18, yPos);
+        pdf.text(`${totalCost.toFixed(2)} €`, 148, yPos);
+        pdf.setFont("helvetica", "normal");
+        
+        yPos += 12;
+      }
+      
+      // Wenn Marker mit unterschiedlichen Belastungsklassen vorhanden sind, Hinweis hinzufügen
+      const uniqueKlassen = Array.from(new Set(markers.filter(m => m.belastungsklasse).map(m => m.belastungsklasse)));
+      if (uniqueKlassen.length > 1) {
+        pdf.setFont("helvetica", "italic");
+        pdf.text('Hinweis: Die Strecke enthält Abschnitte mit unterschiedlichen Belastungsklassen.', 14, yPos);
+        pdf.text('Die Materialberechnung basiert auf der global gewählten Belastungsklasse.', 14, yPos + 5);
+        pdf.setFont("helvetica", "normal");
+        yPos += 15;
+      }
+      
+      // Bild zur Mitte der Seite ausrichten und unter den Informationen platzieren
       const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 3; // Etwas höher auf der Seite platzieren
+      const y = yPos + 5; // Nach den Informationen platzieren
       
       // Bild aus dem Canvas in das PDF einfügen
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
       setExportProgress(80);
-      
-      // Materialliste hinzufügen, wenn Marker vorhanden sind
-      if (markers.length > 1) {
-        pdf.addPage();
-        
-        // Titel für die Materialliste
-        pdf.setFontSize(16);
-        pdf.text('Streckendaten und Materialliste', 14, 20);
-        
-        // Informationen zur Strecke
-        pdf.setFontSize(12);
-        const { total, segments } = calculateRouteDistances(markers);
-        pdf.text(`Gesamte Streckenlänge: ${total.toFixed(2)} km`, 14, 30);
-        pdf.text(`Straßenbreite: ${roadWidth} m`, 14, 36);
-        pdf.text(`Gewählte Belastungsklasse: ${selectedBelastungsklasse}`, 14, 42);
-        
-        // Wenn Marker mit unterschiedlichen Belastungsklassen vorhanden sind
-        const uniqueKlassen = Array.from(new Set(markers.filter(m => m.belastungsklasse).map(m => m.belastungsklasse)));
-        if (uniqueKlassen.length > 1) {
-          pdf.text('Hinweis: Die Strecke enthält Abschnitte mit unterschiedlichen Belastungsklassen.', 14, 48);
-          pdf.text('Die Materialberechnung basiert auf der global gewählten Belastungsklasse.', 14, 54);
-        }
-        
-        // Materialliste
-        const { materials, total: totalCost } = calculateMaterialCosts(total, roadWidth, selectedBelastungsklasse);
-        
-        pdf.text('Benötigte Materialien:', 14, 64);
-        
-        let yPos = 70;
-        materials.forEach((material: any) => {
-          pdf.text(`${material.name} (${material.thickness}):`, 14, yPos);
-          pdf.text(`Fläche: ${material.area.toFixed(2)} m²`, 28, yPos + 6);
-          pdf.text(`Kosten pro m²: ${material.costPerSqm.toFixed(2)} €`, 28, yPos + 12);
-          pdf.text(`Gesamtkosten: ${material.totalCost.toFixed(2)} €`, 28, yPos + 18);
-          yPos += 24;
-        });
-        
-        pdf.text(`Gesamte Materialkosten: ${totalCost.toFixed(2)} €`, 14, yPos + 6);
-      }
-      
-      setExportProgress(95);
-      
-      // Projekttitel und Datum zum PDF hinzufügen
-      pdf.setFontSize(14);
-      pdf.text('Bau - Structura: Straßenplanung', 14, 15);
-      pdf.setFontSize(10);
-      const currentDate = new Date().toLocaleDateString('de-DE');
-      pdf.text(`Erstellt am: ${currentDate}`, 14, 22);
-      pdf.text(`Belastungsklasse: ${selectedBelastungsklasse}`, 14, 28);
       
       // PDF speichern
       pdf.save('strassenplanung.pdf');
