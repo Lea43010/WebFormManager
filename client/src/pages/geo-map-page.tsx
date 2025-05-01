@@ -881,10 +881,8 @@ export default function GeoMapPage() {
           pdf.text(`Adresse: ${selectedProject.projectAddress}`, 14, 50);
         }
         
-        // Kundeninformationen hinzufügen, falls vorhanden
-        if (selectedProject.customerName) {
-          pdf.text(`Kunde: ${selectedProject.customerName}`, 14, 55);
-        }
+        // Kundeninformationen würden hier hinzugefügt werden, falls vorhanden
+        // Dies ist für zukünftige Erweiterungen vorgesehen
       }
       
       // Kartenheader
@@ -1141,8 +1139,8 @@ export default function GeoMapPage() {
             {/* Layout vertikal: Steuerung oben, Karte in der Mitte, Ergebnisse unten */}
             <div className="flex flex-col gap-6">
               {/* Obere Steuerung - Suche und Auswahl */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+              <div className="grid grid-cols-1 gap-6">
+                <Card className="max-w-full">
                 <CardHeader className="pb-3">
                   <div>
                     <CardTitle>Straßenplanung</CardTitle>
