@@ -59,7 +59,7 @@ export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsP
                 <div className="text-center">
                   <div className="flex justify-center">
                     <img 
-                      src="https://geoportal.bayern.de/bayernatlas/assets/img/bayernAtlas_logo_new.svg" 
+                      src="/assets/bayern-atlas-logo.svg" 
                       alt="BayernAtlas Logo" 
                       className="h-12 my-4"
                     />
@@ -105,7 +105,11 @@ export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsP
               <div className="space-y-6 bg-muted/60 p-6 rounded-md border">
                 <div className="text-center">
                   <div className="flex justify-center">
-                    <div className="h-12 my-4 font-bold text-xl">DenkmalAtlas Bayern</div>
+                    <img 
+                      src="/assets/denkmal-atlas-logo.svg" 
+                      alt="DenkmalAtlas Logo" 
+                      className="h-12 my-4"
+                    />
                   </div>
                   <p className="text-sm mb-6 text-muted-foreground">
                     Der DenkmalAtlas Bayern bietet Informationen zu denkmalgeschützten Objekten und historischen Stätten im Freistaat Bayern.
