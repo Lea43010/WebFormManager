@@ -553,6 +553,54 @@ export default function InformationPage() {
             </Alert>
           </div>
           
+          {/* Datenqualität Sektion */}
+          <div id="datenqualitaet" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Datenqualitätsmodul</h2>
+            
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-medium mb-3 text-primary">Umfassende Anleitung zum Datenqualitätsmodul</h3>
+                <p className="text-gray-700 mb-2">
+                  Das Datenqualitätsmodul bietet umfassende Funktionen zur Überwachung, Analyse und Verbesserung der Datenqualität in der Bau-Structura Anwendung.
+                </p>
+                <p className="text-gray-700 mb-4">
+                  Vollständige PDF-Dokumentation mit Erklärungen und Beispielen.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                  <Button variant="outline" className="flex items-center" onClick={() => window.open('/public/docs/datenqualitaet-dokumentation.pdf', '_blank')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Ansehen
+                  </Button>
+                  <Button variant="outline" className="flex items-center" onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = '/public/docs/datenqualitaet-dokumentation.pdf';
+                    link.setAttribute('download', 'datenqualitaet-dokumentation.pdf');
+                    link.setAttribute('type', 'application/pdf');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Herunterladen
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Hauptfunktionen des Datenqualitätsmoduls</h3>
+                <ul className="list-disc pl-5 space-y-2 text-gray-700">
+                  <li>Erstellung von umfassenden Datenqualitätsprofilen</li>
+                  <li>Automatische Erkennung von Ausreißern und Anomalien</li>
+                  <li>Validierung gegen definierte Erwartungen</li>
+                  <li>Überwachung von Datentrends und -veränderungen</li>
+                  <li>Erstellung von detaillierten HTML- und JSON-Berichten</li>
+                  <li>Integration mit der Datenbank-Überwachung</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
           {/* Datenarchitektur Sektion */}
           <div id="datenarchitektur" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Datenarchitektur</h2>

@@ -61,13 +61,6 @@ export default function HelpPage() {
             </CardHeader>
             <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <DocumentationCard 
-                title="Datenqualität" 
-                description="Umfassende Anleitung zum Datenqualitätsmodul"
-                icon={<FileText className="h-10 w-10 text-primary" />}
-                filePath="/docs/datenqualitaet-dokumentation.pdf"
-              />
-              
-              <DocumentationCard 
                 title="Benutzerhandbuch" 
                 description="Vollständiges Handbuch zur Nutzung der Anwendung"
                 icon={<Book className="h-10 w-10 text-primary" />}
