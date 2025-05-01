@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import HomePage from "@/pages/home-page";
 import HomeSimple from "@/pages/home-simple";
@@ -71,11 +71,7 @@ function Router() {
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <Route path="/help">
-        {() => {
-          // Weiterleitung von /help zu /information
-          window.location.href = '/information';
-          return null;
-        }}
+        {() => <Redirect to="/information" />}
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}

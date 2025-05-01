@@ -121,7 +121,9 @@ const sections = [
   { id: "geofencing", title: "GeoFencing" },
   { id: "strassenbau-module", title: "Straßenbau-Module" },
   { id: "nutzungshinweise", title: "Nutzungshinweise" },
-  { id: "eu-konformitaet", title: "EU-Konformität" }
+  { id: "eu-konformitaet", title: "EU-Konformität" },
+  { id: "faq", title: "Häufige Fragen" },
+  { id: "kontakt", title: "Kontakt & Support" }
 ];
 
 // Das Letzte Aktualisierungsdatum für die Informationsseite
