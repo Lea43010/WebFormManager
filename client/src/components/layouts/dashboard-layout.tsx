@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipButton } from "@/components/ui/tooltip-button";
 import { useAuth } from "@/hooks/use-auth";
-import TourButton from "@/components/onboarding/tour-button";
 import logoImage from "@/assets/Logo.png";
 
 interface DashboardLayoutProps {
@@ -62,11 +61,6 @@ export default function DashboardLayout({
                 <span className="text-sm font-medium text-gray-700">
                   Willkommen, {user?.username}
                 </span>
-              </div>
-              
-              {/* Tour-Button */}
-              <div className="hidden md:flex items-center mr-2">
-                <TourButton variant="outline" size="sm" className="text-xs" />
               </div>
               
               <div className="flex items-center gap-1 sm:gap-2">

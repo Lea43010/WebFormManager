@@ -963,12 +963,15 @@ export default function GeoMapPage() {
           
           {bayernTabValue === "strassenplanung" && (
             <div className="space-y-4">
-              {/* 1. Adresssuche */}
+              {/* Einstellungen (kompakter für Laptops) */}
               <Card className="bg-background shadow border-border/40">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Einstellungen</CardTitle>
+                </CardHeader>
                 <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Adresssuche */}
-                    <div className="md:col-span-2 space-y-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    {/* Erste Zeile: Adresssuche und Aktionsbuttons */}
+                    <div className="lg:col-span-8 space-y-2">
                       <Label htmlFor="address-search">Adresssuche</Label>
                       <div className="flex gap-2">
                         <Input 
@@ -989,7 +992,7 @@ export default function GeoMapPage() {
                     </div>
                     
                     {/* Aktionsbuttons */}
-                    <div className="flex flex-col justify-end gap-2">
+                    <div className="lg:col-span-4 flex flex-col justify-end gap-2">
                       <Button 
                         variant="outline" 
                         className="w-full"
@@ -1019,50 +1022,47 @@ export default function GeoMapPage() {
                         )}
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* 2. Straßentyp und Belastungsklasse */}
-              <Card className="bg-background shadow border-border/40">
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Straßentyp */}
-                    <div>
+                    
+                    {/* Zweite Zeile: Straßentyp und Belastungsklasse */}
+                    <div className="lg:col-span-6">
                       <Label htmlFor="strassentyp">Straßentyp</Label>
-                      <Select defaultValue={roadType} onValueChange={value => setRoadType(value)}>
-                        <SelectTrigger id="strassentyp">
-                          <SelectValue placeholder="Straßentyp wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Autobahn">Autobahn</SelectItem>
-                          <SelectItem value="Bundesstraße">Bundesstraße</SelectItem>
-                          <SelectItem value="Landstraße">Landstraße</SelectItem>
-                          <SelectItem value="Kreisstraße">Kreisstraße</SelectItem>
-                          <SelectItem value="Gemeindestraße">Gemeindestraße</SelectItem>
-                          <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      
-                      {roadType === "Benutzerdefiniert" && (
-                        <div className="mt-2">
-                          <Label htmlFor="custom-width">Straßenbreite (m)</Label>
-                          <Input 
-                            id="custom-width"
-                            type="number"
-                            min="2"
-                            max="30"
-                            step="0.1"
-                            value={customRoadWidth || ""}
-                            onChange={(e) => setCustomRoadWidth(parseFloat(e.target.value))}
-                            placeholder="Breite in Metern"
-                          />
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-grow">
+                          <Select defaultValue={roadType} onValueChange={value => setRoadType(value)}>
+                            <SelectTrigger id="strassentyp">
+                              <SelectValue placeholder="Straßentyp wählen" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Autobahn">Autobahn</SelectItem>
+                              <SelectItem value="Bundesstraße">Bundesstraße</SelectItem>
+                              <SelectItem value="Landstraße">Landstraße</SelectItem>
+                              <SelectItem value="Kreisstraße">Kreisstraße</SelectItem>
+                              <SelectItem value="Gemeindestraße">Gemeindestraße</SelectItem>
+                              <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                      )}
+                        
+                        {roadType === "Benutzerdefiniert" && (
+                          <div className="w-1/3">
+                            <Label htmlFor="custom-width" className="text-xs">Breite (m)</Label>
+                            <Input 
+                              id="custom-width"
+                              type="number"
+                              min="2"
+                              max="30"
+                              step="0.1"
+                              value={customRoadWidth || ""}
+                              onChange={(e) => setCustomRoadWidth(parseFloat(e.target.value))}
+                              placeholder="Breite in m"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Belastungsklasse */}
-                    <div>
+                    <div className="lg:col-span-6">
                       <Label htmlFor="belastungsklasse">Belastungsklasse</Label>
                       <Select defaultValue={selectedBelastungsklasse} onValueChange={value => setSelectedBelastungsklasse(value)}>
                         <SelectTrigger id="belastungsklasse">
