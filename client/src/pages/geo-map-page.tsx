@@ -985,152 +985,183 @@ export default function GeoMapPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                 <CardHeader className="pb-3">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Straßenplanung</CardTitle>
-                      <CardDescription>
-                        Straßenbau mit RStO-konformen Belastungsklassen
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      {/* Projekt-Verbindung mit Dropdown */}
-                      <div className="flex items-center gap-2">
-                        {isLoadingProjects ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm">Projekte werden geladen...</span>
-                          </div>
-                        ) : geoProjects && geoProjects.length > 0 ? (
-                          <div className="flex gap-2 items-center">
-                            <Select
-                              value={selectedProject ? String(selectedProject.id) : ""}
-                              onValueChange={(value) => {
-                                if (value === "new-project") {
-                                  window.location.href = "/projects";
-                                  return;
-                                }
+                  <div>
+                    <CardTitle>Straßenplanung</CardTitle>
+                    <CardDescription>
+                      Straßenbau mit RStO-konformen Belastungsklassen
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 pb-3">
+                  {/* Erste Zeile: Projekt-Auswahl, Adresssuche und Marker-Button */}
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Projekt-Verbindung mit Dropdown */}
+                    <div className="flex-1">
+                      <Label htmlFor="projekt-auswahl" className="mb-2 block">Projekt</Label>
+                      {isLoadingProjects ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Projekte werden geladen...</span>
+                        </div>
+                      ) : geoProjects && geoProjects.length > 0 ? (
+                        <div className="flex gap-2 items-center">
+                          <Select
+                            value={selectedProject ? String(selectedProject.id) : ""}
+                            onValueChange={(value) => {
+                              if (value === "new-project") {
+                                window.location.href = "/projects";
+                                return;
+                              }
+                              
+                              const selected = geoProjects.find((p: ProjectData) => p.id === parseInt(value));
+                              if (selected) {
+                                setSelectedProject(selected);
                                 
-                                const selected = geoProjects.find((p: ProjectData) => p.id === parseInt(value));
-                                if (selected) {
-                                  setSelectedProject(selected);
+                                // Marker für das Projekt erstellen
+                                if (selected.projectLatitude && selected.projectLongitude) {
+                                  const projectMarker: MarkerInfo = {
+                                    position: [selected.projectLatitude, selected.projectLongitude],
+                                    belastungsklasse: "Bk32", // Standardwert
+                                    name: selected.projectName || `Projekt #${selected.id}`,
+                                    notes: `Projekt: ${selected.projectName || `#${selected.id}`}`,
+                                  };
                                   
-                                  // Marker für das Projekt erstellen
-                                  if (selected.projectLatitude && selected.projectLongitude) {
-                                    const projectMarker: MarkerInfo = {
-                                      position: [selected.projectLatitude, selected.projectLongitude],
-                                      belastungsklasse: "Bk32", // Standardwert
-                                      name: selected.projectName || `Projekt #${selected.id}`,
-                                      notes: `Projekt: ${selected.projectName || `#${selected.id}`}`,
-                                    };
-                                    
-                                    // Adressinformationen hinzufügen, wenn vorhanden
-                                    if (selected.projectAddress) {
-                                      const addressParts = selected.projectAddress.split(", ");
-                                      if (addressParts.length >= 2) {
-                                        projectMarker.strasse = addressParts[0];
-                                        
-                                        const plzStadt = addressParts[1].split(" ");
-                                        if (plzStadt.length >= 2) {
-                                          projectMarker.plz = plzStadt[0];
-                                          projectMarker.ort = plzStadt.slice(1).join(" ");
-                                        }
+                                  // Adressinformationen hinzufügen, wenn vorhanden
+                                  if (selected.projectAddress) {
+                                    const addressParts = selected.projectAddress.split(", ");
+                                    if (addressParts.length >= 2) {
+                                      projectMarker.strasse = addressParts[0];
+                                      
+                                      const plzStadt = addressParts[1].split(" ");
+                                      if (plzStadt.length >= 2) {
+                                        projectMarker.plz = plzStadt[0];
+                                        projectMarker.ort = plzStadt.slice(1).join(" ");
                                       }
                                     }
-                                    
-                                    // Marker setzen und Karte zur Position zentrieren
-                                    setMarkers([projectMarker]);
-                                    
-                                    // Mit kleiner Verzögerung zur Position zentrieren (warten bis Map geladen ist)
-                                    setTimeout(() => {
-                                      if (mapRef.current) {
-                                        mapRef.current.setView([selected.projectLatitude, selected.projectLongitude], 15);
-                                      }
-                                    }, 500);
                                   }
+                                  
+                                  // Marker setzen und Karte zur Position zentrieren
+                                  setMarkers([projectMarker]);
+                                  
+                                  // Mit kleiner Verzögerung zur Position zentrieren (warten bis Map geladen ist)
+                                  setTimeout(() => {
+                                    if (mapRef.current) {
+                                      mapRef.current.setView([selected.projectLatitude, selected.projectLongitude], 15);
+                                    }
+                                  }, 500);
                                 }
-                              }}
-                            >
-                              <SelectTrigger className="min-w-[200px]">
-                                <SelectValue placeholder="Projekt auswählen" />
-                              </SelectTrigger>
-                              <SelectContent position="popper" sideOffset={5} className="z-50">
-                                {geoProjects.map((project: ProjectData) => (
-                                  <SelectItem key={project.id} value={String(project.id)}>
-                                    <div className="flex items-center gap-1">
-                                      <Briefcase className="h-3.5 w-3.5 mr-1" />
-                                      {project.projectName || `Projekt #${project.id}`}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                                <SelectItem value="new-project">
-                                  <div className="flex items-center gap-1 text-primary">
-                                    <Plus className="h-3.5 w-3.5 mr-1" />
-                                    Neues Projekt
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full" id="projekt-auswahl">
+                              <SelectValue placeholder="Projekt auswählen" />
+                            </SelectTrigger>
+                            <SelectContent position="popper" sideOffset={5} className="z-50">
+                              {geoProjects.map((project: ProjectData) => (
+                                <SelectItem key={project.id} value={String(project.id)}>
+                                  <div className="flex items-center gap-1">
+                                    <Briefcase className="h-3.5 w-3.5 mr-1" />
+                                    {project.projectName || `Projekt #${project.id}`}
                                   </div>
                                 </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            {selectedProject && (
-                              <Button
-                                variant="secondary"
+                              ))}
+                              <SelectItem value="new-project">
+                                <div className="flex items-center gap-1 text-primary">
+                                  <Plus className="h-3.5 w-3.5 mr-1" />
+                                  Neues Projekt
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {selectedProject && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                // Speichern der aktuellen Marker-Position im Projekt
+                                if (markers.length > 0 && selectedProject) {
+                                  const firstMarker = markers[0];
+                                  const address = 
+                                    (firstMarker.strasse ? `${firstMarker.strasse}, ` : '') +
+                                    (firstMarker.plz && firstMarker.ort ? `${firstMarker.plz} ${firstMarker.ort}` : '');
+                                  
+                                  updateProjectMutation.mutate({
+                                    projectId: selectedProject.id,
+                                    projectLatitude: firstMarker.position[0],
+                                    projectLongitude: firstMarker.position[1],
+                                    projectAddress: address
+                                  });
+                                }
+                              }}
+                              disabled={updateProjectMutation.isPending || markers.length === 0}
+                            >
+                              {updateProjectMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                  Speichern...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                  Speichern
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
                                 size="sm"
                                 onClick={() => {
-                                  // Speichern der aktuellen Marker-Position im Projekt
-                                  if (markers.length > 0 && selectedProject) {
-                                    const firstMarker = markers[0];
-                                    const address = 
-                                      (firstMarker.strasse ? `${firstMarker.strasse}, ` : '') +
-                                      (firstMarker.plz && firstMarker.ort ? `${firstMarker.plz} ${firstMarker.ort}` : '');
-                                    
-                                    updateProjectMutation.mutate({
-                                      projectId: selectedProject.id,
-                                      projectLatitude: firstMarker.position[0],
-                                      projectLongitude: firstMarker.position[1],
-                                      projectAddress: address
-                                    });
-                                  }
+                                  // Zurück zur Projektübersicht navigieren
+                                  window.location.href = "/projects";
                                 }}
-                                disabled={updateProjectMutation.isPending || markers.length === 0}
                               >
-                                {updateProjectMutation.isPending ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                    Speichern...
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg className="mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                                    Speichern
-                                  </>
-                                )}
+                                <Briefcase className="mr-2 h-4 w-4" />
+                                Projekt erstellen
                               </Button>
-                            )}
-                          </div>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    // Zurück zur Projektübersicht navigieren
-                                    window.location.href = "/projects";
-                                  }}
-                                >
-                                  <Briefcase className="mr-2 h-4 w-4" />
-                                  Projekt erstellen
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Sie benötigen ein Projekt zum Speichern der Geo-Informationen</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Sie benötigen ein Projekt zum Speichern der Geo-Informationen</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                    
+                    {/* Adresssuche */}
+                    <div className="flex-1">
+                      <Label htmlFor="adresssuche" className="mb-2 block">Adresssuche</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="adresssuche"
+                          value={searchAddress} 
+                          onChange={(e) => setSearchAddress(e.target.value)}
+                          placeholder="Adresse eingeben..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleAddressSearch();
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={handleAddressSearch} 
+                          disabled={isSearching || !searchAddress}
+                          size="sm"
+                        >
+                          {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                          <span className="ml-2 hidden sm:inline">Suchen</span>
+                        </Button>
                       </div>
-                      
+                    </div>
+                    
+                    {/* Marker-Steuerung */}
+                    <div className="flex gap-2">
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -1162,8 +1193,8 @@ export default function GeoMapPage() {
                       )}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4 pb-3">
+                  
+                  {/* Zweite Zeile: Straßentyp und Belastungsklasse */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="strassentyp">Straßentyp</Label>
@@ -1233,72 +1264,46 @@ export default function GeoMapPage() {
                 </CardContent>
               </Card>
                 
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Adresssuche</CardTitle>
-                        <CardDescription>
-                          Suchen Sie nach Standorten in Deutschland
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pb-3">
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Input 
-                          value={searchAddress} 
-                          onChange={(e) => setSearchAddress(e.target.value)}
-                          placeholder="Adresse eingeben..."
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleAddressSearch();
-                            }
-                          }}
-                        />
-                      </div>
-                      <Button 
-                        onClick={handleAddressSearch} 
-                        disabled={isSearching || !searchAddress}
-                      >
-                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        <span className="ml-2 hidden sm:inline">Suchen</span>
-                      </Button>
-                    </div>
-                    
-                    {searchError && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Fehler</AlertTitle>
-                        <AlertDescription>
-                          {searchError}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    {searchResults.length > 0 && (
-                      <div className="border rounded-lg max-h-[200px] overflow-y-auto">
-                        <div className="p-2 text-xs font-medium text-muted-foreground bg-muted/50">
-                          {searchResults.length} Ergebnisse gefunden
+                {/* Suchergebnisse unterhalb des Hauptformulars */}
+                {(searchError || searchResults.length > 0) && (
+                  <Card className="mt-4">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Suchergebnisse</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {searchError && (
+                        <Alert variant="destructive" className="py-2 mb-2">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Fehler</AlertTitle>
+                          <AlertDescription>
+                            {searchError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {searchResults.length > 0 && (
+                        <div className="border rounded-lg max-h-[200px] overflow-y-auto">
+                          <div className="p-2 text-xs font-medium text-muted-foreground bg-muted/50">
+                            {searchResults.length} Ergebnisse gefunden
+                          </div>
+                          <div className="divide-y">
+                            {searchResults.map((result, index) => (
+                              <Button
+                                key={index}
+                                variant="ghost"
+                                className="w-full justify-start p-2 text-sm h-auto"
+                                onClick={() => handleSelectSearchResult(result)}
+                              >
+                                <Building className="h-4 w-4 mr-2 flex-shrink-0" />
+                                <span className="text-left truncate">{result.place_name}</span>
+                              </Button>
+                            ))}
+                          </div>
                         </div>
-                        <div className="divide-y">
-                          {searchResults.map((result, index) => (
-                            <Button
-                              key={index}
-                              variant="ghost"
-                              className="w-full justify-start p-2 text-sm h-auto"
-                              onClick={() => handleSelectSearchResult(result)}
-                            >
-                              <Building className="h-4 w-4 mr-2 flex-shrink-0" />
-                              <span className="text-left truncate">{result.place_name}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
               
               {/* Karte in der Mitte */}
