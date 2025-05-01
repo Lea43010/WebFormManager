@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Link, useLocation, useParams } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -1140,7 +1142,7 @@ export default function GeoMapPage() {
             <div className="flex flex-col gap-6">
               {/* Obere Steuerung - Suche und Auswahl */}
               <div className="grid grid-cols-1 gap-6">
-                <Card className="max-w-full">
+                <Card className="w-full">
                 <CardHeader className="pb-3">
                   <div>
                     <CardTitle>Straßenplanung</CardTitle>
@@ -1149,11 +1151,11 @@ export default function GeoMapPage() {
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4 pb-3">
+                <CardContent className="space-y-5 pb-3">
                   {/* Erste Zeile: Projekt-Auswahl, Adresssuche und Marker-Button */}
-                  <div className="flex flex-col md:flex-row gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Projekt-Verbindung mit Dropdown */}
-                    <div className="flex-1">
+                    <div>
                       <Label htmlFor="projekt-auswahl" className="mb-2 block">Projekt</Label>
                       {isLoadingProjects ? (
                         <div className="flex items-center gap-2">
@@ -1351,8 +1353,8 @@ export default function GeoMapPage() {
                     </div>
                   </div>
                   
-                  {/* Zweite Zeile: Straßentyp und Belastungsklasse */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Zweite Zeile: Straßentyp, Belastungsklasse und Straßenbreite */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="strassentyp">Straßentyp</Label>
                       <Select defaultValue={roadType} onValueChange={value => setRoadType(value)}>
@@ -1400,6 +1402,42 @@ export default function GeoMapPage() {
                           </SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    
+                    {roadType !== "Benutzerdefiniert" && (
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <Label htmlFor="roadWidthSlider">Straßenbreite: {roadWidth} m</Label>
+                        </div>
+                        <Slider 
+                          id="roadWidthSlider"
+                          min={3} 
+                          max={15} 
+                          step={0.5} 
+                          defaultValue={[roadWidth]} 
+                          onValueChange={([value]) => setRoadWidth(value)} 
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Hilfslinien und Distanzen als Inline-Optionen */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="hilfslinien" className="cursor-pointer">Hilfslinien anzeigen</Label>
+                      <Switch 
+                        id="hilfslinien" 
+                        checked={showGuides} 
+                        onCheckedChange={setShowGuides} 
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="distanzen" className="cursor-pointer">Distanzen anzeigen</Label>
+                      <Switch 
+                        id="distanzen" 
+                        checked={showDistances} 
+                        onCheckedChange={setShowDistances} 
+                      />
                     </div>
                   </div>
                   
