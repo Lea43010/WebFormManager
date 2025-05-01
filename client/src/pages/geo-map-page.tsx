@@ -885,9 +885,11 @@ export default function GeoMapPage() {
           </TabsList>
           
           <TabsContent value="strassenplanung" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-5 gap-6">
-              {/* Linke Spalte - Steuerung und Informationen - angepasste Breite für verschiedene Bildschirmgrößen */}
-              <Card className="md:col-span-2 lg:col-span-1">
+            {/* Layout vertikal: Steuerung oben, Karte in der Mitte, Ergebnisse unten */}
+            <div className="flex flex-col gap-6">
+              {/* Obere Steuerung - Suche und Auswahl */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-center">
                     <div>
@@ -1606,11 +1608,93 @@ export default function GeoMapPage() {
                   </div>
                 </CardContent>
               </Card>
+                
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>Straßentyp</CardTitle>
+                        <CardDescription>
+                          Auswahl der Straßenbreite für die Berechnung
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Straßenbreite einstellen */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <Label htmlFor="roadType" className="text-xs">Straßentyp</Label>
+                        <span className="text-xs font-medium bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                          {roadWidth.toFixed(1)} m
+                        </span>
+                      </div>
+                      <Select defaultValue={roadType} onValueChange={setRoadType}>
+                        <SelectTrigger id="roadType" className="h-8 text-sm">
+                          <SelectValue placeholder="Straßentyp wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Autobahn">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span>Autobahn</span>
+                              <span className="text-xs text-muted-foreground">12,5 m</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Bundesstraße">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span>Bundesstraße</span>
+                              <span className="text-xs text-muted-foreground">7,5 m</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Landstraße">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span>Landstraße</span>
+                              <span className="text-xs text-muted-foreground">6,5 m</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Kreisstraße">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span>Kreisstraße</span>
+                              <span className="text-xs text-muted-foreground">5,5 m</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Gemeindestraße">
+                            <div className="flex items-center justify-between w-full pr-4">
+                              <span>Gemeindestraße</span>
+                              <span className="text-xs text-muted-foreground">5,0 m</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Benutzerdefiniert">Benutzerdefiniert</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {roadType === "Benutzerdefiniert" && (
+                        <div className="mt-2">
+                          <Label htmlFor="customWidth" className="text-xs mb-1 block">Eigene Breite</Label>
+                          <div className="flex items-center">
+                            <Input
+                              id="customWidth"
+                              type="number"
+                              value={customRoadWidth}
+                              onChange={(e) => setCustomRoadWidth(parseFloat(e.target.value) || 0)}
+                              min="0.1"
+                              max="30"
+                              step="0.1"
+                              className="h-8 text-sm"
+                            />
+                            <span className="ml-2">m</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
               
-              {/* Rechte Spalte - Karte */}
-              <Card className="md:col-span-3 lg:col-span-2">
+              {/* Karte - volle Breite */}
+              <Card>
                 <CardContent className="p-0 overflow-hidden">
-                  <div className="h-[800px]" ref={mapContainerRef}>
+                  <div className="h-[500px]" ref={mapContainerRef}>
                     <MapContainer
                       center={[48.1351, 11.5820]} // München als Zentrum
                       zoom={11}
@@ -1701,6 +1785,220 @@ export default function GeoMapPage() {
                       )}
                     </MapContainer>
                   </div>
+                </CardContent>
+              </Card>
+              
+              {/* Untere Steuerung - Marker-Liste und Bearbeitung */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Markierte Standorte</CardTitle>
+                      <CardDescription>Übersicht und Bearbeitung der gesetzten Punkte</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {markers.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                      <p>Keine Standorte markiert.</p>
+                      <p className="text-sm mt-2">Klicken Sie auf die Karte, um Punkte zu setzen.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {markers.length} {markers.length === 1 ? 'Standort' : 'Standorte'} markiert
+                      </div>
+                      
+                      <div className="border rounded-md divide-y">
+                        {markers.map((marker, index) => (
+                          <div key={index} className="p-3 flex justify-between items-center">
+                            <div className="flex gap-3 items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center
+                                ${marker.belastungsklasse && marker.belastungsklasse !== 'none' 
+                                  ? 'bg-primary text-white' 
+                                  : 'bg-muted'}`}>
+                                {index + 1}
+                              </div>
+                              <div>
+                                <div className="font-medium">{marker.name || `Standort ${index + 1}`}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {marker.strasse ? (
+                                    <>
+                                      {marker.strasse}
+                                      {(marker.plz || marker.ort) && `, ${marker.plz || ''} ${marker.ort || ''}`}
+                                    </>
+                                  ) : (
+                                    `Lat: ${marker.position[0].toFixed(4)}, Lng: ${marker.position[1].toFixed(4)}`
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => {
+                                        setCurrentEditIndex(index);
+                                        setEditMarker(marker);
+                                      }}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">Bearbeiten</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive"
+                                      onClick={() => handleDeleteMarker(index)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="text-xs">Löschen</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Wenn ein Marker bearbeitet wird */}
+                      {currentEditIndex !== -1 && (
+                        <div className="mt-4 border rounded-md p-3 bg-muted/50">
+                          <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-medium">Standort bearbeiten</h3>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setCurrentEditIndex(-1)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="marker-name" className="text-xs mb-1 block">Name</Label>
+                              <Input 
+                                id="marker-name"
+                                value={editMarker.name || ''}
+                                onChange={(e) => handleEditMarkerChange('name', e.target.value)}
+                                placeholder="z.B. Baustelle Nord"
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-2">
+                              <div className="col-span-3">
+                                <Label htmlFor="marker-strasse" className="text-xs mb-1 block">Straße</Label>
+                                <Input 
+                                  id="marker-strasse"
+                                  value={editMarker.strasse || ''}
+                                  onChange={(e) => handleEditMarkerChange('strasse', e.target.value)}
+                                  placeholder="Straßenname"
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="marker-hausnummer" className="text-xs mb-1 block">Nr.</Label>
+                                <Input 
+                                  id="marker-hausnummer"
+                                  value={editMarker.hausnummer || ''}
+                                  onChange={(e) => handleEditMarkerChange('hausnummer', e.target.value)}
+                                  placeholder="123"
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <Label htmlFor="marker-plz" className="text-xs mb-1 block">PLZ</Label>
+                                <Input 
+                                  id="marker-plz"
+                                  value={editMarker.plz || ''}
+                                  onChange={(e) => handleEditMarkerChange('plz', e.target.value)}
+                                  placeholder="12345"
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <Label htmlFor="marker-ort" className="text-xs mb-1 block">Ort</Label>
+                                <Input 
+                                  id="marker-ort"
+                                  value={editMarker.ort || ''}
+                                  onChange={(e) => handleEditMarkerChange('ort', e.target.value)}
+                                  placeholder="Stadt"
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="marker-notes" className="text-xs mb-1 block">Notizen</Label>
+                              <Textarea 
+                                id="marker-notes"
+                                value={editMarker.notes || ''}
+                                onChange={(e) => handleEditMarkerChange('notes', e.target.value)}
+                                placeholder="Zusätzliche Informationen zum Standort"
+                                className="h-20 text-sm"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="marker-belastungsklasse" className="text-xs mb-1 block">Belastungsklasse</Label>
+                              <Select 
+                                value={editMarker.belastungsklasse || 'none'} 
+                                onValueChange={(value) => handleEditMarkerChange('belastungsklasse', value)}
+                              >
+                                <SelectTrigger id="marker-belastungsklasse" className="h-8 text-sm">
+                                  <SelectValue placeholder="Belastungsklasse wählen" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Bk100">Bk100 - Sehr starke Beanspruchung</SelectItem>
+                                  <SelectItem value="Bk32">Bk32 - Starke Beanspruchung</SelectItem>
+                                  <SelectItem value="Bk10">Bk10 - Mittlere Beanspruchung</SelectItem>
+                                  <SelectItem value="Bk3">Bk3 - Geringe Beanspruchung</SelectItem>
+                                  <SelectItem value="Bk1">Bk1 - Sehr geringe Beanspruchung</SelectItem>
+                                  <SelectItem value="Bk0_3">Bk0.3 - Minimale Beanspruchung</SelectItem>
+                                  <SelectItem value="none">Keine Belastungsklasse</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="w-full mt-3" 
+                            size="sm"
+                            onClick={() => handleSaveMarkerEdit()}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-2">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Änderungen speichern
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
