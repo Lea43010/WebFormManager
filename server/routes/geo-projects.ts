@@ -1,22 +1,55 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { db } from "../db";
 import { projects } from "@shared/schema";
-import { eq, isNotNull } from "drizzle-orm";
+import { eq, isNotNull, and, or } from "drizzle-orm";
+import { requireAnyRole } from "../middleware/role-check";
+
+// Hilfsfunktion für Type-Safety
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: number;
+    username: string;
+    role?: string;
+  };
+}
+
+function isAuthenticated(req: Request): req is AuthenticatedRequest {
+  return req.isAuthenticated() && !!req.user;
+}
 
 const router = Router();
 
-// API-Endpunkt zum Abrufen aller Projekte mit Geo-Koordinaten
-router.get("/api/geo-projects", async (req, res) => {
+// API-Endpunkt zum Abrufen aller Projekte mit Berücksichtigung der Benutzerrolle
+router.get("/api/geo-projects", requireAnyRole(), async (req, res) => {
   try {
-    // Nur Projekte mit Koordinaten zurückgeben
-    const projectsWithCoords = await db
-      .select()
-      .from(projects)
-      .where(
-        isNotNull(projects.projectLatitude)
-      );
+    if (!isAuthenticated(req)) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    let allProjects;
+    
+    // Administrator sieht alle Projekte
+    if (req.user.role === 'administrator') {
+      allProjects = await db
+        .select()
+        .from(projects);
+    } 
+    // Manager sieht seine eigenen erstellten Projekte
+    else if (req.user.role === 'manager') {
+      allProjects = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.createdBy, req.user.id));
+    } 
+    // Normale Benutzer sehen nur ihre eigenen Projekte
+    else {
+      allProjects = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.createdBy, req.user.id));
+    }
 
-    res.json(projectsWithCoords);
+    res.json(allProjects);
   } catch (error) {
     console.error("Fehler beim Abrufen der Geo-Projekte:", error);
     res.status(500).json({ 
@@ -27,7 +60,7 @@ router.get("/api/geo-projects", async (req, res) => {
 });
 
 // API-Endpunkt zum Abrufen eines bestimmten Projekts mit Geo-Koordinaten
-router.get("/api/geo-projects/:id", async (req, res) => {
+router.get("/api/geo-projects/:id", requireAnyRole(), async (req, res) => {
   try {
     const projectId = parseInt(req.params.id);
     
@@ -44,6 +77,17 @@ router.get("/api/geo-projects/:id", async (req, res) => {
       return res.status(404).json({ message: "Projekt nicht gefunden" });
     }
     
+    // Berechtigungsprüfung
+    // Administrator darf alle Projekte sehen
+    if (req.user.role !== 'administrator') {
+      // Manager und normale Benutzer dürfen nur ihre eigenen Projekte sehen
+      if (project.createdBy !== req.user.id) {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung, auf dieses Projekt zuzugreifen" 
+        });
+      }
+    }
+    
     res.json(project);
   } catch (error) {
     console.error("Fehler beim Abrufen des Projekts:", error);
@@ -55,12 +99,33 @@ router.get("/api/geo-projects/:id", async (req, res) => {
 });
 
 // API-Endpunkt zum Aktualisieren der Geo-Koordinaten eines Projekts
-router.put("/api/geo-projects/:id", async (req, res) => {
+router.put("/api/geo-projects/:id", requireAnyRole(), async (req, res) => {
   try {
     const projectId = parseInt(req.params.id);
     
     if (isNaN(projectId)) {
       return res.status(400).json({ message: "Ungültige Projekt-ID" });
+    }
+    
+    // Überprüfen, ob das Projekt existiert und ob der Benutzer Zugriff hat
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
+    
+    if (!project) {
+      return res.status(404).json({ message: "Projekt nicht gefunden" });
+    }
+    
+    // Berechtigungsprüfung
+    // Administrator darf alle Projekte aktualisieren
+    if (req.user.role !== 'administrator') {
+      // Manager und normale Benutzer dürfen nur ihre eigenen Projekte aktualisieren
+      if (project.createdBy !== req.user.id) {
+        return res.status(403).json({ 
+          message: "Keine Berechtigung, dieses Projekt zu aktualisieren" 
+        });
+      }
     }
     
     const { projectLatitude, projectLongitude, projectAddress } = req.body;
@@ -80,7 +145,7 @@ router.put("/api/geo-projects/:id", async (req, res) => {
       .returning();
     
     if (!updatedProject) {
-      return res.status(404).json({ message: "Projekt nicht gefunden" });
+      return res.status(404).json({ message: "Projekt konnte nicht aktualisiert werden" });
     }
     
     res.json(updatedProject);
