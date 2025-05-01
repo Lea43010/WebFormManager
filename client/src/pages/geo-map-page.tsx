@@ -241,6 +241,14 @@ interface MarkerInfo {
   };
 }
 
+interface ProjectData {
+  id: number;
+  projectName: string;
+  projectLatitude: number | null;
+  projectLongitude: number | null;
+  projectAddress: string | null;
+}
+
 interface MaterialCosts {
   asphaltdecke: number;     // Kosten pro m² für Asphaltdecke
   asphalttragschicht: number;  // Kosten pro m² für Asphalttragschicht
@@ -515,7 +523,7 @@ export default function GeoMapPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   
   // Projektzustände
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectData | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   
   // PDF Export Status
@@ -985,6 +993,73 @@ export default function GeoMapPage() {
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
+                      {/* Projekt-Verbindung */}
+                      <div className="flex items-center gap-2">
+                        {selectedProject ? (
+                          <div className="flex gap-2 items-center">
+                            <div className="text-sm font-medium bg-muted px-2 py-1 rounded-md flex items-center gap-1">
+                              <Briefcase className="h-4 w-4" />
+                              {selectedProject.projectName || `Projekt #${selectedProject.id}`}
+                            </div>
+                            
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                // Speichern der aktuellen Marker-Position im Projekt
+                                if (markers.length > 0 && selectedProject) {
+                                  const firstMarker = markers[0];
+                                  const address = 
+                                    (firstMarker.strasse ? `${firstMarker.strasse}, ` : '') +
+                                    (firstMarker.plz && firstMarker.ort ? `${firstMarker.plz} ${firstMarker.ort}` : '');
+                                  
+                                  updateProjectMutation.mutate({
+                                    projectId: selectedProject.id,
+                                    projectLatitude: firstMarker.position[0],
+                                    projectLongitude: firstMarker.position[1],
+                                    projectAddress: address
+                                  });
+                                }
+                              }}
+                              disabled={updateProjectMutation.isPending || markers.length === 0}
+                            >
+                              {updateProjectMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                  Speichern...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                  Speichern
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    // Zurück zur Projektübersicht navigieren
+                                    window.location.href = "/projects";
+                                  }}
+                                >
+                                  <Briefcase className="mr-2 h-4 w-4" />
+                                  Projekt wählen
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Zum Speichern der Koordinaten mit einem Projekt verbinden</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                      
                       <Button 
                         variant="outline" 
                         size="sm" 
