@@ -2141,6 +2141,171 @@ export default function InformationPage() {
               </div>
             </div>
           </div>
+          
+          {/* FAQ Bereich */}
+          <div id="faq" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2 flex items-center gap-2">
+              <FileQuestion className="h-5 w-5 text-primary" />
+              Häufige Fragen
+            </h2>
+            
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Hier finden Sie Antworten auf häufig gestellte Fragen zur Nutzung der Bau-Structura App.
+            </p>
+            
+            <Accordion type="single" collapsible className="w-full space-y-2">
+              <AccordionItem value="item-1" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Wie kann ich ein neues Projekt anlegen?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  Um ein neues Projekt anzulegen, navigieren Sie zur Projektübersicht und klicken auf die Schaltfläche "Neues Projekt". 
+                  Füllen Sie im erscheinenden Formular alle erforderlichen Felder aus und weisen Sie das Projekt einem Kunden und einer Firma zu. 
+                  Nach dem Speichern können Sie weitere Details wie Meilensteine, Anhänge und Geo-Informationen hinzufügen.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-2" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Wie funktioniert die Strecken- und Flächenmessung auf der Karte?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  In der Geo-Ansicht können Sie über die Werkzeugleiste am oberen Rand die Messfunktion aktivieren. 
+                  Wählen Sie zwischen Streckenmessung (Lineal-Symbol) und Flächenmessung (Polygon-Symbol). 
+                  Klicken Sie dann nacheinander auf die Punkte auf der Karte, um die Strecke oder Fläche zu definieren. 
+                  Zum Abschluss der Messung doppelklicken Sie auf den letzten Punkt. Die berechnete Länge oder Fläche wird 
+                  dann angezeigt und kann zum Projekt gespeichert werden.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-3" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Kann ich Bilder von Straßenschäden automatisch klassifizieren lassen?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  Ja, die App bietet eine KI-gestützte Bildanalyse für Straßenschäden. Navigieren Sie zum Abschnitt 
+                  "Straßenschäden" in einem Projekt und laden Sie ein Bild hoch oder nehmen Sie direkt eines mit der 
+                  Kamera auf. Die KI analysiert automatisch das Bild und schlägt eine Klassifizierung des Schadens vor. 
+                  Sie können das Ergebnis überprüfen und bei Bedarf korrigieren, bevor Sie es speichern.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-4" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Wie erstelle ich ein Bautagebuch?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  Bautagebücher können über den Abschnitt "Bautagebuch" in der Projektansicht erstellt werden. 
+                  Klicken Sie auf "Neuer Eintrag" und füllen Sie das Formular mit Datum, Wetterbedingungen, 
+                  ausgeführten Arbeiten und eingesetztem Personal aus. Sie können auch Fotos anhängen und die 
+                  Spracheingabe nutzen, um Text zu diktieren. Alle Einträge werden chronologisch gespeichert und 
+                  können später als PDF exportiert werden.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-5" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Wie funktioniert das Lizenzmodell und die Abrechnung?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  Die Bau-Structura App wird als Abonnement-Dienst angeboten. Es gibt verschiedene Tarife, die sich in der Anzahl 
+                  der verwaltbaren Projekte, Benutzer und verfügbaren Funktionen unterscheiden. Die Abrechnung erfolgt monatlich 
+                  oder jährlich über unser Zahlungssystem. Sie können Ihren aktuellen Tarif und Rechnungen im Bereich 
+                  "Abonnement" unter den Kontoeinstellungen einsehen. Bei Fragen zur Abrechnung kontaktieren Sie bitte unseren Support.
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="item-6" className="border rounded-md px-4">
+                <AccordionTrigger className="text-left font-medium py-4">
+                  Kann ich die App auch offline nutzen?
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 text-gray-600">
+                  Die Bau-Structura App bietet eingeschränkte Offline-Funktionalität. Sie können bereits geladene Projekte 
+                  und Daten auch ohne Internetverbindung ansehen. Das Erfassen neuer Daten, wie Bautagebucheinträge oder 
+                  Fotos, ist ebenfalls offline möglich - diese werden zwischengespeichert und automatisch synchronisiert, 
+                  sobald wieder eine Internetverbindung besteht. Beachten Sie, dass Kartenfunktionen offline nur eingeschränkt 
+                  oder gar nicht verfügbar sind.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+          
+          {/* Kontakt & Support */}
+          <div id="kontakt" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2 flex items-center gap-2">
+              <Phone className="h-5 w-5 text-primary" />
+              Kontakt & Support
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    E-Mail Support
+                  </CardTitle>
+                  <CardDescription>
+                    Unser Support-Team steht für alle Fragen zur Verfügung
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm">
+                    Bei technischen Fragen, Problemen mit der Anwendung oder Anregungen zur Verbesserung 
+                    können Sie uns jederzeit per E-Mail kontaktieren. Wir bemühen uns, alle Anfragen 
+                    innerhalb von 24 Stunden zu beantworten.
+                  </p>
+                  
+                  <div className="p-3 bg-gray-50 rounded-md flex items-center justify-between">
+                    <span className="font-medium">support@bau-structura.de</span>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      E-Mail senden
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-primary" />
+                    Telefonischer Support
+                  </CardTitle>
+                  <CardDescription>
+                    Direkte Hilfe bei dringenden Anliegen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm">
+                    Für dringende Fälle und komplexere Anliegen bieten wir auch telefonischen Support an. 
+                    Unsere Hotline ist von Montag bis Freitag zwischen 9:00 und 17:00 Uhr (CET) besetzt.
+                  </p>
+                  
+                  <div className="p-3 bg-gray-50 rounded-md">
+                    <p className="font-medium">+49 (0) 89 / 123 456 789</p>
+                    <p className="text-xs text-gray-500 mt-1">Mo-Fr 9:00-17:00 Uhr (CET)</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Separator className="my-8" />
+            
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-4">Fehlermeldung einreichen</h3>
+              <p className="text-gray-600 mb-4">
+                Haben Sie einen Fehler in der Anwendung entdeckt? Helfen Sie uns, die Bau-Structura App zu verbessern, 
+                indem Sie uns detaillierte Informationen zum aufgetretenen Problem mitteilen.
+              </p>
+              
+              <div className="flex justify-end">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Fehlerbericht erstellen
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
