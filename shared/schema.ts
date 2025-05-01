@@ -110,6 +110,10 @@ export const projects = pgTable("tblproject", {
   projectStopstartdate: date("project_stopstartdate"),
   projectStopenddate: date("project_stopenddate"),
   projectNotes: text("project_notes"),
+  // Geo-Informationen
+  projectLatitude: numeric("project_latitude", { precision: 10, scale: 7 }),
+  projectLongitude: numeric("project_longitude", { precision: 10, scale: 7 }),
+  projectAddress: text("project_address"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
