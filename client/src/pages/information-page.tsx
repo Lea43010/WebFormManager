@@ -108,6 +108,7 @@ const belastungsklassen = [
 // Definiere die Inhaltsabschnitte für das Seitenmenü
 const sections = [
   { id: "benutzerhandbuch", title: "Benutzerhandbuch" },
+  { id: "datenqualitaet", title: "Datenqualität" },
   { id: "datenarchitektur", title: "Datenarchitektur" },
   { id: "externe-dienste", title: "Externe Geoportale und Dienste" },
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
