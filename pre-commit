@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Farben für eine bessere Ausgabe
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Bau-Structura Pre-Commit-Hook${NC}"
+echo -e "${YELLOW}Überprüfe Code-Qualität vor dem Commit...${NC}"
+
+# Bestimme geänderte Dateien
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx)$')
+
+if [[ "$STAGED_FILES" = "" ]]; then
+  echo -e "${GREEN}✓ Keine relevanten Dateien im Staging-Bereich.${NC}"
+  exit 0
+fi
+
+# Speichern der aktuellen Dateien für späteren Checkout
+for FILE in $STAGED_FILES; do
+  if [[ -f "$FILE" ]]; then
+    git show ":$FILE" > "$FILE.lint-tmp"
+  fi
+done
+
+# TypeScript-Überprüfung
+echo -e "${YELLOW}Führe TypeScript-Typprüfung durch...${NC}"
+npm run check
+
+if [[ $? -ne 0 ]]; then
+  echo -e "${RED}✗ TypeScript-Fehler gefunden. Bitte behebe die oben aufgeführten Fehler.${NC}"
+  
+  # Wiederherstellen der Originaldateien
+  for FILE in $STAGED_FILES; do
+    if [[ -f "$FILE.lint-tmp" ]]; then
+      mv "$FILE.lint-tmp" "$FILE"
+    fi
+  done
+  
+  exit 1
+fi
+
+# ESLint-Überprüfung
+echo -e "${YELLOW}Führe ESLint-Überprüfung durch...${NC}"
+npx eslint --cache $STAGED_FILES
+
+if [[ $? -ne 0 ]]; then
+  echo -e "${RED}✗ ESLint-Fehler gefunden. Bitte behebe die Fehler und commitre erneut.${NC}"
+  
+  # Wiederherstellen der Originaldateien
+  for FILE in $STAGED_FILES; do
+    if [[ -f "$FILE.lint-tmp" ]]; then
+      mv "$FILE.lint-tmp" "$FILE"
+    fi
+  done
+  
+  exit 1
+fi
+
+# JSX-spezifische Fehlerüberprüfung
+echo -e "${YELLOW}Führe JSX-spezifische Überprüfung durch...${NC}"
+
+# Prüfe auf verschachtelte <a>-Tags in .tsx-Dateien
+NESTED_A_TAGS=$(grep -r --include="*.tsx" "<a.*>.*<a" $STAGED_FILES 2>/dev/null || echo "")
+if [[ "$NESTED_A_TAGS" != "" ]]; then
+  echo -e "${RED}✗ Verschachtelte <a>-Tags gefunden:${NC}"
+  echo "$NESTED_A_TAGS"
+  
+  # Wiederherstellen der Originaldateien
+  for FILE in $STAGED_FILES; do
+    if [[ -f "$FILE.lint-tmp" ]]; then
+      mv "$FILE.lint-tmp" "$FILE"
+    fi
+  done
+  
+  exit 1
+fi
+
+# Prüfe auf häufige Fehler: fehlende key-Props in map()-Funktionen
+MAP_WITHOUT_KEY=$(grep -E '\.map\(\([^)]*\)|\.map\(\s*[^)]*\s*\)' $STAGED_FILES | grep -v "key=" || echo "")
+if [[ "$MAP_WITHOUT_KEY" != "" ]]; then
+  echo -e "${YELLOW}⚠ Potenzielle fehlende key-Props in map()-Funktionen gefunden:${NC}"
+  echo "$MAP_WITHOUT_KEY"
+  echo ""
+  echo -e "${YELLOW}Warnung: Stelle sicher, dass in allen Listen-Renderings key-Props verwendet werden.${NC}"
+  # Kein Abbruch, nur Warnung
+fi
+
+# Erfolgreich
+echo -e "${GREEN}✓ Code-Qualitätsprüfungen bestanden.${NC}"
+
+# Aufräumen
+for FILE in $STAGED_FILES; do
+  if [[ -f "$FILE.lint-tmp" ]]; then
+    rm "$FILE.lint-tmp"
+  fi
+done
+
+exit 0

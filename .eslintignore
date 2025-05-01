@@ -1,0 +1,45 @@
+# Build und Ausgabeverzeichnisse
+node_modules
+dist
+build
+public
+
+# Konfigurationsdateien
+.replit
+.gitignore
+.env
+.env.*
+*.lock
+*.log
+
+# Generierte Dateien
+*.d.ts
+*.js.map
+
+# Nichtcodebasierte Dateien
+*.md
+*.txt
+*.json
+
+# Von anderen Tools generierte Dateien
+coverage
+.vscode
+
+# Datenverzeichnisse
+data
+uploads
+temp
+backups
+backup
+
+# Paketmanagerdateien
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Spezifische Anwendungsdateien ausschließen
+.git
+.github
+public/documentation
+attached_assets
