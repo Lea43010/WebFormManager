@@ -869,18 +869,16 @@ export default function GeoMapPage() {
                 svg.style.top = '0';
               });
               
-              // Spezifisch die Polylinien-SVG-Elemente verbessern
+              // Polylinien für den Export ausblenden - Nutzeranforderung: Nur Marker, keine Verbindungslinien
               const polylinePaths = mapContainer.querySelectorAll('.leaflet-overlay-pane path');
               polylinePaths.forEach(path => {
-                path.setAttribute('stroke-width', '4');
-                path.setAttribute('stroke', '#0066ff');
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke-opacity', '0.7');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('stroke-linejoin', 'round');
-                path.setAttribute('vector-effect', 'non-scaling-stroke');
-                // Als wichtig markieren, damit es beim Export nicht ignoriert wird
-                path.setAttribute('data-html2canvas-important', 'true');
+                // Polylinien ausblenden statt zu verbessern
+                path.setAttribute('stroke-opacity', '0');
+                path.setAttribute('fill-opacity', '0');
+                path.style.display = 'none';
+                path.style.visibility = 'hidden';
+                // Markieren, dass es beim Export ignoriert werden soll
+                path.setAttribute('data-html2canvas-ignore', 'true');
               });
             }, 10);
           }
