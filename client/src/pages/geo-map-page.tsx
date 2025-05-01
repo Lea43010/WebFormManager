@@ -9,7 +9,7 @@ import {
   Map as MapIcon, ArrowLeft, MapPin, Camera,
   Layers, Calculator, Download, AlertCircle, Route,
   Search, Loader2, HelpCircle, Pencil, Trash2, X, Building,
-  Briefcase
+  Briefcase, Plus
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -993,48 +993,119 @@ export default function GeoMapPage() {
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      {/* Projekt-Verbindung */}
+                      {/* Projekt-Verbindung mit Dropdown */}
                       <div className="flex items-center gap-2">
-                        {selectedProject ? (
+                        {isLoadingProjects ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Projekte werden geladen...</span>
+                          </div>
+                        ) : geoProjects && geoProjects.length > 0 ? (
                           <div className="flex gap-2 items-center">
-                            <div className="text-sm font-medium bg-muted px-2 py-1 rounded-md flex items-center gap-1">
-                              <Briefcase className="h-4 w-4" />
-                              {selectedProject.projectName || `Projekt #${selectedProject.id}`}
-                            </div>
-                            
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => {
-                                // Speichern der aktuellen Marker-Position im Projekt
-                                if (markers.length > 0 && selectedProject) {
-                                  const firstMarker = markers[0];
-                                  const address = 
-                                    (firstMarker.strasse ? `${firstMarker.strasse}, ` : '') +
-                                    (firstMarker.plz && firstMarker.ort ? `${firstMarker.plz} ${firstMarker.ort}` : '');
+                            <Select
+                              value={selectedProject ? String(selectedProject.id) : ""}
+                              onValueChange={(value) => {
+                                if (value === "new-project") {
+                                  window.location.href = "/projects";
+                                  return;
+                                }
+                                
+                                const selected = geoProjects.find((p: ProjectData) => p.id === parseInt(value));
+                                if (selected) {
+                                  setSelectedProject(selected);
                                   
-                                  updateProjectMutation.mutate({
-                                    projectId: selectedProject.id,
-                                    projectLatitude: firstMarker.position[0],
-                                    projectLongitude: firstMarker.position[1],
-                                    projectAddress: address
-                                  });
+                                  // Marker für das Projekt erstellen
+                                  if (selected.projectLatitude && selected.projectLongitude) {
+                                    const projectMarker: MarkerInfo = {
+                                      position: [selected.projectLatitude, selected.projectLongitude],
+                                      belastungsklasse: "Bk32", // Standardwert
+                                      name: selected.projectName || `Projekt #${selected.id}`,
+                                      notes: `Projekt: ${selected.projectName || `#${selected.id}`}`,
+                                    };
+                                    
+                                    // Adressinformationen hinzufügen, wenn vorhanden
+                                    if (selected.projectAddress) {
+                                      const addressParts = selected.projectAddress.split(", ");
+                                      if (addressParts.length >= 2) {
+                                        projectMarker.strasse = addressParts[0];
+                                        
+                                        const plzStadt = addressParts[1].split(" ");
+                                        if (plzStadt.length >= 2) {
+                                          projectMarker.plz = plzStadt[0];
+                                          projectMarker.ort = plzStadt.slice(1).join(" ");
+                                        }
+                                      }
+                                    }
+                                    
+                                    // Marker setzen und Karte zur Position zentrieren
+                                    setMarkers([projectMarker]);
+                                    
+                                    // Mit kleiner Verzögerung zur Position zentrieren (warten bis Map geladen ist)
+                                    setTimeout(() => {
+                                      if (mapRef.current) {
+                                        mapRef.current.setView([selected.projectLatitude, selected.projectLongitude], 15);
+                                      }
+                                    }, 500);
+                                  }
                                 }
                               }}
-                              disabled={updateProjectMutation.isPending || markers.length === 0}
                             >
-                              {updateProjectMutation.isPending ? (
-                                <>
-                                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                  Speichern...
-                                </>
-                              ) : (
-                                <>
-                                  <svg className="mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                                  Speichern
-                                </>
-                              )}
-                            </Button>
+                              <SelectTrigger className="min-w-[200px]">
+                                <SelectValue placeholder="Projekt auswählen" />
+                              </SelectTrigger>
+                              <SelectContent position="popper" sideOffset={5} className="z-50">
+                                {geoProjects.map((project: ProjectData) => (
+                                  <SelectItem key={project.id} value={String(project.id)}>
+                                    <div className="flex items-center gap-1">
+                                      <Briefcase className="h-3.5 w-3.5 mr-1" />
+                                      {project.projectName || `Projekt #${project.id}`}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="new-project">
+                                  <div className="flex items-center gap-1 text-primary">
+                                    <Plus className="h-3.5 w-3.5 mr-1" />
+                                    Neues Projekt
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            {selectedProject && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                  // Speichern der aktuellen Marker-Position im Projekt
+                                  if (markers.length > 0 && selectedProject) {
+                                    const firstMarker = markers[0];
+                                    const address = 
+                                      (firstMarker.strasse ? `${firstMarker.strasse}, ` : '') +
+                                      (firstMarker.plz && firstMarker.ort ? `${firstMarker.plz} ${firstMarker.ort}` : '');
+                                    
+                                    updateProjectMutation.mutate({
+                                      projectId: selectedProject.id,
+                                      projectLatitude: firstMarker.position[0],
+                                      projectLongitude: firstMarker.position[1],
+                                      projectAddress: address
+                                    });
+                                  }
+                                }}
+                                disabled={updateProjectMutation.isPending || markers.length === 0}
+                              >
+                                {updateProjectMutation.isPending ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                    Speichern...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="mr-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    Speichern
+                                  </>
+                                )}
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           <TooltipProvider>
@@ -1049,11 +1120,11 @@ export default function GeoMapPage() {
                                   }}
                                 >
                                   <Briefcase className="mr-2 h-4 w-4" />
-                                  Projekt wählen
+                                  Projekt erstellen
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Zum Speichern der Koordinaten mit einem Projekt verbinden</p>
+                                <p>Sie benötigen ein Projekt zum Speichern der Geo-Informationen</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
