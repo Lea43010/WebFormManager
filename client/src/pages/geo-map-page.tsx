@@ -630,9 +630,9 @@ export default function GeoMapPage() {
       
       setExportProgress(50);
       
-      // Ein neues PDF-Dokument erstellen
+      // Ein neues PDF-Dokument erstellen (auf Hochformat umstellen)
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
       });
       
@@ -640,16 +640,17 @@ export default function GeoMapPage() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Canvas-Seitenverhältnis beibehalten
+      // Canvas-Seitenverhältnis beibehalten, aber auf 70% der ursprünglichen Größe reduzieren
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight);
+      const sizeReduction = 0.7; // Karte auf 70% verkleinern
+      const ratio = Math.min(pdfWidth / canvasWidth, pdfHeight / canvasHeight) * sizeReduction;
       const imgWidth = canvasWidth * ratio;
       const imgHeight = canvasHeight * ratio;
       
       // Bild zur Mitte der Seite ausrichten
       const x = (pdfWidth - imgWidth) / 2;
-      const y = (pdfHeight - imgHeight) / 2;
+      const y = (pdfHeight - imgHeight) / 3; // Etwas höher auf der Seite platzieren
       
       // Bild aus dem Canvas in das PDF einfügen
       const imgData = canvas.toDataURL('image/png');
@@ -697,6 +698,14 @@ export default function GeoMapPage() {
       }
       
       setExportProgress(95);
+      
+      // Projekttitel und Datum zum PDF hinzufügen
+      pdf.setFontSize(14);
+      pdf.text('Bau - Structura: Straßenplanung', 14, 15);
+      pdf.setFontSize(10);
+      const currentDate = new Date().toLocaleDateString('de-DE');
+      pdf.text(`Erstellt am: ${currentDate}`, 14, 22);
+      pdf.text(`Belastungsklasse: ${selectedBelastungsklasse}`, 14, 28);
       
       // PDF speichern
       pdf.save('strassenplanung.pdf');
