@@ -843,53 +843,98 @@ export default function GeoMapPage() {
         year: 'numeric'
       });
       
-      // Zuerst die Karte als Canvas rendern mit verbesserten Einstellungen für SVG-Elemente
-      const canvas = await html2canvas(mapContainerRef.current, {
-        scale: 2, // Höhere Qualität
-        useCORS: true, // Für Tile-Layer von externen Quellen
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-        imageTimeout: 0, // Keine Zeitbegrenzung für Bilder
-        onclone: (documentClone) => {
-          // Zusätzliche Vorbereitungen, damit SVG-Elemente (Polylinien) korrekt gerendert werden
-          const mapContainer = documentClone.querySelector('.leaflet-container');
-          if (mapContainer) {
-            // Karte vor dem Export um 10ms pausieren, damit alle Layer korrekt geladen werden
-            setTimeout(() => {
-              // Sicherstellen, dass alle SVG-Elemente vollständig geladen sind
-              const svgElements = mapContainer.querySelectorAll('svg');
-              svgElements.forEach(svg => {
-                svg.setAttribute('width', '100%');
-                svg.setAttribute('height', '100%');
-                svg.style.width = '100%';
-                svg.style.height = '100%';
-                svg.style.position = 'absolute';
-                svg.style.left = '0';
-                svg.style.top = '0';
-              });
-              
-              // Polylinien für den Export ausblenden - Nutzeranforderung: Nur Marker, keine Verbindungslinien
-              const polylinePaths = mapContainer.querySelectorAll('.leaflet-overlay-pane path');
-              polylinePaths.forEach(path => {
-                // Polylinien ausblenden statt zu verbessern
-                path.setAttribute('stroke-opacity', '0');
-                path.setAttribute('fill-opacity', '0');
-                path.style.display = 'none';
-                path.style.visibility = 'hidden';
-                // Markieren, dass es beim Export ignoriert werden soll
-                path.setAttribute('data-html2canvas-ignore', 'true');
-              });
-            }, 10);
+      // Einen künstlichen Screenshot erstellen, der nur Marker ohne Verbindungslinien zeigt
+      setExportProgress(20);
+      
+      // Canvas-Größe festlegen (in etwa DIN A4-Proportionen)
+      const width = 800;
+      const height = 500;
+      
+      // Canvas erstellen
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        console.error("Canvas-Kontext konnte nicht erstellt werden");
+        setExportingPDF(false);
+        setExportProgress(0);
+        return;
+      }
+      
+      // Einfachen Kartenhintergrund zeichnen
+      ctx.fillStyle = '#f0f0f0'; // Hellgrauer Hintergrund
+      ctx.fillRect(0, 0, width, height);
+      
+      // Hellgrauen "Stadtbereich" zeichnen
+      ctx.fillStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.ellipse(width/2, height/2, width/3, height/3, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Horizontale "Straße" zeichnen
+      ctx.strokeStyle = '#d0d0d0';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(50, height/2);
+      ctx.lineTo(width-50, height/2);
+      ctx.stroke();
+      
+      // Vertikale "Straße" zeichnen
+      ctx.beginPath();
+      ctx.moveTo(width/2, 50);
+      ctx.lineTo(width/2, height-50);
+      ctx.stroke();
+      
+      // Die Marker auf dem Canvas platzieren, aber KEINE Verbindungslinien
+      if (markers.length > 0) {
+        const markerRadius = 15;
+        
+        // Berechne optimale Positionen für die Marker
+        const getPositionForIndex = (index: number, total: number) => {
+          // Bei einem einzigen Marker: in die Mitte platzieren
+          if (total === 1) {
+            return { x: width / 2, y: height / 2 };
           }
-        },
-        ignoreElements: (element) => {
-          // Nur Elemente ignorieren, die wirklich ignoriert werden sollen
-          return element.classList && 
-                 (element.classList.contains('leaflet-control-container') ||
-                  element.classList.contains('leaflet-control'));
-        }
-      });
+          
+          // Zwei Marker: horizontal nebeneinander platzieren
+          if (total === 2) {
+            const spacing = width / 3;
+            return { 
+              x: width / 2 + (index === 0 ? -spacing : spacing), 
+              y: height / 2 
+            };
+          }
+          
+          // Mehr als zwei Marker: auf einem Kreis anordnen
+          const angle = (2 * Math.PI * index) / total;
+          const radius = Math.min(width, height) / 3;
+          
+          const x = width / 2 + radius * Math.cos(angle);
+          const y = height / 2 + radius * Math.sin(angle);
+          
+          return { x, y };
+        };
+        
+        // Marker zeichnen
+        markers.forEach((marker, index) => {
+          const { x, y } = getPositionForIndex(index, markers.length);
+          
+          // Orangefarbener Kreis für Marker
+          ctx.beginPath();
+          ctx.arc(x, y, markerRadius, 0, 2 * Math.PI);
+          ctx.fillStyle = '#ff6600'; // Orange Farbe
+          ctx.fill();
+          
+          // Weißer Text (Nummer) im Marker
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText((index + 1).toString(), x, y);
+        });
+      }
       
       setExportProgress(40);
       
