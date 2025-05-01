@@ -507,7 +507,7 @@ export default function GeoMapPage() {
   const [customRoadWidth, setCustomRoadWidth] = useState<number>(5.0);
   const [roadWidth, setRoadWidth] = useState<number>(roadWidthPresets.Landstraße);
   const [editMarker, setEditMarker] = useState<MarkerInfo | null>(null);
-  const [currentEditIndex, setCurrentEditIndex] = useState<number | null>(null);
+  const [currentEditIndex, setCurrentEditIndex] = useState<number>(-1);
   const [showExampleImages, setShowExampleImages] = useState<boolean>(false);
   const [bayernTabValue, setBayernTabValue] = useState<string>("strassenplanung");
   const [printLoading, setPrintLoading] = useState<boolean>(false);
@@ -574,7 +574,7 @@ export default function GeoMapPage() {
   
   // Callback für das Aktualisieren eines Markers
   const handleUpdateMarker = useCallback(() => {
-    if (editMarker && currentEditIndex !== null) {
+    if (editMarker && currentEditIndex !== -1) {
       setMarkers(prev => {
         const newMarkers = [...prev];
         newMarkers[currentEditIndex] = editMarker;
