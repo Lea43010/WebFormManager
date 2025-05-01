@@ -942,7 +942,7 @@ export default function GeoMapPage() {
   }, [markers]);
 
   return (
-    <div className="container py-6 lg:py-10">
+    <div className="container mx-auto py-6 lg:py-10">
       {/* Header mit Zurück-Button */}
       <div className="flex justify-between items-center mb-6">
         <Link href="/" className="flex items-center text-muted-foreground hover:text-primary transition-colors">
@@ -1231,7 +1231,7 @@ export default function GeoMapPage() {
               </div>
               
               {/* Karte in der Mitte */}
-              <Card>
+              <Card className="max-w-4xl mx-auto">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-center">
                     <div>
@@ -1256,7 +1256,7 @@ export default function GeoMapPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 pt-0">
-                  <div className="h-[60vh] border rounded-md overflow-hidden relative mx-auto" ref={mapContainerRef}>
+                  <div className="h-[50vh] border rounded-md overflow-hidden relative mx-auto" ref={mapContainerRef}>
                     {exportingPDF && (
                       <div className="absolute inset-0 z-40 flex flex-col justify-center items-center bg-background/80">
                         <h3 className="mb-2 font-semibold">PDF wird erstellt...</h3>
@@ -1380,7 +1380,7 @@ export default function GeoMapPage() {
               </Card>
               
               {/* Untere Karte - Ergebnisse/Auswertung */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {/* Belastungsklasse-Info */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -1556,7 +1556,7 @@ export default function GeoMapPage() {
               
               {/* Materialkostentabelle */}
               {markers.length > 1 && (
-                <Card>
+                <Card className="max-w-4xl mx-auto">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-center">
                       <div>
@@ -1608,7 +1608,7 @@ export default function GeoMapPage() {
             
             {/* Marker-Bearbeitungsformular */}
             {editMarker && currentEditIndex !== -1 && (
-              <Card className="mt-4">
+              <Card className="mt-4 max-w-4xl mx-auto">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl">Marker bearbeiten</CardTitle>
