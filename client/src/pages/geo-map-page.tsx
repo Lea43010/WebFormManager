@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { 
   Map as MapIcon, ArrowLeft, MapPin, Camera,
   Layers, Calculator, Download, AlertCircle, Route,
-  Search, Loader2, HelpCircle, Pencil, Trash2, X, Building
+  Search, Loader2, HelpCircle, Pencil, Trash2, X, Building,
+  Briefcase
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,8 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Link } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 // Direktes Mapbox-Token für zuverlässiges Laden
 const MAPBOX_TOKEN = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
@@ -489,6 +492,11 @@ function MapControl({ position }: MapControlProps) {
 
 // Hauptkomponente
 export default function GeoMapPage() {
+  // URL-Parameter und Navigation
+  const [location, setLocation] = useLocation();
+  const params = new URLSearchParams(location.split("?")[1] || "");
+  const projectId = params.get("projectId");
+  
   // Zustandsvariablen für die Karte
   const [markers, setMarkers] = useState<MarkerInfo[]>([]);
   const [selectedBelastungsklasse, setSelectedBelastungsklasse] = useState<string>("Bk32");
@@ -506,11 +514,61 @@ export default function GeoMapPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   
+  // Projektzustände
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  
   // PDF Export Status
   const [exportingPDF, setExportingPDF] = useState<boolean>(false);
   const [exportProgress, setExportProgress] = useState<number>(0);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  
+  // Projekte mit Geo-Koordinaten laden
+  const { data: geoProjects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['/api/geo-projects'],
+    queryFn: async () => {
+      const res = await fetch('/api/geo-projects');
+      if (!res.ok) throw new Error('Fehler beim Laden der Projekte mit Geo-Koordinaten');
+      return res.json();
+    },
+    enabled: bayernTabValue === "strassenplanung", // Nur laden, wenn auf dem Straßenplanungs-Tab
+  });
+  
+  // Spezifisches Projekt laden
+  const { data: project, isLoading: isLoadingProject } = useQuery({
+    queryKey: ['/api/geo-projects', projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const res = await fetch(`/api/geo-projects/${projectId}`);
+      if (!res.ok) throw new Error(`Fehler beim Laden des Projekts mit ID ${projectId}`);
+      return res.json();
+    },
+    enabled: !!projectId, // Nur laden, wenn eine Projekt-ID vorhanden ist
+  });
+  
+  // Mutation zum Aktualisieren der Projekt-Koordinaten
+  const updateProjectMutation = useMutation({
+    mutationFn: async (data: { 
+      projectId: number, 
+      projectLatitude: number, 
+      projectLongitude: number,
+      projectAddress: string
+    }) => {
+      const response = await apiRequest(
+        'PUT', 
+        `/api/geo-projects/${data.projectId}`, 
+        data
+      );
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Beim Erfolg den Cache invalidieren, um aktualisierte Daten zu laden
+      queryClient.invalidateQueries({ queryKey: ['/api/geo-projects'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/geo-projects', projectId] });
+      setHasUnsavedChanges(false);
+    },
+  });
   
   // Berechnen der Strecke und Materialkosten
   const { total, segments } = calculateRouteDistances(markers);
@@ -1098,7 +1156,7 @@ export default function GeoMapPage() {
                       center={[48.1351, 11.5820]} // München als Standard
                       zoom={13} 
                       style={{ height: '100%', width: '100%' }}
-                      whenCreated={(map) => { mapRef.current = map; }}
+                      ref={mapRef}
                     >
                       <LayersControl position="topright">
                         <LayersControl.BaseLayer checked name="OpenStreetMap">

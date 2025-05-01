@@ -35,6 +35,7 @@ import { checkDatabaseStructureHandler, checkDatabaseStructure } from "./db-stru
 import { dataQualityChecker } from "./data-quality-checker";
 import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
 import { ZodError, z } from "zod";
+import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
@@ -106,6 +107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Neue Backup-API-Routen einrichten
   registerBackupApiRoutes(app);
+  
+  // Geo-Projekte-API-Routen einrichten
+  app.use(geoProjectsRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
