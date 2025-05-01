@@ -87,16 +87,10 @@ const navItems: NavItem[] = [
     tooltip: "Abonnement verwalten und Zahlungsinformationen",
   },
   {
-    title: "Informationen",
+    title: "Hilfe & Info",
     href: "/information",
     icon: Info,
-    tooltip: "Allgemeine Informationen zur App",
-  },
-  {
-    title: "Hilfe & Dokumentation",
-    href: "/help",
-    icon: HelpCircle,
-    tooltip: "Hilfe, Benutzerhandbücher und Dokumentation",
+    tooltip: "Hilfe, Dokumentation und Informationen zur App",
   },
   // Nutzerverwaltung wurde in den Admin-Bereich verschoben
   {

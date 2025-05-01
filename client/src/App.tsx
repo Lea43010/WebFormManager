@@ -70,7 +70,13 @@ function Router() {
       <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
-      <ProtectedRoute path="/help" component={HelpPage} />
+      <Route path="/help">
+        {() => {
+          // Weiterleitung von /help zu /information
+          window.location.href = '/information';
+          return null;
+        }}
+      </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route component={NotFound} />

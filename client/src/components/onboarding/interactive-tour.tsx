@@ -284,18 +284,18 @@ const getTourSteps = (): Step[] => [
         <div style={tourStyles.badge}>
           <FileText size={14} style={{ marginRight: '4px' }} /> Bauanleitung
         </div>
-        <h3 style={tourStyles.tooltipTitle}>Hilfe & Dokumentation</h3>
+        <h3 style={tourStyles.tooltipTitle}>Hilfe & Info</h3>
         <div style={tourStyles.tooltipContent}>
           <p>
-            Wie eine Bauanleitung finden Sie hier alle Informationen und Dokumentationen
+            Wie eine Bauanleitung finden Sie hier alle Informationen, Hilfe und Dokumentationen
             zur Nutzung der Anwendung. Von der Planungsphase bis zur Fertigstellung Ihres Projekts.
           </p>
         </div>
       </div>
     ),
     placement: 'right',
-    target: '[data-tour="help-link"]',
-    title: 'Hilfe',
+    target: '[data-tour="information-link"]',
+    title: 'Hilfe & Info',
   },
   {
     content: (
