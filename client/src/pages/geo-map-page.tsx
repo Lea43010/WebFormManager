@@ -1100,7 +1100,7 @@ export default function GeoMapPage() {
                         <SelectTrigger id="strassentyp">
                           <SelectValue placeholder="Straßentyp wählen" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" sideOffset={5} className="z-50">
                           <SelectItem value="Autobahn">Autobahn</SelectItem>
                           <SelectItem value="Bundesstraße">Bundesstraße</SelectItem>
                           <SelectItem value="Landstraße">Landstraße</SelectItem>
@@ -1117,7 +1117,7 @@ export default function GeoMapPage() {
                         <SelectTrigger id="belastungsklasse">
                           <SelectValue placeholder="Belastungsklasse wählen" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" sideOffset={5} className="z-50">
                           <SelectItem value="Bk100">
                             <span className="font-medium">Bk100</span> - Sehr starke Beanspruchung
                           </SelectItem>
@@ -1256,7 +1256,7 @@ export default function GeoMapPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 pt-0">
-                  <div className="h-[50vh] border rounded-md overflow-hidden relative" ref={mapContainerRef}>
+                  <div className="h-[60vh] border rounded-md overflow-hidden relative mx-auto" ref={mapContainerRef}>
                     {exportingPDF && (
                       <div className="absolute inset-0 z-40 flex flex-col justify-center items-center bg-background/80">
                         <h3 className="mb-2 font-semibold">PDF wird erstellt...</h3>
