@@ -853,20 +853,43 @@ export default function GeoMapPage() {
         imageTimeout: 0, // Keine Zeitbegrenzung für Bilder
         onclone: (documentClone) => {
           // Zusätzliche Vorbereitungen, damit SVG-Elemente (Polylinien) korrekt gerendert werden
-          const mapContainer = documentClone.querySelector('.leaflet-pane');
+          const mapContainer = documentClone.querySelector('.leaflet-container');
           if (mapContainer) {
-            // Sicherstellen, dass alle SVG-Elemente vollständig geladen sind
-            const svgElements = mapContainer.querySelectorAll('svg');
-            svgElements.forEach(svg => {
-              svg.setAttribute('width', '100%');
-              svg.setAttribute('height', '100%');
-              svg.style.width = '100%';
-              svg.style.height = '100%';
-              svg.style.position = 'absolute';
-              svg.style.left = '0';
-              svg.style.top = '0';
-            });
+            // Karte vor dem Export um 10ms pausieren, damit alle Layer korrekt geladen werden
+            setTimeout(() => {
+              // Sicherstellen, dass alle SVG-Elemente vollständig geladen sind
+              const svgElements = mapContainer.querySelectorAll('svg');
+              svgElements.forEach(svg => {
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.style.position = 'absolute';
+                svg.style.left = '0';
+                svg.style.top = '0';
+              });
+              
+              // Spezifisch die Polylinien-SVG-Elemente verbessern
+              const polylinePaths = mapContainer.querySelectorAll('.leaflet-overlay-pane path');
+              polylinePaths.forEach(path => {
+                path.setAttribute('stroke-width', '4');
+                path.setAttribute('stroke', '#0066ff');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-opacity', '0.7');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('vector-effect', 'non-scaling-stroke');
+                // Als wichtig markieren, damit es beim Export nicht ignoriert wird
+                path.setAttribute('data-html2canvas-important', 'true');
+              });
+            }, 10);
           }
+        },
+        ignoreElements: (element) => {
+          // Nur Elemente ignorieren, die wirklich ignoriert werden sollen
+          return element.classList && 
+                 (element.classList.contains('leaflet-control-container') ||
+                  element.classList.contains('leaflet-control'));
         }
       });
       
