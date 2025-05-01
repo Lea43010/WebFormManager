@@ -121,10 +121,10 @@ export default function HelpPage() {
                 
                 <AccordionItem value="faq-2">
                   <AccordionTrigger>
-                    Wie funktioniert die Datenqualitätsprüfung?
+                    Wo finde ich Informationen zur Datenqualitätsprüfung?
                   </AccordionTrigger>
                   <AccordionContent>
-                    Die Datenqualitätsprüfung analysiert Ihre Datenbanktabellen auf Vollständigkeit, Konsistenz und potenzielle Probleme. Navigieren Sie zum Datenqualitäts-Dashboard, wählen Sie eine Tabelle aus und starten Sie die Prüfung. Detaillierte Berichte werden automatisch generiert und können direkt im Browser angezeigt werden.
+                    Detaillierte Informationen zum Datenqualitätsmodul finden Sie im Bereich "Hilfe & Info" unter dem Abschnitt "Datenqualität". Dort stehen Ihnen umfassende Dokumentationen zur Verfügung, die erklären, wie Sie Datenqualitätsprüfungen durchführen, Berichte interpretieren und die Qualität Ihrer Daten verbessern können.
                   </AccordionContent>
                 </AccordionItem>
                 
