@@ -956,36 +956,43 @@ export default function GeoMapPage() {
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
-      // Polylinien direkt im PDF nachzeichnen, da sie im Canvas möglicherweise nicht korrekt erfasst wurden
+      // Manuelle Zeichnung der Verbindungslinien im PDF
       if (markers.length > 1) {
-        // Zunächst die Koordinaten auf die PDF-Dimension transformieren
-        const transformCoordinates = (position: [number, number]): [number, number] => {
-          // Map Bounds abrufen
-          const bounds = map.current?.getBounds();
-          if (!bounds) return [0, 0];
+        try {
+          // Polylinien im PDF zeichnen
+          pdf.setDrawColor(0, 102, 255); // #0066ff
+          pdf.setLineWidth(0.75); // Angepasste Linienbreite für PDF
           
-          const northEast = bounds.getNorthEast();
-          const southWest = bounds.getSouthWest();
+          // Einfacher Ansatz: Zeichne die Verbindungslinien als gerade Linien zwischen den Markern
+          // Dies verteilt die Marker horizontal gleichmäßig über die Karte
           
-          // Relativen Anteil der Position innerhalb der Bounds berechnen
-          const relativeX = (position[1] - southWest.lng) / (northEast.lng - southWest.lng);
-          const relativeY = (northEast.lat - position[0]) / (northEast.lat - southWest.lat);
+          // Abstand zwischen den Markern
+          const markerSpacing = imgWidth / (markers.length + 1);
           
-          // Auf PDF-Koordinaten umrechnen
-          const pdfX = x + relativeX * imgWidth;
-          const pdfY = y + relativeY * imgHeight;
+          // Position und Größe der Marker
+          const markerSize = 12;
+          const markerY = y + imgHeight / 2;
           
-          return [pdfX, pdfY];
-        };
-        
-        // Polylinien im PDF zeichnen
-        pdf.setDrawColor(0, 102, 255); // #0066ff
-        pdf.setLineWidth(0.75); // Angepasste Linienbreite für PDF
-        
-        for (let i = 0; i < markers.length - 1; i++) {
-          const [x1, y1] = transformCoordinates(markers[i].position);
-          const [x2, y2] = transformCoordinates(markers[i + 1].position);
-          pdf.line(x1, y1, x2, y2);
+          // Position für jeden Marker berechnen
+          const positions = markers.map((_, index) => {
+            return {
+              x: x + markerSpacing * (index + 1),
+              y: markerY
+            };
+          });
+          
+          // Linien zwischen den Markern zeichnen
+          for (let i = 0; i < positions.length - 1; i++) {
+            pdf.line(
+              positions[i].x, 
+              positions[i].y, 
+              positions[i+1].x, 
+              positions[i+1].y
+            );
+          }
+        } catch (error) {
+          console.error("Fehler beim Zeichnen der Polylinien im PDF:", error);
+          // Fehler beim Zeichnen unterdrücken, aber protokollieren
         }
       }
       
