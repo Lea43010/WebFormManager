@@ -33,7 +33,7 @@ import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import DbStructureFixPage from "@/pages/db-structure-fix-page";
 import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
-import HelpPage from "@/pages/help-page";
+// HelpPage nicht mehr benötigt, Redirect zu InformationPage
 import StreetModulesPage from "@/pages/street-modules-new";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
