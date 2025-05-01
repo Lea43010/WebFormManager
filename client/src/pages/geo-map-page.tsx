@@ -843,12 +843,31 @@ export default function GeoMapPage() {
         year: 'numeric'
       });
       
-      // Zuerst die Karte als Canvas rendern
+      // Zuerst die Karte als Canvas rendern mit verbesserten Einstellungen für SVG-Elemente
       const canvas = await html2canvas(mapContainerRef.current, {
         scale: 2, // Höhere Qualität
         useCORS: true, // Für Tile-Layer von externen Quellen
         allowTaint: true,
         backgroundColor: null,
+        logging: false,
+        imageTimeout: 0, // Keine Zeitbegrenzung für Bilder
+        onclone: (documentClone) => {
+          // Zusätzliche Vorbereitungen, damit SVG-Elemente (Polylinien) korrekt gerendert werden
+          const mapContainer = documentClone.querySelector('.leaflet-pane');
+          if (mapContainer) {
+            // Sicherstellen, dass alle SVG-Elemente vollständig geladen sind
+            const svgElements = mapContainer.querySelectorAll('svg');
+            svgElements.forEach(svg => {
+              svg.setAttribute('width', '100%');
+              svg.setAttribute('height', '100%');
+              svg.style.width = '100%';
+              svg.style.height = '100%';
+              svg.style.position = 'absolute';
+              svg.style.left = '0';
+              svg.style.top = '0';
+            });
+          }
+        }
       });
       
       setExportProgress(40);
