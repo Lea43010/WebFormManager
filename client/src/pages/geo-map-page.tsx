@@ -956,6 +956,39 @@ export default function GeoMapPage() {
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       
+      // Polylinien direkt im PDF nachzeichnen, da sie im Canvas möglicherweise nicht korrekt erfasst wurden
+      if (markers.length > 1) {
+        // Zunächst die Koordinaten auf die PDF-Dimension transformieren
+        const transformCoordinates = (position: [number, number]): [number, number] => {
+          // Map Bounds abrufen
+          const bounds = map.current?.getBounds();
+          if (!bounds) return [0, 0];
+          
+          const northEast = bounds.getNorthEast();
+          const southWest = bounds.getSouthWest();
+          
+          // Relativen Anteil der Position innerhalb der Bounds berechnen
+          const relativeX = (position[1] - southWest.lng) / (northEast.lng - southWest.lng);
+          const relativeY = (northEast.lat - position[0]) / (northEast.lat - southWest.lat);
+          
+          // Auf PDF-Koordinaten umrechnen
+          const pdfX = x + relativeX * imgWidth;
+          const pdfY = y + relativeY * imgHeight;
+          
+          return [pdfX, pdfY];
+        };
+        
+        // Polylinien im PDF zeichnen
+        pdf.setDrawColor(0, 102, 255); // #0066ff
+        pdf.setLineWidth(0.75); // Angepasste Linienbreite für PDF
+        
+        for (let i = 0; i < markers.length - 1; i++) {
+          const [x1, y1] = transformCoordinates(markers[i].position);
+          const [x2, y2] = transformCoordinates(markers[i + 1].position);
+          pdf.line(x1, y1, x2, y2);
+        }
+      }
+      
       setExportProgress(70);
       
       // Standortinformationen
