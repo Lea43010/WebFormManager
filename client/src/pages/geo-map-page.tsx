@@ -531,6 +531,10 @@ export default function GeoMapPage() {
   // PDF Export Status
   const [exportingPDF, setExportingPDF] = useState<boolean>(false);
   const [exportProgress, setExportProgress] = useState<number>(0);
+  
+  // Anzeigeoptionen
+  const [showGuides, setShowGuides] = useState<boolean>(true);
+  const [showDistances, setShowDistances] = useState<boolean>(true);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   
