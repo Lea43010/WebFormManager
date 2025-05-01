@@ -652,21 +652,12 @@ export default function GeoMapPage() {
   
   // Als PDF exportieren
   const handleExportPDF = async () => {
-    if (markers.length === 0 || !mapRef.current) return;
+    if (markers.length === 0) return;
     
     setExportingPDF(true);
     setExportProgress(5);
     
     try {
-      // Sichern der aktuellen Verbindungslinien-Sichtbarkeit
-      let polylineVisible = true;
-      if (polylineRef.current) {
-        polylineVisible = polylineRef.current._container.style.display !== 'none';
-        polylineRef.current._container.style.display = 'none'; // Verbindungslinien temporär ausblenden
-      }
-      
-      setExportProgress(10);
-      
       // Erstelle das PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -694,115 +685,171 @@ export default function GeoMapPage() {
       
       setExportProgress(20);
       
-      // Karte rendern
-      const mapContainer = mapRef.current.container;
-      const canvas = await html2canvas(mapContainer, {
-        useCORS: true,
-        allowTaint: true,
-        scale: 1
-      });
-      
+      // Erstelle eine vereinfachte Darstellung der Karte
       setExportProgress(60);
       
-      // Karte ins PDF einfügen (65% Größe, in der oberen Hälfte)
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 190;  // ~65% der A4-Breite
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 10, 30, imgWidth, imgHeight);
+      // Setze den Startpunkt für die Projektdaten
+      let yPosition = 30;
+      
+      // Projektdaten
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Projektübersicht', 10, yPosition);
+      yPosition += 8;
+      
+      // Setze Startposition für die Karte (simuliert)
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(10, yPosition, 190, 100, 'F');
+      
+      // Zeichne Route (vereinfacht)
+      if (markers.length >= 2) {
+        pdf.setDrawColor(59, 130, 246); // #3b82f6
+        pdf.setLineWidth(0.5);
+        
+        // Berechne Mittelpunkt und Grenzen der Marker
+        let minLat = markers[0].position[0];
+        let maxLat = markers[0].position[0];
+        let minLng = markers[0].position[1];
+        let maxLng = markers[0].position[1];
+        
+        markers.forEach(marker => {
+          minLat = Math.min(minLat, marker.position[0]);
+          maxLat = Math.max(maxLat, marker.position[0]);
+          minLng = Math.min(minLng, marker.position[1]);
+          maxLng = Math.max(maxLng, marker.position[1]);
+        });
+        
+        // Füge etwas Puffer hinzu
+        const latBuffer = (maxLat - minLat) * 0.1;
+        const lngBuffer = (maxLng - minLng) * 0.1;
+        minLat -= latBuffer;
+        maxLat += latBuffer;
+        minLng -= lngBuffer;
+        maxLng += lngBuffer;
+        
+        // Skalierungsfaktoren
+        const latRange = maxLat - minLat;
+        const lngRange = maxLng - minLng;
+        const scaleX = 180 / (lngRange || 0.1);
+        const scaleY = 90 / (latRange || 0.05);
+        
+        // Zeichne Linien zwischen den Markern
+        for (let i = 0; i < markers.length - 1; i++) {
+          const startX = 10 + ((markers[i].position[1] - minLng) * scaleX);
+          const startY = yPosition + ((markers[i].position[0] - minLat) * scaleY);
+          const endX = 10 + ((markers[i+1].position[1] - minLng) * scaleX);
+          const endY = yPosition + ((markers[i+1].position[0] - minLat) * scaleY);
+          
+          pdf.line(startX, startY, endX, endY);
+        }
+        
+        // Zeichne Marker
+        markers.forEach((marker, idx) => {
+          const x = 10 + ((marker.position[1] - minLng) * scaleX);
+          const y = yPosition + ((marker.position[0] - minLat) * scaleY);
+          
+          // Markerpunkt
+          pdf.setFillColor(0, 0, 0);
+          pdf.circle(x, y, 1, 'F');
+          
+          // Markerindex
+          pdf.setFontSize(8);
+          pdf.text(`${idx + 1}`, x + 1.5, y - 1);
+        });
+      }
+      
+      yPosition += 105; // Nach der Karte weitermachen
       
       setExportProgress(75);
-      
-      // Position für die Tabellen nach der Karte
-      let yPos = 30 + imgHeight + 10;
       
       // Projektzusammenfassung
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Streckendaten', 10, yPos);
-      yPos += 8;
+      pdf.text('Streckendaten', 10, yPosition);
+      yPosition += 8;
       
       // Tabellenüberschriften für Streckendaten
       pdf.setFillColor(240, 240, 240);
-      pdf.rect(10, yPos, 190, 7, 'F');
+      pdf.rect(10, yPosition, 190, 7, 'F');
       pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
-      pdf.text('Eigenschaft', 12, yPos + 5);
-      pdf.text('Wert', 140, yPos + 5);
-      yPos += 7;
+      pdf.text('Eigenschaft', 12, yPosition + 5);
+      pdf.text('Wert', 140, yPosition + 5);
+      yPosition += 7;
       
       // Tabellendaten für Streckendaten
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Gesamtstrecke', 12, yPos + 5);
-      pdf.text(`${total.toFixed(2)} km`, 140, yPos + 5);
-      yPos += 7;
+      pdf.text('Gesamtstrecke', 12, yPosition + 5);
+      pdf.text(`${total.toFixed(2)} km`, 140, yPosition + 5);
+      yPosition += 7;
       
-      pdf.text('Straßentyp', 12, yPos + 5);
-      pdf.text(roadType, 140, yPos + 5);
-      yPos += 7;
+      pdf.text('Straßentyp', 12, yPosition + 5);
+      pdf.text(roadType, 140, yPosition + 5);
+      yPosition += 7;
       
-      pdf.text('Straßenbreite', 12, yPos + 5);
-      pdf.text(`${roadWidth.toFixed(1)} m`, 140, yPos + 5);
-      yPos += 7;
+      pdf.text('Straßenbreite', 12, yPosition + 5);
+      pdf.text(`${roadWidth.toFixed(1)} m`, 140, yPosition + 5);
+      yPosition += 7;
       
-      pdf.text('Belastungsklasse', 12, yPos + 5);
-      pdf.text(selectedBelastungsklasse, 140, yPos + 5);
-      yPos += 7;
+      pdf.text('Belastungsklasse', 12, yPosition + 5);
+      pdf.text(selectedBelastungsklasse, 140, yPosition + 5);
+      yPosition += 7;
       
-      pdf.text('Gesamtfläche', 12, yPos + 5);
-      pdf.text(`${(total * 1000 * roadWidth).toFixed(0)} m²`, 140, yPos + 5);
-      yPos += 12;
+      pdf.text('Gesamtfläche', 12, yPosition + 5);
+      pdf.text(`${(total * 1000 * roadWidth).toFixed(0)} m²`, 140, yPosition + 5);
+      yPosition += 12;
       
       // Materialtabelle, wenn eine Belastungsklasse ausgewählt ist
       if (selectedBelastungsklasse !== "none" && materials.length > 0) {
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Materialkosten (geschätzt)', 10, yPos);
-        yPos += 8;
+        pdf.text('Materialkosten (geschätzt)', 10, yPosition);
+        yPosition += 8;
         
         // Tabellenüberschriften für Materialkosten
         pdf.setFillColor(240, 240, 240);
-        pdf.rect(10, yPos, 190, 7, 'F');
+        pdf.rect(10, yPosition, 190, 7, 'F');
         pdf.setFontSize(10);
-        pdf.text('Material', 12, yPos + 5);
-        pdf.text('Dicke', 80, yPos + 5);
-        pdf.text('Fläche', 110, yPos + 5);
-        pdf.text('Kosten', 150, yPos + 5);
-        yPos += 7;
+        pdf.text('Material', 12, yPosition + 5);
+        pdf.text('Dicke', 80, yPosition + 5);
+        pdf.text('Fläche', 110, yPosition + 5);
+        pdf.text('Kosten', 150, yPosition + 5);
+        yPosition += 7;
         
         // Tabellendaten für Materialkosten
         pdf.setFont('helvetica', 'normal');
         materials.forEach((material: any) => {
-          pdf.text(material.name, 12, yPos + 5);
-          pdf.text(material.thickness, 80, yPos + 5);
-          pdf.text(`${material.area.toFixed(0)} m²`, 110, yPos + 5);
-          pdf.text(material.totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), 150, yPos + 5);
-          yPos += 7;
+          pdf.text(material.name, 12, yPosition + 5);
+          pdf.text(material.thickness, 80, yPosition + 5);
+          pdf.text(`${material.area.toFixed(0)} m²`, 110, yPosition + 5);
+          pdf.text(material.totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), 150, yPosition + 5);
+          yPosition += 7;
         });
         
         // Gesamtkosten
         pdf.setFont('helvetica', 'bold');
-        yPos += 2;
-        pdf.text('Gesamtkosten', 12, yPos + 5);
-        pdf.text(totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), 150, yPos + 5);
+        yPosition += 2;
+        pdf.text('Gesamtkosten', 12, yPosition + 5);
+        pdf.text(totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), 150, yPosition + 5);
       }
       
       // Wenn es Standorte gibt, auch diese auflisten
       if (markers.length > 0) {
-        yPos += 15;
+        yPosition += 15;
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Standorte', 10, yPos);
-        yPos += 8;
+        pdf.text('Standorte', 10, yPosition);
+        yPosition += 8;
         
         // Tabellenüberschriften für Standorte
         pdf.setFillColor(240, 240, 240);
-        pdf.rect(10, yPos, 190, 7, 'F');
+        pdf.rect(10, yPosition, 190, 7, 'F');
         pdf.setFontSize(10);
-        pdf.text('Nr.', 12, yPos + 5);
-        pdf.text('Adresse', 25, yPos + 5);
-        pdf.text('Belastungsklasse', 120, yPos + 5);
-        pdf.text('Notizen', 160, yPos + 5);
-        yPos += 7;
+        pdf.text('Nr.', 12, yPosition + 5);
+        pdf.text('Adresse', 25, yPosition + 5);
+        pdf.text('Belastungsklasse', 120, yPosition + 5);
+        pdf.text('Notizen', 160, yPosition + 5);
+        yPosition += 7;
         
         // Tabellendaten für Standorte
         pdf.setFont('helvetica', 'normal');
@@ -813,20 +860,20 @@ export default function GeoMapPage() {
             if (address === ',') address = 'Unbekannt';
           }
           
-          pdf.text(`${idx + 1}`, 12, yPos + 5);
-          pdf.text(address, 25, yPos + 5);
-          pdf.text(marker.belastungsklasse || 'Keine', 120, yPos + 5);
+          pdf.text(`${idx + 1}`, 12, yPosition + 5);
+          pdf.text(address, 25, yPosition + 5);
+          pdf.text(marker.belastungsklasse || 'Keine', 120, yPosition + 5);
           
           // Notizen (gekürzt, wenn zu lang)
           const notes = marker.notes || '';
-          pdf.text(notes.length > 25 ? notes.substring(0, 22) + '...' : notes, 160, yPos + 5);
+          pdf.text(notes.length > 25 ? notes.substring(0, 22) + '...' : notes, 160, yPosition + 5);
           
-          yPos += 7;
+          yPosition += 7;
           
           // Neue Seite, wenn der Platz knapp wird
-          if (yPos > 270) {
+          if (yPosition > 270) {
             pdf.addPage();
-            yPos = 20;
+            yPosition = 20;
           }
         });
       }
@@ -835,11 +882,6 @@ export default function GeoMapPage() {
       
       // Speichern des PDFs
       pdf.save('strassenbauplanung.pdf');
-      
-      // Verbindungslinien wieder anzeigen, wenn sie vorher sichtbar waren
-      if (polylineRef.current && polylineVisible) {
-        polylineRef.current._container.style.display = '';
-      }
       
       setExportProgress(100);
     } catch (error) {
@@ -1065,8 +1107,7 @@ export default function GeoMapPage() {
                 >
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token={accessToken}"
-                    accessToken={MAPBOX_TOKEN}
+                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
                   />
                   
                   {/* Routenlinien */}
