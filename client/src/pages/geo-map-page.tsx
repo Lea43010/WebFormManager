@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { 
   Map as MapIcon, ArrowLeft, MapPin, Camera,
-  Layers, Calculator, Download, AlertCircle, Route, FileDown, Loader2
+  Layers, Calculator, Download, AlertCircle, FileDown, Loader2
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -286,43 +286,7 @@ function calculateRouteDistances(markers: MarkerInfo[]): {total: number, segment
   return { total: totalDistance, segments };
 }
 
-// Funktion zum Finden der optimalen Reihenfolge der Marker (einfache Nearest-Neighbor-Heuristik)
-function optimizeRouteOrder(markers: MarkerInfo[]): MarkerInfo[] {
-  if (markers.length <= 2) return markers;
-  
-  const optimizedRoute: MarkerInfo[] = [markers[0]]; // Starte mit dem ersten Marker
-  const unvisited = new Set(markers.slice(1));
-  
-  while (unvisited.size > 0) {
-    const currentMarker = optimizedRoute[optimizedRoute.length - 1];
-    let nearestMarker: MarkerInfo | null = null;
-    let minDistance = Number.MAX_VALUE;
-    
-    // Finde den nächsten unbesuchten Marker
-    unvisited.forEach(marker => {
-      const distance = calculateDistance(
-        currentMarker.position[0],
-        currentMarker.position[1],
-        marker.position[0],
-        marker.position[1]
-      );
-      
-      if (distance < minDistance) {
-        nearestMarker = marker;
-        minDistance = distance;
-      }
-    });
-    
-    if (nearestMarker) {
-      // Füge den nächsten Marker zur optimierten Route hinzu
-      optimizedRoute.push(nearestMarker);
-      // Entferne den besuchten Marker aus der unbesuchten Liste
-      unvisited.delete(nearestMarker);
-    }
-  }
-  
-  return optimizedRoute;
-}
+
 
 // Funktion zum Ermitteln der Belastungsklasseninformationen
 function getKlasseInfo(klasseId: string): BelastungsklasseInfo | undefined {
@@ -508,8 +472,7 @@ export default function GeoMapPage() {
   const [markerNotes, setMarkerNotes] = useState<string>("");
   const [addressSearch, setAddressSearch] = useState<string>("");
   
-  // Zustand für die Routenoptimierung
-  const [isRouteOptimized, setIsRouteOptimized] = useState<boolean>(false);
+
   
   // Zustand für das Exportieren als PDF
   const [exportingPDF, setExportingPDF] = useState<boolean>(false);
@@ -703,15 +666,7 @@ export default function GeoMapPage() {
     }
   };
   
-  // Route optimieren (Traveling Salesman Problem mit einfacher Nearest-Neighbor-Heuristik)
-  const handleOptimizeRoute = () => {
-    if (markers.length < 3) return; // Mindestens 3 Marker benötigt
-    
-    const optimizedMarkers = optimizeRouteOrder(markers);
-    setMarkers(optimizedMarkers);
-    setIsRouteOptimized(true);
-  };
-  
+
   // Als PDF exportieren
   const handleExportPDF = async () => {
     if (markers.length === 0) return;
@@ -1389,16 +1344,7 @@ export default function GeoMapPage() {
                     
                     {/* Aktionsbuttons */}
                     <div className="lg:col-span-4 flex flex-col justify-end gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={handleOptimizeRoute}
-                        disabled={markers.length < 3}
-                      >
-                        <Route className="h-4 w-4 mr-2" />
-                        Route optimieren
-                      </Button>
-                      
+
                       <Button 
                         variant="outline" 
                         className="w-full"
