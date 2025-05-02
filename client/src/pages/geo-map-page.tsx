@@ -846,8 +846,109 @@ export default function GeoMapPage() {
         // Zeichne Linien zwischen den Markern mit visuellem Effekt
         pdf.setDrawColor(59, 130, 246); // #3b82f6
         
-        // Zeichne Route mit modernem Stil
+        // Zeichne Kartenhintergrund (stilisierte Straßenkarte)
+        try {
+          // Erstelle Canvas für den Kartenhintergrund
+          const mapCanvas = document.createElement('canvas');
+          const canvasWidth = 190 * 3; // Höhere Auflösung für PDF
+          const canvasHeight = 100 * 3;
+          mapCanvas.width = canvasWidth;
+          mapCanvas.height = canvasHeight;
+          const ctx = mapCanvas.getContext('2d');
+          
+          if (ctx) {
+            // Hintergrund
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            
+            // Stilisierte Stadtblöcke
+            ctx.fillStyle = '#eef0f2';
+            const blockSize = canvasWidth / 20;
+            for (let i = 0; i < canvasWidth; i += blockSize) {
+              for (let j = 0; j < canvasHeight; j += blockSize) {
+                if (Math.random() > 0.4) { // Zufällige Blockverteilung
+                  ctx.fillRect(i + blockSize * 0.1, j + blockSize * 0.1, 
+                               blockSize * 0.8, blockSize * 0.8);
+                }
+              }
+            }
+            
+            // Straßen
+            ctx.strokeStyle = '#dfe4e8';
+            ctx.lineWidth = 6;
+            
+            // Horizontale Hauptstraßen
+            for (let i = 0; i < canvasHeight; i += blockSize * 3) {
+              ctx.beginPath();
+              ctx.moveTo(0, i);
+              ctx.lineTo(canvasWidth, i);
+              ctx.stroke();
+            }
+            
+            // Vertikale Hauptstraßen
+            for (let i = 0; i < canvasWidth; i += blockSize * 3) {
+              ctx.beginPath();
+              ctx.moveTo(i, 0);
+              ctx.lineTo(i, canvasHeight);
+              ctx.stroke();
+            }
+            
+            // Gitternetzlinien
+            ctx.strokeStyle = '#e9ecef';
+            ctx.lineWidth = 1;
+            
+            // Vertikales Gitter
+            for (let i = 0; i < canvasWidth; i += blockSize) {
+              ctx.beginPath();
+              ctx.moveTo(i, 0);
+              ctx.lineTo(i, canvasHeight);
+              ctx.stroke();
+            }
+            
+            // Horizontales Gitter
+            for (let i = 0; i < canvasHeight; i += blockSize) {
+              ctx.beginPath();
+              ctx.moveTo(0, i);
+              ctx.lineTo(canvasWidth, i);
+              ctx.stroke();
+            }
+            
+            // Konvertiere zu Bilddaten
+            const mapImage = mapCanvas.toDataURL('image/png');
+            
+            // Füge das Kartenbild in die PDF ein
+            pdf.addImage(
+              mapImage,
+              'PNG',
+              10, 
+              yPosition,
+              190,
+              100
+            );
+          }
+        } catch (err) {
+          console.error("Fehler bei der Kartenhintergrunderstellung:", err);
+          
+          // Fallback: Einfacher Hintergrund
+          pdf.setFillColor(245, 245, 245);
+          pdf.rect(10, yPosition, 190, 100, 'F');
+          
+          // Gitternetz
+          pdf.setDrawColor(230, 230, 230);
+          pdf.setLineWidth(0.1);
+          
+          // Vertikale Linien
+          for (let i = 0; i <= 19; i++) {
+            pdf.line(10 + (i * 10), yPosition, 10 + (i * 10), yPosition + 100);
+          }
+          
+          // Horizontale Linien
+          for (let i = 0; i <= 10; i++) {
+            pdf.line(10, yPosition + (i * 10), 200, yPosition + (i * 10));
+          }
+        }
         
+        // Zeichne Route mit modernem Stil
         // Hauptlinie für die Route (leuchtendes Blau mit besserer Sichtbarkeit)
         pdf.setDrawColor(30, 64, 175); // Dunkles Blau als Basis
         pdf.setLineWidth(3);
