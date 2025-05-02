@@ -1162,6 +1162,69 @@ export default function GeoMapPage() {
         pdf.text(totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }), 150, yPosition + 5);
       }
       
+      // Empfohlene Baumaschinen für das Projekt basierend auf der Belastungsklasse
+      if (selectedBelastungsklasse !== "none") {
+        yPosition += 15;
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Empfohlene Baumaschinen', 10, yPosition);
+        yPosition += 8;
+        
+        // Filtere passende Baumaschinen für die gewählte Belastungsklasse
+        const passendeMaschinen = baumaschinen.filter(maschine => 
+          maschine.eignung.includes(selectedBelastungsklasse)
+        );
+        
+        if (passendeMaschinen.length > 0) {
+          // Tabellenüberschriften für Baumaschinen
+          pdf.setFillColor(240, 240, 240);
+          pdf.rect(10, yPosition, 190, 7, 'F');
+          pdf.setFontSize(10);
+          pdf.text('Maschinentyp', 12, yPosition + 5);
+          pdf.text('Beschreibung', 70, yPosition + 5);
+          pdf.text('Leistung', 130, yPosition + 5);
+          pdf.text('Tagesmiete', 160, yPosition + 5);
+          yPosition += 7;
+          
+          // Tabellendaten für Baumaschinen
+          pdf.setFont('helvetica', 'normal');
+          passendeMaschinen.forEach((maschine) => {
+            pdf.text(maschine.name, 12, yPosition + 5);
+            
+            // Beschreibung auf 55 Zeichen begrenzen
+            const beschreibung = maschine.beschreibung.length > 55 ? 
+              maschine.beschreibung.substring(0, 52) + '...' : 
+              maschine.beschreibung;
+            
+            pdf.text(beschreibung, 70, yPosition + 5);
+            pdf.text(`${maschine.leistung.toLocaleString('de-DE')} m²/Tag`, 130, yPosition + 5);
+            pdf.text(`${maschine.tagesmiete.toLocaleString('de-DE')} €`, 160, yPosition + 5);
+            yPosition += 7;
+          });
+          
+          // Berechnen der geschätzten Bauzeit
+          if (total > 0 && roadWidth > 0) {
+            const gesamtFlaeche = total * 1000 * roadWidth; // in m²
+            
+            yPosition += 5;
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('Geschätzte Bauzeiten:', 12, yPosition + 5);
+            yPosition += 7;
+            
+            pdf.setFont('helvetica', 'normal');
+            passendeMaschinen.forEach((maschine) => {
+              const bauzeitTage = Math.ceil(gesamtFlaeche / maschine.leistung);
+              pdf.text(`${maschine.name}: ca. ${bauzeitTage} Arbeitstage`, 12, yPosition + 5);
+              yPosition += 7;
+            });
+          }
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('Keine passenden Baumaschinen für diese Belastungsklasse gefunden.', 12, yPosition + 5);
+          yPosition += 7;
+        }
+      }
+      
       // Wenn es Standorte gibt, auch diese auflisten
       if (markers.length > 0) {
         yPosition += 15;
@@ -1579,6 +1642,47 @@ export default function GeoMapPage() {
                                 {totalCost.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                               </div>
                             </div>
+                          </div>
+                        </div>
+                      )}
+                    
+                      {/* Empfohlene Baumaschinen */}
+                      {selectedBelastungsklasse !== "none" && empfohleneBaumaschinen.length > 0 && (
+                        <div className="space-y-3 mt-5">
+                          <h3 className="font-medium text-base">Empfohlene Baumaschinen</h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {empfohleneBaumaschinen.map((maschine, idx) => (
+                              <div 
+                                key={idx} 
+                                className="bg-card border rounded-md p-3 relative overflow-hidden"
+                              >
+                                <div className="space-y-1">
+                                  <div className="font-medium">{maschine.name}</div>
+                                  <div className="text-sm text-muted-foreground">{maschine.beschreibung}</div>
+                                  <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                                    <div>
+                                      <span className="text-muted-foreground">Leistung:</span> 
+                                      <span className="ml-1 font-medium">{maschine.leistung.toLocaleString('de-DE')} m²/Tag</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Tagesmiete:</span> 
+                                      <span className="ml-1 font-medium">{maschine.tagesmiete.toLocaleString('de-DE')} €</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Geschätzte Bauzeit, wenn eine Route definiert ist */}
+                                  {total > 0 && roadWidth > 0 && (
+                                    <div className="mt-2 text-sm bg-muted p-2 rounded">
+                                      <span className="text-muted-foreground">Geschätzte Bauzeit:</span> 
+                                      <span className="ml-1 font-medium">
+                                        ca. {Math.ceil((total * 1000 * roadWidth) / maschine.leistung)} Arbeitstage
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
