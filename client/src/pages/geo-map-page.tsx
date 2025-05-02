@@ -17,8 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
 
-// Direktes Mapbox-Token für zuverlässiges Laden
-const MAPBOX_TOKEN = "pk.eyJ1IjoibGVhemltbWVyIiwiYSI6ImNtOWlqenRoOTAyd24yanF2dmh4MzVmYnEifQ.VCg8sM94uqeuolEObT6dbw";
+// Mapbox-Token aus den Umgebungsvariablen laden
+import { MAPBOX_TOKEN } from "@/config/mapbox";
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
