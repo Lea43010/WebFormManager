@@ -84,6 +84,7 @@ const navItems: NavItem[] = [
     title: "Abonnement",
     href: "/subscription",
     icon: CreditCard,
+    showFor: ['administrator'],
     tooltip: "Abonnement verwalten und Zahlungsinformationen",
   },
   {
@@ -99,13 +100,6 @@ const navItems: NavItem[] = [
     icon: ShieldAlert,
     showFor: ['administrator', 'manager'],
     tooltip: "Benutzer- und Systemadministration",
-  },
-  {
-    title: "Datenübertragung",
-    href: "/db-migration",
-    icon: Database,
-    showFor: ['administrator'],
-    tooltip: "Datenaustausch und Datenbankmigration",
   },
 ];
 
