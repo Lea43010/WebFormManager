@@ -19,26 +19,8 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
   const { user } = useAuth();
-  const [showMigration, setShowMigration] = useState(false);
-
-  const downloadFile = (filename: string) => {
-    // Create the full URL with the protocol and host
-    const baseUrl = window.location.origin;
-    const url = `${baseUrl}/downloads/${filename}`;
-    
-    console.log("Downloading file from URL:", url);
-    
-    // Direkter Download über ein neues Fenster
-    window.open(url, '_blank');
-    
-    toast({
-      title: "Download gestartet",
-      description: `Die Datei ${filename} wird in einem neuen Tab geöffnet. Speichern Sie sie mit Rechtsklick > Speichern unter...`,
-    });
-  };
 
   return (
     <DashboardLayout title="Dashboard" tabs={[]}>
@@ -145,58 +127,18 @@ export default function HomePage() {
           )}
         </div>
         
-        {/* Datenbank-Migration Card - nur für Administratoren */}
-        {user?.role === 'administrator' && (
-          <Card className="mt-2">
-            <CardHeader className="py-2 sm:py-3 px-2 sm:px-3 flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle className="text-xs sm:text-sm font-medium flex items-center">
-                  <Database className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-primary" />
-                  Datenbank-Migration
-                </CardTitle>
-                <CardDescription className="text-xs">Migration zu Supabase</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" 
-                      className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
-                      onClick={() => setShowMigration(!showMigration)}>
-                {showMigration ? "Ausblenden" : "Anzeigen"}
-              </Button>
+        {/* Hinweis für Administratoren, dass die Datenbank-Migration in den Admin-Bereich verschoben wurde */}
+        {user?.role === 'administrator' && false && (
+          <Card className="mt-2 bg-gray-50 border-gray-200">
+            <CardHeader className="py-2 sm:py-3 px-2 sm:px-3">
+              <CardTitle className="text-xs sm:text-sm font-medium flex items-center">
+                <Info className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-blue-500" />
+                Hinweis
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Die Datenbank-Migration zu Supabase wurde in den Admin-Bereich verschoben.
+              </CardDescription>
             </CardHeader>
-            {showMigration && (
-              <>
-                <CardContent className="py-2 px-2 sm:px-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                    <Button 
-                      onClick={() => downloadFile('migration_schema.sql')}
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-                    >
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Schema
-                    </Button>
-                    <Button 
-                      onClick={() => downloadFile('data_inserts.sql')}
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-                    >
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Daten
-                    </Button>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-2 sm:p-3">
-                  <div className="bg-gray-50 p-2 sm:p-3 rounded-lg w-full">
-                    <h3 className="text-2xs sm:text-xs font-bold mb-1">Migrations-Anleitung</h3>
-                    <ol className="list-decimal list-inside space-y-1 text-2xs sm:text-xs">
-                      <li>Supabase-Projekt mit leerer Postgres-DB erstellen</li>
-                      <li>Zuerst <code className="bg-gray-200 px-1 rounded text-2xs sm:text-xs">migration_schema.sql</code> ausführen</li>
-                      <li>Dann <code className="bg-gray-200 px-1 rounded text-2xs sm:text-xs">data_inserts.sql</code> ausführen</li>
-                      <li>Umgebungsvariablen mit Supabase-Daten aktualisieren</li>
-                    </ol>
-                  </div>
-                </CardFooter>
-              </>
-            )}
           </Card>
         )}
       </div>
