@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { 
   ShieldAlert, Users, Database, BarChart, Settings, FileCode, 
   Mail, ActivityIcon, Clock, ServerCrash, HardDrive, CloudUpload,
-  CreditCard
+  CreditCard, Map
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -204,6 +204,7 @@ export default function AdminPage() {
                 </Button>
               </CardFooter>
             </Card>
+
           </>
         )}
       </div>
