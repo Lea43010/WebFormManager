@@ -44,16 +44,8 @@ export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsP
           </AlertDescription>
         </Alert>
 
-        <Tabs 
-          value={activeTab} 
-          onValueChange={(value: any) => setActiveTab(value as "bayernatlas" | "denkmalatlas")} 
-          className="w-full"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="bayernatlas">BayernAtlas</TabsTrigger>
-            <TabsTrigger value="denkmalatlas">DenkmalAtlas</TabsTrigger>
-          </TabsList>
-          <TabsContent value="bayernatlas" className="mt-4">
+        {/* Inhalt ohne Tabs */}
+        {activeTab === "bayernatlas" && (
             <div className="space-y-4">
               <div className="space-y-6 bg-muted/60 p-6 rounded-md border">
                 <div className="text-center">
@@ -99,8 +91,9 @@ export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsP
                 </div>
               </div>
             </div>
-          </TabsContent>
-          <TabsContent value="denkmalatlas" className="mt-4">
+        )}
+        
+        {activeTab === "denkmalatlas" && (
             <div className="space-y-4">
               <div className="space-y-6 bg-muted/60 p-6 rounded-md border">
                 <div className="text-center">
@@ -146,8 +139,7 @@ export function BayernMaps({ defaultTab = "bayernatlas", tabValue }: BayernMapsP
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+        )}
       </CardContent>
     </Card>
   );
