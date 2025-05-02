@@ -19,6 +19,8 @@ import BayernMaps from "@/components/maps/bayern-maps";
 
 // Mapbox-Token aus den Umgebungsvariablen laden
 import { MAPBOX_TOKEN } from "@/config/mapbox";
+// Debug-Ausgabe des Tokens
+console.log("Geladenes Mapbox-Token:", MAPBOX_TOKEN);
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
