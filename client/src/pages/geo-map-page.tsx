@@ -846,130 +846,110 @@ export default function GeoMapPage() {
         // Zeichne Linien zwischen den Markern mit visuellem Effekt
         pdf.setDrawColor(59, 130, 246); // #3b82f6
         
-        // Direkte Zeichnung eines realistischeren Straßenkartenbildes
+        // Sehr einfache Kartenansicht - fokussiert auf Klarheit ohne komplexe Elemente
         
-        // Hintergrund mit leichtem Farbverlauf für mehr Tiefe
-        const gradientHeight = 100;
-        
-        // Landschaft-Hintergrund (hellblauer Himmel oben, hellgrüner Boden unten)
-        const bgGradient = pdf.setFillColor(240, 245, 250);
+        // Hellgrauer Hintergrund
+        pdf.setFillColor(249, 249, 249);
         pdf.rect(10, yPosition, 190, 100, 'F');
         
-        // Ländliche Landschaft oder Stadtlandschaft zeichnen
-        
-        // 1. Grünflächen (Parks, Wiesen)
-        pdf.setFillColor(225, 240, 230);
-        
-        // Untere Blockreihe als Grünfläche
-        pdf.rect(10, yPosition + 85, 190, 15, 'F');
-        
-        // Einige Parks
-        for (let i = 0; i < 4; i++) {
-          const parkX = 15 + (i * 45);
-          const parkY = yPosition + 20 + (i * 15);
-          const parkWidth = 25 + Math.random() * 10;
-          const parkHeight = 15;
-          
-          pdf.setFillColor(222, 238, 222);
-          pdf.roundedRect(parkX, parkY, parkWidth, parkHeight, 3, 3, 'F');
-          
-          // Park-Baumgruppen (kleine Kreise)
-          pdf.setFillColor(180, 210, 180);
-          for (let t = 0; t < 6; t++) {
-            const treeX = parkX + 2 + (t * 4);
-            const treeY = parkY + 2 + (Math.random() * 8);
-            const treeSize = 1 + Math.random() * 1.5;
-            pdf.circle(treeX, treeY, treeSize, 'F');
-          }
-        }
-        
-        // 2. Straßennetz - Hauptstraßen
-        pdf.setFillColor(220, 220, 220);
-        
+        // Einfaches Straßennetz
         // Horizontale Hauptstraßen
+        pdf.setFillColor(225, 225, 225);
+        
         for (let i = 0; i < 4; i++) {
-          const roadY = yPosition + 15 + (i * 25);
-          pdf.rect(10, roadY, 190, 6, 'F');
+          const roadY = yPosition + 20 + (i * 20);
+          pdf.rect(10, roadY, 190, 4, 'F');
           
-          // Straßenmarkierungen (gestrichelte Linie)
+          // Straßenmarkierungen
           pdf.setDrawColor(255, 255, 255);
           pdf.setLineWidth(0.5);
           
-          for (let j = 0; j < 19; j++) {
-            const dashX1 = 20 + (j * 10);
-            const dashX2 = dashX1 + 5;
-            pdf.line(dashX1, roadY + 3, dashX2, roadY + 3);
+          for (let x = 15; x < 195; x += 12) {
+            pdf.line(x, roadY + 2, x + 6, roadY + 2);
           }
         }
         
         // Vertikale Hauptstraßen
         for (let i = 0; i < 5; i++) {
           const roadX = 10 + (i * 40);
-          pdf.setFillColor(220, 220, 220);
-          pdf.rect(roadX, yPosition, 6, 100, 'F');
+          pdf.rect(roadX, yPosition, 4, 100, 'F');
           
           // Straßenmarkierungen
           pdf.setDrawColor(255, 255, 255);
           pdf.setLineWidth(0.5);
           
-          for (let j = 0; j < 10; j++) {
-            const dashY1 = yPosition + 5 + (j * 10);
-            const dashY2 = dashY1 + 5;
-            pdf.line(roadX + 3, dashY1, roadX + 3, dashY2);
+          for (let y = yPosition + 5; y < yPosition + 95; y += 12) {
+            pdf.line(roadX + 2, y, roadX + 2, y + 6);
           }
         }
         
-        // 3. Gebäudeblöcke
-        const buildings = [
-          [230, 230, 230],  // Hellgrau
-          [240, 240, 245],  // Hellblaugrau
-          [245, 240, 235],  // Hellbeige
-          [235, 235, 240]   // Hellviolettgrau
-        ];
-        
-        // Zeichne Gebäudeblöcke zwischen den Straßen
-        for (let row = 0; row < 3; row++) {
-          for (let col = 0; col < 4; col++) {
-            const blockX = 16 + (col * 40);
-            const blockY = yPosition + 21 + (row * 25);
-            const blockWidth = 34;
-            const blockHeight = 19;
+        // Stadtblöcke mit einheitlichem, klarem Design
+        for (let col = 0; col < 4; col++) {
+          for (let row = 0; row < 3; row++) {
+            const blockX = 14 + (col * 40);
+            const blockY = yPosition + 24 + (row * 20);
+            const blockWidth = 36;
+            const blockHeight = 16;
             
-            // Wähle zufällige Farbe aus dem buildings Array
-            const buildingColor = buildings[Math.floor(Math.random() * buildings.length)];
-            pdf.setFillColor(buildingColor[0], buildingColor[1], buildingColor[2]);
-            
-            // Gebäudeblock
+            // Blockfarbe basierend auf Position
+            const shade = 240 + ((col + row) % 2) * 5;
+            pdf.setFillColor(shade, shade, shade);
             pdf.rect(blockX, blockY, blockWidth, blockHeight, 'F');
             
-            // Strukturdetails auf den Gebäuden (Fensterreihen)
-            pdf.setDrawColor(buildingColor[0] - 15, buildingColor[1] - 15, buildingColor[2] - 15);
-            pdf.setLineWidth(0.2);
+            // Vereinfachte Baugrenzen/Strukturen andeuten
+            pdf.setDrawColor(220, 220, 220);
+            pdf.setLineWidth(0.1);
             
-            // Horizontale Fensterreihen
-            for (let i = 0; i < 3; i++) {
-              const windowY = blockY + 4 + (i * 5);
-              pdf.line(blockX + 2, windowY, blockX + blockWidth - 2, windowY);
+            // Horizontale Unterteilungen
+            for (let i = 1; i < 3; i++) {
+              pdf.line(
+                blockX, 
+                blockY + (blockHeight / 3) * i, 
+                blockX + blockWidth, 
+                blockY + (blockHeight / 3) * i
+              );
             }
             
-            // Vertikale Strukturlinien
-            for (let i = 0; i < 7; i++) {
-              const windowX = blockX + 5 + (i * 4);
-              pdf.line(windowX, blockY + 2, windowX, blockY + blockHeight - 2);
+            // Vertikale Unterteilungen
+            for (let i = 1; i < 3; i++) {
+              pdf.line(
+                blockX + (blockWidth / 3) * i, 
+                blockY, 
+                blockX + (blockWidth / 3) * i, 
+                blockY + blockHeight
+              );
             }
           }
         }
         
-        // 4. Gitternetz für Orientierung (sehr hell)
-        pdf.setDrawColor(235, 235, 235);
+        // Ein paar Grünflächen hinzufügen
+        pdf.setFillColor(230, 240, 230);
+        
+        // Oben links
+        pdf.rect(14, yPosition + 4, 36, 16, 'F');
+        
+        // Unten rechts
+        pdf.rect(134, yPosition + 64, 36, 16, 'F');
+        
+        // Kreisverkehr in der Mitte
+        pdf.setFillColor(225, 225, 225);
+        pdf.circle(105, yPosition + 50, 8, 'F');
+        
+        pdf.setFillColor(230, 240, 230);
+        pdf.circle(105, yPosition + 50, 5, 'F');
+        
+        // Wasserelemente (kleine Teiche/Seen)
+        pdf.setFillColor(225, 235, 245);
+        pdf.circle(85, yPosition + 30, 4, 'F');
+        
+        // Subtiles Gitternetz
+        pdf.setDrawColor(240, 240, 240);
         pdf.setLineWidth(0.1);
         
-        // Vertikale Linien
         for (let i = 0; i <= 19; i++) {
           pdf.line(10 + (i * 10), yPosition, 10 + (i * 10), yPosition + 100);
         }
         
-        // Horizontale Linien
         for (let i = 0; i <= 10; i++) {
           pdf.line(10, yPosition + (i * 10), 200, yPosition + (i * 10));
         }
