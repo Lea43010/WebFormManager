@@ -26,7 +26,7 @@ import { useMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { TooltipButton } from "@/components/ui/tooltip-button";
-import logoImage from "@/assets/Logo.webp";
+import logoImage from "@/assets/Logo.png";
 
 interface NavItem {
   title: string;
@@ -114,10 +114,9 @@ export function Sidebar() {
           <img 
             src={logoImage} 
             alt="Bau - Structura Logo" 
-            className="h-16 mr-3" 
+            className="h-auto w-auto max-h-[52px] mr-3" 
             loading="eager" 
-            width="64" 
-            height="64" 
+            style={{ objectFit: 'contain' }}
           />
           <span className="text-xl font-medium text-white">Bau - Structura</span>
         </div>
