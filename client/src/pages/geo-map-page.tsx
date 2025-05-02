@@ -584,12 +584,31 @@ export default function GeoMapPage() {
     if (addressSearch.length < 3) return;
     
     try {
-      // Verwende hier die Mapbox Geocoding API
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addressSearch)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=de,at,ch`
-      );
-      
-      const data = await response.json();
+      let data;
+      // Falls Mapbox-Token verfügbar ist, verwende die Mapbox Geocoding API
+      if (MAPBOX_TOKEN) {
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addressSearch)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=de,at,ch`
+        );
+        data = await response.json();
+      } else {
+        // Alternativ nutzen wir das Nominatim-API von OpenStreetMap
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch)}&limit=1&countrycodes=de,at,ch`
+        );
+        const nominatimData = await response.json();
+        
+        // Konvertiere Nominatim-Format in ein Format, das mit dem restlichen Code kompatibel ist
+        data = {
+          features: nominatimData.map((item: any) => ({
+            center: [parseFloat(item.lon), parseFloat(item.lat)],
+            place_name: item.display_name,
+            properties: {
+              address: item.display_name
+            }
+          }))
+        };
+      }
       
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
@@ -598,22 +617,58 @@ export default function GeoMapPage() {
         // Extrahiere Adressinformationen
         let strasse = "", hausnummer = "", plz = "", ort = "";
         
-        // Versuche, Adresskomponenten zu extrahieren
-        feature.context?.forEach((ctx: any) => {
-          if (ctx.id.startsWith('postcode')) {
-            plz = ctx.text;
-          } else if (ctx.id.startsWith('place')) {
-            ort = ctx.text;
+        if (MAPBOX_TOKEN) {
+          // Versuche, Adresskomponenten aus Mapbox-Ergebnis zu extrahieren
+          feature.context?.forEach((ctx: any) => {
+            if (ctx.id.startsWith('postcode')) {
+              plz = ctx.text;
+            } else if (ctx.id.startsWith('place')) {
+              ort = ctx.text;
+            }
+          });
+          
+          // Straße und Hausnummer aus der vollständigen Adresse extrahieren (Mapbox)
+          const addressParts = feature.place_name.split(',')[0].trim().split(' ');
+          if (addressParts.length > 1 && /\d/.test(addressParts[addressParts.length - 1])) {
+            hausnummer = addressParts.pop() || "";
+            strasse = addressParts.join(' ');
+          } else {
+            strasse = addressParts.join(' ');
           }
-        });
-        
-        // Straße und Hausnummer aus der vollständigen Adresse extrahieren
-        const addressParts = feature.place_name.split(',')[0].trim().split(' ');
-        if (addressParts.length > 1 && /\d/.test(addressParts[addressParts.length - 1])) {
-          hausnummer = addressParts.pop() || "";
-          strasse = addressParts.join(' ');
         } else {
-          strasse = addressParts.join(' ');
+          // Extrahiere Adresskomponenten aus dem OpenStreetMap-Nominatim-Ergebnis
+          try {
+            // Nominatim-Ergebnisse enthalten addressdetails
+            const addressParts = feature.place_name.split(',');
+            if (addressParts.length > 0) {
+              // Erste Zeile enthält normalerweise Straße und Hausnummer
+              const firstPart = addressParts[0].trim();
+              const matches = firstPart.match(/^(.+?)\s+(\d+.*)$/);
+              
+              if (matches && matches.length >= 3) {
+                strasse = matches[1];
+                hausnummer = matches[2];
+              } else {
+                strasse = firstPart;
+              }
+              
+              // Suche nach PLZ und Ort in den restlichen Teilen
+              for (let i = 1; i < addressParts.length; i++) {
+                const part = addressParts[i].trim();
+                // PLZ hat typischerweise 5 Ziffern in Deutschland
+                const plzMatch = part.match(/^(\d{5})\s+(.+)$/);
+                if (plzMatch && plzMatch.length >= 3) {
+                  plz = plzMatch[1];
+                  ort = plzMatch[2];
+                  break;
+                } else if (!ort && part) {
+                  ort = part; // Fallback für Ort
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Fehler beim Parsen der Adressdaten:", error);
+          }
         }
         
         // Neuen Marker erstellen
@@ -632,6 +687,11 @@ export default function GeoMapPage() {
         
         // Adresssuchefeld leeren
         setAddressSearch("");
+        
+        // Karte auf den neuen Marker zentrieren
+        if (mapRef.current) {
+          mapRef.current.setView([lat, lng], 14);
+        }
         
         // Wenn Route optimiert wurde, zurücksetzen
         if (isRouteOptimized) {
@@ -699,9 +759,57 @@ export default function GeoMapPage() {
       pdf.text('Projektübersicht', 10, yPosition);
       yPosition += 8;
       
-      // Setze Startposition für die Karte (simuliert)
-      pdf.setFillColor(240, 240, 240);
+      // Setze Startposition für die Karte mit attraktiverem Hintergrund
+      
+      // Hintergrundraster (leicht gräulich)
+      pdf.setFillColor(245, 245, 247);
       pdf.rect(10, yPosition, 190, 100, 'F');
+      
+      // Gitternetzlinien für eine kartografische Anmutung
+      pdf.setDrawColor(230, 230, 235);
+      pdf.setLineWidth(0.2);
+      
+      // Horizontale Linien
+      for (let i = 0; i <= 10; i++) {
+        const lineY = yPosition + (i * 10);
+        pdf.line(10, lineY, 200, lineY);
+      }
+      
+      // Vertikale Linien
+      for (let i = 0; i <= 19; i++) {
+        const lineX = 10 + (i * 10);
+        pdf.line(lineX, yPosition, lineX, yPosition + 100);
+      }
+      
+      // Kartenüberschrift
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 120, 130);
+      pdf.text('Straßenverlaufsplanung', 12, yPosition + 5);
+      
+      // Kompass-Symbol auf der Karte
+      const compassX = 190;
+      const compassY = yPosition + 10;
+      
+      // Äußerer Kreis
+      pdf.setDrawColor(100, 100, 110);
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(compassX, compassY, 5, 'FD');
+      
+      // Nord-Richtung
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setFillColor(230, 60, 60);
+      pdf.setLineWidth(0.5);
+      
+      // Pfeil nach Norden
+      pdf.line(compassX, compassY - 4, compassX, compassY + 4);
+      pdf.line(compassX, compassY - 4, compassX - 1, compassY - 2);
+      pdf.line(compassX, compassY - 4, compassX + 1, compassY - 2);
+      
+      // N-Markierung
+      pdf.setFontSize(5);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('N', compassX - 1, compassY - 5);
       
       // Zeichne Route (vereinfacht)
       if (markers.length >= 2) {
@@ -735,7 +843,12 @@ export default function GeoMapPage() {
         const scaleX = 180 / (lngRange || 0.1);
         const scaleY = 90 / (latRange || 0.05);
         
-        // Zeichne Linien zwischen den Markern
+        // Zeichne Linien zwischen den Markern mit visuellem Effekt
+        pdf.setDrawColor(59, 130, 246); // #3b82f6
+        
+        // Zeichne zuerst dicke Linie als Hintergrund für besseren visuellen Effekt
+        pdf.setLineWidth(1.5);
+        pdf.setDrawColor(59, 130, 246); // Blau (RGB)
         for (let i = 0; i < markers.length - 1; i++) {
           const startX = 10 + ((markers[i].position[1] - minLng) * scaleX);
           const startY = yPosition + ((markers[i].position[0] - minLat) * scaleY);
@@ -745,18 +858,82 @@ export default function GeoMapPage() {
           pdf.line(startX, startY, endX, endY);
         }
         
+        // Zeichne dann dünnere Linie als Hauptlinie
+        pdf.setLineWidth(0.7);
+        pdf.setDrawColor(59, 130, 246); // #3b82f6
+        for (let i = 0; i < markers.length - 1; i++) {
+          const startX = 10 + ((markers[i].position[1] - minLng) * scaleX);
+          const startY = yPosition + ((markers[i].position[0] - minLat) * scaleY);
+          const endX = 10 + ((markers[i+1].position[1] - minLng) * scaleX);
+          const endY = yPosition + ((markers[i+1].position[0] - minLat) * scaleY);
+          
+          pdf.line(startX, startY, endX, endY);
+          
+          // Richtungspfeil (Kleiner Pfeil in der Mitte jeder Linie)
+          const midX = (startX + endX) / 2;
+          const midY = (startY + endY) / 2;
+          const dx = endX - startX;
+          const dy = endY - startY;
+          const angle = Math.atan2(dy, dx);
+          
+          // Pfeilspitze
+          const arrowSize = 2;
+          const arrowX1 = midX - arrowSize * Math.cos(angle - Math.PI/6);
+          const arrowY1 = midY - arrowSize * Math.sin(angle - Math.PI/6);
+          const arrowX2 = midX - arrowSize * Math.cos(angle + Math.PI/6);
+          const arrowY2 = midY - arrowSize * Math.sin(angle + Math.PI/6);
+          
+          pdf.setFillColor(59, 130, 246);
+          pdf.triangle(midX, midY, arrowX1, arrowY1, arrowX2, arrowY2, 'F');
+        }
+        
         // Zeichne Marker
         markers.forEach((marker, idx) => {
           const x = 10 + ((marker.position[1] - minLng) * scaleX);
           const y = yPosition + ((marker.position[0] - minLat) * scaleY);
           
-          // Markerpunkt
-          pdf.setFillColor(0, 0, 0);
-          pdf.circle(x, y, 1, 'F');
+          // Markerpunkt mit Belastungsklassenfarbe
+          if (marker.belastungsklasse) {
+            // Farbkodierung für Belastungsklassen
+            const colors: Record<string, [number, number, number]> = {
+              'Bk100': [220, 53, 69], // rot
+              'Bk32': [255, 128, 0],  // orange
+              'Bk10': [255, 193, 7],  // gelb
+              'Bk3': [25, 135, 84],   // grün
+              'Bk1': [13, 110, 253],  // blau
+              'Bk0_3': [111, 66, 193] // lila
+            };
+            
+            const color = colors[marker.belastungsklasse] || [0, 0, 0];
+            pdf.setFillColor(color[0], color[1], color[2]);
+            pdf.circle(x, y, 2, 'F');
+            
+            // Weißer Rand um den Marker
+            pdf.setDrawColor(255, 255, 255);
+            pdf.setLineWidth(0.3);
+            pdf.circle(x, y, 2, 'S');
+          } else {
+            // Standard schwarzer Marker
+            pdf.setFillColor(0, 0, 0);
+            pdf.circle(x, y, 1.5, 'F');
+          }
           
-          // Markerindex
-          pdf.setFontSize(8);
-          pdf.text(`${idx + 1}`, x + 1.5, y - 1);
+          // Markerindex und Beschriftung
+          pdf.setFontSize(7);
+          
+          // Hintergrund für bessere Lesbarkeit
+          const labelText = marker.strasse 
+            ? `${idx + 1}: ${marker.strasse} ${marker.hausnummer || ''}`.substring(0, 20)
+            : `${idx + 1}`;
+            
+          // Textbox mit transparentem Hintergrund
+          const textWidth = pdf.getStringUnitWidth(labelText) * 7 * 0.35;
+          pdf.setFillColor(255, 255, 255);
+          pdf.setTextColor(0, 0, 0);
+          pdf.rect(x + 2, y - 5, textWidth, 5, 'F');
+          
+          // Text
+          pdf.text(labelText, x + 2.5, y - 1.5);
         });
       }
       
@@ -974,13 +1151,19 @@ export default function GeoMapPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     {/* Erste Zeile: Adresssuche und Aktionsbuttons */}
                     <div className="lg:col-span-8 space-y-2">
-                      <Label htmlFor="address-search">Adresssuche</Label>
+                      <div className="flex justify-between items-center mb-1">
+                        <Label htmlFor="address-search">Adresssuche</Label>
+                        <Badge variant="outline" className="text-xs px-1.5 py-0">
+                          {MAPBOX_TOKEN ? 'Mapbox Geocoding' : 'OpenStreetMap Nominatim'}
+                        </Badge>
+                      </div>
                       <div className="flex gap-2">
                         <Input 
                           id="address-search"
                           placeholder="Straße, Hausnummer, PLZ, Ort"
                           value={addressSearch}
                           onChange={(e) => setAddressSearch(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddressSearch()}
                         />
                         <Button 
                           variant="secondary"
@@ -1107,10 +1290,18 @@ export default function GeoMapPage() {
                   style={{ height: "100%", width: "100%" }}
                   ref={mapRef}
                 >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                  />
+                  {/* Fallback auf OpenStreetMap, wenn kein Mapbox-Token verfügbar ist */}
+                  {MAPBOX_TOKEN ? (
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
+                      url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
+                    />
+                  ) : (
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                  )}
                   
                   {/* Routenlinien */}
                   {markers.length >= 2 && (
@@ -1132,13 +1323,14 @@ export default function GeoMapPage() {
                     >
                       <Popup>
                         <div className="text-sm space-y-2">
-                          <h3 className="font-semibold">Standort {idx + 1}</h3>
-                          
-                          {marker.strasse && (
-                            <p>
-                              {marker.strasse} {marker.hausnummer || ''}<br />
+                          {marker.strasse ? (
+                            <h3 className="font-semibold">
+                              {marker.strasse} {marker.hausnummer || ''} 
+                              {marker.plz || marker.ort ? <>, </> : ''}
                               {marker.plz} {marker.ort}
-                            </p>
+                            </h3>
+                          ) : (
+                            <h3 className="font-semibold">Standort {idx + 1}</h3>
                           )}
                           
                           {marker.belastungsklasse && (
@@ -1173,7 +1365,11 @@ export default function GeoMapPage() {
                       
                       {/* Zusätzliche Tooltip-Beschriftung für den Marker */}
                       <LeafletTooltip direction="top" offset={[0, -10]} permanent>
-                        <span className="font-medium">{idx + 1}</span>
+                        <span className="font-medium">
+                          {marker.strasse 
+                            ? `${marker.strasse} ${marker.hausnummer || ''}`
+                            : idx + 1}
+                        </span>
                       </LeafletTooltip>
                     </Marker>
                   ))}
@@ -1309,10 +1505,15 @@ export default function GeoMapPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle>Standort bearbeiten</CardTitle>
+              <CardTitle>
+                {editMarker.strasse 
+                  ? `${editMarker.strasse} ${editMarker.hausnummer || ''}`
+                  : "Standort bearbeiten"
+                }
+              </CardTitle>
               <CardDescription>
                 {editMarker.strasse 
-                  ? `${editMarker.strasse} ${editMarker.hausnummer || ''}, ${editMarker.plz || ''} ${editMarker.ort || ''}`
+                  ? (editMarker.plz || editMarker.ort ? `${editMarker.plz || ''} ${editMarker.ort || ''}` : '')
                   : `Position: ${editMarker.position[0].toFixed(5)}, ${editMarker.position[1].toFixed(5)}`
                 }
               </CardDescription>
