@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { 
   ShieldAlert, Users, Database, BarChart, Settings, FileCode, 
-  Mail, ActivityIcon, Clock, ServerCrash, HardDrive, CloudUpload
+  Mail, ActivityIcon, Clock, ServerCrash, HardDrive, CloudUpload,
+  CreditCard
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -154,6 +155,50 @@ export default function AdminPage() {
                   variant="default" 
                   className="bg-slate-600 hover:bg-slate-700 w-full" 
                   onClick={() => navigate("/admin/deployment-docs")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* Abonnement-Verwaltung */}
+            <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-emerald-800 text-base flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 shrink-0" />
+                  <span>Abonnement-Verwaltung</span>
+                </CardTitle>
+                <CardDescription className="text-emerald-600">
+                  Abonnements und Zahlungsinformationen verwalten
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-emerald-600 hover:bg-emerald-700 w-full" 
+                  onClick={() => navigate("/subscription")}
+                >
+                  Öffnen
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Datenübertragung */}
+            <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:shadow-md transition-shadow">
+              <CardHeader className="p-4">
+                <CardTitle className="text-amber-800 text-base flex items-center gap-2">
+                  <Database className="h-5 w-5 shrink-0" />
+                  <span>Datenübertragung</span>
+                </CardTitle>
+                <CardDescription className="text-amber-600">
+                  Datenaustausch und Datenbankmigration
+                </CardDescription>
+              </CardHeader>
+              <CardFooter className="p-4 pt-0 flex justify-center">
+                <Button 
+                  variant="default" 
+                  className="bg-amber-600 hover:bg-amber-700 w-full" 
+                  onClick={() => navigate("/db-migration")}
                 >
                   Öffnen
                 </Button>
