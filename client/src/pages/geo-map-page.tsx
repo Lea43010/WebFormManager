@@ -846,9 +846,14 @@ export default function GeoMapPage() {
         // Zeichne Linien zwischen den Markern mit visuellem Effekt
         pdf.setDrawColor(59, 130, 246); // #3b82f6
         
-        // Zeichne zuerst dicke Linie als Hintergrund für besseren visuellen Effekt
-        pdf.setLineWidth(1.5);
-        pdf.setDrawColor(59, 130, 246); // Blau (RGB)
+        // Zeichne Route mit modernem Stil
+        
+        // Hauptlinie für die Route (leuchtendes Blau mit besserer Sichtbarkeit)
+        pdf.setDrawColor(30, 64, 175); // Dunkles Blau als Basis
+        pdf.setLineWidth(3);
+        pdf.setLineCap('round');
+        pdf.setLineJoin('round');
+        
         for (let i = 0; i < markers.length - 1; i++) {
           const startX = 10 + ((markers[i].position[1] - minLng) * scaleX);
           const startY = yPosition + ((markers[i].position[0] - minLat) * scaleY);
@@ -858,9 +863,10 @@ export default function GeoMapPage() {
           pdf.line(startX, startY, endX, endY);
         }
         
-        // Zeichne dann dünnere Linie als Hauptlinie
-        pdf.setLineWidth(0.7);
+        // Mittlere Linie für bessere Sichtbarkeit (etwas heller)
         pdf.setDrawColor(59, 130, 246); // #3b82f6
+        pdf.setLineWidth(1.8);
+        
         for (let i = 0; i < markers.length - 1; i++) {
           const startX = 10 + ((markers[i].position[1] - minLng) * scaleX);
           const startY = yPosition + ((markers[i].position[0] - minLat) * scaleY);
@@ -869,22 +875,33 @@ export default function GeoMapPage() {
           
           pdf.line(startX, startY, endX, endY);
           
-          // Richtungspfeil (Kleiner Pfeil in der Mitte jeder Linie)
+          // Mittellinie für bessere Sichtbarkeit
+          pdf.setDrawColor(255, 255, 255); // Weiße Mittellinie
+          pdf.setLineWidth(0.5);
+          pdf.line(startX, startY, endX, endY);
+          
+          // 4. Richtungspfeile an jedem Viertel der Strecke
+          const arrowSize = 2;
+          
+          // Funktion zum Zeichnen eines Pfeils
+          const drawArrow = (posX: number, posY: number) => {
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const angle = Math.atan2(dy, dx);
+            
+            const arrowX1 = posX - arrowSize * Math.cos(angle - Math.PI/6);
+            const arrowY1 = posY - arrowSize * Math.sin(angle - Math.PI/6);
+            const arrowX2 = posX - arrowSize * Math.cos(angle + Math.PI/6);
+            const arrowY2 = posY - arrowSize * Math.sin(angle + Math.PI/6);
+            
+            pdf.setFillColor(59, 130, 246);
+            pdf.triangle(posX, posY, arrowX1, arrowY1, arrowX2, arrowY2, 'F');
+          };
+          
+          // Pfeil in der Mitte der Verbindungslinie
           const midX = (startX + endX) / 2;
           const midY = (startY + endY) / 2;
-          const dx = endX - startX;
-          const dy = endY - startY;
-          const angle = Math.atan2(dy, dx);
-          
-          // Pfeilspitze
-          const arrowSize = 2;
-          const arrowX1 = midX - arrowSize * Math.cos(angle - Math.PI/6);
-          const arrowY1 = midY - arrowSize * Math.sin(angle - Math.PI/6);
-          const arrowX2 = midX - arrowSize * Math.cos(angle + Math.PI/6);
-          const arrowY2 = midY - arrowSize * Math.sin(angle + Math.PI/6);
-          
-          pdf.setFillColor(59, 130, 246);
-          pdf.triangle(midX, midY, arrowX1, arrowY1, arrowX2, arrowY2, 'F');
+          drawArrow(midX, midY);
         }
         
         // Zeichne Marker
@@ -919,21 +936,108 @@ export default function GeoMapPage() {
           }
           
           // Markerindex und Beschriftung
-          pdf.setFontSize(7);
+          pdf.setFontSize(6);
+          pdf.setFont('helvetica', 'bold');
           
-          // Hintergrund für bessere Lesbarkeit
-          const labelText = marker.strasse 
-            ? `${idx + 1}: ${marker.strasse} ${marker.hausnummer || ''}`.substring(0, 20)
-            : `${idx + 1}`;
+          // Indexnummer direkt im Marker (besser sichtbar)
+          pdf.setTextColor(255, 255, 255);
+          const idxText = `${idx + 1}`;
+          // Alternative Zentrierungsmethode ohne Positions-Offset zu berechnen
+          pdf.text(idxText, x, y + 2, { align: "center" });
+          
+          // Straßenname außerhalb des Markers
+          if (marker.strasse) {
+            const streetLabel = `${marker.strasse} ${marker.hausnummer || ''}`.substring(0, 18);
             
-          // Textbox mit transparentem Hintergrund
-          const textWidth = pdf.getStringUnitWidth(labelText) * 7 * 0.35;
-          pdf.setFillColor(255, 255, 255);
-          pdf.setTextColor(0, 0, 0);
-          pdf.rect(x + 2, y - 5, textWidth, 5, 'F');
-          
-          // Text
-          pdf.text(labelText, x + 2.5, y - 1.5);
+            // Vereinfachte Platzierungslogik
+            // Immer neben dem Marker, Versatz abhängig von Position
+            let textX: number;
+            let textY: number;
+            
+            // Immer einen kleinen Versatz hinzufügen, damit Text und Marker sich nicht überlagern
+            const offsetX = 4; 
+            const offsetY = 0;
+            
+            // Bestimme, ob Text rechts oder links vom Marker
+            const placeRight = x < 90; // Links der Bildmitte → Text rechts platzieren
+            
+            if (placeRight) {
+              // Text rechts vom Marker
+              textX = x + offsetX;
+              textY = y + offsetY;
+              
+              // Hintergrund für Label
+              pdf.setFillColor(255, 255, 255, 0.9); // Leicht transparent
+              pdf.setDrawColor(200, 200, 200);
+              pdf.setLineWidth(0.2);
+              
+              // Textgröße berechnen
+              const textWidth = streetLabel.length * 1.3; // Vereinfachte Berechnung
+              
+              // Zeichne Hintergrund mit kleiner Schlagschatten für Tiefe
+              pdf.setFillColor(240, 240, 240);
+              pdf.roundedRect(
+                textX - 0.2, 
+                textY - 2.2, 
+                textWidth, 
+                4, 
+                0.5, 
+                0.5, 
+                'F'
+              );
+              
+              // Haupthintergrund
+              pdf.setFillColor(255, 255, 255);
+              pdf.roundedRect(
+                textX, 
+                textY - 2, 
+                textWidth, 
+                3.8, 
+                0.5, 
+                0.5, 
+                'FD'
+              );
+              
+              // Text
+              pdf.setTextColor(30, 30, 30);
+              pdf.text(streetLabel, textX + 0.8, textY);
+            } else {
+              // Text links vom Marker
+              textX = x - offsetX;
+              textY = y + offsetY;
+              
+              // Textgröße berechnen
+              const textWidth = streetLabel.length * 1.3; // Vereinfachte Berechnung
+              
+              // Zeichne Hintergrund mit kleiner Schlagschatten für Tiefe
+              pdf.setFillColor(240, 240, 240);
+              pdf.roundedRect(
+                textX - textWidth - 0.2, 
+                textY - 2.2, 
+                textWidth, 
+                4, 
+                0.5, 
+                0.5, 
+                'F'
+              );
+              
+              // Haupthintergrund
+              pdf.setFillColor(255, 255, 255);
+              pdf.roundedRect(
+                textX - textWidth, 
+                textY - 2, 
+                textWidth, 
+                3.8, 
+                0.5, 
+                0.5, 
+                'FD'
+              );
+              
+              // Text rechts ausgerichtet
+              pdf.setTextColor(30, 30, 30);
+              pdf.text(streetLabel, textX, textY, { align: 'right' });
+            }
+          }
         });
       }
       
