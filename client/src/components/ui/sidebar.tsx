@@ -80,13 +80,7 @@ const navItems: NavItem[] = [
     showFor: ['administrator', 'manager'],
     tooltip: "Datenqualität überwachen und verbessern",
   },
-  {
-    title: "Abonnement",
-    href: "/subscription",
-    icon: CreditCard,
-    showFor: ['administrator'],
-    tooltip: "Abonnement verwalten und Zahlungsinformationen",
-  },
+
   {
     title: "Hilfe & Info",
     href: "/information",
