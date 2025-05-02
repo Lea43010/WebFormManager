@@ -498,12 +498,7 @@ export default function GeoMapPage() {
     
     // Marker an vorhandene Liste anhängen
     setMarkers(prev => [...prev, newMarker]);
-    
-    // Wenn Route optimiert wurde, zurücksetzen
-    if (isRouteOptimized) {
-      setIsRouteOptimized(false);
-    }
-  }, [selectedBelastungsklasse, isRouteOptimized]);
+  }, [selectedBelastungsklasse]);
   
   // Marker bearbeiten
   const handleEditMarker = (idx: number) => {
@@ -529,17 +524,11 @@ export default function GeoMapPage() {
   // Marker löschen
   const handleDeleteMarker = (idx: number) => {
     setMarkers(prev => prev.filter((_, i) => i !== idx));
-    
-    // Wenn Route optimiert wurde, zurücksetzen
-    if (isRouteOptimized) {
-      setIsRouteOptimized(false);
-    }
   };
   
   // Alle Marker löschen
   const handleClearAllMarkers = () => {
     setMarkers([]);
-    setIsRouteOptimized(false);
   };
   
   // Adresssuche
@@ -654,11 +643,6 @@ export default function GeoMapPage() {
         // Karte auf den neuen Marker zentrieren
         if (mapRef.current) {
           mapRef.current.setView([lat, lng], 14);
-        }
-        
-        // Wenn Route optimiert wurde, zurücksetzen
-        if (isRouteOptimized) {
-          setIsRouteOptimized(false);
         }
       }
     } catch (error) {
