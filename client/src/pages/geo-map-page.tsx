@@ -846,106 +846,132 @@ export default function GeoMapPage() {
         // Zeichne Linien zwischen den Markern mit visuellem Effekt
         pdf.setDrawColor(59, 130, 246); // #3b82f6
         
-        // Zeichne Kartenhintergrund (stilisierte Straßenkarte)
-        try {
-          // Erstelle Canvas für den Kartenhintergrund
-          const mapCanvas = document.createElement('canvas');
-          const canvasWidth = 190 * 3; // Höhere Auflösung für PDF
-          const canvasHeight = 100 * 3;
-          mapCanvas.width = canvasWidth;
-          mapCanvas.height = canvasHeight;
-          const ctx = mapCanvas.getContext('2d');
+        // Direkte Zeichnung eines realistischeren Straßenkartenbildes
+        
+        // Hintergrund mit leichtem Farbverlauf für mehr Tiefe
+        const gradientHeight = 100;
+        
+        // Landschaft-Hintergrund (hellblauer Himmel oben, hellgrüner Boden unten)
+        const bgGradient = pdf.setFillColor(240, 245, 250);
+        pdf.rect(10, yPosition, 190, 100, 'F');
+        
+        // Ländliche Landschaft oder Stadtlandschaft zeichnen
+        
+        // 1. Grünflächen (Parks, Wiesen)
+        pdf.setFillColor(225, 240, 230);
+        
+        // Untere Blockreihe als Grünfläche
+        pdf.rect(10, yPosition + 85, 190, 15, 'F');
+        
+        // Einige Parks
+        for (let i = 0; i < 4; i++) {
+          const parkX = 15 + (i * 45);
+          const parkY = yPosition + 20 + (i * 15);
+          const parkWidth = 25 + Math.random() * 10;
+          const parkHeight = 15;
           
-          if (ctx) {
-            // Hintergrund
-            ctx.fillStyle = '#f8f9fa';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            
-            // Stilisierte Stadtblöcke
-            ctx.fillStyle = '#eef0f2';
-            const blockSize = canvasWidth / 20;
-            for (let i = 0; i < canvasWidth; i += blockSize) {
-              for (let j = 0; j < canvasHeight; j += blockSize) {
-                if (Math.random() > 0.4) { // Zufällige Blockverteilung
-                  ctx.fillRect(i + blockSize * 0.1, j + blockSize * 0.1, 
-                               blockSize * 0.8, blockSize * 0.8);
-                }
-              }
-            }
-            
-            // Straßen
-            ctx.strokeStyle = '#dfe4e8';
-            ctx.lineWidth = 6;
-            
-            // Horizontale Hauptstraßen
-            for (let i = 0; i < canvasHeight; i += blockSize * 3) {
-              ctx.beginPath();
-              ctx.moveTo(0, i);
-              ctx.lineTo(canvasWidth, i);
-              ctx.stroke();
-            }
-            
-            // Vertikale Hauptstraßen
-            for (let i = 0; i < canvasWidth; i += blockSize * 3) {
-              ctx.beginPath();
-              ctx.moveTo(i, 0);
-              ctx.lineTo(i, canvasHeight);
-              ctx.stroke();
-            }
-            
-            // Gitternetzlinien
-            ctx.strokeStyle = '#e9ecef';
-            ctx.lineWidth = 1;
-            
-            // Vertikales Gitter
-            for (let i = 0; i < canvasWidth; i += blockSize) {
-              ctx.beginPath();
-              ctx.moveTo(i, 0);
-              ctx.lineTo(i, canvasHeight);
-              ctx.stroke();
-            }
-            
-            // Horizontales Gitter
-            for (let i = 0; i < canvasHeight; i += blockSize) {
-              ctx.beginPath();
-              ctx.moveTo(0, i);
-              ctx.lineTo(canvasWidth, i);
-              ctx.stroke();
-            }
-            
-            // Konvertiere zu Bilddaten
-            const mapImage = mapCanvas.toDataURL('image/png');
-            
-            // Füge das Kartenbild in die PDF ein
-            pdf.addImage(
-              mapImage,
-              'PNG',
-              10, 
-              yPosition,
-              190,
-              100
-            );
+          pdf.setFillColor(222, 238, 222);
+          pdf.roundedRect(parkX, parkY, parkWidth, parkHeight, 3, 3, 'F');
+          
+          // Park-Baumgruppen (kleine Kreise)
+          pdf.setFillColor(180, 210, 180);
+          for (let t = 0; t < 6; t++) {
+            const treeX = parkX + 2 + (t * 4);
+            const treeY = parkY + 2 + (Math.random() * 8);
+            const treeSize = 1 + Math.random() * 1.5;
+            pdf.circle(treeX, treeY, treeSize, 'F');
           }
-        } catch (err) {
-          console.error("Fehler bei der Kartenhintergrunderstellung:", err);
+        }
+        
+        // 2. Straßennetz - Hauptstraßen
+        pdf.setFillColor(220, 220, 220);
+        
+        // Horizontale Hauptstraßen
+        for (let i = 0; i < 4; i++) {
+          const roadY = yPosition + 15 + (i * 25);
+          pdf.rect(10, roadY, 190, 6, 'F');
           
-          // Fallback: Einfacher Hintergrund
-          pdf.setFillColor(245, 245, 245);
-          pdf.rect(10, yPosition, 190, 100, 'F');
+          // Straßenmarkierungen (gestrichelte Linie)
+          pdf.setDrawColor(255, 255, 255);
+          pdf.setLineWidth(0.5);
           
-          // Gitternetz
-          pdf.setDrawColor(230, 230, 230);
-          pdf.setLineWidth(0.1);
-          
-          // Vertikale Linien
-          for (let i = 0; i <= 19; i++) {
-            pdf.line(10 + (i * 10), yPosition, 10 + (i * 10), yPosition + 100);
+          for (let j = 0; j < 19; j++) {
+            const dashX1 = 20 + (j * 10);
+            const dashX2 = dashX1 + 5;
+            pdf.line(dashX1, roadY + 3, dashX2, roadY + 3);
           }
+        }
+        
+        // Vertikale Hauptstraßen
+        for (let i = 0; i < 5; i++) {
+          const roadX = 10 + (i * 40);
+          pdf.setFillColor(220, 220, 220);
+          pdf.rect(roadX, yPosition, 6, 100, 'F');
           
-          // Horizontale Linien
-          for (let i = 0; i <= 10; i++) {
-            pdf.line(10, yPosition + (i * 10), 200, yPosition + (i * 10));
+          // Straßenmarkierungen
+          pdf.setDrawColor(255, 255, 255);
+          pdf.setLineWidth(0.5);
+          
+          for (let j = 0; j < 10; j++) {
+            const dashY1 = yPosition + 5 + (j * 10);
+            const dashY2 = dashY1 + 5;
+            pdf.line(roadX + 3, dashY1, roadX + 3, dashY2);
           }
+        }
+        
+        // 3. Gebäudeblöcke
+        const buildings = [
+          [230, 230, 230],  // Hellgrau
+          [240, 240, 245],  // Hellblaugrau
+          [245, 240, 235],  // Hellbeige
+          [235, 235, 240]   // Hellviolettgrau
+        ];
+        
+        // Zeichne Gebäudeblöcke zwischen den Straßen
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 4; col++) {
+            const blockX = 16 + (col * 40);
+            const blockY = yPosition + 21 + (row * 25);
+            const blockWidth = 34;
+            const blockHeight = 19;
+            
+            // Wähle zufällige Farbe aus dem buildings Array
+            const buildingColor = buildings[Math.floor(Math.random() * buildings.length)];
+            pdf.setFillColor(buildingColor[0], buildingColor[1], buildingColor[2]);
+            
+            // Gebäudeblock
+            pdf.rect(blockX, blockY, blockWidth, blockHeight, 'F');
+            
+            // Strukturdetails auf den Gebäuden (Fensterreihen)
+            pdf.setDrawColor(buildingColor[0] - 15, buildingColor[1] - 15, buildingColor[2] - 15);
+            pdf.setLineWidth(0.2);
+            
+            // Horizontale Fensterreihen
+            for (let i = 0; i < 3; i++) {
+              const windowY = blockY + 4 + (i * 5);
+              pdf.line(blockX + 2, windowY, blockX + blockWidth - 2, windowY);
+            }
+            
+            // Vertikale Strukturlinien
+            for (let i = 0; i < 7; i++) {
+              const windowX = blockX + 5 + (i * 4);
+              pdf.line(windowX, blockY + 2, windowX, blockY + blockHeight - 2);
+            }
+          }
+        }
+        
+        // 4. Gitternetz für Orientierung (sehr hell)
+        pdf.setDrawColor(235, 235, 235);
+        pdf.setLineWidth(0.1);
+        
+        // Vertikale Linien
+        for (let i = 0; i <= 19; i++) {
+          pdf.line(10 + (i * 10), yPosition, 10 + (i * 10), yPosition + 100);
+        }
+        
+        // Horizontale Linien
+        for (let i = 0; i <= 10; i++) {
+          pdf.line(10, yPosition + (i * 10), 200, yPosition + (i * 10));
         }
         
         // Zeichne Route mit modernem Stil
