@@ -111,12 +111,13 @@ const GeoMapNew = () => {
 
   // Höhendaten von der Google Elevation API abrufen mit verbessertem Fehlerhandling
   const fetchElevationData = async () => {
-    // Prüfen, ob wir Routenpunkte haben
+    // Prüfen, ob wir Routenpunkte haben - mit verbessertem Hinweis
     if (routeCoordinates.length < 2) {
       toast({
         title: "Fehler",
-        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
-        variant: "destructive"
+        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte, indem Sie auf die Karte klicken.",
+        variant: "destructive",
+        duration: 6000
       });
       return;
     }
@@ -124,7 +125,7 @@ const GeoMapNew = () => {
     setLoading(true);
     
     // Timeout ID für manuelle Abbruchlogik
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let timeoutId: NodeJS.Timeout | undefined;
     
     try {
       // Zeige Verarbeitungshinweis
@@ -133,11 +134,9 @@ const GeoMapNew = () => {
         description: "Höhenprofilsdaten werden abgerufen...",
       });
       
-      // Timeout ID deklarieren und initialisieren
-      let timeoutId: NodeJS.Timeout;
-      
-      // Timeout-Promise erstellen
+      // Timeout-Promise erstellen mit garantierter Zuweisung
       const timeoutPromise = new Promise<Response>((_, reject) => {
+        // Timeout explizit zuweisen
         timeoutId = setTimeout(() => {
           reject(new Error("Zeitüberschreitung bei der Anfrage"));
         }, 15000); // 15 Sekunden Timeout
@@ -204,13 +203,14 @@ const GeoMapNew = () => {
     }
   };
 
-  // Route speichern
+  // Route speichern mit verbessertem Feedback
   const saveRoute = () => {
     if (routeCoordinates.length < 2) {
       toast({
         title: "Fehler",
-        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
-        variant: "destructive"
+        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte, indem Sie auf die Karte klicken.",
+        variant: "destructive",
+        duration: 6000
       });
       return;
     }

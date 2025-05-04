@@ -126,7 +126,8 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     };
     
     // Init-Funktion für die Karte nach API-Ladung
-    window.initMap = () => {
+    // Diese Funktion muss als globale Variable definiert werden, damit sie vom Callback der Google Maps API aufgerufen werden kann
+    (window as any).initMap = () => {
       console.log("Google Maps API initialisiert");
       
       // Wir tun hier nichts, der eigentliche Initialisierungscode wird in useEffect mit getElementById ausgeführt
@@ -238,58 +239,85 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     </div>
   );
   
-  // Statt ref-Callback verwenden wir useEffect mit einem festen DOM-Element-Selektor
+  // Optimierte DOM-Element-Initialisierung
   useEffect(() => {
-    // Ein kurzes Timeout, um sicherzustellen, dass das DOM vollständig gerendert ist
-    const renderTimeout = setTimeout(() => {
+    // Direkte Prüfung nach DOM-Element ohne Timeout
+    const initMap = () => {
       const mapElement = document.getElementById(mapContainerID);
-      if (mapElement && window.google?.maps && !window.googleMap) {
-        console.log("DOM-Element gefunden, initialisiere Karte");
-        try {
-          // Google Maps-Karte erstellen
-          window.googleMap = new google.maps.Map(mapElement, {
-            center: window.mapInitialCenter,
-            zoom: window.mapInitialZoom,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: true,
-            zoomControl: true,
-          });
-          
-          // Polyline für die Route erstellen
-          window.polyline = new google.maps.Polyline({
-            path: [],
-            geodesic: true,
-            strokeColor: '#3b82f6', // Blue
-            strokeOpacity: 1.0,
-            strokeWeight: 3,
-            map: window.googleMap
-          });
-          
-          // Event-Listener für Klicks auf die Karte
-          window.googleMap.addListener('click', (event: any) => {
-            if (!event.latLng) return;
-            window.addMapMarker(event.latLng);
-          });
-          
-          // Loading beenden
-          setIsLoading(false);
-          
-          toast({
-            title: "Erfolg",
-            description: "Karte erfolgreich geladen. Setzen Sie Marker durch Klicks auf die Karte.",
-          });
-        } catch (err) {
-          console.error('Fehler beim Initialisieren der Karte:', err);
-          setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
-          setIsLoading(false);
-        }
+      
+      if (!mapElement) {
+        console.log("Warte auf DOM-Element...");
+        // Versuche es erneut, wenn das Element nicht gefunden wurde
+        requestAnimationFrame(initMap);
+        return;
       }
-    }, 500); // 500ms Verzögerung zur Sicherstellung des DOM-Renderings
+      
+      if (!window.google?.maps) {
+        console.log("Warte auf Google Maps API...");
+        // Versuche es erneut, wenn die API noch nicht geladen ist
+        requestAnimationFrame(initMap);
+        return;
+      }
+      
+      if (window.googleMap) {
+        console.log("Karte bereits initialisiert");
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log("DOM-Element und API gefunden, initialisiere Karte");
+      
+      try {
+        // Google Maps-Karte erstellen
+        window.googleMap = new google.maps.Map(mapElement, {
+          center: window.mapInitialCenter,
+          zoom: window.mapInitialZoom,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true,
+          zoomControl: true,
+        });
+        
+        // Polyline für die Route erstellen
+        window.polyline = new google.maps.Polyline({
+          path: [],
+          geodesic: true,
+          strokeColor: '#3b82f6', // Blue
+          strokeOpacity: 1.0,
+          strokeWeight: 3,
+          map: window.googleMap
+        });
+        
+        // Event-Listener für Klicks auf die Karte
+        window.googleMap.addListener('click', (event: any) => {
+          if (!event.latLng) return;
+          window.addMapMarker(event.latLng);
+        });
+        
+        // Hilfetext hinzufügen
+        const helpToast = setTimeout(() => {
+          toast({
+            title: "Hinweis",
+            description: "Klicken Sie auf die Karte, um mindestens zwei Marker für ein Höhenprofil zu setzen.",
+            duration: 8000,
+          });
+        }, 1500);
+        
+        // Loading beenden
+        setIsLoading(false);
+        
+        return () => clearTimeout(helpToast);
+      } catch (err) {
+        console.error('Fehler beim Initialisieren der Karte:', err);
+        setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
+        setIsLoading(false);
+      }
+    };
     
-    return () => clearTimeout(renderTimeout);
-  }, [isLoading, toast]);
+    // Starte die Initialisierungssequenz
+    initMap();
+  }, [mapContainerID, toast]);
   
   return element;
 };
