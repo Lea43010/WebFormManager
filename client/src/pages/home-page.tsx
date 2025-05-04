@@ -76,17 +76,17 @@ export default function HomePage() {
             </CardFooter>
           </Card>
 
-          {/* Geomapkarte */}
+          {/* Tiefbau-Streckenplanung (vorher: Geo-Map) */}
           <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-md transition-shadow">
             <CardHeader className="p-2 sm:p-3">
               <CardTitle className="text-yellow-800 text-sm sm:text-base flex items-center gap-1 sm:gap-2">
                 <Map className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span className="truncate">Geo-Map</span>
+                <span className="truncate">Tiefbau-Karte</span>
               </CardTitle>
             </CardHeader>
             <CardFooter className="p-2 sm:p-3 pt-0">
               <Button variant="default" className="w-full text-xs sm:text-sm h-8 sm:h-10 bg-yellow-600 hover:bg-yellow-700" 
-                      onClick={() => navigate("/geo-map")}>
+                      onClick={() => navigate("/tiefbau-map")}>
                 Öffnen
               </Button>
             </CardFooter>

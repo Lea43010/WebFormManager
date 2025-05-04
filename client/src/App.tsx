@@ -15,7 +15,6 @@ import ProjectDetailPage from "@/pages/project-detail-page";
 import QuickEntryPage from "@/pages/quick-entry-page";
 import DownloadPage from "@/pages/download-page";
 import AttachmentPage from "@/pages/attachment-page";
-// Geo-bezogene Seiten wurden temporär entfernt für Fehlersuche
 import InformationPage from "@/pages/information-page";
 import LandingPage from "@/pages/landing-page";
 import SimpleLoginPage from "@/pages/simple-login";
@@ -34,9 +33,6 @@ import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
 // HelpPage nicht mehr benötigt, Redirect zu InformationPage
 import StreetModulesPage from "@/pages/street-modules-new";
-import GeoMapPlaceholder from "@/pages/geo-map-placeholder";
-import GeoMapNew from "@/pages/geo-map-new";
-import GeoMapSimple from "@/pages/geo-map-simple";
 import TiefbauMap from "@/pages/tiefbau-map";
 // Direkter Import als JSX.Element-Komponente
 import TiefbauMapSearchable from "@/pages/tiefbau-map-searchable";
@@ -69,9 +65,16 @@ function Router() {
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
-      <ProtectedRoute path="/geo-map" component={GeoMapPlaceholder} />
-      <ProtectedRoute path="/geo-map-new" component={GeoMapNew} />
-      <Route path="/geo-map-simple" component={() => <GeoMapSimple />} />
+      {/* Alte Geo-Map-Routen werden auf Tiefbau-Map umgeleitet */}
+      <Route path="/geo-map">
+        {() => <Redirect to="/tiefbau-map" />}
+      </Route>
+      <Route path="/geo-map-new">
+        {() => <Redirect to="/tiefbau-map" />}
+      </Route>
+      <Route path="/geo-map-simple">
+        {() => <Redirect to="/tiefbau-map" />}
+      </Route>
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
@@ -87,7 +90,7 @@ function Router() {
         {() => <Redirect to="/information" />}
       </Route>
       <Route path="/geo">
-        {() => <Redirect to="/geo-map-new" />}
+        {() => <Redirect to="/tiefbau-map" />}
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
