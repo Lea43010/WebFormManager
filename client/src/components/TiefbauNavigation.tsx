@@ -1,54 +1,87 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { 
-  Map, 
-  Shovel, 
-  Truck, 
-  Calculator 
-} from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Shovel, Database, Truck, MapPin, Calculator } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
-interface NavigationLinkProps {
-  to: string;
-  icon: React.ReactNode;
-  text: string;
-}
+/**
+ * Komponente für die Navigation im Tiefbau-Bereich
+ * Bietet einfachen Zugriff auf Tiefbau-spezifische Funktionen
+ */
+const TiefbauNavigation = () => {
+  const [location] = useLocation();
 
-const NavigationLink: React.FC<NavigationLinkProps> = ({ to, icon, text }) => {
+  // Definieren der Navigationsitems
+  const navItems = [
+    {
+      title: 'Tiefbau Karte',
+      href: '/tiefbau-map',
+      icon: MapPin,
+      description: 'Höhenprofil und Baustellen-Übersicht'
+    },
+    {
+      title: 'Bodenanalyse',
+      href: '/bodenanalyse',
+      icon: Database,
+      description: 'Analyse von Bodenarten und Eigenschaften'
+    },
+    {
+      title: 'Maschinenauswahl',
+      href: '/maschinen-auswahl',
+      icon: Truck,
+      description: 'Passende Baumaschinen finden'
+    },
+    {
+      title: 'Kostenkalkulation',
+      href: '/tiefbau-kostenkalkulation',
+      icon: Calculator,
+      description: 'Projektkosten kalkulieren',
+      comingSoon: true
+    }
+  ];
+
   return (
-    <Link href={to}>
-      <a className="flex items-center p-3 rounded-md hover:bg-slate-100 transition-colors">
-        <div className="mr-3">{icon}</div>
-        <span>{text}</span>
-      </a>
-    </Link>
-  );
-};
-
-const TiefbauNavigation: React.FC = () => {
-  return (
-    <div className="tiefbau-navigation bg-white rounded-md shadow p-4 mb-6">
-      <h3 className="text-lg font-semibold mb-4">Tiefbau-Module</h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-        <NavigationLink 
-          to="/tiefbau-map" 
-          icon={<Map className="h-5 w-5 text-blue-500" />} 
-          text="Streckenplanung" 
-        />
-        <NavigationLink 
-          to="/bodenanalyse" 
-          icon={<Shovel className="h-5 w-5 text-orange-500" />} 
-          text="Bodenanalyse" 
-        />
-        <NavigationLink 
-          to="/maschinen-auswahl" 
-          icon={<Truck className="h-5 w-5 text-green-500" />} 
-          text="Maschinenplanung" 
-        />
-        <NavigationLink 
-          to="/kosten-kalkulation" 
-          icon={<Calculator className="h-5 w-5 text-purple-500" />} 
-          text="Kostenkalkulation" 
-        />
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div className="flex items-center mb-4">
+        <Shovel className="h-6 w-6 mr-2 text-primary" />
+        <h2 className="text-xl font-semibold">Tiefbau-Navigation</h2>
+      </div>
+      <Separator className="mb-4" />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {navItems.map((item) => {
+          const isActive = location === item.href;
+          
+          return (
+            <div key={item.href} className="relative">
+              {item.comingSoon && (
+                <div className="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-br-lg rounded-tl-lg z-10">
+                  Demnächst
+                </div>
+              )}
+              
+              <Link href={item.comingSoon ? "#" : item.href}>
+                <Button 
+                  variant={isActive ? "default" : "outline"}
+                  className={cn(
+                    "w-full h-full min-h-24 flex flex-col items-center justify-center p-4 space-y-2",
+                    isActive ? "bg-primary text-white" : "hover:bg-gray-50",
+                    item.comingSoon ? "opacity-70 cursor-not-allowed" : ""
+                  )}
+                  disabled={item.comingSoon}
+                >
+                  <item.icon className={cn("h-8 w-8 mb-2", isActive ? "text-white" : "text-primary")} />
+                  <span className="text-sm font-medium">{item.title}</span>
+                  <span className="text-xs text-center">
+                    {item.description}
+                  </span>
+                </Button>
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
