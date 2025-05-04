@@ -2,6 +2,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
 
+// Wir deklarieren die initMap Funktion als eine Eigenschaft auf dem globalen Window-Objekt
+declare global {
+  interface Window {
+    initMap: () => void;
+    google: any;
+  }
+}
+
 interface GoogleMapProps {
   onRouteChange?: (route: Array<{lat: number, lng: number}>) => void;
   onMarkersClear?: () => void;
@@ -12,9 +20,6 @@ interface GoogleMapProps {
 }
 
 const defaultCenter = { lat: 48.137154, lng: 11.576124 }; // München
-
-// TypeScript-Ignorieranweisung für globale Variablen
-// @ts-ignore - Die globale google-Variable wird durch das Skript geladen
 
 const GoogleMap: React.FC<GoogleMapProps> = ({
   onRouteChange,
@@ -56,7 +61,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     
     // Script-Tag erstellen und API laden
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${effectiveApiKey}&callback=initMap&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&callback=initMap&libraries=geometry`;
     script.async = true;
     script.defer = true;
     script.onerror = (err) => {
