@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Trash2, Save, BarChart } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import GoogleMap from "@/components/maps/google-map";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer, ReferenceLine
@@ -45,12 +46,59 @@ const GeoMapNew = () => {
   const [elevationData, setElevationData] = useState<ElevationResponse | null>(null);
   const [showElevationChart, setShowElevationChart] = useState(false);
   
-  // Vereinfachte Funktionen für die Karteninteraktion
-  const handleMapClick = () => {
-    toast({
-      title: "Info", 
-      description: "Kartenklick-Funktion wurde aufgerufen."
-    });
+  // Berechnet die Entfernung zwischen zwei GPS-Punkten in Kilometern
+  const calculateDistance = (coords: Array<{lat: number, lng: number}>): number => {
+    if (coords.length < 2) return 0;
+    
+    // Funktion zur Berechnung der Entfernung zwischen zwei Punkten (Haversine-Formel)
+    const getDistanceFromLatLonInKm = (
+      lat1: number, 
+      lon1: number, 
+      lat2: number, 
+      lon2: number
+    ): number => {
+      const R = 6371; // Radius der Erde in km
+      const dLat = deg2rad(lat2 - lat1);
+      const dLon = deg2rad(lon2 - lon1);
+      const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Entfernung in km
+    };
+    
+    const deg2rad = (deg: number): number => {
+      return deg * (Math.PI / 180);
+    };
+    
+    // Entfernung für alle aufeinanderfolgenden Punkte berechnen
+    let totalDistance = 0;
+    for (let i = 0; i < coords.length - 1; i++) {
+      totalDistance += getDistanceFromLatLonInKm(
+        coords[i].lat, 
+        coords[i].lng, 
+        coords[i + 1].lat, 
+        coords[i + 1].lng
+      );
+    }
+    
+    return Math.round(totalDistance * 10) / 10; // auf eine Dezimalstelle runden
+  };
+
+  // Route wurde auf der Karte aktualisiert
+  const handleRouteChange = (route: Array<{lat: number, lng: number}>) => {
+    setRouteCoordinates(route);
+    
+    // Distanz berechnen
+    const calculatedDistance = calculateDistance(route);
+    setDistance(calculatedDistance);
+    
+    // Wenn das Höhenprofil angezeigt wird, setzen wir es zurück, da die Route sich geändert hat
+    if (showElevationChart) {
+      setShowElevationChart(false);
+      setElevationData(null);
+    }
   };
 
   // Marker und Route zurücksetzen
@@ -59,33 +107,15 @@ const GeoMapNew = () => {
     setElevationData(null);
     setShowElevationChart(false);
     setDistance(0);
-    
-    toast({
-      title: "Info", 
-      description: "Marker und Routendaten wurden gelöscht."
-    });
-  };
-
-  // Für die Demo-Implementierung verwenden wir simulierte Koordinaten
-  // Im echten Einsatz würden diese durch die Geocoding-API ermittelt
-  const getRouteCoordinates = (): Array<{lat: number, lng: number}> => {
-    // Simulierte Route zwischen zwei Punkten mit mehreren Wegpunkten dazwischen
-    return [
-      { lat: 48.137154, lng: 11.576124 }, // München
-      { lat: 48.155004, lng: 11.541371 },
-      { lat: 48.173854, lng: 11.506618 },
-      { lat: 48.192704, lng: 11.471865 },
-      { lat: 48.211554, lng: 11.437112 },
-      { lat: 48.230404, lng: 11.402359 }, // Außerhalb von München
-    ];
   };
 
   // Höhendaten von der Google Elevation API abrufen
   const fetchElevationData = async () => {
-    if (!startAddress || !endAddress) {
+    // Prüfen, ob wir Routenpunkte haben
+    if (routeCoordinates.length < 2) {
       toast({
         title: "Fehler",
-        description: "Bitte Start- und Zieladresse eingeben.",
+        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
         variant: "destructive"
       });
       return;
@@ -94,13 +124,9 @@ const GeoMapNew = () => {
     setLoading(true);
     
     try {
-      // Simulierte Routenkoordinaten abrufen (später durch echte Geocoding ersetzen)
-      const coordinates = getRouteCoordinates();
-      setRouteCoordinates(coordinates);
-      
       // Elevation API aufrufen
       const response = await apiRequest("POST", "/api/elevation", {
-        path: coordinates,
+        path: routeCoordinates,
         samples: 256 // Anzahl der Samples entlang der Route
       });
       
@@ -131,10 +157,10 @@ const GeoMapNew = () => {
 
   // Route speichern
   const saveRoute = () => {
-    if (!startAddress || !endAddress) {
+    if (routeCoordinates.length < 2) {
       toast({
         title: "Fehler",
-        description: "Bitte Start- und Zieladresse eingeben.",
+        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
         variant: "destructive"
       });
       return;
@@ -145,26 +171,7 @@ const GeoMapNew = () => {
       title: "Erfolg",
       description: "Route erfolgreich gespeichert!",
     });
-    
-    // Strecke berechnen (später durch echte Distanzberechnung ersetzen)
-    const newDistance = Math.floor(Math.random() * 50) + 5; // 5-55 km
-    setDistance(newDistance);
   };
-
-  // Einfache Karten-Platzhalter-Komponente
-  const SimpleMapPlaceholder = () => (
-    <div 
-      className="w-full h-[500px] bg-slate-100 rounded-md border-2 border-dashed border-slate-200 flex flex-col items-center justify-center"
-      onClick={handleMapClick}
-    >
-      <MapPin className="h-16 w-16 text-slate-300 mb-4" />
-      <h3 className="text-xl font-medium text-slate-700 mb-2">Karte wird geladen</h3>
-      <p className="text-slate-500 text-center max-w-md">
-        Die Google Maps Komponente wird hier integriert. 
-        Klicken Sie auf die Karte, um Wegpunkte zu markieren.
-      </p>
-    </div>
-  );
 
   // Formatiere die Höhendaten für Recharts
   const formatElevationData = () => {
@@ -226,7 +233,12 @@ const GeoMapNew = () => {
           <CardTitle>Kartenansicht</CardTitle>
         </CardHeader>
         <CardContent>
-          <SimpleMapPlaceholder />
+          <GoogleMap
+            onRouteChange={handleRouteChange}
+            onMarkersClear={clearMarkers}
+            initialCenter={{ lat: 48.137154, lng: 11.576124 }} // München
+            initialZoom={12}
+          />
         </CardContent>
       </Card>
 
