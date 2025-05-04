@@ -82,10 +82,6 @@ interface Maschine {
 }
 
 const TiefbauMap: React.FC = () => {
-  // State für Adresse
-  const [startAddress, setStartAddress] = useState('');
-  const [endAddress, setEndAddress] = useState('');
-  
   // State für die Route und Distanz
   const [routeCoordinates, setRouteCoordinates] = useState<Array<{lat: number, lng: number}>>([]);
   const [distance, setDistance] = useState(0);
@@ -440,35 +436,6 @@ const TiefbauMap: React.FC = () => {
         <TabsContent value="karte" className="pt-4">
           <Card className="mb-6">
             <CardHeader className="pb-3">
-              <CardTitle>Adresseingabe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="startAddress">Startadresse:</Label>
-                  <Input 
-                    id="startAddress"
-                    placeholder="Startadresse eingeben" 
-                    value={startAddress}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartAddress(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="endAddress">Zieladresse:</Label>
-                  <Input 
-                    id="endAddress"
-                    placeholder="Zieladresse eingeben" 
-                    value={endAddress}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndAddress(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
               <CardTitle>Kartenansicht</CardTitle>
             </CardHeader>
             <CardContent>
@@ -477,6 +444,7 @@ const TiefbauMap: React.FC = () => {
                 onMarkersClear={clearMarkers}
                 initialCenter={{ lat: 48.137154, lng: 11.576124 }} // München
                 initialZoom={12}
+                searchOutsideMap={true} // Adresssuche außerhalb der Karte platzieren
               />
             </CardContent>
           </Card>

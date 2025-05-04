@@ -15,6 +15,7 @@ interface BasicGoogleMapProps {
   height?: string;
   className?: string;
   showSearch?: boolean;
+  searchOutsideMap?: boolean; // Neue Option, um die Suche außerhalb der Karte anzuzeigen
 }
 
 const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
@@ -25,6 +26,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   height = "500px",
   className = "",
   showSearch = true, // Standardmäßig Suche anzeigen
+  searchOutsideMap = false, // Standardmäßig Suche innerhalb der Karte
 }) => {
   // Unique ID für den Map Container
   const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
@@ -238,6 +240,74 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     }
   }
   
+  // Suchkomponente, die sowohl innerhalb als auch außerhalb der Karte verwendet werden kann
+  const SearchComponent = (
+    <div className="flex items-center">
+      <Input
+        ref={searchInputRef}
+        type="text"
+        placeholder="Adresse suchen..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+        className="flex-1 mr-2 h-8"
+      />
+      <Button 
+        variant="default" 
+        size="sm" 
+        onClick={searchAddress}
+        disabled={isSearching || !searchQuery.trim()}
+        className="h-8 px-3 py-1 whitespace-nowrap"
+      >
+        {isSearching ? (
+          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+        ) : (
+          <Search className="h-4 w-4 mr-1" />
+        )}
+        Suchen
+      </Button>
+    </div>
+  );
+
+  // Wenn die Suche außerhalb der Karte angezeigt werden soll
+  if (searchOutsideMap && showSearch) {
+    return (
+      <div className={`w-full ${className}`}>
+        {/* Suchfeld außerhalb der Karte */}
+        <div className="w-full mb-3 p-2 bg-white rounded-md shadow">
+          {SearchComponent}
+        </div>
+        
+        {/* Karte mit Container */}
+        <div className="relative w-full">
+          <div 
+            id={mapId.current}
+            style={{ height, width: '100%' }} 
+            className="w-full rounded-md overflow-hidden"
+          />
+          
+          {/* Overlay mit Marker-Anzahl und Löschen-Button */}
+          <div className="absolute top-3 right-3 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
+            <span className="text-sm font-medium mr-3">
+              {markersCount} {markersCount === 1 ? 'Marker' : 'Marker'}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearMarkers}
+              disabled={markersCount === 0}
+              className="h-8 px-2 py-1"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Löschen
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Standard-Rendering mit Suchfeld innerhalb der Karte
   return (
     <div className={`relative w-full ${className}`}>
       {/* Map Container */}
@@ -247,32 +317,10 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
         className="w-full rounded-md overflow-hidden"
       />
       
-      {/* Adresssuche */}
+      {/* Adresssuche innerhalb der Karte */}
       {showSearch && (
-        <div className="absolute top-3 left-3 right-16 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
-          <Input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Adresse suchen..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
-            className="flex-1 mr-2 h-8"
-          />
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={searchAddress}
-            disabled={isSearching || !searchQuery.trim()}
-            className="h-8 px-3 py-1 whitespace-nowrap"
-          >
-            {isSearching ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <Search className="h-4 w-4 mr-1" />
-            )}
-            Suchen
-          </Button>
+        <div className="absolute top-3 left-3 right-16 z-10 bg-white bg-opacity-90 rounded-md shadow p-2">
+          {SearchComponent}
         </div>
       )}
       
