@@ -17,8 +17,10 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
 
-// Google Maps Komponente und Konfiguration
-import GoogleMapsComponent, { MarkerInfo as GoogleMarkerInfo } from "@/components/maps/google-maps";
+// Leaflet Komponente
+import LeafletMapsComponent, { MarkerInfo as LeafletMarkerInfo } from "@/components/maps/leaflet-maps";
+// Google Maps Komponente und Konfiguration (derzeit nicht verwendet)
+// import GoogleMapsComponent, { MarkerInfo as GoogleMarkerInfo } from "@/components/maps/google-maps";
 import { DEFAULT_CENTER } from "@/config/google-maps";
 
 // Mapbox-Token aus den Umgebungsvariablen laden
