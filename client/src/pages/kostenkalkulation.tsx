@@ -66,7 +66,7 @@ export default function KostenKalkulationPage() {
   // Daten aus der Datenbank
   const [bodenarten, setBodenarten] = useState(mockBodenarten);
   const [maschinen, setMaschinen] = useState(mockMaschinen);
-  const [routen, setRouten] = useState(mockRouten);
+  const [routen, setRouten] = useState<any[]>([]);
   
   // Ausgewählte Elemente
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export default function KostenKalkulationPage() {
   const [kalkulation, setKalkulation] = useState<any | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  // Hole Parameter aus der URL wenn vorhanden
+  // Hole Parameter aus der URL wenn vorhanden und lade Daten aus der API
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const bodenartId = params.get('bodenart');
@@ -102,11 +102,36 @@ export default function KostenKalkulationPage() {
       setSelectedMaschineId(maschineId);
     }
 
-    // In einer realen Implementierung würden wir hier die API-Daten laden
-    // Für den Moment verwenden wir die Mock-Daten und simulieren Ladezeit
-    setTimeout(() => {
-      setLoading(false);
-    }, 800);
+    // Lade die Routen aus der API
+    const loadRoutes = async () => {
+      try {
+        setLoading(true);
+        
+        // Routen aus der API laden
+        const routenResponse = await fetch('/api/routes');
+        
+        if (!routenResponse.ok) {
+          throw new Error('Fehler beim Laden der Routen');
+        }
+        
+        const routenData = await routenResponse.json();
+        
+        // Setze die geladenen Routen in den State
+        setRouten(routenData);
+        
+        // In Zukunft: Auch Bodenarten und Maschinen aus der API laden
+        // const bodenResponse = await fetch('/api/bodenarten');
+        // const maschinenResponse = await fetch('/api/maschinen');
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Fehler beim Laden der Daten:', error);
+        setError('Die Daten konnten nicht geladen werden. Bitte versuchen Sie es später erneut.');
+        setLoading(false);
+      }
+    };
+    
+    loadRoutes();
   }, []);
 
   // Handler für Parameteränderungen
