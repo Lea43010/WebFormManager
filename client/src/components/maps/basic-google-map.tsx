@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react"; 
+import { Input } from "@/components/ui/input";
+import { Trash2, Search, Loader2 } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Eine sehr einfache DOM-basierte Google Maps Komponente ohne komplexe React-Patterns
@@ -12,6 +14,7 @@ interface BasicGoogleMapProps {
   initialZoom?: number;
   height?: string;
   className?: string;
+  showSearch?: boolean;
 }
 
 const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
@@ -21,13 +24,21 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   initialZoom = 12,
   height = "500px",
   className = "",
+  showSearch = true, // Standardmäßig Suche anzeigen
 }) => {
   // Unique ID für den Map Container
   const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
   const mapRef = useRef<any>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null); 
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  
   const [markersCount, setMarkersCount] = React.useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
   
   // Map initialisieren sobald die Komponente gemountet wird
   useEffect(() => {
@@ -55,9 +66,15 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   
   // Map initialisieren
   function initMap() {
+    console.log('Lade Google Maps API');
     // Element finden
     const mapElement = document.getElementById(mapId.current);
-    if (!mapElement) return;
+    if (!mapElement) {
+      console.error('Google Maps nicht verfügbar oder Container nicht gefunden');
+      return;
+    }
+    
+    console.log('Google Maps API geladen');
     
     // Map erstellen
     const map = new google.maps.Map(mapElement, {
@@ -85,9 +102,75 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
       addMarker(event.latLng);
     });
     
+    // Geocoder für Adresssuche initialisieren
+    geocoderRef.current = new google.maps.Geocoder();
+    
+    // Autocomplete für Suchfeld initialisieren (wird später verwendet)
+    if (searchInputRef.current) {
+      autocompleteRef.current = new google.maps.places.Autocomplete(searchInputRef.current, {
+        types: ['geocode', 'establishment']
+      });
+      
+      // Event-Listener für Auswahl eines Autocomplete-Eintrags
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place && place.geometry && place.geometry.location) {
+          handleSearchResult(place.geometry.location);
+        }
+      });
+    }
+    
     // Referenzen speichern
     mapRef.current = map;
     polylineRef.current = polyline;
+  }
+  
+  // Adresssuche durchführen
+  async function searchAddress() {
+    if (!geocoderRef.current || !searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    
+    try {
+      const result = await geocoderRef.current.geocode({ address: searchQuery });
+      
+      if (result.results && result.results.length > 0) {
+        const location = result.results[0].geometry.location;
+        handleSearchResult(location);
+        
+        toast({
+          title: "Adresse gefunden",
+          description: result.results[0].formatted_address,
+        });
+      } else {
+        toast({
+          title: "Keine Ergebnisse",
+          description: "Keine Adresse für diese Suchanfrage gefunden",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Geocoding Fehler:", error);
+      toast({
+        title: "Fehler bei der Suche",
+        description: "Es gab ein Problem bei der Adresssuche",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  }
+  
+  // Suchergebnis verarbeiten
+  function handleSearchResult(location: google.maps.LatLng) {
+    if (!mapRef.current) return;
+    
+    // Karte auf das Ergebnis zentrieren
+    mapRef.current.setCenter(location);
+    mapRef.current.setZoom(15);
+    
+    // Optional: Marker an der Position hinzufügen
+    addMarker(location);
   }
   
   // Marker hinzufügen
@@ -163,6 +246,35 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
         style={{ height, width: '100%' }} 
         className="w-full rounded-md overflow-hidden"
       />
+      
+      {/* Adresssuche */}
+      {showSearch && (
+        <div className="absolute top-3 left-3 right-16 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
+          <Input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Adresse suchen..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+            className="flex-1 mr-2 h-8"
+          />
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={searchAddress}
+            disabled={isSearching || !searchQuery.trim()}
+            className="h-8 px-3 py-1 whitespace-nowrap"
+          >
+            {isSearching ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <Search className="h-4 w-4 mr-1" />
+            )}
+            Suchen
+          </Button>
+        </div>
+      )}
       
       {/* Overlay mit Marker-Anzahl und Löschen-Button */}
       <div className="absolute top-3 right-3 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
