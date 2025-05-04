@@ -34,6 +34,7 @@ import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
 // HelpPage nicht mehr benötigt, Redirect zu InformationPage
 import StreetModulesPage from "@/pages/street-modules-new";
+import GeoMapPlaceholder from "@/pages/geo-map-placeholder";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -60,7 +61,7 @@ function Router() {
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
-      {/* Geo-bezogene Routen temporär entfernt */}
+      <ProtectedRoute path="/geo-map" component={GeoMapPlaceholder} />
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
