@@ -34,15 +34,52 @@ router.post('/api/elevation', isAuthenticated, async (req: Request, res: Respons
     // Formatiere den Pfad für die Google Elevation API
     const pathString = path.map(point => `${point.lat},${point.lng}`).join('|');
     
-    // Anfrage an die Google Elevation API
-    const response = await axios.get('https://maps.googleapis.com/maps/api/elevation/json', {
-      params: {
-        path: pathString,
-        samples,
-        key: GOOGLE_MAPS_API_KEY
+    // Anfrage an die Google Elevation API mit Timeout und Retry-Logik
+    let response: any = null;
+    let retryCount = 0;
+    const maxRetries = 2;
+    const timeout = 10000; // 10 Sekunden Timeout
+    
+    while (retryCount <= maxRetries) {
+      try {
+        logger.info(`Elevation API Anfrage: ${samples} Samples, Versuch ${retryCount + 1}/${maxRetries + 1}`);
+        response = await axios.get('https://maps.googleapis.com/maps/api/elevation/json', {
+          params: {
+            path: pathString,
+            samples,
+            key: GOOGLE_MAPS_API_KEY
+          },
+          timeout: timeout
+        });
+        
+        if (response && response.data) {
+          break; // Bei erfolgreicher Antwort die Schleife verlassen
+        }
+      } catch (axiosError) {
+        retryCount++;
+        
+        // Wenn alle Versuche fehlgeschlagen sind, werfen wir den Fehler weiter
+        if (retryCount > maxRetries) {
+          logger.error(`Elevation API nicht erreichbar nach ${maxRetries + 1} Versuchen`);
+          throw axiosError;
+        }
+        
+        // Bei Timeout oder Netzwerkfehlern erneut versuchen
+        logger.warn(`Elevation API Anfrage fehlgeschlagen, Versuch ${retryCount}/${maxRetries + 1}`);
+        
+        // Kurze Pause vor dem nächsten Versuch
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
-    });
+    }
 
+    // Stellen Sie sicher, dass die Antwort definiert ist
+    if (!response || !response.data) {
+      logger.error('Keine gültige Antwort von der Elevation API erhalten');
+      return res.status(500).json({ 
+        error: 'Keine gültige Antwort von der Elevation API erhalten' 
+      });
+    }
+    
     if (response.data.status !== 'OK') {
       logger.error(`Elevation API Fehler: ${response.data.status}`, { 
         error: response.data.error_message 

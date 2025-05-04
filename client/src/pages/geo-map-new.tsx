@@ -109,7 +109,7 @@ const GeoMapNew = () => {
     setDistance(0);
   };
 
-  // Höhendaten von der Google Elevation API abrufen
+  // Höhendaten von der Google Elevation API abrufen mit verbessertem Fehlerhandling
   const fetchElevationData = async () => {
     // Prüfen, ob wir Routenpunkte haben
     if (routeCoordinates.length < 2) {
@@ -123,12 +123,34 @@ const GeoMapNew = () => {
 
     setLoading(true);
     
+    // Timeout ID für manuelle Abbruchlogik
+    let timeoutId: ReturnType<typeof setTimeout>;
+    
     try {
-      // Elevation API aufrufen
-      const response = await apiRequest("POST", "/api/elevation", {
+      // Zeige Verarbeitungshinweis
+      toast({
+        title: "Verarbeitung",
+        description: "Höhenprofilsdaten werden abgerufen...",
+      });
+      
+      // Timeout-Promise erstellen
+      const timeoutPromise = new Promise<Response>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("Zeitüberschreitung bei der Anfrage"));
+        }, 15000); // 15 Sekunden Timeout
+      });
+      
+      // Eigentliche API-Anfrage
+      const fetchPromise = apiRequest("POST", "/api/elevation", {
         path: routeCoordinates,
         samples: 256 // Anzahl der Samples entlang der Route
       });
+      
+      // Warten auf die schnellere der beiden Promises
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      // Timeout löschen, da Antwort erfolgreich zurückgekommen ist
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -139,17 +161,41 @@ const GeoMapNew = () => {
       setElevationData(data);
       setShowElevationChart(true);
       
+      // Statistiken protokollieren
+      console.log('Elevation Statistics:', {
+        Min: data.stats.minElevation.toFixed(1) + 'm',
+        Max: data.stats.maxElevation.toFixed(1) + 'm',
+        Difference: data.stats.elevationDifference.toFixed(1) + 'm',
+        Ascent: data.stats.totalAscent.toFixed(1) + 'm',
+        Descent: data.stats.totalDescent.toFixed(1) + 'm',
+        'Avg. Slope': ((data.stats.totalAscent / distance) * 100).toFixed(1) + '%'
+      });
+      
       toast({
         title: "Erfolg",
         description: "Höhenprofilsdaten erfolgreich abgerufen!",
       });
-    } catch (error) {
-      console.error('Fehler beim Abrufen der Höhendaten:', error);
-      toast({
-        title: "Fehler",
-        description: error instanceof Error ? error.message : "Fehler beim Abrufen der Höhendaten",
-        variant: "destructive"
-      });
+    } catch (error: unknown) {
+      // Sicherstellen, dass der Timeout gelöscht wird
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+      
+      if (errorMessage.includes("Zeitüberschreitung")) {
+        console.error('API-Anfrage wegen Zeitüberschreitung abgebrochen');
+        toast({
+          title: "Zeitüberschreitung",
+          description: "Die Anfrage hat zu lange gedauert. Bitte versuchen Sie es mit weniger Punkten oder später erneut.",
+          variant: "destructive"
+        });
+      } else {
+        console.error('Fehler beim Abrufen der Höhendaten:', error);
+        toast({
+          title: "Fehler",
+          description: error instanceof Error ? error.message : "Fehler beim Abrufen der Höhendaten",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }

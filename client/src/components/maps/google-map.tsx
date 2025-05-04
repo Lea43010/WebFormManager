@@ -184,11 +184,18 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       return;
     }
     
-    // Script-Tag erstellen und API laden
+    // Script-Tag erstellen und API laden - mit optimierten Parametern
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=geometry&loading=async&callback=initMap`;
     script.async = true;
     script.defer = true;
+    
+    // Callback für die Maps API bereitstellen
+    window.initMap = () => {
+      console.log("Google Maps API Callback (initMap) aufgerufen");
+      // State aktualisieren, um Re-Rendering zu erzwingen und DOM zu erkennen
+      setIsLoading(prevState => prevState);
+    };
     
     // Timeout festlegen, falls die API zu lange lädt
     const timeoutId = setTimeout(() => {
