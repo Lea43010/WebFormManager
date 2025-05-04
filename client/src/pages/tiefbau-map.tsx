@@ -407,39 +407,34 @@ const TiefbauMap: React.FC = () => {
     // Ein sinnvoller Name für die Route
     const routeName = `Route von ${effectiveStartAddress.split(',')[0]} nach ${effectiveEndAddress.split(',')[0]}`;
     
-    // Logging für Debugging-Zwecke
-    console.log('Speichere Route mit folgenden Daten:', { 
-      name: routeName,
-      start_address: effectiveStartAddress,
-      end_address: effectiveEndAddress,
-      distance: Math.round(distance),
-      coordinates_count: routeCoordinates.length
-    });
-    
     try {
-      // Detailliertes Logging vor Absenden
-      console.log('Speichere Route mit folgenden Daten:', {
-        name: routeName,
-        start_address: effectiveStartAddress,
-        end_address: effectiveEndAddress,
-        distance: Math.round(distance || 100),
-        route_data_length: routeCoordinates.length
-      });
+      // Bereite die Koordinaten-Daten für den Server vor
+      // Wandle alle Objekte in einfache Strukturen um, die gut serialisiert werden können
+      const simplifiedCoordinates = routeCoordinates.slice(0, 50).map(point => ({
+        lat: Number(point.lat),
+        lng: Number(point.lng)
+      }));
       
-      // Zurück zum normalen Endpunkt
+      // Stellen sicher, dass alle Werte den richtigen Typ haben
+      const routeData = {
+        name: String(routeName || `Route ${new Date().toLocaleString('de-DE')}`),
+        start_address: String(effectiveStartAddress || 'Unbekannter Startpunkt'),
+        end_address: String(effectiveEndAddress || 'Unbekannter Endpunkt'),
+        distance: Math.round(Number(distance || 100)), // Fallback-Abstand, falls keine Berechnung möglich war
+        route_data: simplifiedCoordinates
+      };
+      
+      // Detailliertes Logging vor Absenden
+      console.log('Sende folgende Route an API:', JSON.stringify(routeData, null, 2));
+      
+      // Zum normalen Endpunkt senden
       const response = await fetch('/api/routes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          name: routeName,
-          start_address: effectiveStartAddress,
-          end_address: effectiveEndAddress,
-          distance: Math.round(distance || 100), // Fallback-Abstand, falls keine Berechnung möglich war
-          route_data: routeCoordinates.slice(0, 50) // Nur die ersten 50 Punkte senden, um Datengröße zu reduzieren
-        }),
+        body: JSON.stringify(routeData),
       });
       
       if (!response.ok) {

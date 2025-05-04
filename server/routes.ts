@@ -3602,7 +3602,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Route in der Datenbank speichern
         const userId = req.user?.id || null;
-        const jsonRouteData = route_data ? JSON.stringify(route_data) : null;
         
         // Werte mit Fallbacks definieren für den Fall, dass sie fehlen
         const effectiveName = name || `Route vom ${new Date().toLocaleString('de-DE')}`;
@@ -3610,16 +3609,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const effectiveEndAddress = end_address || 'Unbekannter Endpunkt';
         const effectiveDistance = distance || 100;
         
+        let finalRouteData;
+        try {
+          // Versuche die route_data in ein gültiges JSON zu parsen, falls es als String übergeben wurde
+          if (typeof route_data === 'string') {
+            finalRouteData = JSON.stringify(JSON.parse(route_data));
+          } else if (Array.isArray(route_data)) {
+            // Wenn es bereits ein Array ist, einfach als JSON-String serialisieren
+            finalRouteData = JSON.stringify(route_data);
+          } else {
+            // Fallback: leeres Array
+            finalRouteData = '[]';
+          }
+        } catch (error) {
+          console.error('Fehler beim Verarbeiten der Route-Daten:', error);
+          finalRouteData = '[]'; // Fallback: leeres Array
+        }
+        
         console.log('Verwende folgende Werte für SQL-Insert:', {
           name: effectiveName,
           start_address: effectiveStartAddress,
           end_address: effectiveEndAddress,
-          distance: effectiveDistance
+          distance: effectiveDistance,
+          route_data_type: typeof route_data,
+          route_data_preview: Array.isArray(route_data) 
+            ? `Array mit ${route_data.length} Elementen` 
+            : 'Keine gültigen Koordinaten'
         });
         
+        // Die finale SQL-Anfrage mit Typecast als JSONB
         const result = await sql`
           INSERT INTO routes (name, start_address, end_address, distance, route_data, created_by)
-          VALUES (${effectiveName}, ${effectiveStartAddress}, ${effectiveEndAddress}, ${effectiveDistance}, ${jsonRouteData}::jsonb, ${userId})
+          VALUES (${effectiveName}, ${effectiveStartAddress}, ${effectiveEndAddress}, ${effectiveDistance}, ${finalRouteData}::jsonb, ${userId})
           RETURNING *
         `;
         
