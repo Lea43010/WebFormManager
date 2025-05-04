@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Loader2, MapPin, Trash2, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect, useRef, useCallback, useImperativeHandle } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, MapPin, Trash2, Search } from "lucide-react";
 
+// Google Maps-Typdefinitionen für TypeScript
 declare global {
   interface Window {
     google: any;
   }
 }
 
-// Eigenschaften für die SimpleGoogleMap-Komponente
-interface SimpleGoogleMapProps {
+// Eigenschaften für die SearchableGoogleMap-Komponente
+interface SearchableGoogleMapProps {
   defaultCenter?: { lat: number; lng: number };
   defaultZoom?: number;
   height?: string;
@@ -27,8 +28,8 @@ interface SimpleGoogleMapProps {
   }>;
 }
 
-// Google Maps Komponente mit vereinfachtem DOM-basierten Ansatz
-const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
+// Google Maps Komponente mit Adresssuchfunktion
+const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   defaultCenter = { lat: 48.137154, lng: 11.576124 },
   defaultZoom = 12,
   height = '500px',
@@ -64,13 +65,13 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   
   // Marker hinzufügen
   const addMarker = useCallback((position: any) => {
-    if (!mapRef.current) return;
+    if (!internalMapRef.current) return;
     
     try {
       // Marker erstellen
       const marker = new window.google.maps.Marker({
         position,
-        map: mapRef.current,
+        map: internalMapRef.current,
         draggable: true,
         animation: window.google.maps.Animation.DROP,
       });
@@ -105,7 +106,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   
   // Polyline aktualisieren
   const updatePolyline = useCallback(() => {
-    if (!mapRef.current || !polylineRef.current || !window.google) return;
+    if (!internalMapRef.current || !polylineRef.current || !window.google) return;
     
     try {
       // Positionen extrahieren
@@ -162,6 +163,75 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
     }
   }, [onMarkersCleared, toast]);
   
+  // Adresssuche
+  const searchAddressInternal = useCallback(async (address: string) => {
+    if (!address.trim() || !internalMapRef.current || !window.google) {
+      return;
+    }
+    
+    setSearching(true);
+    
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      
+      return new Promise<void>((resolve, reject) => {
+        geocoder.geocode({ address }, (results: any, status: any) => {
+          if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
+            const location = results[0].geometry.location;
+            
+            // Karte zentrieren
+            internalMapRef.current.setCenter(location);
+            internalMapRef.current.setZoom(15);
+            
+            // Marker setzen
+            addMarker(location);
+            
+            toast({
+              title: "Adresse gefunden",
+              description: results[0].formatted_address,
+              duration: 3000
+            });
+            
+            resolve();
+          } else {
+            toast({
+              title: "Fehler",
+              description: "Die Adresse konnte nicht gefunden werden.",
+              variant: "destructive",
+              duration: 3000
+            });
+            
+            reject(new Error("Adresse nicht gefunden"));
+          }
+          
+          setSearching(false);
+        });
+      });
+    } catch (error) {
+      console.error('Fehler bei der Adresssuche:', error);
+      toast({
+        title: "Fehler",
+        description: "Bei der Adresssuche ist ein Fehler aufgetreten.",
+        variant: "destructive",
+        duration: 3000
+      });
+      setSearching(false);
+      throw error;
+    }
+  }, [addMarker, toast]);
+  
+  // Diese Methode für die externe Nutzung verfügbar machen
+  useImperativeHandle(mapRef, () => ({
+    searchAddress: async (address: string) => {
+      return searchAddressInternal(address);
+    }
+  }), [searchAddressInternal]);
+  
+  // Suchfunktion für Suchfeld in der Karte
+  const handleSearchButtonClick = useCallback(() => {
+    searchAddressInternal(searchInput);
+  }, [searchInput, searchAddressInternal]);
+  
   // Karte initialisieren
   const initMap = useCallback(() => {
     try {
@@ -197,7 +267,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
       });
       
       // Referenzen speichern
-      mapRef.current = map;
+      internalMapRef.current = map;
       polylineRef.current = polyline;
       
       // Loading beenden
@@ -294,54 +364,6 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
     );
   }
   
-  // Suchfunktion für Adressen
-  const searchAddress = useCallback(() => {
-    if (!searchInput.trim() || !mapRef.current || !window.google) return;
-    
-    setSearching(true);
-    
-    try {
-      const geocoder = new window.google.maps.Geocoder();
-      
-      geocoder.geocode({ address: searchInput }, (results: any, status: any) => {
-        if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
-          const location = results[0].geometry.location;
-          
-          // Karte zentrieren
-          mapRef.current.setCenter(location);
-          mapRef.current.setZoom(15);
-          
-          // Marker setzen
-          addMarker(location);
-          
-          toast({
-            title: "Adresse gefunden",
-            description: results[0].formatted_address,
-            duration: 3000
-          });
-        } else {
-          toast({
-            title: "Fehler",
-            description: "Die Adresse konnte nicht gefunden werden.",
-            variant: "destructive",
-            duration: 3000
-          });
-        }
-        
-        setSearching(false);
-      });
-    } catch (error) {
-      console.error('Fehler bei der Adresssuche:', error);
-      toast({
-        title: "Fehler",
-        description: "Bei der Adresssuche ist ein Fehler aufgetreten.",
-        variant: "destructive",
-        duration: 3000
-      });
-      setSearching(false);
-    }
-  }, [searchInput, addMarker, toast]);
-
   // Karten-Ansicht
   return (
     <div className={`relative ${className}`}>
@@ -352,13 +374,13 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
           placeholder="Adresse suchen..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearchButtonClick()}
           className="h-8 text-sm"
         />
         <Button
           variant="default"
           size="sm"
-          onClick={searchAddress}
+          onClick={handleSearchButtonClick}
           disabled={searching || !searchInput.trim()}
           className="h-8 px-2 py-1"
         >
@@ -402,4 +424,4 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   );
 };
 
-export default SimpleGoogleMap;
+export default SearchableGoogleMap;

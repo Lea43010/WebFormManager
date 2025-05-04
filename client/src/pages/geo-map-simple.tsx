@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'wouter';
 import { 
   ArrowLeft, 
@@ -26,8 +26,8 @@ import {
   ReferenceLine
 } from 'recharts';
 
-// Neue vereinfachte Google Maps-Komponente
-import SimpleGoogleMap from '@/components/maps/simple-google-map';
+// Neue Google Maps-Komponente mit Suchfunktion
+import SearchableGoogleMap from '@/components/maps/searchable-google-map';
 
 // Typdefinitionen
 interface ElevationPoint {
@@ -67,6 +67,10 @@ const GeoMapSimple: React.FC = () => {
   
   // Loading-State
   const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  
+  // Referenz auf die Kartenkomponente
+  const mapRef = useRef<{ searchAddress: (address: string) => Promise<void> }>(null);
   
   // Toast-Hook
   const { toast } = useToast();
@@ -233,23 +237,86 @@ const GeoMapSimple: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startAddress">Startadresse:</Label>
-              <Input 
-                id="startAddress"
-                placeholder="Startadresse eingeben" 
-                value={startAddress}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartAddress(e.target.value)}
-              />
+              <div className="flex space-x-2">
+                <Input 
+                  id="startAddress"
+                  placeholder="Startadresse eingeben" 
+                  value={startAddress}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartAddress(e.target.value)}
+                />
+                <Button 
+                  size="sm" 
+                  disabled={searchLoading}
+                  onClick={async () => {
+                    if (!startAddress.trim()) {
+                      toast({
+                        title: "Fehler",
+                        description: "Bitte geben Sie eine Startadresse ein.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    setSearchLoading(true);
+                    try {
+                      if (mapRef.current) {
+                        await mapRef.current.searchAddress(startAddress);
+                      }
+                    } catch (error) {
+                      console.error('Fehler bei der Adresssuche:', error);
+                    } finally {
+                      setSearchLoading(false);
+                    }
+                  }}
+                >
+                  {searchLoading ? 'Suche...' : 'Suchen'}
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="endAddress">Zieladresse:</Label>
-              <Input 
-                id="endAddress"
-                placeholder="Zieladresse eingeben" 
-                value={endAddress}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndAddress(e.target.value)}
-              />
+              <div className="flex space-x-2">
+                <Input 
+                  id="endAddress"
+                  placeholder="Zieladresse eingeben" 
+                  value={endAddress}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndAddress(e.target.value)}
+                />
+                <Button 
+                  size="sm"
+                  disabled={searchLoading}
+                  onClick={async () => {
+                    if (!endAddress.trim()) {
+                      toast({
+                        title: "Fehler",
+                        description: "Bitte geben Sie eine Zieladresse ein.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    setSearchLoading(true);
+                    try {
+                      if (mapRef.current) {
+                        await mapRef.current.searchAddress(endAddress);
+                      }
+                    } catch (error) {
+                      console.error('Fehler bei der Adresssuche:', error);
+                    } finally {
+                      setSearchLoading(false);
+                    }
+                  }}
+                >
+                  {searchLoading ? 'Suche...' : 'Suchen'}
+                </Button>
+              </div>
             </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-slate-500">
+              <strong>Hinweis:</strong> Alternativ können Sie auch direkt in der Karte nach Adressen suchen, indem Sie das Suchfeld oben links in der Karte verwenden.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -259,11 +326,12 @@ const GeoMapSimple: React.FC = () => {
           <CardTitle>Kartenansicht</CardTitle>
         </CardHeader>
         <CardContent>
-          <SimpleGoogleMap
+          <SearchableGoogleMap
             onRouteChange={handleRouteChange}
             onMarkersCleared={clearMarkers}
             defaultCenter={{ lat: 48.137154, lng: 11.576124 }} // München
             defaultZoom={12}
+            mapRef={mapRef}
           />
         </CardContent>
       </Card>
