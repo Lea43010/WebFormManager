@@ -31,22 +31,24 @@ const TiefbauNavigation = () => {
       description: 'Höhenprofil und Baustellen-Übersicht'
     },
     {
-      title: 'Bodenanalyse',
-      href: '/bodenanalyse',
-      icon: Database,
-      description: 'Analyse von Bodenarten und Eigenschaften'
-    },
-    {
-      title: 'Maschinenauswahl',
-      href: '/maschinen-auswahl',
-      icon: Truck,
-      description: 'Passende Baumaschinen finden'
-    },
-    {
       title: 'Kostenkalkulation',
       href: '/kostenkalkulation',
       icon: Calculator,
       description: 'Projektkosten kalkulieren'
+    },
+    {
+      title: 'Bodenanalyse',
+      href: '#',
+      icon: Database,
+      description: 'Analyse von Bodenarten und Eigenschaften',
+      comingSoon: true
+    },
+    {
+      title: 'Maschinenauswahl',
+      href: '#',
+      icon: Truck,
+      description: 'Passende Baumaschinen finden',
+      comingSoon: true
     }
   ];
 

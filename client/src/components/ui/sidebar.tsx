@@ -70,16 +70,10 @@ const navItems: NavItem[] = [
     tooltip: "Tiefbau-Planung und Baustellen-Management",
   },
   {
-    title: "Bodenanalyse",
-    href: "/bodenanalyse",
-    icon: Database,
-    tooltip: "Analyse von Bodenarten und Eigenschaften",
-  },
-  {
-    title: "Maschinenauswahl",
-    href: "/maschinen-auswahl",
-    icon: Truck,
-    tooltip: "Baumaschinen nach Bodenart und Leistung auswählen",
+    title: "Kostenkalkulation",
+    href: "/kostenkalkulation",
+    icon: CreditCard,
+    tooltip: "Kosten für Bauvorhaben kalkulieren",
   },
   {
     title: "Dokumente",
