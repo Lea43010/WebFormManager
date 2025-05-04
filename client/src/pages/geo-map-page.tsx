@@ -17,19 +17,23 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
 
+// Google Maps Komponente und Konfiguration
+import GoogleMapsComponent, { MarkerInfo as GoogleMarkerInfo } from "@/components/maps/google-maps";
+import { DEFAULT_CENTER } from "@/config/google-maps";
+
 // Mapbox-Token aus den Umgebungsvariablen laden
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 // Debug-Ausgabe des Tokens
 console.log("Geladenes Mapbox-Token:", MAPBOX_TOKEN);
 
-// Leaflet imports
+// Leaflet imports für PDF Export (wird vorerst weiterhin benötigt)
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// Hack um Leaflet-Marker-Icons in Vite zu fixen
+// Hack um Leaflet-Marker-Icons in Vite zu fixen (wird für PDF Export weiterhin benötigt)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -499,6 +503,13 @@ export default function GeoMapPage() {
     // Marker an vorhandene Liste anhängen
     setMarkers(prev => [...prev, newMarker]);
   }, [selectedBelastungsklasse]);
+  
+  // Legacy-Funktion für den Fall, dass ein Leaflet-Event übergeben wird
+  const handleMapClick = useCallback((e: any) => {
+    if (e && e.latlng) {
+      handleAddMarker(e.latlng.lat, e.latlng.lng);
+    }
+  }, [handleAddMarker]);
   
   // Marker bearbeiten
   const handleEditMarker = (idx: number) => {
@@ -1488,107 +1499,37 @@ export default function GeoMapPage() {
               
               {/* 3. Karte mit Markern */}
               <div className="h-[500px] relative border rounded-lg overflow-hidden">
-                <MapContainer
-                  center={mapCenterPosition}
+                {/* Google Maps Integration */}
+                <GoogleMapsComponent
+                  markers={markers.map(marker => ({
+                    ...marker,
+                    position: marker.position
+                  }))}
+                  onMarkerAdd={(lat, lng) => {
+                    // Marker hinzufügen
+                    handleAddMarker(lat, lng);
+                  }}
+                  onMarkerDragEnd={(index, lat, lng) => {
+                    // Marker-Position aktualisieren
+                    const updatedMarkers = [...markers];
+                    updatedMarkers[index].position = [lat, lng];
+                    setMarkers(updatedMarkers);
+                  }}
+                  onMarkerClick={(index) => {
+                    // Marker zum Bearbeiten auswählen
+                    handleEditMarker(index);
+                  }}
+                  center={{
+                    lat: mapCenterPosition[0],
+                    lng: mapCenterPosition[1]
+                  }}
                   zoom={13}
-                  style={{ height: "100%", width: "100%" }}
-                  ref={mapRef}
-                >
-                  {/* Fallback auf OpenStreetMap, wenn kein Mapbox-Token verfügbar ist */}
-                  {MAPBOX_TOKEN ? (
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>'
-                      url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`}
-                    />
-                  ) : (
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                  )}
-                  
-                  {/* Routenlinien */}
-                  {markers.length >= 2 && (
-                    <Polyline
-                      positions={markers.map(m => m.position)}
-                      color="#3b82f6"
-                      weight={4}
-                      opacity={0.7}
-                      ref={polylineRef}
-                    />
-                  )}
-                  
-                  {/* Marker anzeigen */}
-                  {markers.map((marker, idx) => (
-                    <Marker
-                      key={idx}
-                      position={marker.position}
-                      icon={createCustomIcon(marker.belastungsklasse)}
-                    >
-                      <Popup>
-                        <div className="text-sm space-y-2">
-                          {marker.strasse ? (
-                            <h3 className="font-semibold">
-                              {marker.strasse} {marker.hausnummer || ''} 
-                              {marker.plz || marker.ort ? <>, </> : ''}
-                              {marker.plz} {marker.ort}
-                            </h3>
-                          ) : (
-                            <h3 className="font-semibold">Standort {idx + 1}</h3>
-                          )}
-                          
-                          {marker.belastungsklasse && (
-                            <p>Belastungsklasse: <strong>{marker.belastungsklasse}</strong></p>
-                          )}
-                          
-                          {marker.notes && (
-                            <div>
-                              <p className="font-medium">Notizen:</p>
-                              <p>{marker.notes}</p>
-                            </div>
-                          )}
-                          
-                          <div className="flex space-x-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleEditMarker(idx)}
-                            >
-                              Bearbeiten
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="sm"
-                              onClick={() => handleDeleteMarker(idx)}
-                            >
-                              Entfernen
-                            </Button>
-                          </div>
-                        </div>
-                      </Popup>
-                      
-                      {/* Zusätzliche Tooltip-Beschriftung für den Marker */}
-                      <LeafletTooltip direction="top" offset={[0, -10]} permanent>
-                        <span className="font-medium">
-                          {marker.strasse 
-                            ? `${marker.strasse} ${marker.hausnummer || ''}`
-                            : idx + 1}
-                        </span>
-                      </LeafletTooltip>
-                    </Marker>
-                  ))}
-                  
-                  {/* Map-Events */}
-                  <MapClicker 
-                    onMarkerAdd={handleAddMarker} 
-                    selectedBelastungsklasse={selectedBelastungsklasse}
-                  />
-                  <MapControl position={mapCenterPosition} />
-                </MapContainer>
+                  selectedBelastungsklasse={selectedBelastungsklasse}
+                />
                 
-                {/* Mapbox-Attribution (erforderlich laut ToS) */}
+                {/* Google Maps Attribution */}
                 <div className="absolute bottom-0 right-0 bg-white/80 text-xs p-1 z-[1000]">
-                  <a href="https://www.mapbox.com/about/maps/" target="_blank" rel="noopener noreferrer">© Mapbox</a>
+                  <a href="https://www.google.com/maps/" target="_blank" rel="noopener noreferrer">© Google Maps</a>
                 </div>
               </div>
               

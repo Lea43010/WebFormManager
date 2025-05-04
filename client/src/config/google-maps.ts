@@ -6,7 +6,7 @@ export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || i
 export const GOOGLE_MAPS_LIBRARIES = ["places", "geometry"];
 
 // Standardoptionen für die Google Maps Karte
-export const DEFAULT_MAP_OPTIONS: google.maps.MapOptions = {
+export const DEFAULT_MAP_OPTIONS = {
   disableDefaultUI: false,
   zoomControl: true,
   streetViewControl: false,
@@ -22,13 +22,12 @@ export const DEFAULT_MAP_OPTIONS: google.maps.MapOptions = {
 };
 
 // Standardoptionen für Marker
-export const DEFAULT_MARKER_OPTIONS: google.maps.MarkerOptions = {
-  animation: google.maps.Animation.DROP,
+export const DEFAULT_MARKER_OPTIONS = {
   draggable: true,
 };
 
 // Standardposition (Nürnberg)
-export const DEFAULT_CENTER: google.maps.LatLngLiteral = {
+export const DEFAULT_CENTER = {
   lat: 49.44,
   lng: 11.07
 };

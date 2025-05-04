@@ -126,6 +126,10 @@ export default function GoogleMapsComponent({
       ? belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors] 
       : belastungsklassenColors.none;
     
+    if (!isLoaded) {
+      return undefined; // Wenn google noch nicht geladen ist
+    }
+    
     return {
       path: google.maps.SymbolPath.CIRCLE,
       fillColor: color,
