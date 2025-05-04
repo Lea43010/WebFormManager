@@ -1,35 +1,29 @@
-// Das Token von Google Maps für die Kartendarstellung exportieren
-// Wir verwenden die Umgebungsvariable GOOGLE_MAPS_API_KEY oder GOOGLE_API_KEY
-export const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_MAPS_API_KEY || import.meta.env.GOOGLE_API_KEY || '';
-// Debug-Log für API-Key (ohne den Key selbst zu zeigen)
-console.log("Google Maps API Key konfiguriert:", GOOGLE_MAPS_API_KEY ? "Ja" : "Nein");
+/**
+ * Google Maps Konfiguration
+ */
 
-// Google Maps Bibliotheken
-export const GOOGLE_MAPS_LIBRARIES = ["places", "geometry"];
+// Google Maps API-Schlüssel
+export const GOOGLE_MAPS_API_KEY = "AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg";
 
-// Standardoptionen für die Google Maps Karte
+// Standard-Zentrum (München)
+export const DEFAULT_CENTER = { lat: 48.137154, lng: 11.576124 };
+
+// Standard-Kartenoptionen
 export const DEFAULT_MAP_OPTIONS = {
   disableDefaultUI: false,
   zoomControl: true,
+  mapTypeControl: true,
   streetViewControl: false,
   fullscreenControl: true,
-  mapTypeControl: true,
-  styles: [
-    {
-      featureType: "poi",
-      elementType: "labels",
-      stylers: [{ visibility: "off" }]
-    }
-  ]
 };
 
-// Standardoptionen für Marker
-export const DEFAULT_MARKER_OPTIONS = {
-  draggable: true,
-};
-
-// Standardposition (Nürnberg)
-export const DEFAULT_CENTER = {
-  lat: 49.44,
-  lng: 11.07
+// Belastungsklassen-Farbcodierung
+export const BELASTUNGSKLASSEN_COLORS = {
+  Bk100: "#e74c3c", // Rot - höchste Belastung
+  Bk32: "#e67e22",  // Orange
+  Bk10: "#f39c12",  // Helleres Orange
+  Bk3: "#f1c40f",   // Gelb
+  Bk1: "#2ecc71",   // Grün
+  Bk0_3: "#3498db", // Blau - niedrigste Belastung
+  none: "#95a5a6"   // Grau - keine Belastungsklasse
 };

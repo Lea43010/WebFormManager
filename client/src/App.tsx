@@ -77,11 +77,56 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route path="/maps-test" component={MapsTestPage} /> {/* Google Maps Test-Seite */}
-      <Route path="/simple-test" component={() => {
-        // Einfache Static-Import-Variante verwenden
-        const SimpleTestPage = require("./pages/simple-test-page").default;
-        return <SimpleTestPage />;
-      }} /> {/* Einfache Test-Seite ohne komplexe Imports */}
+      <Route path="/startup-test">
+        {() => {
+          // Einfache statische Testseite direkt hier
+          return (
+            <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem 1rem" }}>
+              <h1 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1.5rem" }}>
+                Startup Test
+              </h1>
+              
+              <div style={{ 
+                border: "1px solid #e2e8f0", 
+                borderRadius: "0.5rem", 
+                padding: "1.5rem", 
+                marginBottom: "1.5rem", 
+                background: "white" 
+              }}>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
+                  Server Status
+                </h2>
+                
+                <div style={{ 
+                  padding: "1rem", 
+                  border: "1px solid #e2e8f0", 
+                  borderRadius: "0.375rem", 
+                  background: "#f8fafc" 
+                }}>
+                  <p style={{ marginBottom: "1rem" }}>
+                    Erfolgreicher Server-Start bestätigt.
+                    Einfache Testseite ohne komplexe Komponenten.
+                  </p>
+                  
+                  <button 
+                    style={{
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "0.25rem",
+                      fontWeight: "500",
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Test Button
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }}
+      </Route> {/* Sehr einfache Test-Seite direkt in App.tsx */}
       <Route component={NotFound} />
     </Switch>
   );
