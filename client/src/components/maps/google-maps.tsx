@@ -121,14 +121,14 @@ export default function GoogleMapsComponent({
   }, [markers]);
 
   // Icon für Marker basierend auf Belastungsklasse
-  const getMarkerIcon = (belastungsklasse?: string) => {
-    const color = belastungsklasse 
-      ? belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors] 
-      : belastungsklassenColors.none;
-    
+  const getMarkerIcon = (belastungsklasse?: string): google.maps.Symbol | undefined => {
     if (!isLoaded) {
       return undefined; // Wenn google noch nicht geladen ist
     }
+    
+    const color = belastungsklasse 
+      ? belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors] 
+      : belastungsklassenColors.none;
     
     return {
       path: google.maps.SymbolPath.CIRCLE,
