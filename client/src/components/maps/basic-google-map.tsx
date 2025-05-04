@@ -202,7 +202,12 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   
   // Adresse für eine Position abrufen
   async function getAddressForLocation(location: {lat: number, lng: number}): Promise<string> {
-    if (!geocoderRef.current) return '';
+    console.log('Versuche Adresse für Position abzurufen:', location);
+    
+    if (!geocoderRef.current) {
+      console.warn('Geocoder nicht verfügbar');
+      return `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
+    }
     
     try {
       const result = await geocoderRef.current.geocode({ 
@@ -210,13 +215,22 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
       });
       
       if (result.results && result.results.length > 0) {
-        return result.results[0].formatted_address;
+        const address = result.results[0].formatted_address;
+        console.log('Adresse gefunden:', address);
+        return address;
+      } else {
+        console.warn('Keine Adresse für Position gefunden');
       }
     } catch (error) {
       console.error("Geocoding Fehler:", error);
+      // Bei Google Places API Fehler alternative Adresse verwenden
+      if (error.toString().includes('API project is not authorized')) {
+        console.warn('API-Berechtigungsfehler, verwende Koordinaten als Fallback');
+      }
     }
     
-    return '';
+    // Fallback: Verwende Koordinaten als "Adresse"
+    return `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
   }
   
   // Polyline aktualisieren

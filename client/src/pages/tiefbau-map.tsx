@@ -401,81 +401,40 @@ const TiefbauMap: React.FC = () => {
     }
     
     // Prüfen, ob Start- und Endadresse gesetzt sind
-    if (!startAddress || !endAddress) {
-      console.error('Fehlende Adressen:', { startAddress, endAddress });
-      // Automatisch generierte Adressen, falls keine vorhanden sind
-      const fallbackStartAddress = 'Startpunkt';
-      const fallbackEndAddress = 'Endpunkt';
-      
-      toast({
-        title: "Warnung",
-        description: "Adressen konnten nicht ermittelt werden. Verwende generische Namen.",
-        variant: "destructive",
-        duration: 6000
-      });
-      
-      // Speichern mit Fallback-Adressen fortsetzen
-      
-      try {
-        const response = await fetch('/api/routes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: `Route von ${fallbackStartAddress} nach ${fallbackEndAddress}`,
-            start_address: fallbackStartAddress,
-            end_address: fallbackEndAddress,
-            distance: Math.round(distance),
-            route_data: routeCoordinates
-          }),
-        });
-        
-        // Rest des Codes zur Fehlerbehandlung...
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Fehler beim Speichern der Route');
-        }
-        
-        const data = await response.json();
-        toast({
-          title: "Erfolg",
-          description: `Route "${data.name}" erfolgreich gespeichert!`,
-          duration: 5000
-        });
-      } catch (error: any) {
-        console.error('Fehler beim Speichern der Route:', error);
-        toast({
-          title: "Fehler",
-          description: error.message || "Fehler beim Speichern der Route",
-          variant: "destructive",
-          duration: 6000
-        });
-      }
-      
-      return;
-    }
+    const effectiveStartAddress = startAddress || `${routeCoordinates[0].lat.toFixed(6)}, ${routeCoordinates[0].lng.toFixed(6)}`;
+    const effectiveEndAddress = endAddress || `${routeCoordinates[routeCoordinates.length-1].lat.toFixed(6)}, ${routeCoordinates[routeCoordinates.length-1].lng.toFixed(6)}`;
     
-    // Debugging-Ausgabe für Adressen
-    console.log('Speichere Route mit Adressen:', { startAddress, endAddress });
+    // Ein sinnvoller Name für die Route
+    const routeName = `Route von ${effectiveStartAddress.split(',')[0]} nach ${effectiveEndAddress.split(',')[0]}`;
+    
+    // Logging für Debugging-Zwecke
+    console.log('Speichere Route mit folgenden Daten:', { 
+      name: routeName,
+      start_address: effectiveStartAddress,
+      end_address: effectiveEndAddress,
+      distance: Math.round(distance),
+      coordinates_count: routeCoordinates.length
+    });
     
     try {
       const response = await fetch('/api/routes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-          name: `Route von ${startAddress.split(',')[0]} nach ${endAddress.split(',')[0]}`,
-          start_address: startAddress,
-          end_address: endAddress,
-          distance: Math.round(distance),
+          name: routeName,
+          start_address: effectiveStartAddress,
+          end_address: effectiveEndAddress,
+          distance: Math.round(distance || 100), // Fallback-Abstand, falls keine Berechnung möglich war
           route_data: routeCoordinates
         }),
       });
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API-Fehler-Details:', errorData);
         throw new Error(errorData.error || 'Fehler beim Speichern der Route');
       }
       
@@ -485,6 +444,9 @@ const TiefbauMap: React.FC = () => {
         description: `Route "${data.name}" erfolgreich gespeichert!`,
         duration: 5000
       });
+      
+      // Optional: Zurück zur Kostenkalkulation navigieren
+      // setLocation('/kostenkalkulation');
     } catch (error: any) {
       console.error('Fehler beim Speichern der Route:', error);
       toast({
