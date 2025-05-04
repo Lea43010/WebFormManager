@@ -46,7 +46,10 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   useEffect(() => {
     // Script Tag erstellen und zur Seite hinzufügen
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg&libraries=geometry,places`;
+    // API-Key direkt verwenden, da die Umgebungsvariable nicht richtig geladen wird
+    const apiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
+    console.log('Google Maps API Key:', apiKey);
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
     script.async = true;
     script.defer = true;
     script.onload = initMap;

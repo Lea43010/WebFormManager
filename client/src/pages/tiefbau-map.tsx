@@ -402,14 +402,62 @@ const TiefbauMap: React.FC = () => {
     
     // Prüfen, ob Start- und Endadresse gesetzt sind
     if (!startAddress || !endAddress) {
+      console.error('Fehlende Adressen:', { startAddress, endAddress });
+      // Automatisch generierte Adressen, falls keine vorhanden sind
+      const fallbackStartAddress = 'Startpunkt';
+      const fallbackEndAddress = 'Endpunkt';
+      
       toast({
-        title: "Fehler",
-        description: "Bitte geben Sie eine Start- und Zieladresse ein.",
+        title: "Warnung",
+        description: "Adressen konnten nicht ermittelt werden. Verwende generische Namen.",
         variant: "destructive",
         duration: 6000
       });
+      
+      // Speichern mit Fallback-Adressen fortsetzen
+      
+      try {
+        const response = await fetch('/api/routes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: `Route von ${fallbackStartAddress} nach ${fallbackEndAddress}`,
+            start_address: fallbackStartAddress,
+            end_address: fallbackEndAddress,
+            distance: Math.round(distance),
+            route_data: routeCoordinates
+          }),
+        });
+        
+        // Rest des Codes zur Fehlerbehandlung...
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Fehler beim Speichern der Route');
+        }
+        
+        const data = await response.json();
+        toast({
+          title: "Erfolg",
+          description: `Route "${data.name}" erfolgreich gespeichert!`,
+          duration: 5000
+        });
+      } catch (error: any) {
+        console.error('Fehler beim Speichern der Route:', error);
+        toast({
+          title: "Fehler",
+          description: error.message || "Fehler beim Speichern der Route",
+          variant: "destructive",
+          duration: 6000
+        });
+      }
+      
       return;
     }
+    
+    // Debugging-Ausgabe für Adressen
+    console.log('Speichere Route mit Adressen:', { startAddress, endAddress });
     
     try {
       const response = await fetch('/api/routes', {
