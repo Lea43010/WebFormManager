@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -47,6 +47,21 @@ function MapCenter({ center }: { center: [number, number] }) {
     map.setView(center);
   }, [center, map]);
 
+  return null;
+}
+
+// MapClickHandler Komponente für Klick-Events
+interface MapClickHandlerProps {
+  onMapClick: (lat: number, lng: number) => void;
+}
+
+function MapClickHandler({ onMapClick }: MapClickHandlerProps) {
+  useMapEvents({
+    click: (e: L.LeafletMouseEvent) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  
   return null;
 }
 
@@ -117,12 +132,7 @@ export default function LeafletMapsComponent({
     });
   };
 
-  // Event-Handler für Kartenklick
-  const handleMapClick = useCallback((e: L.LeafletMouseEvent) => {
-    if (onMarkerAdd) {
-      onMarkerAdd(e.latlng.lat, e.latlng.lng);
-    }
-  }, [onMarkerAdd]);
+  // Event-Handler für Kartenklick wird jetzt über MapClickHandler Komponente gehandhabt
 
   return (
     <div style={{ height, width }} className="rounded-md overflow-hidden relative">
@@ -195,19 +205,10 @@ export default function LeafletMapsComponent({
           />
         )}
         
-        {/* Event-Listener für Kartenklicks */}
-        <div 
-          onClick={handleMapClick}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 400, // Unter den Markern und Popups, aber über der Karte
-            pointerEvents: 'none' // Lässt Klicks durch
-          }}
-        />
+        {/* Event-Listener für Kartenklicks - gehandhabt durch useMapEvents in React-Leaflet */}
+        {onMarkerAdd && (
+          <MapClickHandler onMapClick={(lat, lng) => onMarkerAdd(lat, lng)} />
+        )}
       </MapContainer>
       
       {/* Copyright / Attribution */}

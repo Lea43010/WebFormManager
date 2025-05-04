@@ -28,10 +28,11 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 // Debug-Ausgabe des Tokens
 console.log("Geladenes Mapbox-Token:", MAPBOX_TOKEN);
 
-// Leaflet imports für PDF Export (wird vorerst weiterhin benötigt)
+// Leaflet imports für Karte und PDF Export
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import LeafletMapsComponent from '@/components/maps/leaflet-maps';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -1501,38 +1502,29 @@ export default function GeoMapPage() {
               
               {/* 3. Karte mit Markern */}
               <div className="h-[500px] relative border rounded-lg overflow-hidden">
-                {/* Google Maps Integration */}
-                <GoogleMapsComponent
-                  markers={markers.map(marker => ({
-                    ...marker,
-                    position: marker.position
-                  }))}
-                  onMarkerAdd={(lat, lng) => {
+                {/* Leaflet Maps Integration */}
+                <LeafletMapsComponent
+                  markers={markers}
+                  onMarkerAdd={(lat: number, lng: number) => {
                     // Marker hinzufügen
                     handleAddMarker(lat, lng);
                   }}
-                  onMarkerDragEnd={(index, lat, lng) => {
+                  onMarkerDragEnd={(index: number, lat: number, lng: number) => {
                     // Marker-Position aktualisieren
                     const updatedMarkers = [...markers];
                     updatedMarkers[index].position = [lat, lng];
                     setMarkers(updatedMarkers);
                   }}
-                  onMarkerClick={(index) => {
+                  onMarkerClick={(index: number) => {
                     // Marker zum Bearbeiten auswählen
                     handleEditMarker(index);
                   }}
-                  center={{
-                    lat: mapCenterPosition[0],
-                    lng: mapCenterPosition[1]
-                  }}
+                  center={mapCenterPosition}
                   zoom={13}
                   selectedBelastungsklasse={selectedBelastungsklasse}
                 />
                 
-                {/* Google Maps Attribution */}
-                <div className="absolute bottom-0 right-0 bg-white/80 text-xs p-1 z-[1000]">
-                  <a href="https://www.google.com/maps/" target="_blank" rel="noopener noreferrer">© Google Maps</a>
-                </div>
+                {/* Attribution wird bereits in der Leaflet-Komponente angezeigt */}
               </div>
               
               {/* 4. Zusammenfassung und Materialberechnungen */}
