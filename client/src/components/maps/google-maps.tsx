@@ -1,8 +1,8 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
-import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow, Libraries } from '@react-google-maps/api';
-import { GOOGLE_MAPS_LIBRARIES, DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from "@/config/google-maps";
+import React, { useState } from "react";
+import BasicMap from "./basic-map";
+import { GOOGLE_MAPS_API_KEY, DEFAULT_CENTER } from "@/config/google-maps";
 
-// Typdefinitionen
+// Typdefinitionen für Marker
 export interface MarkerInfo {
   position: [number, number]; // Position als [latitude, longitude]
   belastungsklasse?: string;  // Z.B. "Bk100", "Bk32", etc.
@@ -51,9 +51,8 @@ const belastungsklassenColors = {
 interface GoogleMapsProps {
   markers: MarkerInfo[];
   onMarkerAdd?: (lat: number, lng: number) => void;
-  onMarkerDragEnd?: (index: number, lat: number, lng: number) => void;
   onMarkerClick?: (index: number) => void;
-  center?: google.maps.LatLngLiteral;
+  center?: { lat: number, lng: number };
   zoom?: number;
   height?: string;
   width?: string;
@@ -63,7 +62,6 @@ interface GoogleMapsProps {
 export default function GoogleMapsComponent({
   markers,
   onMarkerAdd,
-  onMarkerDragEnd,
   onMarkerClick,
   center = DEFAULT_CENTER,
   zoom = 13,
@@ -71,162 +69,23 @@ export default function GoogleMapsComponent({
   width = "100%",
   selectedBelastungsklasse = "none"
 }: GoogleMapsProps) {
-  // Direkter API-Schlüssel
-  const apiKey = "AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg";
-  console.log("Google Maps API Key verwendet");
-  
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES as Libraries,
-  });
-
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const [infoWindowData, setInfoWindowData] = useState<{ marker: MarkerInfo, index: number } | null>(null);
-
-  // Callback für wenn die Karte geladen wird
-  const onLoad = useCallback(function callback(map: google.maps.Map) {
-    mapRef.current = map;
-  }, []);
-
-  // Callback für wenn die Karte entladen wird
-  const onUnmount = useCallback(function callback() {
-    mapRef.current = null;
-  }, []);
-
-  // Handler für Klick auf die Karte
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (onMarkerAdd && e.latLng) {
-      onMarkerAdd(e.latLng.lat(), e.latLng.lng());
-    }
-  }, [onMarkerAdd]);
-
-  // Handler für das Ziehen eines Markers
-  const handleMarkerDragEnd = useCallback((index: number, e: google.maps.MapMouseEvent) => {
-    if (onMarkerDragEnd && e.latLng) {
-      onMarkerDragEnd(index, e.latLng.lat(), e.latLng.lng());
-    }
-  }, [onMarkerDragEnd]);
-
-  // Handler für Klick auf einen Marker
-  const handleMarkerClick = useCallback((index: number, marker: MarkerInfo) => {
-    setInfoWindowData({ marker, index });
-    if (onMarkerClick) {
-      onMarkerClick(index);
-    }
-  }, [onMarkerClick]);
-
-  // Polyline-Pfad erstellen
-  const polylinePath = useMemo(() => {
-    return markers.map(marker => ({
-      lat: marker.position[0],
-      lng: marker.position[1]
-    }));
-  }, [markers]);
-
-  // Icon für Marker basierend auf Belastungsklasse
-  const getMarkerIcon = (belastungsklasse?: string): google.maps.Symbol | undefined => {
-    if (!isLoaded) {
-      return undefined; // Wenn google noch nicht geladen ist
-    }
-    
-    const color = belastungsklasse 
-      ? belastungsklassenColors[belastungsklasse as keyof typeof belastungsklassenColors] 
-      : belastungsklassenColors.none;
-    
-    return {
-      path: google.maps.SymbolPath.CIRCLE,
-      fillColor: color,
-      fillOpacity: 1,
-      strokeWeight: 2,
-      strokeColor: '#ffffff',
-      scale: 8
-    };
-  };
-
-  if (!isLoaded) {
-    return <div className="h-full w-full flex items-center justify-center bg-muted/20">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
-  }
+  // Marker für die BasicMap formatieren
+  const formattedMarkers = markers.map((marker, index) => ({
+    lat: marker.position[0],
+    lng: marker.position[1],
+    title: marker.name || marker.strasse || `Standort ${index + 1}`
+  }));
 
   return (
     <div className="h-full w-full rounded-md overflow-hidden relative">
-      <GoogleMap
-        mapContainerStyle={{ height, width }}
+      <BasicMap
+        apiKey={GOOGLE_MAPS_API_KEY}
         center={center}
         zoom={zoom}
-        options={DEFAULT_MAP_OPTIONS}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-        onClick={handleMapClick}
-      >
-        {/* Marker für alle Standorte */}
-        {markers.map((marker, idx) => (
-          <Marker
-            key={idx}
-            position={{
-              lat: marker.position[0],
-              lng: marker.position[1]
-            }}
-            draggable={true}
-            icon={getMarkerIcon(marker.belastungsklasse)}
-            label={{
-              text: (idx + 1).toString(),
-              color: '#ffffff',
-              fontWeight: 'bold',
-            }}
-            onDragEnd={(e) => handleMarkerDragEnd(idx, e)}
-            onClick={() => handleMarkerClick(idx, marker)}
-          />
-        ))}
-
-        {/* Info-Fenster für Marker-Details */}
-        {infoWindowData && (
-          <InfoWindow
-            position={{
-              lat: infoWindowData.marker.position[0],
-              lng: infoWindowData.marker.position[1]
-            }}
-            onCloseClick={() => setInfoWindowData(null)}
-          >
-            <div className="p-2 max-w-xs">
-              <h3 className="font-bold text-base">
-                {infoWindowData.marker.strasse 
-                  ? `${infoWindowData.marker.strasse} ${infoWindowData.marker.hausnummer || ''}`
-                  : `Standort ${infoWindowData.index + 1}`}
-              </h3>
-              {infoWindowData.marker.plz || infoWindowData.marker.ort ? (
-                <p className="mb-2 text-sm">
-                  {infoWindowData.marker.plz} {infoWindowData.marker.ort}
-                </p>
-              ) : null}
-              {infoWindowData.marker.belastungsklasse && (
-                <p className="text-sm">
-                  <span className="font-medium">Belastungsklasse:</span> {infoWindowData.marker.belastungsklasse}
-                </p>
-              )}
-              {infoWindowData.marker.notes && (
-                <p className="text-sm mt-2">
-                  <span className="font-medium">Notizen:</span> {infoWindowData.marker.notes}
-                </p>
-              )}
-            </div>
-          </InfoWindow>
-        )}
-
-        {/* Polyline für die Route */}
-        {markers.length >= 2 && (
-          <Polyline
-            path={polylinePath}
-            options={{
-              strokeColor: '#3b82f6', // Blau (Tailwind blue-500)
-              strokeOpacity: 0.8,
-              strokeWeight: 5,
-            }}
-          />
-        )}
-      </GoogleMap>
+        markers={formattedMarkers}
+        height={height}
+        width={width}
+      />
 
       {/* Copyright / Attribution */}
       <div className="absolute bottom-0 right-0 bg-white/80 text-xs p-1 z-10">

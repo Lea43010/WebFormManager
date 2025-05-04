@@ -77,6 +77,11 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       <Route path="/maps-test" component={MapsTestPage} /> {/* Google Maps Test-Seite */}
+      <Route path="/simple-test" component={() => {
+        // Einfache Static-Import-Variante verwenden
+        const SimpleTestPage = require("./pages/simple-test-page").default;
+        return <SimpleTestPage />;
+      }} /> {/* Einfache Test-Seite ohne komplexe Imports */}
       <Route component={NotFound} />
     </Switch>
   );

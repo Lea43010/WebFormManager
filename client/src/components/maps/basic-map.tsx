@@ -19,36 +19,55 @@ export default function BasicMap({
 }: BasicMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
 
   // Funktion zum Laden der Google Maps API
   useEffect(() => {
-    // Prüfen, ob bereits geladen
-    if (window.google?.maps || document.querySelector('script[src*="maps.googleapis.com/maps/api"]')) {
-      initMap();
-      return;
+    let isApiLoaded = false;
+
+    // Hilfsfunktionen für Google Maps API
+    function loadGoogleMaps() {
+      // Wenn wir bereits versuchen zu laden, nicht erneut starten
+      if (document.getElementById('google-maps-api-script')) {
+        return;
+      }
+
+      // Script-Tag erstellen und API-Schlüssel einfügen
+      const script = document.createElement('script');
+      script.id = 'google-maps-api-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        isApiLoaded = true;
+        initMap();
+      };
+      document.head.appendChild(script);
+      scriptRef.current = script;
     }
 
-    // Script-Tag erstellen und API-Schlüssel einfügen
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = initMap;
-    document.head.appendChild(script);
-    scriptRef.current = script;
+    // Prüfen, ob Google Maps bereits geladen wurde
+    if (window.google?.maps) {
+      isApiLoaded = true;
+      initMap();
+    } else {
+      loadGoogleMaps();
+    }
 
     // Aufräumen beim Unmounten
     return () => {
-      if (scriptRef.current && document.head.contains(scriptRef.current)) {
-        document.head.removeChild(scriptRef.current);
-      }
-      
       // Marker entfernen
       if (markersRef.current) {
-        markersRef.current.forEach(marker => marker.setMap(null));
+        markersRef.current.forEach(marker => {
+          if (marker && marker.setMap) {
+            marker.setMap(null);
+          }
+        });
       }
+      
+      // Globalen Zustand nicht durch Entfernen des Script-Tags ändern
+      // Es könnten andere Komponenten sein, die Google Maps verwenden
     };
   }, [apiKey]);
 
@@ -56,9 +75,12 @@ export default function BasicMap({
   const initMap = () => {
     if (!mapRef.current || !window.google?.maps) return;
 
+    // Google Maps Klassen
+    const { Map, Marker } = window.google.maps;
+
     if (!mapInstanceRef.current) {
       // Karte erstellen
-      mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+      mapInstanceRef.current = new Map(mapRef.current, {
         center,
         zoom,
         mapTypeControl: true,
@@ -73,12 +95,16 @@ export default function BasicMap({
     }
 
     // Bestehende Marker entfernen
-    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current.forEach(marker => {
+      if (marker && marker.setMap) {
+        marker.setMap(null);
+      }
+    });
     markersRef.current = [];
 
     // Neue Marker hinzufügen
     markers.forEach(markerData => {
-      const marker = new google.maps.Marker({
+      const marker = new Marker({
         position: { lat: markerData.lat, lng: markerData.lng },
         map: mapInstanceRef.current,
         title: markerData.title,
@@ -89,17 +115,22 @@ export default function BasicMap({
 
   // Aktualisiere die Karte bei Änderungen der Props
   useEffect(() => {
-    if (mapInstanceRef.current) {
+    if (mapInstanceRef.current && window.google?.maps) {
       mapInstanceRef.current.setCenter(center);
       mapInstanceRef.current.setZoom(zoom);
 
       // Bestehende Marker entfernen
-      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.forEach(marker => {
+        if (marker && marker.setMap) {
+          marker.setMap(null);
+        }
+      });
       markersRef.current = [];
 
       // Neue Marker hinzufügen
+      const { Marker } = window.google.maps;
       markers.forEach(markerData => {
-        const marker = new google.maps.Marker({
+        const marker = new Marker({
           position: { lat: markerData.lat, lng: markerData.lng },
           map: mapInstanceRef.current,
           title: markerData.title,

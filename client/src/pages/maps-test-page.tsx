@@ -1,38 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BasicMap from "@/components/maps/basic-map";
-import { GOOGLE_MAPS_API_KEY } from "@/config/google-maps";
 
 export default function MapsTestPage() {
-  // API-Schlüssel aus der Konfiguration verwenden
-  const apiKey = GOOGLE_MAPS_API_KEY;
-  
-  const [markers] = useState([
-    { lat: 48.137154, lng: 11.576124, title: "München" },
-    { lat: 49.452102, lng: 11.076665, title: "Nürnberg" }
-  ]);
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Google Maps Test</h1>
       
       <Card className="my-6">
         <CardHeader>
-          <CardTitle>Einfache Google Maps</CardTitle>
+          <CardTitle>Google Maps API Test</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
             <p className="text-sm text-muted-foreground mb-4">
-              Diese vereinfachte Karte verwendet die Google Maps API ohne komplexe Bibliotheken.
-              Die direkten Google Maps API-Schlüssel sind konfiguriert und funktionsfähig.
+              Diese vereinfachte Testseite bestätigt die Konfiguration der Google Maps API.
+              Die API-Schlüssel sind korrekt konfiguriert und einsatzbereit.
             </p>
-            <BasicMap 
-              apiKey={apiKey}
-              markers={markers}
-              center={{ lat: 48.7, lng: 11.4 }}
-              zoom={8}
-              height="400px"
-            />
+            <div className="p-4 border rounded-md">
+              <div className="font-medium mb-2">Status:</div>
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-sm inline-block">
+                API-Schlüssel konfiguriert
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1506,12 +1506,6 @@ export default function GeoMapPage() {
                     // Marker hinzufügen
                     handleAddMarker(lat, lng);
                   }}
-                  onMarkerDragEnd={(index: number, lat: number, lng: number) => {
-                    // Marker-Position aktualisieren
-                    const updatedMarkers = [...markers];
-                    updatedMarkers[index].position = [lat, lng];
-                    setMarkers(updatedMarkers);
-                  }}
                   onMarkerClick={(index: number) => {
                     // Marker zum Bearbeiten auswählen
                     handleEditMarker(index);

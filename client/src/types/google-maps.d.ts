@@ -1,6 +1,7 @@
 // Type definitions for Google Maps JavaScript API
 
 declare global {
+  // Erweitere die vorhandene Window-Schnittstelle statt sie neu zu definieren
   interface Window {
     google?: typeof google;
   }
