@@ -17,10 +17,8 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
 import BayernMaps from "@/components/maps/bayern-maps";
 
-// Leaflet Komponente
-import LeafletMapsComponent, { MarkerInfo as LeafletMarkerInfo } from "@/components/maps/leaflet-maps";
-// Google Maps Komponente und Konfiguration (derzeit nicht verwendet)
-// import GoogleMapsComponent, { MarkerInfo as GoogleMarkerInfo } from "@/components/maps/google-maps";
+// Google Maps Komponente für die Hauptkarte
+import GoogleMapsComponent from "@/components/maps/google-maps";
 import { DEFAULT_CENTER } from "@/config/google-maps";
 
 // Mapbox-Token aus den Umgebungsvariablen laden
@@ -28,11 +26,10 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 // Debug-Ausgabe des Tokens
 console.log("Geladenes Mapbox-Token:", MAPBOX_TOKEN);
 
-// Leaflet imports für Karte und PDF Export
+// PDF Export mit Leaflet
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, LayersControl, useMapEvents, Tooltip as LeafletTooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import LeafletMapsComponent from '@/components/maps/leaflet-maps';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -1502,8 +1499,8 @@ export default function GeoMapPage() {
               
               {/* 3. Karte mit Markern */}
               <div className="h-[500px] relative border rounded-lg overflow-hidden">
-                {/* Leaflet Maps Integration */}
-                <LeafletMapsComponent
+                {/* Google Maps Integration */}
+                <GoogleMapsComponent
                   markers={markers}
                   onMarkerAdd={(lat: number, lng: number) => {
                     // Marker hinzufügen
@@ -1519,12 +1516,15 @@ export default function GeoMapPage() {
                     // Marker zum Bearbeiten auswählen
                     handleEditMarker(index);
                   }}
-                  center={mapCenterPosition}
+                  center={{
+                    lat: mapCenterPosition[0],
+                    lng: mapCenterPosition[1]
+                  }}
                   zoom={13}
                   selectedBelastungsklasse={selectedBelastungsklasse}
                 />
                 
-                {/* Attribution wird bereits in der Leaflet-Komponente angezeigt */}
+                {/* Attribution wird bereits in der Google Maps-Komponente angezeigt */}
               </div>
               
               {/* 4. Zusammenfassung und Materialberechnungen */}

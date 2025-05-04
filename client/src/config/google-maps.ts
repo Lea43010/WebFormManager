@@ -1,6 +1,8 @@
 // Das Token von Google Maps für die Kartendarstellung exportieren
-// Wir verwenden direkt die Umgebungsvariable GOOGLE_API_KEY
-export const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_API_KEY || '';
+// Wir verwenden die Umgebungsvariable GOOGLE_MAPS_API_KEY oder GOOGLE_API_KEY
+export const GOOGLE_MAPS_API_KEY = import.meta.env.GOOGLE_MAPS_API_KEY || import.meta.env.GOOGLE_API_KEY || '';
+// Debug-Log für API-Key (ohne den Key selbst zu zeigen)
+console.log("Google Maps API Key konfiguriert:", GOOGLE_MAPS_API_KEY ? "Ja" : "Nein");
 
 // Google Maps Bibliotheken
 export const GOOGLE_MAPS_LIBRARIES = ["places", "geometry"];

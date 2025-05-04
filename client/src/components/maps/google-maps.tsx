@@ -71,9 +71,9 @@ export default function GoogleMapsComponent({
   width = "100%",
   selectedBelastungsklasse = "none"
 }: GoogleMapsProps) {
-  // Wir verwenden den API-Schlüssel direkt
-  const apiKey = "AIzaSyBhUVnGEq8JIEsbkwGvlCjM1ZEv2DGVuds";
-  console.log("API Key verwendet:", apiKey);
+  // Direkter API-Schlüssel
+  const apiKey = "AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg";
+  console.log("Google Maps API Key verwendet");
   
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
