@@ -261,9 +261,9 @@ const GeoMapSimple: React.FC = () => {
         <CardContent>
           <SimpleGoogleMap
             onRouteChange={handleRouteChange}
-            onMarkersClear={clearMarkers}
-            initialCenter={{ lat: 48.137154, lng: 11.576124 }} // München
-            initialZoom={12}
+            onMarkersCleared={clearMarkers}
+            defaultCenter={{ lat: 48.137154, lng: 11.576124 }} // München
+            defaultZoom={12}
           />
         </CardContent>
       </Card>
