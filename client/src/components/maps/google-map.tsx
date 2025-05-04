@@ -127,7 +127,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     
     // Init-Funktion für die Karte nach API-Ladung
     // Diese Funktion muss als globale Variable definiert werden, damit sie vom Callback der Google Maps API aufgerufen werden kann
-    (window as any).initMap = () => {
+    window.initMap = () => {
       console.log("Google Maps API initialisiert");
       
       // Wir tun hier nichts, der eigentliche Initialisierungscode wird in useEffect mit getElementById ausgeführt
@@ -242,20 +242,20 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   // Optimierte DOM-Element-Initialisierung
   useEffect(() => {
     // Direkte Prüfung nach DOM-Element ohne Timeout
-    const initMap = () => {
+    const initializeMap = () => {
       const mapElement = document.getElementById(mapContainerID);
       
       if (!mapElement) {
         console.log("Warte auf DOM-Element...");
         // Versuche es erneut, wenn das Element nicht gefunden wurde
-        requestAnimationFrame(initMap);
+        requestAnimationFrame(initializeMap);
         return;
       }
       
       if (!window.google?.maps) {
         console.log("Warte auf Google Maps API...");
         // Versuche es erneut, wenn die API noch nicht geladen ist
-        requestAnimationFrame(initMap);
+        requestAnimationFrame(initializeMap);
         return;
       }
       
@@ -316,7 +316,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     };
     
     // Starte die Initialisierungssequenz
-    initMap();
+    initializeMap();
   }, [mapContainerID, toast]);
   
   return element;
