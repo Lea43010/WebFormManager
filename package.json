@@ -122,7 +122,7 @@
     "react-joyride": "^2.9.3",
     "react-leaflet": "^4.2.1",
     "react-resizable-panels": "^2.1.4",
-    "recharts": "^2.13.0",
+    "recharts": "^2.15.3",
     "sharp": "^0.33.5",
     "sib-api-v3-sdk": "^8.5.0",
     "stripe": "^18.0.0",
