@@ -19,7 +19,9 @@ import {
   CreditCard,
   BarChart2, 
   FileCheck,
-  HelpCircle
+  HelpCircle,
+  Shovel,
+  Truck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -68,6 +70,24 @@ const navItems: NavItem[] = [
     tooltip: "Geografische Informationen und Kartenfunktionen",
   },
   {
+    title: "Tiefbau-Planung",
+    href: "/tiefbau-map",
+    icon: Shovel,
+    tooltip: "Tiefbau-Planung und Baustellen-Management",
+  },
+  {
+    title: "Bodenanalyse",
+    href: "/bodenanalyse",
+    icon: Database,
+    tooltip: "Analyse von Bodenarten und Eigenschaften",
+  },
+  {
+    title: "Maschinenauswahl",
+    href: "/maschinen-auswahl",
+    icon: Truck,
+    tooltip: "Baumaschinen nach Bodenart und Leistung auswählen",
+  },
+  {
     title: "Dokumente",
     href: "/attachments",
     icon: Paperclip,
@@ -80,7 +100,6 @@ const navItems: NavItem[] = [
     showFor: ['administrator', 'manager'],
     tooltip: "Datenqualität überwachen und verbessern",
   },
-
   {
     title: "Hilfe & Info",
     href: "/information",

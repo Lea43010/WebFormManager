@@ -76,9 +76,9 @@ function Router() {
       <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
-      <ProtectedRoute path="/tiefbau-map" component={TiefbauMap} />
-      <ProtectedRoute path="/bodenanalyse" component={BodenAnalyse} />
-      <ProtectedRoute path="/maschinen-auswahl" component={MaschinenAuswahl} />
+      <ProtectedRoute path="/tiefbau-map" component={() => <TiefbauMap />} />
+      <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
+      <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <Route path="/help">
         {() => <Redirect to="/information" />}
       </Route>
