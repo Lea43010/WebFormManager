@@ -4,7 +4,7 @@ import { Trash2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 /**
- * Eine vereinfachte und robuste Google Maps-Komponente ohne TypeScript-Fehler
+ * Eine vereinfachte Google Maps-Komponente mit minimaler TypeScript-Konfiguration
  */
 interface SimpleGoogleMapProps {
   onRouteChange?: (route: Array<{lat: number, lng: number}>) => void;
@@ -29,91 +29,72 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   const [markersCount, setMarkersCount] = useState(0);
   const { toast } = useToast();
   
-  // Einzigartige ID für den Map-Container generieren
-  const mapContainerId = useRef(`map-container-${Math.random().toString(36).substr(2, 9)}`);
-  
-  // Speicher für Map-Objekte außerhalb des React-Lifecycle
+  // Speicher für Google Maps Objekte
   const mapObjects = useRef<{
-    map: any;
+    map: any | null;
     markers: any[];
-    polyline: any;
+    polyline: any | null;
   }>({
     map: null,
     markers: [],
     polyline: null
   });
 
+  // Funktion zum Aktualisieren der Polyline
+  const updatePolyline = () => {
+    if (!mapObjects.current.map || !mapObjects.current.polyline) return;
+    
+    const path = mapObjects.current.markers.map((marker: any) => {
+      const position = marker.getPosition();
+      return { lat: position.lat(), lng: position.lng() };
+    });
+    
+    mapObjects.current.polyline.setPath(path);
+    
+    if (onRouteChange && path.length >= 2) {
+      onRouteChange(path);
+    }
+  };
+
   // Funktion zum Hinzufügen eines Markers
   const addMarker = (position: any) => {
     if (!mapObjects.current.map) return;
     
-    // Google Maps Marker erstellen
     const marker = new google.maps.Marker({
       position,
       map: mapObjects.current.map,
       draggable: true
     });
     
-    // Marker zur Liste hinzufügen
     mapObjects.current.markers.push(marker);
-    
-    // Marker-Anzahl aktualisieren
     setMarkersCount(mapObjects.current.markers.length);
     
-    // Event-Listener für Drag-End
     marker.addListener('dragend', updatePolyline);
-    
-    // Polyline aktualisieren
     updatePolyline();
     
-    // Hilfetext beim ersten Marker anzeigen
     if (mapObjects.current.markers.length === 1) {
       toast({
         title: "Hinweis",
-        description: "Klicken Sie mindestens einen weiteren Punkt auf der Karte an, um eine Route zu erstellen.",
+        description: "Klicken Sie auf einen weiteren Punkt, um eine Route zu erstellen.",
         duration: 5000,
       });
     }
   };
   
-  // Funktion zum Aktualisieren der Polyline
-  const updatePolyline = () => {
-    if (!mapObjects.current.map || !mapObjects.current.polyline) return;
-    
-    // Routenpfad aus Markern erstellen
-    const path = mapObjects.current.markers.map((marker: any) => {
-      const position = marker.getPosition();
-      return { lat: position.lat(), lng: position.lng() };
-    });
-    
-    // Polyline aktualisieren
-    mapObjects.current.polyline.setPath(path);
-    
-    // Callback aufrufen, wenn vorhanden
-    if (onRouteChange && path.length >= 2) {
-      onRouteChange(path);
-    }
-  };
-  
   // Funktion zum Löschen aller Marker
   const clearMarkers = () => {
-    // Alle Marker von der Karte entfernen
     mapObjects.current.markers.forEach((marker: any) => {
       marker.setMap(null);
     });
     
-    // Marker-Array zurücksetzen
     mapObjects.current.markers = [];
     
-    // Polyline zurücksetzen
     if (mapObjects.current.polyline) {
       mapObjects.current.polyline.setPath([]);
     }
     
-    // Marker-Anzahl aktualisieren
     setMarkersCount(0);
     
-    // Callback aufrufen, wenn vorhanden
     if (onMarkersClear) {
       onMarkersClear();
     }
@@ -121,108 +102,119 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
 
   // Map initialisieren
   useEffect(() => {
-    // API-Key direkt festlegen (kann später durch Umgebungsvariable ersetzt werden)
-    const googleMapsApiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
+    const apiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
     
-    // Funktion zur Initialisierung der Karte
-    const initializeMap = () => {
+    // DOM-Element prüfen
+    if (!mapRef.current) {
+      console.error('Map Container nicht gefunden');
+      return;
+    }
+    
+    // Initialisierung der Map
+    function initMap() {
       if (!mapRef.current) return;
       
       try {
-        // Google Maps-Karte erstellen
-        const mapInstance = new google.maps.Map(mapRef.current, {
+        console.log('Initialisiere Google Maps');
+        
+        // Erstelle Map-Instanz
+        const map = new google.maps.Map(mapRef.current, {
           center: initialCenter,
           zoom: initialZoom,
           mapTypeId: google.maps.MapTypeId.ROADMAP,
           mapTypeControl: true,
-          streetViewControl: true,
-          fullscreenControl: true,
           zoomControl: true,
+          fullscreenControl: true
         });
         
-        // Polyline für die Route erstellen
-        const polylineInstance = new google.maps.Polyline({
+        // Erstelle Polyline
+        const polyline = new google.maps.Polyline({
           path: [],
           geodesic: true,
-          strokeColor: '#3b82f6', // Blau
+          strokeColor: '#3b82f6',
           strokeOpacity: 1.0,
           strokeWeight: 3,
-          map: mapInstance
+          map: map
         });
         
-        // Speichern der Objekte im Ref
+        // Speichere Objekte
         mapObjects.current = {
-          map: mapInstance,
+          map: map,
           markers: [],
-          polyline: polylineInstance
+          polyline: polyline
         };
         
-        // Event-Listener für Klicks auf die Karte
-        mapInstance.addListener('click', (event: any) => {
-          if (!event.latLng) return;
+        // Klick-Handler für Marker
+        map.addListener('click', (event: any) => {
           addMarker(event.latLng);
         });
         
-        // Hilfetext hinzufügen
-        setTimeout(() => {
-          toast({
-            title: "Hinweis",
-            description: "Klicken Sie auf die Karte, um Marker zu setzen und eine Route zu erstellen.",
-            duration: 8000,
-          });
-        }, 1500);
-        
         // Loading beenden
         setIsLoading(false);
+        
+        // Hinweis anzeigen
+        toast({
+          title: "Karte geladen",
+          description: "Klicken Sie auf die Karte, um Marker zu setzen.",
+          duration: 5000
+        });
       } catch (err) {
         console.error('Fehler beim Initialisieren der Karte:', err);
         setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
         setIsLoading(false);
       }
-    };
+    }
     
-    // Prüfen, ob die Google Maps API bereits geladen ist
-    if (window.google && window.google.maps) {
-      // API ist bereits geladen, Karte direkt initialisieren
-      initializeMap();
-    } else {
-      // API muss geladen werden
+    // Google Maps API laden
+    function loadGoogleMapsApi() {
+      // Prüfen, ob die API bereits geladen ist
+      if (window.google && window.google.maps) {
+        console.log('Google Maps bereits geladen');
+        initMap();
+        return;
+      }
+      
+      console.log('Lade Google Maps API');
+      
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=geometry`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
       script.async = true;
       script.defer = true;
       
-      // Timeout für Ladehinweis
       const timeoutId = setTimeout(() => {
         toast({
           title: "Hinweis",
-          description: "Der Ladevorgang der Karte dauert länger als erwartet. Bitte haben Sie Geduld.",
+          description: "Google Maps lädt...",
+          duration: 5000
         });
-      }, 5000);
+      }, 3000);
       
-      // Event-Handler für erfolgreiche Ladung
       script.onload = () => {
         clearTimeout(timeoutId);
-        initializeMap();
+        console.log('Google Maps API geladen');
+        setTimeout(initMap, 500);
       };
       
-      // Error-Handler
       script.onerror = () => {
         clearTimeout(timeoutId);
-        setError('Fehler beim Laden der Google Maps API. Bitte prüfen Sie Ihre Internetverbindung.');
+        setError('Fehler beim Laden der Google Maps API');
         setIsLoading(false);
       };
       
-      // Script einfügen
       document.head.appendChild(script);
       
-      // Cleanup-Funktion
       return () => {
         clearTimeout(timeoutId);
-        document.head.removeChild(script);
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
       };
     }
-  }, [initialCenter, initialZoom, onRouteChange, onMarkersClear, toast]);
+    
+    // API laden
+    return loadGoogleMapsApi();
+    
+  }, [initialCenter, initialZoom, toast]);
   
   // Fehler-Ansicht
   if (error) {
@@ -247,7 +239,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
         <div className="w-full h-full bg-slate-100 rounded-md border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
           <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
           <h3 className="text-xl font-medium text-slate-700">Karte wird geladen...</h3>
-          <p className="text-slate-500 mt-2">Dies kann bis zu 10 Sekunden dauern</p>
+          <p className="text-slate-500 mt-2">Dies kann einige Sekunden dauern</p>
         </div>
       </div>
     );
@@ -258,10 +250,9 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
     <div className={`relative w-full ${className}`}>
       <div 
         ref={mapRef}
-        id={mapContainerId.current}
         style={{ height }} 
         className="w-full rounded-md overflow-hidden"
-      ></div>
+      />
       
       {/* Overlay mit Marker-Anzahl und Löschen-Button */}
       <div className="absolute top-3 right-3 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
