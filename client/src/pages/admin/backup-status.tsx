@@ -58,7 +58,7 @@ interface BackupInfo {
 
 export default function BackupStatusPage() {
   const { toast } = useToast();
-  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedBackupId, setSelectedBackupId] = useState<string | null>(null);
@@ -125,7 +125,7 @@ export default function BackupStatusPage() {
 
   // Gefilterte Backups basierend auf Typ-Filter
   const getFilteredBackups = () => {
-    if (!selectedType) {
+    if (!selectedType || selectedType === 'all') {
       return backupHistory;
     }
     
@@ -352,14 +352,14 @@ export default function BackupStatusPage() {
               </CardDescription>
             </div>
             <Select 
-              value={selectedType || ""} 
-              onValueChange={(value) => setSelectedType(value || null)}
+              value={selectedType || "all"} 
+              onValueChange={(value) => setSelectedType(value)}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Alle Typen" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle Typen</SelectItem>
+                <SelectItem value="all">Alle Typen</SelectItem>
                 <SelectItem value="local">Lokale Backups</SelectItem>
                 <SelectItem value="github">GitHub Backups</SelectItem>
               </SelectContent>
