@@ -65,9 +65,7 @@ function Router() {
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
       <ProtectedRoute path="/geo-map" component={GeoMapPlaceholder} />
       <ProtectedRoute path="/geo-map-new" component={GeoMapNew} />
-      <Route path="/geo-map-simple">
-        {() => <GeoMapSimple />}
-      </Route>
+      <Route path="/geo-map-simple" component={() => <GeoMapSimple />} />
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
