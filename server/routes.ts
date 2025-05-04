@@ -3361,6 +3361,279 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // API-Endpunkte für Kostenkalkulation
+  
+  // Bodenarten abrufen
+  app.get('/api/bodenarten', async (req, res) => {
+    try {
+      // Für die erste Implementierung verwenden wir statische Daten
+      // Später sollten diese aus der Datenbank geladen werden
+      const bodenarten = [
+        { id: 1, name: "Sand", belastungsklasse: "Gering", material_kosten_pro_m2: 12.50, dichte: 1800 },
+        { id: 2, name: "Lehm", belastungsklasse: "Mittel", material_kosten_pro_m2: 14.75, dichte: 1950 },
+        { id: 3, name: "Fels", belastungsklasse: "Hoch", material_kosten_pro_m2: 22.80, dichte: 2400 },
+        { id: 4, name: "Asphalt (bestehend)", belastungsklasse: "Mittel", material_kosten_pro_m2: 18.20, dichte: 2300 },
+        { id: 5, name: "Kies", belastungsklasse: "Gering", material_kosten_pro_m2: 10.75, dichte: 1750 }
+      ];
+      
+      res.json(bodenarten);
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Bodenarten:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Bodenarten' });
+    }
+  });
+  
+  // Einzelne Bodenart abrufen
+  app.get('/api/bodenarten/:id', async (req, res) => {
+    try {
+      const bodenartId = parseInt(req.params.id);
+      
+      // Mock-Daten für die erste Implementierung
+      const bodenarten = [
+        { id: 1, name: "Sand", belastungsklasse: "Gering", material_kosten_pro_m2: 12.50, dichte: 1800 },
+        { id: 2, name: "Lehm", belastungsklasse: "Mittel", material_kosten_pro_m2: 14.75, dichte: 1950 },
+        { id: 3, name: "Fels", belastungsklasse: "Hoch", material_kosten_pro_m2: 22.80, dichte: 2400 },
+        { id: 4, name: "Asphalt (bestehend)", belastungsklasse: "Mittel", material_kosten_pro_m2: 18.20, dichte: 2300 },
+        { id: 5, name: "Kies", belastungsklasse: "Gering", material_kosten_pro_m2: 10.75, dichte: 1750 }
+      ];
+      
+      const bodenart = bodenarten.find(b => b.id === bodenartId);
+      
+      if (bodenart) {
+        res.json(bodenart);
+      } else {
+        res.status(404).json({ error: 'Bodenart nicht gefunden' });
+      }
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Bodenart:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Bodenart' });
+    }
+  });
+  
+  // Maschinen abrufen
+  app.get('/api/maschinen', async (req, res) => {
+    try {
+      // Für die erste Implementierung verwenden wir statische Daten
+      // Später sollten diese aus der Datenbank geladen werden
+      const maschinen = [
+        { id: 1, name: "CAT 320 Bagger", typ: "Bagger", kosten_pro_tag: 650, kraftstoffverbrauch: 15 },
+        { id: 2, name: "BOMAG BW213 Walze", typ: "Walze", kosten_pro_tag: 480, kraftstoffverbrauch: 8 },
+        { id: 3, name: "Wirtgen W200 Fräse", typ: "Fräse", kosten_pro_tag: 1200, kraftstoffverbrauch: 40 },
+        { id: 4, name: "Caterpillar D6 Planierraupe", typ: "Planierraupe", kosten_pro_tag: 850, kraftstoffverbrauch: 25 },
+        { id: 5, name: "JCB 3CX Baggerlader", typ: "Baggerlader", kosten_pro_tag: 420, kraftstoffverbrauch: 12 }
+      ];
+      
+      res.json(maschinen);
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Maschinen:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Maschinen' });
+    }
+  });
+  
+  // Einzelne Maschine abrufen
+  app.get('/api/maschinen/:id', async (req, res) => {
+    try {
+      const maschinenId = parseInt(req.params.id);
+      
+      // Mock-Daten für die erste Implementierung
+      const maschinen = [
+        { id: 1, name: "CAT 320 Bagger", typ: "Bagger", kosten_pro_tag: 650, kraftstoffverbrauch: 15 },
+        { id: 2, name: "BOMAG BW213 Walze", typ: "Walze", kosten_pro_tag: 480, kraftstoffverbrauch: 8 },
+        { id: 3, name: "Wirtgen W200 Fräse", typ: "Fräse", kosten_pro_tag: 1200, kraftstoffverbrauch: 40 },
+        { id: 4, name: "Caterpillar D6 Planierraupe", typ: "Planierraupe", kosten_pro_tag: 850, kraftstoffverbrauch: 25 },
+        { id: 5, name: "JCB 3CX Baggerlader", typ: "Baggerlader", kosten_pro_tag: 420, kraftstoffverbrauch: 12 }
+      ];
+      
+      const maschine = maschinen.find(m => m.id === maschinenId);
+      
+      if (maschine) {
+        res.json(maschine);
+      } else {
+        res.status(404).json({ error: 'Maschine nicht gefunden' });
+      }
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Maschine:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Maschine' });
+    }
+  });
+  
+  // Gespeicherte Routen abrufen 
+  app.get('/api/routes', async (req, res) => {
+    try {
+      // Mock-Daten für die erste Implementierung
+      const routen = [
+        { 
+          id: 1, 
+          name: "Hauptstraße Sanierung", 
+          start_address: "Bergstraße 1, Berlin", 
+          end_address: "Bergstraße 50, Berlin", 
+          distance: 1245,
+          created_at: "2025-03-15T10:23:45Z"
+        },
+        { 
+          id: 2, 
+          name: "Kanalarbeiten Müllerweg", 
+          start_address: "Müllerweg 12, München", 
+          end_address: "Schulstraße 8, München", 
+          distance: 820,
+          created_at: "2025-04-02T09:15:12Z"
+        },
+        { 
+          id: 3, 
+          name: "Neubaugebiet Erschließung", 
+          start_address: "Am Waldrand 1, Frankfurt", 
+          end_address: "Feldweg 22, Frankfurt", 
+          distance: 1750,
+          created_at: "2025-04-25T14:05:33Z"
+        }
+      ];
+      
+      res.json(routen);
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Routen:', error);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Routen' });
+    }
+  });
+  
+  // Kostenkalkulation durchführen
+  app.post('/api/kalkulation', async (req, res) => {
+    try {
+      const { route_id, bodenart_id, maschine_id, parameter } = req.body;
+      
+      // Mock-Implementierung, in einer realen Anwendung würden wir aus der Datenbank laden
+      // und die Berechnung komplexer gestalten
+      
+      // Mit den IDs die entsprechenden Objekte finden
+      const bodenarten = [
+        { id: 1, name: "Sand", belastungsklasse: "Gering", material_kosten_pro_m2: 12.50, dichte: 1800 },
+        { id: 2, name: "Lehm", belastungsklasse: "Mittel", material_kosten_pro_m2: 14.75, dichte: 1950 },
+        { id: 3, name: "Fels", belastungsklasse: "Hoch", material_kosten_pro_m2: 22.80, dichte: 2400 },
+        { id: 4, name: "Asphalt (bestehend)", belastungsklasse: "Mittel", material_kosten_pro_m2: 18.20, dichte: 2300 },
+        { id: 5, name: "Kies", belastungsklasse: "Gering", material_kosten_pro_m2: 10.75, dichte: 1750 }
+      ];
+      
+      const maschinen = [
+        { id: 1, name: "CAT 320 Bagger", typ: "Bagger", kosten_pro_tag: 650, kraftstoffverbrauch: 15 },
+        { id: 2, name: "BOMAG BW213 Walze", typ: "Walze", kosten_pro_tag: 480, kraftstoffverbrauch: 8 },
+        { id: 3, name: "Wirtgen W200 Fräse", typ: "Fräse", kosten_pro_tag: 1200, kraftstoffverbrauch: 40 },
+        { id: 4, name: "Caterpillar D6 Planierraupe", typ: "Planierraupe", kosten_pro_tag: 850, kraftstoffverbrauch: 25 },
+        { id: 5, name: "JCB 3CX Baggerlader", typ: "Baggerlader", kosten_pro_tag: 420, kraftstoffverbrauch: 12 }
+      ];
+      
+      const routen = [
+        { 
+          id: 1, 
+          name: "Hauptstraße Sanierung", 
+          start_address: "Bergstraße 1, Berlin", 
+          end_address: "Bergstraße 50, Berlin", 
+          distance: 1245,
+          created_at: "2025-03-15T10:23:45Z"
+        },
+        { 
+          id: 2, 
+          name: "Kanalarbeiten Müllerweg", 
+          start_address: "Müllerweg 12, München", 
+          end_address: "Schulstraße 8, München", 
+          distance: 820,
+          created_at: "2025-04-02T09:15:12Z"
+        },
+        { 
+          id: 3, 
+          name: "Neubaugebiet Erschließung", 
+          start_address: "Am Waldrand 1, Frankfurt", 
+          end_address: "Feldweg 22, Frankfurt", 
+          distance: 1750,
+          created_at: "2025-04-25T14:05:33Z"
+        }
+      ];
+      
+      const selectedRoute = routen.find(r => r.id === route_id);
+      const selectedBodenart = bodenarten.find(b => b.id === bodenart_id);
+      const selectedMaschine = maschinen.find(m => m.id === maschine_id);
+      
+      if (!selectedRoute || !selectedBodenart || !selectedMaschine) {
+        return res.status(400).json({
+          error: 'Ein oder mehrere der ausgewählten Elemente wurden nicht gefunden'
+        });
+      }
+      
+      const strecke = selectedRoute.distance; // in Metern
+      const breite = parameter.breite;
+      const tiefe = parameter.tiefe;
+      const volumen = strecke * breite * tiefe;
+      const flaeche = strecke * breite;
+      
+      // Materialkosten
+      const materialkosten = flaeche * selectedBodenart.material_kosten_pro_m2;
+      
+      // Effizienzfaktor simulieren
+      let effizienzFaktor = 1.0;
+      let bearbeitungszeit = 0.1; // Standardwert in Minuten pro m²
+      
+      if (selectedMaschine.typ === 'Bagger' && selectedBodenart.name.includes('Sand')) {
+        effizienzFaktor = 1.2;
+        bearbeitungszeit = 0.08;
+      } else if (selectedMaschine.typ === 'Walze' && selectedBodenart.name.includes('Asphalt')) {
+        effizienzFaktor = 1.25;
+        bearbeitungszeit = 0.06;
+      } else if (selectedMaschine.typ === 'Fräse' && selectedBodenart.name.includes('Asphalt')) {
+        effizienzFaktor = 1.5;
+        bearbeitungszeit = 0.05;
+      }
+      
+      // Gesamte Bearbeitungszeit in Stunden
+      const gesamtzeit_minuten = flaeche * bearbeitungszeit / effizienzFaktor;
+      const gesamtzeit_stunden = gesamtzeit_minuten / 60;
+      
+      // Anzahl der Arbeitstage
+      const arbeitsstunden_pro_tag = parameter.arbeitsstunden_pro_tag;
+      const benoetigte_tage = Math.ceil(gesamtzeit_stunden / arbeitsstunden_pro_tag);
+      
+      // Maschinenkosten
+      const maschinenkosten = benoetigte_tage * selectedMaschine.kosten_pro_tag;
+      
+      // Personalkosten
+      const personalkosten = gesamtzeit_stunden * parameter.personalkosten_pro_stunde * parameter.anzahl_personal;
+      
+      // Kraftstoffkosten
+      const kraftstoffkosten = gesamtzeit_stunden * selectedMaschine.kraftstoffverbrauch * 1.50; // 1.50€ pro Liter
+      
+      // Gesamtkosten vor Zusatzkosten
+      const zwischensumme = materialkosten + maschinenkosten + personalkosten + kraftstoffkosten;
+      
+      // Zusatzkosten (Unvorhergesehenes, Verwaltung, etc.)
+      const zusatzkosten = zwischensumme * (parameter.zusatzkosten_prozent / 100);
+      
+      // Gesamtkosten
+      const gesamtkosten = zwischensumme + zusatzkosten;
+      
+      // Kosten pro Meter
+      const kosten_pro_meter = gesamtkosten / strecke;
+      
+      // Ergebnis zurückgeben
+      res.json({
+        strecke,
+        breite,
+        tiefe,
+        flaeche,
+        volumen,
+        materialkosten,
+        maschinenkosten,
+        personalkosten,
+        kraftstoffkosten,
+        zusatzkosten,
+        gesamtkosten,
+        kosten_pro_meter,
+        gesamtzeit_stunden,
+        benoetigte_tage
+      });
+      
+    } catch (error) {
+      console.error('Fehler bei der Kostenkalkulation:', error);
+      res.status(500).json({ error: 'Fehler bei der Kostenkalkulation' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

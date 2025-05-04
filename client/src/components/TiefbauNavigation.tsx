@@ -13,8 +13,17 @@ import { cn } from '@/lib/utils';
 const TiefbauNavigation = () => {
   const [location] = useLocation();
 
+  // Interface für Navigationsitems
+  interface NavItem {
+    title: string;
+    href: string;
+    icon: React.ForwardRefExoticComponent<any>;
+    description: string;
+    comingSoon?: boolean;
+  }
+
   // Definieren der Navigationsitems
-  const navItems = [
+  const navItems: NavItem[] = [
     {
       title: 'Tiefbau Karte',
       href: '/tiefbau-map',
