@@ -35,9 +35,11 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   
   // Google Maps API laden
   const loadGoogleMapsAPI = useCallback(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    // VITE_GOOGLE_MAPS_API_KEY scheint in Replit nicht zuverlässig zu funktionieren
+    // Daher verwenden wir den API-Schlüssel direkt
+    const googleMapsApiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
     
-    if (!apiKey) {
+    if (!googleMapsApiKey) {
       setError('Google Maps API-Schlüssel nicht gefunden');
       setIsLoading(false);
       return;
@@ -54,10 +56,11 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     
     // Script-Tag erstellen und API laden
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${effectiveApiKey}&callback=initMap&libraries=geometry`;
     script.async = true;
     script.defer = true;
-    script.onerror = () => {
+    script.onerror = (err) => {
+      console.error('Google Maps API Ladefehler:', err);
       setError('Fehler beim Laden der Google Maps API');
       setIsLoading(false);
     };
