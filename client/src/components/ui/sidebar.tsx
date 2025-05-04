@@ -64,12 +64,6 @@ const navItems: NavItem[] = [
     tooltip: "Projekte erstellen, bearbeiten und verwalten",
   },
   {
-    title: "Geo-Informationen",
-    href: "/geo-map",
-    icon: Map,
-    tooltip: "Geografische Informationen und Kartenfunktionen",
-  },
-  {
     title: "Tiefbau-Planung",
     href: "/tiefbau-map",
     icon: Shovel,
