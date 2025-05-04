@@ -417,7 +417,17 @@ const TiefbauMap: React.FC = () => {
     });
     
     try {
-      const response = await fetch('/api/routes', {
+      // Test zuerst mit dem Debug-Endpunkt
+      console.log('Test mit Debug-Endpunkt. Senden von:', {
+        name: routeName,
+        start_address: effectiveStartAddress,
+        end_address: effectiveEndAddress,
+        distance: Math.round(distance || 100),
+        route_data_length: routeCoordinates.length
+      });
+      
+      // Verwende einen anderen URL für das Testing
+      const response = await fetch('/api/routes/debug', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

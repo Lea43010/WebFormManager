@@ -3535,6 +3535,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test-Endpunkt für Route-Daten (Debug)
+  app.post('/api/routes/debug', (req, res) => {
+    console.log('========== DEBUGGING ROUTE ==========');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    
+    // Einfach die Daten zurückgeben, die empfangen wurden
+    return res.status(200).json({
+      message: 'Daten empfangen (Debug)',
+      receivedData: req.body,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Neue Route speichern
   app.post('/api/routes', async (req, res) => {
     try {
@@ -3546,13 +3560,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { name, start_address, end_address, distance, route_data } = req.body;
       
       // Debug-Ausgabe zur Fehlersuche
-      console.log('Empfangene Daten:', JSON.stringify({
-        name, 
-        start_address, 
-        end_address, 
-        distance,
-        route_data_length: route_data ? route_data.length : 0
-      }));
+      console.log('========== Routendaten-Anfrage Start ==========');
+      console.log('Body der Anfrage:', req.body);
+      console.log('Content-Type der Anfrage:', req.headers['content-type']);
+      console.log('Extrahierte Felder:');
+      console.log('- name:', name);
+      console.log('- start_address:', start_address);
+      console.log('- end_address:', end_address); 
+      console.log('- distance:', distance);
+      console.log('- route_data:', route_data ? `Array mit ${route_data.length} Elementen` : 'undefined oder null');
+      console.log('========== Routendaten-Anfrage Ende ==========');
       
       // Validieren der erforderlichen Felder
       if (!name || !start_address || !end_address || !distance) {
@@ -3561,6 +3578,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!start_address) missingFields.push('start_address');
         if (!end_address) missingFields.push('end_address');
         if (!distance) missingFields.push('distance');
+        
+        console.error('Fehler: Fehlende Pflichtfelder -', missingFields.join(', '));
         
         return res.status(400).json({ 
           error: 'Fehlende Pflichtfelder',
