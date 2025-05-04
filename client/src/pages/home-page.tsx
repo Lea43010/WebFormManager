@@ -76,12 +76,12 @@ export default function HomePage() {
             </CardFooter>
           </Card>
 
-          {/* Tiefbau-Streckenplanung (vorher: Geo-Map) */}
+          {/* Geo-Karte (führt zu Tiefbau-Map) */}
           <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 hover:shadow-md transition-shadow">
             <CardHeader className="p-2 sm:p-3">
               <CardTitle className="text-yellow-800 text-sm sm:text-base flex items-center gap-1 sm:gap-2">
                 <Map className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span className="truncate">Tiefbau-Karte</span>
+                <span className="truncate">Geo-Karte</span>
               </CardTitle>
             </CardHeader>
             <CardFooter className="p-2 sm:p-3 pt-0">
