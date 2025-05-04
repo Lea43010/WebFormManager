@@ -1,13 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Wir deklarieren die initMap Funktion als eine Eigenschaft auf dem globalen Window-Objekt
 declare global {
   interface Window {
-    initMap?: () => void;  // Optional, damit TypeScript nicht meckert
     google: any;
+    googleMap: any;
+    mapMarkers: any[];
+    polyline: any;
+    initMap: () => void;
+    addMapMarker: (position: any) => void;
+    clearMapMarkers: () => void;
+    updateMarkersCount: (count: number) => void;
+    externalOnRouteChange: ((route: Array<{lat: number, lng: number}>) => void) | null;
+    externalOnMarkersClear: (() => void) | null;
+    mapInitialCenter: {lat: number, lng: number};
+    mapInitialZoom: number;
   }
 }
 
@@ -22,6 +31,8 @@ interface GoogleMapProps {
 
 const defaultCenter = { lat: 48.137154, lng: 11.576124 }; // München
 
+// Die Google Map Komponente mit minimaler Komplexität - vereinfachte, nicht-reactive Version
+// um DOM-Rendering-Probleme zu vermeiden
 const GoogleMap: React.FC<GoogleMapProps> = ({
   onRouteChange,
   onMarkersClear,
@@ -35,202 +46,142 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [markersCount, setMarkersCount] = useState(0);
   
-  // Refs mit useState statt useRef, um Re-Rendering auszulösen
-  const [mapElement, setMapElement] = useState<HTMLDivElement | null>(null);
-  const [googleMap, setGoogleMap] = useState<any>(null);
-  const [markers, setMarkers] = useState<any[]>([]);
-  const [polyline, setPolyline] = useState<any>(null);
+  // Statische ID für das Kartenelement um es sicher zu finden
+  const mapContainerID = "google-map-container-" + Math.random().toString(36).substring(2, 9);
   
-  // Callback-Ref für das DOM-Element der Karte
-  const mapRef = useCallback((node: HTMLDivElement | null) => {
-    console.log("Map Element Ref-Callback aufgerufen:", !!node);
-    if (node !== null) {
-      setMapElement(node);
-    }
-  }, []);
-  
-  // Marker hinzufügen
-  const addMarker = useCallback((latLng: google.maps.LatLng) => {
-    if (!googleMap) return;
-    
-    const marker = new google.maps.Marker({
-      position: latLng,
-      map: googleMap,
-      title: `Punkt ${markers.length + 1}`,
-      animation: google.maps.Animation.DROP,
-      draggable: true,
-    });
-    
-    const newMarkers = [...markers, marker];
-    setMarkers(newMarkers);
-    setMarkersCount(newMarkers.length);
-    
-    // Polyline aktualisieren
-    updatePolyline(newMarkers);
-    
-    // Drag-Event hinzufügen
-    marker.addListener('dragend', () => {
-      updatePolyline(newMarkers);
-    });
-  }, [googleMap, markers]);
-  
-  // Polyline und Route-Callback aktualisieren
-  const updatePolyline = useCallback((currentMarkers: any[] = markers) => {
-    if (!polyline) return;
-    
-    const path = currentMarkers.map((marker) => marker.getPosition()!);
-    polyline.setPath(path);
-    
-    // Route-Daten an den Parent-Component übergeben
-    if (onRouteChange && path.length >= 2) {
-      const routeCoordinates = path.map((point) => ({
-        lat: point.lat(),
-        lng: point.lng(),
-      }));
-      onRouteChange(routeCoordinates);
-    }
-  }, [markers, polyline, onRouteChange]);
-  
-  // Alle Marker löschen
-  const clearMarkers = useCallback(() => {
-    // Marker von der Karte entfernen
-    markers.forEach((marker) => {
-      marker.setMap(null);
-    });
-    
-    // Marker-Array zurücksetzen
-    setMarkers([]);
-    setMarkersCount(0);
-    
-    // Polyline zurücksetzen
-    if (polyline) {
-      polyline.setPath([]);
-    }
-    
-    // Callback aufrufen
-    if (onMarkersClear) {
-      onMarkersClear();
-    }
-  }, [markers, polyline, onMarkersClear]);
-  
-  // Karte initialisieren, wenn das DOM-Element verfügbar ist und Google Maps API geladen
+  // Alle Callbacks über das window-Objekt einrichten, um React-Komplexität zu vermeiden
   useEffect(() => {
-    if (!mapElement || !window.google?.maps || googleMap) return;
+    // Globale Variablen setzen
+    window.mapMarkers = [];
+    window.externalOnRouteChange = onRouteChange || null;
+    window.externalOnMarkersClear = onMarkersClear || null;
+    window.mapInitialCenter = initialCenter;
+    window.mapInitialZoom = initialZoom;
     
-    try {
-      console.log("Initialisiere Google Map mit DOM-Element:", mapElement);
-      
-      // Google Maps-Karte erstellen
-      const map = new window.google.maps.Map(mapElement, {
-        center: initialCenter,
-        zoom: initialZoom,
-        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true,
-        zoomControl: true,
-      });
-      
-      setGoogleMap(map);
-      
-      // Polyline für die Route erstellen
-      const newPolyline = new window.google.maps.Polyline({
-        path: [],
-        geodesic: true,
-        strokeColor: '#3b82f6', // Blue
-        strokeOpacity: 1.0,
-        strokeWeight: 3,
-        map
-      });
-      
-      setPolyline(newPolyline);
-      
-      // Event-Listener für Klicks auf die Karte
-      map.addListener('click', (event: google.maps.MapMouseEvent) => {
-        if (!event.latLng) return;
-        addMarker(event.latLng);
-      });
-      
-      setIsLoading(false);
-      
-      toast({
-        title: "Hinweis",
-        description: "Karte wurde erfolgreich geladen. Sie können jetzt Marker durch Klicken hinzufügen.",
-      });
-    } catch (error) {
-      console.error('Fehler beim Initialisieren der Karte:', error);
-      setError('Fehler beim Initialisieren der Karte');
-      setIsLoading(false);
-    }
-  }, [mapElement, initialCenter, initialZoom, googleMap, addMarker, toast]);
-  
-  // Google Maps API laden
-  useEffect(() => {
-    // Wenn Google Maps bereits geladen ist, nichts tun
-    if (window.google?.maps) {
-      console.log("Google Maps API bereits geladen");
-      return;
-    }
-    
-    console.log("Lade Google Maps API...");
-    
-    // VITE_GOOGLE_MAPS_API_KEY scheint in Replit nicht zuverlässig zu funktionieren
-    // Daher verwenden wir den API-Schlüssel direkt
-    const googleMapsApiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
-    
-    if (!googleMapsApiKey) {
-      setError('Google Maps API-Schlüssel nicht gefunden');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Script-Tag erstellen und API laden - mit optimierten Parametern
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=geometry&loading=async&callback=initMap`;
-    script.async = true;
-    script.defer = true;
-    
-    // Callback für die Maps API bereitstellen
-    window.initMap = () => {
-      console.log("Google Maps API Callback (initMap) aufgerufen");
-      // State aktualisieren, um Re-Rendering zu erzwingen und DOM zu erkennen
-      setIsLoading(prevState => prevState);
+    // Update-Funktion für die Marker-Anzahl
+    window.updateMarkersCount = (count) => {
+      setMarkersCount(count);
     };
     
-    // Timeout festlegen, falls die API zu lange lädt
-    const timeoutId = setTimeout(() => {
-      console.warn('Google Maps API-Ladevorgang dauert länger als erwartet.');
-      toast({
-        title: "Hinweis",
-        description: "Der Ladevorgang dauert länger als erwartet. Bitte haben Sie etwas Geduld.",
+    // Marker-Funktion definieren
+    window.addMapMarker = (position) => {
+      if (!window.googleMap) return;
+      
+      const marker = new google.maps.Marker({
+        position,
+        map: window.googleMap,
+        title: `Punkt ${window.mapMarkers.length + 1}`,
+        animation: google.maps.Animation.DROP,
+        draggable: true,
       });
-    }, 5000);
-    
-    script.onerror = (err) => {
-      clearTimeout(timeoutId);
-      console.error('Google Maps API Ladefehler:', err);
-      setError('Fehler beim Laden der Google Maps API');
-      setIsLoading(false);
+      
+      // Drag-Event hinzufügen
+      marker.addListener('dragend', updatePolylineAndRoute);
+      
+      // Marker speichern
+      window.mapMarkers.push(marker);
+      window.updateMarkersCount(window.mapMarkers.length);
+      
+      // Polyline aktualisieren
+      updatePolylineAndRoute();
     };
     
-    script.onload = () => {
-      clearTimeout(timeoutId);
-      console.log('Google Maps API erfolgreich geladen');
-      // Force re-render durch State-Änderung
-      setIsLoading((prevLoading) => prevLoading);
-    };
+    // Funktion zum Aktualisieren der Polyline und Route
+    function updatePolylineAndRoute() {
+      if (!window.polyline) return;
+      
+      const path = window.mapMarkers.map(marker => marker.getPosition());
+      window.polyline.setPath(path);
+      
+      // Route-Daten an den Parent-Component übergeben
+      if (window.externalOnRouteChange && path.length >= 2) {
+        const routeCoordinates = path.map(point => ({
+          lat: point.lat(),
+          lng: point.lng(),
+        }));
+        window.externalOnRouteChange(routeCoordinates);
+      }
+    }
     
-    document.head.appendChild(script);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+    // Marker-Lösch-Funktion definieren
+    window.clearMapMarkers = () => {
+      // Marker von der Karte entfernen
+      window.mapMarkers.forEach(marker => {
+        marker.setMap(null);
+      });
+      
+      // Marker-Array zurücksetzen
+      window.mapMarkers = [];
+      window.updateMarkersCount(0);
+      
+      // Polyline zurücksetzen
+      if (window.polyline) {
+        window.polyline.setPath([]);
+      }
+      
+      // Callback aufrufen
+      if (window.externalOnMarkersClear) {
+        window.externalOnMarkersClear();
       }
     };
-  }, [toast]);
+    
+    // Init-Funktion für die Karte nach API-Ladung
+    window.initMap = () => {
+      console.log("Google Maps API initialisiert");
+      
+      // Wir tun hier nichts, der eigentliche Initialisierungscode wird in useEffect mit getElementById ausgeführt
+      // Das verhindert Probleme mit der DOM-Verfügbarkeit
+    };
+    
+    // Google Maps API laden, wenn noch nicht vorhanden
+    if (!window.google?.maps) {
+      console.log("Google Maps API wird geladen...");
+      
+      // Hardcoded API-Schlüssel
+      const googleMapsApiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
+      
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=geometry&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      
+      // Timeout-Handle speichern
+      const timeoutId = setTimeout(() => {
+        toast({
+          title: "Hinweis",
+          description: "Der Ladevorgang der Karte dauert länger als erwartet. Bitte haben Sie Geduld.",
+        });
+      }, 5000);
+      
+      // Error-Handler
+      script.onerror = () => {
+        clearTimeout(timeoutId);
+        setError('Fehler beim Laden der Google Maps API. Bitte prüfen Sie Ihre Internetverbindung.');
+        setIsLoading(false);
+      };
+      
+      // Script einfügen
+      document.head.appendChild(script);
+      
+      // Cleanup-Funktion
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    } else {
+      // API bereits geladen, initMap direkt aufrufen
+      console.log("Google Maps API bereits geladen, starte initMap...");
+      window.initMap();
+    }
+    
+    // Beim Unmount aufräumen
+    return () => {
+      window.mapMarkers = [];
+      window.externalOnRouteChange = null;
+      window.externalOnMarkersClear = null;
+    };
+  }, [initialCenter, initialZoom, onRouteChange, onMarkersClear, toast]);
   
-  // Fallback-Ansicht, wenn die API nicht geladen werden kann
+  // Fehler-Ansicht
   if (error) {
     return (
       <div className={`w-full ${className}`} style={{ height }}>
@@ -246,22 +197,27 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     );
   }
   
-  // Ladeansicht
+  // Lade-Ansicht
   if (isLoading) {
     return (
       <div className={`w-full ${className}`} style={{ height }}>
         <div className="w-full h-full bg-slate-100 rounded-md border-2 border-dashed border-slate-200 flex flex-col items-center justify-center">
           <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
           <h3 className="text-xl font-medium text-slate-700">Karte wird geladen...</h3>
-          <p className="text-slate-500 mt-2">Dies kann einen Moment dauern</p>
+          <p className="text-slate-500 mt-2">Dies kann bis zu 10 Sekunden dauern</p>
         </div>
       </div>
     );
   }
   
-  return (
+  // Normale Kartendarstellung mit useEffect statt ref
+  const element = (
     <div className={`relative w-full ${className}`}>
-      <div ref={mapRef} style={{ height }} className="w-full rounded-md overflow-hidden"></div>
+      <div 
+        id={mapContainerID}
+        style={{ height }} 
+        className="w-full rounded-md overflow-hidden"
+      ></div>
       
       {/* Overlay mit Marker-Anzahl und Löschen-Button */}
       <div className="absolute top-3 right-3 z-10 bg-white bg-opacity-90 rounded-md shadow p-2 flex items-center">
@@ -271,7 +227,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={clearMarkers}
+          onClick={() => window.clearMapMarkers()}
           disabled={markersCount === 0}
           className="h-8 px-2 py-1"
         >
@@ -281,6 +237,61 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       </div>
     </div>
   );
+  
+  // Statt ref-Callback verwenden wir useEffect mit einem festen DOM-Element-Selektor
+  useEffect(() => {
+    // Ein kurzes Timeout, um sicherzustellen, dass das DOM vollständig gerendert ist
+    const renderTimeout = setTimeout(() => {
+      const mapElement = document.getElementById(mapContainerID);
+      if (mapElement && window.google?.maps && !window.googleMap) {
+        console.log("DOM-Element gefunden, initialisiere Karte");
+        try {
+          // Google Maps-Karte erstellen
+          window.googleMap = new google.maps.Map(mapElement, {
+            center: window.mapInitialCenter,
+            zoom: window.mapInitialZoom,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
+            zoomControl: true,
+          });
+          
+          // Polyline für die Route erstellen
+          window.polyline = new google.maps.Polyline({
+            path: [],
+            geodesic: true,
+            strokeColor: '#3b82f6', // Blue
+            strokeOpacity: 1.0,
+            strokeWeight: 3,
+            map: window.googleMap
+          });
+          
+          // Event-Listener für Klicks auf die Karte
+          window.googleMap.addListener('click', (event: any) => {
+            if (!event.latLng) return;
+            window.addMapMarker(event.latLng);
+          });
+          
+          // Loading beenden
+          setIsLoading(false);
+          
+          toast({
+            title: "Erfolg",
+            description: "Karte erfolgreich geladen. Setzen Sie Marker durch Klicks auf die Karte.",
+          });
+        } catch (err) {
+          console.error('Fehler beim Initialisieren der Karte:', err);
+          setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
+          setIsLoading(false);
+        }
+      }
+    }, 500); // 500ms Verzögerung zur Sicherstellung des DOM-Renderings
+    
+    return () => clearTimeout(renderTimeout);
+  }, [isLoading, toast]);
+  
+  return element;
 };
 
 export default GoogleMap;

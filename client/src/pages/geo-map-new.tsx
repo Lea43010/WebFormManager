@@ -133,6 +133,9 @@ const GeoMapNew = () => {
         description: "Höhenprofilsdaten werden abgerufen...",
       });
       
+      // Timeout ID deklarieren und initialisieren
+      let timeoutId: NodeJS.Timeout;
+      
       // Timeout-Promise erstellen
       const timeoutPromise = new Promise<Response>((_, reject) => {
         timeoutId = setTimeout(() => {
@@ -150,7 +153,7 @@ const GeoMapNew = () => {
       const response = await Promise.race([fetchPromise, timeoutPromise]);
       
       // Timeout löschen, da Antwort erfolgreich zurückgekommen ist
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorData = await response.json();
