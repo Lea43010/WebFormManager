@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { GoogleMap, useJsApiLoader, Marker, Polyline, InfoWindow, Libraries } from '@react-google-maps/api';
-import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_LIBRARIES, DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from "@/config/google-maps";
+import { GOOGLE_MAPS_LIBRARIES, DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from "@/config/google-maps";
 
 // Typdefinitionen
 export interface MarkerInfo {

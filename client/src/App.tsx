@@ -35,6 +35,7 @@ import ConstructionDiaryDebugPage from "@/pages/construction-diary-debug";
 import AdminEmailsPage from "@/pages/admin-emails";
 // HelpPage nicht mehr benötigt, Redirect zu InformationPage
 import StreetModulesPage from "@/pages/street-modules-new";
+import MapsTestPage from "@/pages/maps-test-page";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -75,6 +76,7 @@ function Router() {
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
+      <Route path="/maps-test" component={MapsTestPage} /> {/* Google Maps Test-Seite */}
       <Route component={NotFound} />
     </Switch>
   );
