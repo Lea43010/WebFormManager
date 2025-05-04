@@ -71,9 +71,11 @@ export default function GoogleMapsComponent({
   width = "100%",
   selectedBelastungsklasse = "none"
 }: GoogleMapsProps) {
+  console.log("API Key aus env:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+  
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyBhUVnGEq8JIEsbkwGvlCjM1ZEv2DGVuds",
     libraries: GOOGLE_MAPS_LIBRARIES as Libraries,
   });
 
