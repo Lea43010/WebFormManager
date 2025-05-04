@@ -1,0 +1,447 @@
+// pages/KostenKalkulation.js
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const KostenKalkulation = () => {
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Daten aus der Datenbank
+  const [bodenarten, setBodenarten] = useState([]);
+  const [maschinen, setMaschinen] = useState([]);
+  const [routen, setRouten] = useState([]);
+  
+  // Ausgewählte Elemente
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [selectedBodenart, setSelectedBodenart] = useState(null);
+  const [selectedMaschine, setSelectedMaschine] = useState(null);
+  
+  // Parameter für die Kalkulation
+  const [kalkulationsParameter, setKalkulationsParameter] = useState({
+    breite: 2.5, // Standardbreite in Metern
+    tiefe: 0.3,  // Standardtiefe in Metern
+    arbeitsstunden_pro_tag: 8,
+    arbeitstage: 5,
+    zusatzkosten_prozent: 10,
+    personalkosten_pro_stunde: 45,
+    anzahl_personal: 3
+  });
+  
+  // Kalkulationsergebnisse
+  const [kalkulation, setKalkulation] = useState(null);
+
+  // Hole Parameter aus der URL wenn vorhanden
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const bodenartId = params.get('bodenart');
+    const maschineId = params.get('maschine');
+    
+    if (bodenartId) {
+      fetchBodenart(bodenartId);
+    }
+    
+    if (maschineId) {
+      fetchMaschine(maschineId);
+    }
+  }, [location]);
+
+  // Lade alle Daten beim ersten Laden
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Lade Bodenarten
+        const bodenResponse = await fetch('/api/bodenarten');
+        if (!bodenResponse.ok) throw new Error('Fehler beim Laden der Bodenarten');
+        const bodenData = await bodenResponse.json();
+        setBodenarten(bodenData);
+        
+        // Lade Maschinen
+        const maschinenResponse = await fetch('/api/maschinen');
+        if (!maschinenResponse.ok) throw new Error('Fehler beim Laden der Maschinen');
+        const maschinenData = await maschinenResponse.json();
+        setMaschinen(maschinenData);
+        
+        // Lade gespeicherte Routen
+        const routenResponse = await fetch('/api/routes');
+        if (!routenResponse.ok) throw new Error('Fehler beim Laden der Routen');
+        const routenData = await routenResponse.json();
+        setRouten(routenData);
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Lade spezifische Bodenart
+  const fetchBodenart = async (id) => {
+    try {
+      const response = await fetch(`/api/bodenarten/${id}`);
+      if (!response.ok) throw new Error('Fehler beim Laden der Bodenart');
+      const data = await response.json();
+      setSelectedBodenart(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Lade spezifische Maschine
+  const fetchMaschine = async (id) => {
+    try {
+      const response = await fetch(`/api/maschinen/${id}`);
+      if (!response.ok) throw new Error('Fehler beim Laden der Maschine');
+      const data = await response.json();
+      setSelectedMaschine(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Handler für Auswahl
+  const handleSelectRoute = (route) => {
+    setSelectedRoute(route);
+  };
+
+  const handleSelectBodenart = (bodenart) => {
+    setSelectedBodenart(bodenart);
+  };
+
+  const handleSelectMaschine = (maschine) => {
+    setSelectedMaschine(maschine);
+  };
+
+  // Handler für Parameteränderungen
+  const handleParameterChange = (e) => {
+    const { name, value } = e.target;
+    setKalkulationsParameter(prev => ({
+      ...prev,
+      [name]: parseFloat(value)
+    }));
+  };
+
+  // Führe Kalkulation durch
+  const berechneKosten = async () => {
+    if (!selectedRoute || !selectedBodenart || !selectedMaschine) {
+      alert('Bitte wähle Route, Bodenart und Maschine aus.');
+      return;
+    }
+
+    try {
+      // Rufe API zur Berechnung auf
+      const response = await fetch('/api/kalkulation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          route_id: selectedRoute.id,
+          bodenart_id: selectedBodenart.id,
+          maschine_id: selectedMaschine.id,
+          parameter: kalkulationsParameter
+        }),
+      });
+
+      if (!response.ok) throw new Error('Fehler bei der Kalkulation');
+      const data = await response.json();
+      
+      // Alternativ: Führe Berechnung clientseitig durch
+      if (!data || Object.keys(data).length === 0) {
+        const strecke = selectedRoute.distance; // in Metern
+        const breite = kalkulationsParameter.breite;
+        const tiefe = kalkulationsParameter.tiefe;
+        const volumen = strecke * breite * tiefe;
+        const flaeche = strecke * breite;
+        
+        // Materialkosten
+        const materialkosten = flaeche * selectedBodenart.material_kosten_pro_m2;
+        
+        // Maschinenkosten
+        // Suche nach Effizienzfaktor zwischen Maschine und Bodenart
+        let effizienzFaktor = 1.0;
+        let bearbeitungszeit = 0.1; // Standardwert in Minuten pro m²
+        
+        // Diese Daten müssten eigentlich vom Server kommen
+        // Hier simulieren wir es für die Clientberechnung
+        if (selectedMaschine.typ === 'Bagger' && selectedBodenart.name.includes('Sand')) {
+          effizienzFaktor = 1.2;
+          bearbeitungszeit = 0.08;
+        } else if (selectedMaschine.typ === 'Walze' && selectedBodenart.name.includes('Asphalt')) {
+          effizienzFaktor = 1.25;
+          bearbeitungszeit = 0.06;
+        } else if (selectedMaschine.typ === 'Fräse' && selectedBodenart.name.includes('Asphalt')) {
+          effizienzFaktor = 1.5;
+          bearbeitungszeit = 0.05;
+        }
+        
+        // Gesamte Bearbeitungszeit in Stunden
+        const gesamtzeit_minuten = flaeche * bearbeitungszeit / effizienzFaktor;
+        const gesamtzeit_stunden = gesamtzeit_minuten / 60;
+        
+        // Anzahl der Arbeitstage
+        const arbeitsstunden_pro_tag = kalkulationsParameter.arbeitsstunden_pro_tag;
+        const benoetigte_tage = Math.ceil(gesamtzeit_stunden / arbeitsstunden_pro_tag);
+        
+        // Maschinenkosten
+        const maschinenkosten = benoetigte_tage * selectedMaschine.kosten_pro_tag;
+        
+        // Personalkosten
+        const personalkosten = gesamtzeit_stunden * kalkulationsParameter.personalkosten_pro_stunde * kalkulationsParameter.anzahl_personal;
+        
+        // Kraftstoffkosten
+        const kraftstoffkosten = gesamtzeit_stunden * selectedMaschine.kraftstoffverbrauch * 1.50; // 1.50€ pro Liter
+        
+        // Gesamtkosten vor Zusatzkosten
+        const zwischensumme = materialkosten + maschinenkosten + personalkosten + kraftstoffkosten;
+        
+        // Zusatzkosten (Unvorhergesehenes, Verwaltung, etc.)
+        const zusatzkosten = zwischensumme * (kalkulationsParameter.zusatzkosten_prozent / 100);
+        
+        // Gesamtkosten
+        const gesamtkosten = zwischensumme + zusatzkosten;
+        
+        // Kosten pro Meter
+        const kosten_pro_meter = gesamtkosten / strecke;
+        
+        setKalkulation({
+          strecke,
+          breite,
+          tiefe,
+          flaeche,
+          volumen,
+          materialkosten,
+          maschinenkosten,
+          personalkosten,
+          kraftstoffkosten,
+          zusatzkosten,
+          gesamtkosten,
+          kosten_pro_meter,
+          gesamtzeit_stunden,
+          benoetigte_tage
+        });
+      } else {
+        setKalkulation(data);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // PDF-Export der Kalkulation
+  const exportAsPDF = () => {
+    // Diese Funktion würde normalerweise eine PDF-Generierung durchführen
+    alert('PDF-Export-Funktion wird implementiert...');
+  };
+
+  if (loading) {
+    return <div>Lade Daten für Kalkulation...</div>;
+  }
+
+  if (error) {
+    return <div>Fehler: {error}</div>;
+  }
+
+  return (
+    <div className="kostenkalkulation-container">
+      <h2>Kostenkalkulation für Tiefbau</h2>
+      
+      <div className="kalkulation-grid">
+        <div className="kalkulation-inputs">
+          <div className="input-section">
+            <h3>1. Route auswählen</h3>
+            <select 
+              value={selectedRoute?.id || ''} 
+              onChange={(e) => {
+                const route = routen.find(r => r.id === parseInt(e.target.value));
+                handleSelectRoute(route);
+              }}
+            >
+              <option value="">-- Route auswählen --</option>
+              {routen.map(route => (
+                <option key={route.id} value={route.id}>
+                  {route.name} ({(route.distance / 1000).toFixed(2)} km)
+                </option>
+              ))}
+            </select>
+            
+            {selectedRoute && (
+              <div className="route-info">
+                <p>Von: {selectedRoute.start_address}</p>
+                <p>Nach: {selectedRoute.end_address}</p>
+                <p>Länge: {(selectedRoute.distance / 1000).toFixed(2)} km</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/karte'}>
+              Neue Route planen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>2. Bodenart auswählen</h3>
+            <select 
+              value={selectedBodenart?.id || ''} 
+              onChange={(e) => {
+                const bodenart = bodenarten.find(b => b.id === parseInt(e.target.value));
+                handleSelectBodenart(bodenart);
+              }}
+            >
+              <option value="">-- Bodenart auswählen --</option>
+              {bodenarten.map(bodenart => (
+                <option key={bodenart.id} value={bodenart.id}>
+                  {bodenart.name} - {bodenart.belastungsklasse}
+                </option>
+              ))}
+            </select>
+            
+            {selectedBodenart && (
+              <div className="bodenart-info">
+                <p>Materialkosten: {selectedBodenart.material_kosten_pro_m2} €/m²</p>
+                <p>Dichte: {selectedBodenart.dichte} kg/m³</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/bodenanalyse'}>
+              Bodenarten vergleichen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>3. Maschine auswählen</h3>
+            <select 
+              value={selectedMaschine?.id || ''} 
+              onChange={(e) => {
+                const maschine = maschinen.find(m => m.id === parseInt(e.target.value));
+                handleSelectMaschine(maschine);
+              }}
+            >
+              <option value="">-- Maschine auswählen --</option>
+              {maschinen.map(maschine => (
+                <option key={maschine.id} value={maschine.id}>
+                  {maschine.name} ({maschine.typ})
+                </option>
+              ))}
+            </select>
+            
+            {selectedMaschine && (
+              <div className="maschine-info">
+                <p>Tageskosten: {selectedMaschine.kosten_pro_tag} €</p>
+                <p>Kraftstoffverbrauch: {selectedMaschine.kraftstoffverbrauch} l/h</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/maschinen'}>
+              Maschinen vergleichen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>4. Parameter einstellen</h3>
+            <div className="parameter-inputs">
+              <div className="parameter-item">
+                <label>Breite (m):</label>
+                <input 
+                  type="number" 
+                  name="breite" 
+                  value={kalkulationsParameter.breite} 
+                  onChange={handleParameterChange}
+                  step="0.1"
+                  min="0.5"
+                  max="10"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Tiefe (m):</label>
+                <input 
+                  type="number" 
+                  name="tiefe" 
+                  value={kalkulationsParameter.tiefe} 
+                  onChange={handleParameterChange}
+                  step="0.1"
+                  min="0.1"
+                  max="5"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Arbeitsstunden/Tag:</label>
+                <input 
+                  type="number" 
+                  name="arbeitsstunden_pro_tag" 
+                  value={kalkulationsParameter.arbeitsstunden_pro_tag} 
+                  onChange={handleParameterChange}
+                  min="1"
+                  max="24"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Anzahl Personal:</label>
+                <input 
+                  type="number" 
+                  name="anzahl_personal" 
+                  value={kalkulationsParameter.anzahl_personal} 
+                  onChange={handleParameterChange}
+                  min="1"
+                  max="20"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Personalkosten/Stunde (€):</label>
+                <input 
+                  type="number" 
+                  name="personalkosten_pro_stunde" 
+                  value={kalkulationsParameter.personalkosten_pro_stunde} 
+                  onChange={handleParameterChange}
+                  min="20"
+                  max="100"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Zusatzkosten (%):</label>
+                <input 
+                  type="number" 
+                  name="zusatzkosten_prozent" 
+                  value={kalkulationsParameter.zusatzkosten_prozent} 
+                  onChange={handleParameterChange}
+                  min="0"
+                  max="50"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            className="berechnen-button"
+            onClick={berechneKosten}
+            disabled={!selectedRoute || !selectedBodenart || !selectedMaschine}
+          >
+            Kosten berechnen
+          </button>
+        </div>
+        
+        {kalkulation && (
+          <div className="kalkulation-ergebnisse">
+            <h3>Kostenberechnung Ergebnis</h3>
+            
+            <div className="ergebnis-zusammenfassung">
+              <h4>Gesamtkosten: {kalkulation.gesamtkosten.toFixed(2)} €</h4>
+              <p>Kosten pro Meter: {kalkulation.kosten_pro_meter.toFixed(2)} €/m</p>
+              <p>Benötigte Zeit: {kalkulation.gesamtzeit_stunden.toFixed(1)} Stunden ({kalkulation.benoetigte_tage} Arbeitstage)</p>
+            </div>
+            
+            <div className="ergebnis-details">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Position</th>
+                    <th>Berechnung</th>
+                    <th>Kosten (€)</th>
+                  </tr>

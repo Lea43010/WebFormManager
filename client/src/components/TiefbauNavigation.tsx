@@ -35,10 +35,9 @@ const TiefbauNavigation = () => {
     },
     {
       title: 'Kostenkalkulation',
-      href: '/tiefbau-kostenkalkulation',
+      href: '/kostenkalkulation',
       icon: Calculator,
-      description: 'Projektkosten kalkulieren',
-      comingSoon: true
+      description: 'Projektkosten kalkulieren'
     }
   ];
 
