@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
  * Eine sehr einfache DOM-basierte Google Maps Komponente ohne komplexe React-Patterns
  */
 interface BasicGoogleMapProps {
-  onRouteChange?: (route: Array<{lat: number, lng: number}>) => void;
+  onRouteChange?: (route: Array<{lat: number, lng: number}>, startAddress?: string, endAddress?: string) => void;
   onMarkersClear?: () => void;
   initialCenter?: {lat: number, lng: number};
   initialZoom?: number;
@@ -197,8 +197,27 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     updatePolyline();
   }
   
+  // Adresse für eine Position abrufen
+  async function getAddressForLocation(location: {lat: number, lng: number}): Promise<string> {
+    if (!geocoderRef.current) return '';
+    
+    try {
+      const result = await geocoderRef.current.geocode({ 
+        location: new google.maps.LatLng(location.lat, location.lng) 
+      });
+      
+      if (result.results && result.results.length > 0) {
+        return result.results[0].formatted_address;
+      }
+    } catch (error) {
+      console.error("Geocoding Fehler:", error);
+    }
+    
+    return '';
+  }
+  
   // Polyline aktualisieren
-  function updatePolyline() {
+  async function updatePolyline() {
     if (!mapRef.current || !polylineRef.current) return;
     
     // Positionen extrahieren
@@ -212,7 +231,12 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     
     // Callback aufrufen
     if (onRouteChange && path.length >= 2) {
-      onRouteChange(path);
+      // Adressen für Start- und Endpunkt abrufen
+      const startAddress = await getAddressForLocation(path[0]);
+      const endAddress = await getAddressForLocation(path[path.length - 1]);
+      
+      // Callback mit Koordinaten und Adressen aufrufen
+      onRouteChange(path, startAddress, endAddress);
     }
   }
   

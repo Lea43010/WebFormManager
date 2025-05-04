@@ -274,8 +274,21 @@ const TiefbauMap: React.FC = () => {
   }, [selectedBodenart, distance, bodenarten]);
   
   // Handler für Routenänderungen
-  const handleRouteChange = (route: Array<{lat: number, lng: number}>) => {
+  const handleRouteChange = (
+    route: Array<{lat: number, lng: number}>, 
+    startAddr?: string, 
+    endAddr?: string
+  ) => {
     setRouteCoordinates(route);
+    
+    // Start- und Endadressen setzen, wenn vorhanden
+    if (startAddr) {
+      setStartAddress(startAddr);
+    }
+    
+    if (endAddr) {
+      setEndAddress(endAddr);
+    }
     
     // Distanz berechnen
     if (route.length >= 2) {
@@ -301,6 +314,8 @@ const TiefbauMap: React.FC = () => {
   const clearMarkers = () => {
     setRouteCoordinates([]);
     setDistance(0);
+    setStartAddress('');
+    setEndAddress('');
     setShowElevationChart(false);
   };
   
