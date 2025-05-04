@@ -22,9 +22,6 @@ interface SimpleGoogleMapProps {
   onMarkerDrag?: (position: { lat: number; lng: number }, index: number) => void;
   onMarkersCleared?: () => void;
   enableControls?: boolean;
-  mapRef?: React.RefObject<{
-    searchAddress: (address: string) => Promise<void>;
-  }>;
 }
 
 // Google Maps Komponente mit vereinfachtem DOM-basierten Ansatz
@@ -38,7 +35,6 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   onMarkerDrag,
   onMarkersCleared,
   enableControls = true,
-  mapRef,
 }) => {
   // State für die Karte
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +44,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   const [searching, setSearching] = useState(false);
   
   // Referenzen
-  const internalMapRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -261,39 +257,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
       }
     };
   }, [initMap, toast, apiKey]);
-  
-  // Fehler-Ansicht
-  if (error) {
-    return (
-      <Card className={className}>
-        <CardContent className="pt-6 flex flex-col items-center justify-center" style={{ height }}>
-          <div className="text-destructive mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-center">Kartenfehler</h3>
-          <p className="text-muted-foreground text-center mt-2">{error}</p>
-          <Button className="mt-4" onClick={() => window.location.reload()}>
-            Seite neu laden
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Loading-Ansicht
-  if (isLoading) {
-    return (
-      <Card className={className}>
-        <CardContent className="pt-6 flex flex-col items-center justify-center" style={{ height }}>
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Google Maps wird geladen...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
+
   // Suchfunktion für Adressen
   const searchAddress = useCallback(() => {
     if (!searchInput.trim() || !mapRef.current || !window.google) return;
@@ -341,7 +305,39 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
       setSearching(false);
     }
   }, [searchInput, addMarker, toast]);
-
+  
+  // Fehler-Ansicht
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardContent className="pt-6 flex flex-col items-center justify-center" style={{ height }}>
+          <div className="text-destructive mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-center">Kartenfehler</h3>
+          <p className="text-muted-foreground text-center mt-2">{error}</p>
+          <Button className="mt-4" onClick={() => window.location.reload()}>
+            Seite neu laden
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Loading-Ansicht
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardContent className="pt-6 flex flex-col items-center justify-center" style={{ height }}>
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Google Maps wird geladen...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   // Karten-Ansicht
   return (
     <div className={`relative ${className}`}>
