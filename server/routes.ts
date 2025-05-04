@@ -36,6 +36,7 @@ import { dataQualityChecker } from "./data-quality-checker";
 import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
 import { ZodError, z } from "zod";
 import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
+import elevationRouter from "./routes/elevation"; // Google Elevation API
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
@@ -110,6 +111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Geo-Projekte-API-Routen einrichten
   app.use(geoProjectsRouter);
+  
+  // Google Elevation API-Routen einrichten
+  app.use(elevationRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
