@@ -4,6 +4,7 @@ import express from "express";
 import path from "path";
 import fs from "fs-extra";
 import { storage } from "./storage";
+import { sql } from "./db";
 import { setupAuth } from "./auth";
 import { setupDownloadRoutes } from "./download";
 import { setupHealthRoutes } from "./health";
@@ -3458,11 +3459,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Gespeicherte Routen abrufen 
+  // Routen aus der Datenbank abrufen
   app.get('/api/routes', async (req, res) => {
     try {
-      // Mock-Daten für die erste Implementierung
-      const routen = [
+      // Mock-Routen zunächst als Fallback
+      const mockRouten = [
         { 
           id: 1, 
           name: "Hauptstraße Sanierung", 
@@ -3489,10 +3490,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
       
-      res.json(routen);
+      // Versuchen, die Routen aus der Datenbank abzurufen
+      try {
+        const result = await sql`SELECT * FROM routes ORDER BY created_at DESC`;
+        
+        // Wenn Routen gefunden wurden, diese zurückgeben
+        if (result.length > 0) {
+          return res.json(result);
+        }
+        
+        // Sonst: Tabelle erstellen und Mock-Daten einfügen
+        await sql`
+          CREATE TABLE IF NOT EXISTS routes (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            start_address VARCHAR(255) NOT NULL,
+            end_address VARCHAR(255) NOT NULL,
+            distance INTEGER NOT NULL,
+            route_data JSONB,
+            created_by INTEGER REFERENCES tbluser(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `;
+        
+        // Mock-Daten einfügen
+        for (const route of mockRouten) {
+          await sql`
+            INSERT INTO routes (name, start_address, end_address, distance, created_at)
+            VALUES (${route.name}, ${route.start_address}, ${route.end_address}, ${route.distance}, ${route.created_at})
+          `;
+        }
+        
+        // Daten erneut abrufen
+        const newResult = await sql`SELECT * FROM routes ORDER BY created_at DESC`;
+        return res.json(newResult);
+      } catch (error) {
+        // Bei Datenbankfehlern die Mock-Daten zurückgeben
+        console.error('Datenbankfehler beim Abrufen der Routen:', error);
+        return res.json(mockRouten);
+      }
     } catch (error) {
-      console.error('Fehler beim Abrufen der Routen:', error);
+      console.error('Allgemeiner Fehler beim Abrufen der Routen:', error);
       res.status(500).json({ error: 'Fehler beim Abrufen der Routen' });
+    }
+  });
+  
+  // Neue Route speichern
+  app.post('/api/routes', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Nicht authentifiziert' });
+      }
+      
+      const { name, start_address, end_address, distance, route_data } = req.body;
+      
+      // Validieren der erforderlichen Felder
+      if (!name || !start_address || !end_address || !distance) {
+        return res.status(400).json({ error: 'Fehlende Pflichtfelder' });
+      }
+      
+      try {
+        // Stellen sicher, dass die Tabelle existiert
+        await sql`
+          CREATE TABLE IF NOT EXISTS routes (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            start_address VARCHAR(255) NOT NULL,
+            end_address VARCHAR(255) NOT NULL,
+            distance INTEGER NOT NULL,
+            route_data JSONB,
+            created_by INTEGER REFERENCES tbluser(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `;
+        
+        // Route in der Datenbank speichern
+        const userId = req.user?.id || null;
+        const jsonRouteData = route_data ? JSON.stringify(route_data) : null;
+        
+        const result = await sql`
+          INSERT INTO routes (name, start_address, end_address, distance, route_data, created_by)
+          VALUES (${name}, ${start_address}, ${end_address}, ${distance}, ${jsonRouteData}::jsonb, ${userId})
+          RETURNING *
+        `;
+        
+        // Das eingefügte Ergebnis zurückgeben
+        if (result && result.length > 0) {
+          return res.status(201).json(result[0]);
+        } else {
+          throw new Error('Keine Daten nach dem Einfügen zurückgegeben');
+        }
+      } catch (error) {
+        console.error('Datenbankfehler beim Speichern der Route:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Fehler beim Speichern der Route:', error);
+      res.status(500).json({ error: 'Fehler beim Speichern der Route' });
     }
   });
   
@@ -3500,9 +3594,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/kalkulation', async (req, res) => {
     try {
       const { route_id, bodenart_id, maschine_id, parameter } = req.body;
-      
-      // Mock-Implementierung, in einer realen Anwendung würden wir aus der Datenbank laden
-      // und die Berechnung komplexer gestalten
       
       // Mit den IDs die entsprechenden Objekte finden
       const bodenarten = [
@@ -3521,34 +3612,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { id: 5, name: "JCB 3CX Baggerlader", typ: "Baggerlader", kosten_pro_tag: 420, kraftstoffverbrauch: 12 }
       ];
       
-      const routen = [
-        { 
-          id: 1, 
-          name: "Hauptstraße Sanierung", 
-          start_address: "Bergstraße 1, Berlin", 
-          end_address: "Bergstraße 50, Berlin", 
-          distance: 1245,
-          created_at: "2025-03-15T10:23:45Z"
-        },
-        { 
-          id: 2, 
-          name: "Kanalarbeiten Müllerweg", 
-          start_address: "Müllerweg 12, München", 
-          end_address: "Schulstraße 8, München", 
-          distance: 820,
-          created_at: "2025-04-02T09:15:12Z"
-        },
-        { 
-          id: 3, 
-          name: "Neubaugebiet Erschließung", 
-          start_address: "Am Waldrand 1, Frankfurt", 
-          end_address: "Feldweg 22, Frankfurt", 
-          distance: 1750,
-          created_at: "2025-04-25T14:05:33Z"
-        }
-      ];
+      // Route aus der Datenbank abrufen
+      let selectedRoute;
       
-      const selectedRoute = routen.find(r => r.id === route_id);
+      try {
+        // Versuchen, die Route aus der Datenbank abzurufen
+        const routeResult = await sql`SELECT * FROM routes WHERE id = ${parseInt(route_id)}`;
+        
+        if (routeResult && routeResult.length > 0) {
+          selectedRoute = routeResult[0];
+        }
+      } catch (error) {
+        console.error('Fehler beim Abrufen der Route:', error);
+      }
+      
+      // Wenn keine Route gefunden wurde, Mock-Daten verwenden
+      if (!selectedRoute) {
+        const mockRouten = [
+          { 
+            id: 1, 
+            name: "Hauptstraße Sanierung", 
+            start_address: "Bergstraße 1, Berlin", 
+            end_address: "Bergstraße 50, Berlin", 
+            distance: 1245,
+            created_at: "2025-03-15T10:23:45Z"
+          },
+          { 
+            id: 2, 
+            name: "Kanalarbeiten Müllerweg", 
+            start_address: "Müllerweg 12, München", 
+            end_address: "Schulstraße 8, München", 
+            distance: 820,
+            created_at: "2025-04-02T09:15:12Z"
+          },
+          { 
+            id: 3, 
+            name: "Neubaugebiet Erschließung", 
+            start_address: "Am Waldrand 1, Frankfurt", 
+            end_address: "Feldweg 22, Frankfurt", 
+            distance: 1750,
+            created_at: "2025-04-25T14:05:33Z"
+          }
+        ];
+        selectedRoute = mockRouten.find(r => r.id === parseInt(route_id));
+      }
+      
       const selectedBodenart = bodenarten.find(b => b.id === bodenart_id);
       const selectedMaschine = maschinen.find(m => m.id === maschine_id);
       

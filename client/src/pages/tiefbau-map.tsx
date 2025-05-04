@@ -85,6 +85,8 @@ const TiefbauMap: React.FC = () => {
   // State für die Route und Distanz
   const [routeCoordinates, setRouteCoordinates] = useState<Array<{lat: number, lng: number}>>([]);
   const [distance, setDistance] = useState(0);
+  const [startAddress, setStartAddress] = useState('');
+  const [endAddress, setEndAddress] = useState('');
   
   // State für Höhendaten
   const [elevationData, setElevationData] = useState<ElevationResponse | null>(null);
@@ -372,7 +374,7 @@ const TiefbauMap: React.FC = () => {
   };
   
   // Route speichern
-  const saveRoute = () => {
+  const saveRoute = async () => {
     if (routeCoordinates.length < 2) {
       toast({
         title: "Fehler",
@@ -383,11 +385,52 @@ const TiefbauMap: React.FC = () => {
       return;
     }
     
-    // In einer echten Implementierung würden wir hier die Route in der Datenbank speichern
-    toast({
-      title: "Erfolg",
-      description: "Route erfolgreich gespeichert!",
-    });
+    // Prüfen, ob Start- und Endadresse gesetzt sind
+    if (!startAddress || !endAddress) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie eine Start- und Zieladresse ein.",
+        variant: "destructive",
+        duration: 6000
+      });
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `Route von ${startAddress.split(',')[0]} nach ${endAddress.split(',')[0]}`,
+          start_address: startAddress,
+          end_address: endAddress,
+          distance: Math.round(distance),
+          route_data: routeCoordinates
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Speichern der Route');
+      }
+      
+      const data = await response.json();
+      toast({
+        title: "Erfolg",
+        description: `Route "${data.name}" erfolgreich gespeichert!`,
+        duration: 5000
+      });
+    } catch (error: any) {
+      console.error('Fehler beim Speichern der Route:', error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Speichern der Route",
+        variant: "destructive",
+        duration: 6000
+      });
+    }
   };
   
   // Formatiere die Höhendaten für Recharts
