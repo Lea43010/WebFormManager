@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Loader2, MapPin, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, MapPin, Trash2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 declare global {
@@ -39,6 +40,8 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markersCount, setMarkersCount] = useState(0);
+  const [searchInput, setSearchInput] = useState("");
+  const [searching, setSearching] = useState(false);
   
   // Referenzen
   const mapRef = useRef<any>(null);
@@ -53,7 +56,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
   const { toast } = useToast();
   
   // API-Key
-  const apiKey = process.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
   
   // Marker hinzufügen
   const addMarker = useCallback((position: any) => {
@@ -221,7 +224,7 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
     console.log('Lade Google Maps API');
     
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
     script.async = true;
     script.defer = true;
     
@@ -287,9 +290,82 @@ const SimpleGoogleMap: React.FC<SimpleGoogleMapProps> = ({
     );
   }
   
+  // Suchfunktion für Adressen
+  const searchAddress = useCallback(() => {
+    if (!searchInput.trim() || !mapRef.current || !window.google) return;
+    
+    setSearching(true);
+    
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      
+      geocoder.geocode({ address: searchInput }, (results: any, status: any) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
+          const location = results[0].geometry.location;
+          
+          // Karte zentrieren
+          mapRef.current.setCenter(location);
+          mapRef.current.setZoom(15);
+          
+          // Marker setzen
+          addMarker(location);
+          
+          toast({
+            title: "Adresse gefunden",
+            description: results[0].formatted_address,
+            duration: 3000
+          });
+        } else {
+          toast({
+            title: "Fehler",
+            description: "Die Adresse konnte nicht gefunden werden.",
+            variant: "destructive",
+            duration: 3000
+          });
+        }
+        
+        setSearching(false);
+      });
+    } catch (error) {
+      console.error('Fehler bei der Adresssuche:', error);
+      toast({
+        title: "Fehler",
+        description: "Bei der Adresssuche ist ein Fehler aufgetreten.",
+        variant: "destructive",
+        duration: 3000
+      });
+      setSearching(false);
+    }
+  }, [searchInput, addMarker, toast]);
+
   // Karten-Ansicht
   return (
     <div className={`relative ${className}`}>
+      {/* Suchleiste */}
+      <div className="absolute top-3 left-3 z-10 bg-white bg-opacity-95 rounded-md shadow-md p-2 flex items-center space-x-2 w-72">
+        <Input
+          type="text"
+          placeholder="Adresse suchen..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
+          className="h-8 text-sm"
+        />
+        <Button
+          variant="default"
+          size="sm"
+          onClick={searchAddress}
+          disabled={searching || !searchInput.trim()}
+          className="h-8 px-2 py-1"
+        >
+          {searching ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Search className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+      
       {/* Map Container */}
       <div
         id={mapId.current}
