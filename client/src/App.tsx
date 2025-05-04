@@ -36,6 +36,7 @@ import AdminEmailsPage from "@/pages/admin-emails";
 import StreetModulesPage from "@/pages/street-modules-new";
 import GeoMapPlaceholder from "@/pages/geo-map-placeholder";
 import GeoMapNew from "@/pages/geo-map-new";
+import GeoMapSimple from "@/pages/geo-map-simple";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -64,6 +65,9 @@ function Router() {
       <ProtectedRoute path="/attachments" component={AttachmentPage} />
       <ProtectedRoute path="/geo-map" component={GeoMapPlaceholder} />
       <ProtectedRoute path="/geo-map-new" component={GeoMapNew} />
+      <Route path="/geo-map-simple">
+        {() => <GeoMapSimple />}
+      </Route>
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
