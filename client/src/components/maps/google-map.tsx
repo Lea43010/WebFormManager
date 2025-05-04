@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Wir deklarieren die initMap Funktion als eine Eigenschaft auf dem globalen Window-Objekt
 declare global {
   interface Window {
-    initMap: () => void;
+    initMap?: () => void;  // Optional, damit TypeScript nicht meckert
     google: any;
   }
 }
@@ -34,6 +35,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
   
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markersCount, setMarkersCount] = useState(0);
@@ -59,16 +61,34 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     // Wir fügen die Karte-Initialisierungsfunktion zum globalen Scope hinzu
     window.initMap = initMap;
     
-    // Script-Tag erstellen und API laden
+    // Script-Tag erstellen und API laden - mit optimierter Ladestrategie
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&callback=initMap&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&callback=initMap&libraries=geometry&loading=async`;
     script.async = true;
     script.defer = true;
+    
+    // Timeout festlegen, falls die API zu lange lädt
+    const timeoutId = setTimeout(() => {
+      console.warn('Google Maps API-Ladevorgang dauert länger als erwartet.');
+      // Wir brechen nicht ab, aber informieren den Benutzer
+      toast({
+        title: "Hinweis",
+        description: "Der Ladevorgang dauert länger als erwartet. Bitte haben Sie etwas Geduld.",
+      });
+    }, 5000);
+    
     script.onerror = (err) => {
+      clearTimeout(timeoutId);
       console.error('Google Maps API Ladefehler:', err);
       setError('Fehler beim Laden der Google Maps API');
       setIsLoading(false);
     };
+    
+    script.onload = () => {
+      clearTimeout(timeoutId);
+      console.log('Google Maps API erfolgreich geladen');
+    };
+    
     document.head.appendChild(script);
     
     return () => {
@@ -82,7 +102,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
         }
       }
     };
-  }, []);
+  }, [toast]);
   
   // Karte initialisieren
   const initMap = useCallback(() => {
