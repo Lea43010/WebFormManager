@@ -74,6 +74,9 @@ function Router() {
       <Route path="/help">
         {() => <Redirect to="/information" />}
       </Route>
+      <Route path="/geo">
+        {() => <Redirect to="/geo-map-new" />}
+      </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
       {/* Maps-Test-Seite temporär entfernt */}
