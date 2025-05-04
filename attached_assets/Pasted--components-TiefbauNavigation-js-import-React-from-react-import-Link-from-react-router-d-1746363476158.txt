@@ -1,0 +1,1363 @@
+// components/TiefbauNavigation.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const TiefbauNavigation = () => {
+  return (
+    <div className="tiefbau-navigation">
+      <h2>Tiefbau & Straßenbau</h2>
+      <nav>
+        <ul>
+          <li><Link to="/tiefbau/karte">Streckenkarte & Planung</Link></li>
+          <li><Link to="/tiefbau/bodenanalyse">Bodenarten & Belastungsklassen</Link></li>
+          <li><Link to="/tiefbau/maschinen">Maschinenauswahl</Link></li>
+          <li><Link to="/tiefbau/kalkulation">Kostenkalkulation</Link></li>
+        </ul>
+      </nav>
+    </div>
+  );
+};
+
+export default TiefbauNavigation;
+ 
+// pages/TiefbauMain.js
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import TiefbauNavigation from '../components/TiefbauNavigation';
+import TiefbauKarte from './TiefbauKarte';
+import BodenAnalyse from './BodenAnalyse';
+import MaschinenAuswahl from './MaschinenAuswahl';
+import KostenKalkulation from './KostenKalkulation';
+
+const TiefbauMain = () => {
+  return (
+    <div className="tiefbau-container">
+      <TiefbauNavigation />
+      <div className="tiefbau-content">
+        <Routes>
+          <Route path="/karte" element={<TiefbauKarte />} />
+          <Route path="/bodenanalyse" element={<BodenAnalyse />} />
+          <Route path="/maschinen" element={<MaschinenAuswahl />} />
+          <Route path="/kalkulation" element={<KostenKalkulation />} />
+          <Route path="/" element={<TiefbauKarte />} />
+        </Routes>
+      </div>
+    </div>
+  );
+};
+
+export default TiefbauMain;
+ 
+// pages/TiefbauKarte.js
+import React, { useState, useEffect, useRef } from 'react';
+import { GoogleMap, LoadScript, Marker, Polyline, Autocomplete } from '@react-google-maps/api';
+
+const TiefbauKarte = () => {
+  const [markers, setMarkers] = useState([]);
+  const [center, setCenter] = useState({ lat: 51.165691, lng: 10.451526 }); // Deutschland Zentrum
+  const [distance, setDistance] = useState(0);
+  const [startAddress, setStartAddress] = useState('');
+  const [endAddress, setEndAddress] = useState('');
+  
+  const startAutocompleteRef = useRef(null);
+  const endAutocompleteRef = useRef(null);
+
+  const mapContainerStyle = {
+    width: '100%',
+    height: '500px'
+  };
+
+  const options = {
+    streetViewControl: false,
+    mapTypeControl: true,
+    mapTypeControlOptions: {
+      mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain']
+    }
+  };
+
+  // Berechne Distanz zwischen zwei Punkten (Luftlinie)
+  const calculateDistance = (points) => {
+    if (points.length < 2) return 0;
+    
+    let totalDistance = 0;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      
+      // Haversine-Formel zur Berechnung der Entfernung zwischen Geokoordinaten
+      const R = 6371e3; // Erdradius in Metern
+      const φ1 = p1.lat * Math.PI/180;
+      const φ2 = p2.lat * Math.PI/180;
+      const Δφ = (p2.lat - p1.lat) * Math.PI/180;
+      const Δλ = (p2.lng - p1.lng) * Math.PI/180;
+
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      
+      totalDistance += distance;
+    }
+    
+    return totalDistance;
+  };
+
+  // Aktualisiere die Distanz, wenn sich die Marker ändern
+  useEffect(() => {
+    const newDistance = calculateDistance(markers);
+    setDistance(newDistance);
+  }, [markers]);
+
+  // Marker auf der Karte setzen
+  const handleMapClick = (e) => {
+    const newMarker = {
+      lat: e.latLng.lat(),
+      lng: e.latLng.lng()
+    };
+    
+    setMarkers([...markers, newMarker]);
+  };
+
+  // Marker löschen
+  const clearMarkers = () => {
+    setMarkers([]);
+    setDistance(0);
+    setStartAddress('');
+    setEndAddress('');
+  };
+
+  // Adresse zur Karte hinzufügen
+  const handleAddressSearch = (type) => {
+    const autocomplete = type === 'start' ? startAutocompleteRef.current : endAutocompleteRef.current;
+    
+    if (autocomplete) {
+      const place = autocomplete.getPlace();
+      
+      if (place && place.geometry && place.geometry.location) {
+        const newMarker = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        };
+        
+        if (type === 'start') {
+          // Wenn es bereits Marker gibt, ersetze den ersten
+          const newMarkers = markers.length > 0 ? 
+            [newMarker, ...markers.slice(1)] : 
+            [newMarker];
+          setMarkers(newMarkers);
+          setStartAddress(place.formatted_address);
+        } else {
+          // Wenn es bereits Marker gibt, ersetze den letzten oder füge hinzu
+          const newMarkers = markers.length > 0 ? 
+            [...markers.slice(0, -1), newMarker] : 
+            [newMarker];
+          setMarkers(newMarkers);
+          setEndAddress(place.formatted_address);
+        }
+      }
+    }
+  };
+
+  // Routen-Daten mit Elevation-API abrufen
+  const fetchElevationData = async () => {
+    if (markers.length < 2) {
+      alert('Bitte mindestens Start- und Endpunkt markieren.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/elevation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path: markers }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Die Daten können für die Bodenanalyse verwendet werden
+        console.log('Elevation data:', data);
+        alert('Höhenprofilsdaten erfolgreich abgerufen!');
+      } else {
+        alert('Fehler beim Abrufen der Elevation-Daten');
+      }
+    } catch (error) {
+      console.error('Error fetching elevation data:', error);
+      alert('Fehler bei der Verbindung zur API');
+    }
+  };
+
+  // Speichere Route in Datenbank
+  const saveRoute = async () => {
+    if (markers.length < 2) {
+      alert('Bitte mindestens Start- und Endpunkt markieren.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          markers,
+          startAddress,
+          endAddress,
+          distance,
+          name: prompt('Bitte Namen für die Route eingeben:')
+        }),
+      });
+
+      if (response.ok) {
+        alert('Route erfolgreich gespeichert!');
+      } else {
+        alert('Fehler beim Speichern der Route');
+      }
+    } catch (error) {
+      console.error('Error saving route:', error);
+      alert('Fehler bei der Verbindung zur API');
+    }
+  };
+
+  return (
+    <div className="tiefbau-karte-container">
+      <h2>Streckenplanung für Tiefbau</h2>
+      
+      <div className="address-inputs">
+        <div className="address-input">
+          <label>Startadresse:</label>
+          <Autocomplete
+            onLoad={ref => startAutocompleteRef.current = ref}
+            onPlaceChanged={() => handleAddressSearch('start')}
+          >
+            <input 
+              type="text" 
+              placeholder="Startadresse eingeben" 
+              value={startAddress}
+              onChange={(e) => setStartAddress(e.target.value)}
+            />
+          </Autocomplete>
+        </div>
+        
+        <div className="address-input">
+          <label>Zieladresse:</label>
+          <Autocomplete
+            onLoad={ref => endAutocompleteRef.current = ref}
+            onPlaceChanged={() => handleAddressSearch('end')}
+          >
+            <input 
+              type="text" 
+              placeholder="Zieladresse eingeben" 
+              value={endAddress}
+              onChange={(e) => setEndAddress(e.target.value)}
+            />
+          </Autocomplete>
+        </div>
+      </div>
+
+      <div className="map-container">
+        <LoadScript
+          googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY}
+          libraries={['places']}
+        >
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            center={center}
+            zoom={6}
+            options={options}
+            onClick={handleMapClick}
+          >
+            {markers.map((marker, index) => (
+              <Marker
+                key={index}
+                position={marker}
+                label={index === 0 ? 'A' : index === markers.length - 1 ? 'B' : `${index}`}
+              />
+            ))}
+            
+            {markers.length > 1 && (
+              <Polyline
+                path={markers}
+                options={{
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 3,
+                }}
+              />
+            )}
+          </GoogleMap>
+        </LoadScript>
+      </div>
+
+      <div className="route-info">
+        <p><strong>Streckenlänge:</strong> {(distance / 1000).toFixed(2)} km</p>
+      </div>
+
+      <div className="map-actions">
+        <button onClick={clearMarkers}>Marker löschen</button>
+        <button onClick={fetchElevationData}>Höhenprofil abrufen</button>
+        <button onClick={saveRoute}>Route speichern</button>
+      </div>
+    </div>
+  );
+};
+
+export default TiefbauKarte;
+ 
+-- Schema für die Tiefbau-Erweiterung
+
+-- Tabelle für Bodenarten
+CREATE TABLE IF NOT EXISTS bodenarten (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  beschreibung TEXT,
+  dichte DECIMAL(10, 2),  -- kg/m³
+  belastungsklasse VARCHAR(50),
+  material_kosten_pro_m2 DECIMAL(10, 2),
+  bearbeitungshinweise TEXT
+);
+
+-- Tabelle für gespeicherte Routen
+CREATE TABLE IF NOT EXISTS tiefbau_routen (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  start_address TEXT,
+  end_address TEXT,
+  distance DECIMAL(10, 2),  -- in Metern
+  markers JSONB,  -- Array von Koordinaten
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabelle für Maschinen
+CREATE TABLE IF NOT EXISTS maschinen (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  typ VARCHAR(100),
+  beschreibung TEXT,
+  leistung VARCHAR(50),
+  kosten_pro_stunde DECIMAL(10, 2),
+  kosten_pro_tag DECIMAL(10, 2),
+  kosten_pro_woche DECIMAL(10, 2),
+  kraftstoffverbrauch DECIMAL(10, 2),  -- Liter pro Stunde
+  gewicht DECIMAL(10, 2),  -- kg
+  bild_url TEXT
+);
+
+-- Verknüpfungstabelle für Maschinen und geeignete Bodenarten
+CREATE TABLE IF NOT EXISTS maschinen_bodenarten (
+  id SERIAL PRIMARY KEY,
+  maschine_id INTEGER REFERENCES maschinen(id),
+  bodenart_id INTEGER REFERENCES bodenarten(id),
+  effizienz_faktor DECIMAL(5, 2),  -- Effizienzfaktor für diese Kombination (1.0 = normal)
+  bearbeitungszeit_pro_m2 DECIMAL(10, 2)  -- Zeit in Minuten pro m²
+);
+
+-- Füge einige Beispieldaten für Bodenarten ein
+INSERT INTO bodenarten (name, beschreibung, dichte, belastungsklasse, material_kosten_pro_m2, bearbeitungshinweise)
+VALUES 
+('Asphaltbeton', 'Standard-Asphaltbelag für Straßen', 2400, 'SLW 60', 25.50, 'Verdichtung mit Walzen erforderlich'),
+('Sandboden', 'Lockerer Sandboden', 1600, 'SLW 30', 6.80, 'Leicht zu bearbeiten, benötigt Stabilisierung'),
+('Lehmboden', 'Bindiger Lehmboden', 1800, 'SLW 40', 8.20, 'Bei Nässe schwer zu bearbeiten'),
+('Kiesboden', 'Kies mit verschiedenen Korngrößen', 1900, 'SLW 50', 12.40, 'Gute Drainage, einfach zu verdichten'),
+('Fels', 'Harter Felsuntergrund', 2700, 'SLW 60', 42.00, 'Sprengung oder schwere Maschinen erforderlich');
+
+-- Füge einige Beispieldaten für Maschinen ein
+INSERT INTO maschinen (name, typ, beschreibung, leistung, kosten_pro_stunde, kosten_pro_tag, kosten_pro_woche, kraftstoffverbrauch, gewicht)
+VALUES 
+('CAT 320', 'Bagger', '20-Tonnen Hydraulikbagger', '120 kW', 120.50, 950.00, 4500.00, 18.5, 20000),
+('Bomag BW 213', 'Walze', 'Vibrationswalze für Erdarbeiten', '98 kW', 85.00, 680.00, 3200.00, 12.0, 12500),
+('Wirtgen W 100', 'Fräse', 'Kompakte Kaltfräse', '170 kW', 210.00, 1680.00, 8000.00, 35.0, 18000),
+('Vögele Super 1800-3', 'Asphaltfertiger', 'Straßenfertiger mit hoher Einbaubreite', '129 kW', 230.00, 1840.00, 8800.00, 30.0, 19000),
+('Liebherr PR 736', 'Planierraupe', 'Hydrostatische Planierraupe', '150 kW', 140.00, 1120.00, 5300.00, 22.0, 20170);
+
+-- Füge Verknüpfungen zwischen Maschinen und Bodenarten ein
+INSERT INTO maschinen_bodenarten (maschine_id, bodenart_id, effizienz_faktor, bearbeitungszeit_pro_m2)
+VALUES 
+-- CAT 320 Bagger
+(1, 1, 0.85, 0.12),  -- Asphalt - nicht optimal
+(1, 2, 1.20, 0.08),  -- Sand - sehr gut
+(1, 3, 1.10, 0.09),  -- Lehm - gut
+(1, 4, 1.15, 0.09),  -- Kies - sehr gut
+(1, 5, 0.70, 0.18),  -- Fels - schwierig
+
+-- Bomag Walze
+(2, 1, 1.25, 0.06),  -- Asphalt - sehr gut
+(2, 2, 1.00, 0.07),  -- Sand - gut
+(2, 3, 0.90, 0.09),  -- Lehm - akzeptabel
+(2, 4, 1.20, 0.06),  -- Kies - sehr gut
+(2, 5, 0.50, 0.25),  -- Fels - nicht geeignet
+
+-- Wirtgen Fräse
+(3, 1, 1.50, 0.05),  -- Asphalt - optimal
+(3, 2, 0.60, 0.15),  -- Sand - nicht geeignet
+(3, 3, 0.70, 0.12),  -- Lehm - nicht ideal
+(3, 4, 0.80, 0.12),  -- Kies - akzeptabel
+(3, 5, 1.30, 0.08),  -- Fels - gut
+
+-- Vögele Asphaltfertiger
+(4, 1, 1.60, 0.04),  -- Asphalt - optimal
+(4, 2, 0.40, 0.30),  -- Sand - nicht geeignet
+(4, 3, 0.40, 0.30),  -- Lehm - nicht geeignet
+(4, 4, 0.50, 0.25),  -- Kies - nicht geeignet
+(4, 5, 0.30, 0.40),  -- Fels - nicht geeignet
+
+-- Liebherr Planierraupe
+(5, 1, 0.75, 0.14),  -- Asphalt - nicht ideal
+(5, 2, 1.25, 0.07),  -- Sand - sehr gut
+(5, 3, 1.15, 0.08),  -- Lehm - gut
+(5, 4, 1.30, 0.06),  -- Kies - optimal
+(5, 5, 0.60, 0.20);  -- Fels – schwierig
+ 
+// pages/BodenAnalyse.js
+import React, { useState, useEffect } from 'react';
+
+const BodenAnalyse = () => {
+  const [bodenarten, setBodenarten] = useState([]);
+  const [selectedBodenart, setSelectedBodenart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Lade Bodenarten aus der Datenbank
+  useEffect(() => {
+    const fetchBodenarten = async () => {
+      try {
+        const response = await fetch('/api/bodenarten');
+        if (!response.ok) {
+          throw new Error('Fehler beim Laden der Bodenarten');
+        }
+        const data = await response.json();
+        setBodenarten(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchBodenarten();
+  }, []);
+
+  // Zeige Details einer ausgewählten Bodenart
+  const handleSelectBodenart = (bodenart) => {
+    setSelectedBodenart(bodenart);
+  };
+
+  if (loading) {
+    return <div>Lade Bodenarten...</div>;
+  }
+
+  if (error) {
+    return <div>Fehler: {error}</div>;
+  }
+
+  return (
+    <div className="bodenanalyse-container">
+      <h2>Bodenarten & Belastungsklassen</h2>
+      
+      <div className="bodenarten-grid">
+        <div className="bodenarten-liste">
+          <h3>Verfügbare Bodenarten</h3>
+          <ul>
+            {bodenarten.map((bodenart) => (
+              <li 
+                key={bodenart.id} 
+                className={selectedBodenart?.id === bodenart.id ? 'selected' : ''}
+                onClick={() => handleSelectBodenart(bodenart)}
+              >
+                {bodenart.name} - Belastungsklasse: {bodenart.belastungsklasse}
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        {selectedBodenart && (
+          <div className="bodenart-details">
+            <h3>{selectedBodenart.name}</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Beschreibung:</td>
+                  <td>{selectedBodenart.beschreibung}</td>
+                </tr>
+                <tr>
+                  <td>Dichte:</td>
+                  <td>{selectedBodenart.dichte} kg/m³</td>
+                </tr>
+                <tr>
+                  <td>Belastungsklasse:</td>
+                  <td>{selectedBodenart.belastungsklasse}</td>
+                </tr>
+                <tr>
+                  <td>Materialkosten:</td>
+                  <td>{selectedBodenart.material_kosten_pro_m2} €/m²</td>
+                </tr>
+                <tr>
+                  <td>Bearbeitungshinweise:</td>
+                  <td>{selectedBodenart.bearbeitungshinweise}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div className="bodenart-actions">
+              <button onClick={() => window.location.href = `/tiefbau/maschinen?bodenart=${selectedBodenart.id}`}>
+                Geeignete Maschinen anzeigen
+              </button>
+              <button onClick={() => window.location.href = `/tiefbau/kalkulation?bodenart=${selectedBodenart.id}`}>
+                Zur Kostenkalkulation
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="belastungsklassen-info">
+        <h3>Belastungsklassen im Überblick</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Klasse</th>
+              <th>Beschreibung</th>
+              <th>Typische Anwendung</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SLW 30</td>
+              <td>Leichte Belastung, max. 30 kN Achslast</td>
+              <td>Gehwege, Fahrradwege, leichte Zufahrten</td>
+            </tr>
+            <tr>
+              <td>SLW 40</td>
+              <td>Mittlere Belastung, max. 40 kN Achslast</td>
+              <td>Wohnstraßen, Parkplätze</td>
+            </tr>
+            <tr>
+              <td>SLW 50</td>
+              <td>Erhöhte Belastung, max. 50 kN Achslast</td>
+              <td>Sammelstraßen, Gewerbegebiete</td>
+            </tr>
+            <tr>
+              <td>SLW 60</td>
+              <td>Schwere Belastung, max. 60 kN Achslast</td>
+              <td>Hauptverkehrsstraßen, Industriegebiete</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default BodenAnalyse;
+ 
+// pages/MaschinenAuswahl.js
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const MaschinenAuswahl = () => {
+  const [maschinen, setMaschinen] = useState([]);
+  const [filteredMaschinen, setFilteredMaschinen] = useState([]);
+  const [bodenarten, setBodenarten] = useState([]);
+  const [selectedMaschine, setSelectedMaschine] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState({
+    typ: '',
+    bodenartId: '',
+    minLeistung: '',
+    maxKosten: ''
+  });
+
+  const location = useLocation();
+  
+  // Hole Bodenart-ID aus der URL wenn vorhanden
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const bodenartId = params.get('bodenart');
+    
+    if (bodenartId) {
+      setFilter(prev => ({ ...prev, bodenartId }));
+    }
+  }, [location]);
+
+  // Lade Maschinen und Bodenarten aus der Datenbank
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Lade alle Maschinen
+        const maschinenResponse = await fetch('/api/maschinen');
+        if (!maschinenResponse.ok) throw new Error('Fehler beim Laden der Maschinen');
+        const maschinenData = await maschinenResponse.json();
+        setMaschinen(maschinenData);
+        setFilteredMaschinen(maschinenData);
+        
+        // Lade alle Bodenarten
+        const bodenResponse = await fetch('/api/bodenarten');
+        if (!bodenResponse.ok) throw new Error('Fehler beim Laden der Bodenarten');
+        const bodenData = await bodenResponse.json();
+        setBodenarten(bodenData);
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+ 
+// Filtere Maschinen basierend auf den ausgewählten Filtern
+  useEffect(() => {
+    if (loading) return;
+    
+    let result = [...maschinen];
+    
+    // Filter nach Maschinentyp
+    if (filter.typ) {
+      result = result.filter(maschine => 
+        maschine.typ.toLowerCase().includes(filter.typ.toLowerCase())
+      );
+    }
+    
+    // Filter nach Bodenart (erfordert einen zusätzlichen API-Call)
+    if (filter.bodenartId) {
+      const fetchMaschinenForBodenart = async () => {
+        try {
+          const response = await fetch(`/api/maschinen/bodenart/${filter.bodenartId}`);
+          if (!response.ok) throw new Error('Fehler beim Filtern nach Bodenart');
+          const data = await response.json();
+          
+          // Filtere die bereits gefilterten Maschinen
+          result = result.filter(maschine => 
+            data.some(item => item.maschine_id === maschine.id)
+          );
+          
+          setFilteredMaschinen(result);
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+      
+      fetchMaschinenForBodenart();
+    } else {
+      // Wenn keine Bodenart ausgewählt, wende andere Filter an
+      
+      // Filter nach Mindestleistung
+      if (filter.minLeistung) {
+        const minLeistungNum = parseFloat(filter.minLeistung);
+        result = result.filter(maschine => {
+          // Extrahiere numerischen Wert aus Leistungsstring "120 kW" -> 120
+          const leistungNum = parseFloat(maschine.leistung.split(' ')[0]);
+          return leistungNum >= minLeistungNum;
+        });
+      }
+      
+      // Filter nach maximalen Kosten pro Tag
+      if (filter.maxKosten) {
+        const maxKostenNum = parseFloat(filter.maxKosten);
+        result = result.filter(maschine => 
+          maschine.kosten_pro_tag <= maxKostenNum
+        );
+      }
+      
+      setFilteredMaschinen(result);
+    }
+  }, [filter, maschinen, loading]);
+
+  // Handler für Filteränderungen
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handler für Maschinenauswahl
+  const handleSelectMaschine = async (maschine) => {
+    try {
+      // Hole detaillierte Informationen zur Maschine inkl. geeigneter Bodenarten
+      const response = await fetch(`/api/maschinen/${maschine.id}/details`);
+      if (!response.ok) throw new Error('Fehler beim Laden der Maschinendetails');
+      const detailData = await response.json();
+      
+      setSelectedMaschine({
+        ...maschine,
+        geeigneteBodenarten: detailData.geeigneteBodenarten
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  if (loading) {
+    return <div>Lade Maschinen...</div>;
+  }
+
+  if (error) {
+    return <div>Fehler: {error}</div>;
+  }
+
+  return (
+    <div className="maschinen-container">
+      <h2>Maschinenauswahl für Tiefbau</h2>
+      
+      <div className="filter-section">
+        <h3>Filter</h3>
+        <div className="filter-controls">
+          <div className="filter-item">
+            <label>Maschinentyp:</label>
+            <select 
+              name="typ" 
+              value={filter.typ} 
+              onChange={handleFilterChange}
+            >
+              <option value="">Alle Typen</option>
+              <option value="Bagger">Bagger</option>
+              <option value="Walze">Walze</option>
+              <option value="Fräse">Fräse</option>
+              <option value="Asphaltfertiger">Asphaltfertiger</option>
+              <option value="Planierraupe">Planierraupe</option>
+            </select>
+          </div>
+          
+          <div className="filter-item">
+            <label>Bodenart:</label>
+            <select 
+              name="bodenartId" 
+              value={filter.bodenartId} 
+              onChange={handleFilterChange}
+            >
+              <option value="">Alle Bodenarten</option>
+              {bodenarten.map(bodenart => (
+                <option key={bodenart.id} value={bodenart.id}>
+                  {bodenart.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="filter-item">
+            <label>Mindestleistung (kW):</label>
+            <input 
+              type="number" 
+              name="minLeistung" 
+              value={filter.minLeistung} 
+              onChange={handleFilterChange}
+              placeholder="z.B. 100"
+            />
+          </div>
+          
+          <div className="filter-item">
+            <label>Max. Kosten pro Tag (€):</label>
+            <input 
+              type="number" 
+              name="maxKosten" 
+              value={filter.maxKosten} 
+              onChange={handleFilterChange}
+              placeholder="z.B. 1000"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="maschinen-grid">
+        <div className="maschinen-liste">
+          <h3>Verfügbare Maschinen ({filteredMaschinen.length})</h3>
+          {filteredMaschinen.length === 0 ? (
+            <p>Keine Maschinen gefunden, die den Filterkriterien entsprechen.</p>
+          ) : (
+            <ul>
+              {filteredMaschinen.map((maschine) => (
+                <li 
+                  key={maschine.id} 
+                  className={selectedMaschine?.id === maschine.id ? 'selected' : ''}
+                  onClick={() => handleSelectMaschine(maschine)}
+                >
+                  <strong>{maschine.name}</strong> ({maschine.typ})
+                  <div className="maschine-preview-info">
+                    <span>Leistung: {maschine.leistung}</span>
+                    <span>Tageskosten: {maschine.kosten_pro_tag} €</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        
+        {selectedMaschine && (
+          <div className="maschine-details">
+            <h3>{selectedMaschine.name}</h3>
+            <div className="maschine-bild">
+              {selectedMaschine.bild_url ? (
+                <img src={selectedMaschine.bild_url} alt={selectedMaschine.name} />
+              ) : (
+                <div className="placeholder-image">Kein Bild verfügbar</div>
+              )}
+            </div>
+            
+            <table>
+              <tbody>
+                <tr>
+                  <td>Typ:</td>
+                  <td>{selectedMaschine.typ}</td>
+                </tr>
+                <tr>
+                  <td>Beschreibung:</td>
+                  <td>{selectedMaschine.beschreibung}</td>
+                </tr>
+                <tr>
+                  <td>Leistung:</td>
+                  <td>{selectedMaschine.leistung}</td>
+                </tr>
+                <tr>
+                  <td>Gewicht:</td>
+                  <td>{selectedMaschine.gewicht} kg</td>
+                </tr>
+                <tr>
+                  <td>Kraftstoffverbrauch:</td>
+                  <td>{selectedMaschine.kraftstoffverbrauch} l/h</td>
+                </tr>
+                <tr>
+                  <td>Kosten pro Stunde:</td>
+                  <td>{selectedMaschine.kosten_pro_stunde} €</td>
+                </tr>
+                <tr>
+                  <td>Kosten pro Tag:</td>
+                  <td>{selectedMaschine.kosten_pro_tag} €</td>
+                </tr>
+                <tr>
+                  <td>Kosten pro Woche:</td>
+                  <td>{selectedMaschine.kosten_pro_woche} €</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            {selectedMaschine.geeigneteBodenarten && (
+              <div className="geeignete-bodenarten">
+                <h4>Geeignet für Bodenarten:</h4>
+                <ul>
+                  {selectedMaschine.geeigneteBodenarten.map((item) => (
+                    <li key={item.bodenart_id}>
+                      <strong>{item.bodenart_name}</strong>
+                      <div>Effizienz: {(item.effizienz_faktor * 100).toFixed(0)}%</div>
+                      <div>Bearbeitungszeit: {item.bearbeitungszeit_pro_m2} min/m²</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="maschine-actions">
+              <button onClick={() => window.location.href = `/tiefbau/kalkulation?maschine=${selectedMaschine.id}`}>
+                Zur Kostenkalkulation
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default MaschinenAuswahl;// pages/MaschinenAuswahl.js
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const MaschinenAuswahl = () => {
+  const [maschinen, setMaschinen] = useState([]);
+  const [filteredMaschinen, setFilteredMaschinen] = useState([]);
+  const [bodenarten, setBodenarten] = useState([]);
+  const [selectedMaschine, setSelectedMaschine] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState({
+    typ: '',
+    bodenartId: '',
+    minLeistung: '',
+    maxKosten: ''
+  });
+
+  const location = useLocation();
+  
+  // Hole Bodenart-ID aus der URL wenn vorhanden
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const bodenartId = params.get('bodenart');
+    
+    if (bodenartId) {
+      setFilter(prev => ({ ...prev, bodenartId }));
+    }
+  }, [location]);
+
+  // Lade Maschinen und Bodenarten aus der Datenbank
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Lade alle Maschinen
+        const maschinenResponse = await fetch('/api/maschinen');
+        if (!maschinenResponse.ok) throw new Error('Fehler beim Laden der Maschinen');
+        const maschinenData = await maschinenResponse.json();
+        setMaschinen(maschinenData);
+        setFilteredMaschinen(maschinenData);
+        
+        // Lade alle Bodenarten
+        const bodenResponse = await fetch('/api/bodenarten');
+        if (!bodenResponse.ok) throw new Error('Fehler beim Laden der Bodenarten');
+        const bodenData = await bodenResponse.json();
+        setBodenarten(bodenData);
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+ 
+// pages/KostenKalkulation.js
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+const KostenKalkulation = () => {
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Daten aus der Datenbank
+  const [bodenarten, setBodenarten] = useState([]);
+  const [maschinen, setMaschinen] = useState([]);
+  const [routen, setRouten] = useState([]);
+  
+  // Ausgewählte Elemente
+  const [selectedRoute, setSelectedRoute] = useState(null);
+  const [selectedBodenart, setSelectedBodenart] = useState(null);
+  const [selectedMaschine, setSelectedMaschine] = useState(null);
+  
+  // Parameter für die Kalkulation
+  const [kalkulationsParameter, setKalkulationsParameter] = useState({
+    breite: 2.5, // Standardbreite in Metern
+    tiefe: 0.3,  // Standardtiefe in Metern
+    arbeitsstunden_pro_tag: 8,
+    arbeitstage: 5,
+    zusatzkosten_prozent: 10,
+    personalkosten_pro_stunde: 45,
+    anzahl_personal: 3
+  });
+  
+  // Kalkulationsergebnisse
+  const [kalkulation, setKalkulation] = useState(null);
+
+  // Hole Parameter aus der URL wenn vorhanden
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const bodenartId = params.get('bodenart');
+    const maschineId = params.get('maschine');
+    
+    if (bodenartId) {
+      fetchBodenart(bodenartId);
+    }
+    
+    if (maschineId) {
+      fetchMaschine(maschineId);
+    }
+  }, [location]);
+
+  // Lade alle Daten beim ersten Laden
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Lade Bodenarten
+        const bodenResponse = await fetch('/api/bodenarten');
+        if (!bodenResponse.ok) throw new Error('Fehler beim Laden der Bodenarten');
+        const bodenData = await bodenResponse.json();
+        setBodenarten(bodenData);
+        
+        // Lade Maschinen
+        const maschinenResponse = await fetch('/api/maschinen');
+        if (!maschinenResponse.ok) throw new Error('Fehler beim Laden der Maschinen');
+        const maschinenData = await maschinenResponse.json();
+        setMaschinen(maschinenData);
+        
+        // Lade gespeicherte Routen
+        const routenResponse = await fetch('/api/routes');
+        if (!routenResponse.ok) throw new Error('Fehler beim Laden der Routen');
+        const routenData = await routenResponse.json();
+        setRouten(routenData);
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Lade spezifische Bodenart
+  const fetchBodenart = async (id) => {
+    try {
+      const response = await fetch(`/api/bodenarten/${id}`);
+      if (!response.ok) throw new Error('Fehler beim Laden der Bodenart');
+      const data = await response.json();
+      setSelectedBodenart(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Lade spezifische Maschine
+  const fetchMaschine = async (id) => {
+    try {
+      const response = await fetch(`/api/maschinen/${id}`);
+      if (!response.ok) throw new Error('Fehler beim Laden der Maschine');
+      const data = await response.json();
+      setSelectedMaschine(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Handler für Auswahl
+  const handleSelectRoute = (route) => {
+    setSelectedRoute(route);
+  };
+
+  const handleSelectBodenart = (bodenart) => {
+    setSelectedBodenart(bodenart);
+  };
+
+  const handleSelectMaschine = (maschine) => {
+    setSelectedMaschine(maschine);
+  };
+
+  // Handler für Parameteränderungen
+  const handleParameterChange = (e) => {
+    const { name, value } = e.target;
+    setKalkulationsParameter(prev => ({
+      ...prev,
+      [name]: parseFloat(value)
+    }));
+  };
+
+  // Führe Kalkulation durch
+  const berechneKosten = async () => {
+    if (!selectedRoute || !selectedBodenart || !selectedMaschine) {
+      alert('Bitte wähle Route, Bodenart und Maschine aus.');
+      return;
+    }
+
+    try {
+      // Rufe API zur Berechnung auf
+      const response = await fetch('/api/kalkulation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          route_id: selectedRoute.id,
+          bodenart_id: selectedBodenart.id,
+          maschine_id: selectedMaschine.id,
+          parameter: kalkulationsParameter
+        }),
+      });
+
+      if (!response.ok) throw new Error('Fehler bei der Kalkulation');
+      const data = await response.json();
+      
+      // Alternativ: Führe Berechnung clientseitig durch
+      if (!data || Object.keys(data).length === 0) {
+        const strecke = selectedRoute.distance; // in Metern
+        const breite = kalkulationsParameter.breite;
+        const tiefe = kalkulationsParameter.tiefe;
+        const volumen = strecke * breite * tiefe;
+        const flaeche = strecke * breite;
+        
+        // Materialkosten
+        const materialkosten = flaeche * selectedBodenart.material_kosten_pro_m2;
+        
+        // Maschinenkosten
+        // Suche nach Effizienzfaktor zwischen Maschine und Bodenart
+        let effizienzFaktor = 1.0;
+        let bearbeitungszeit = 0.1; // Standardwert in Minuten pro m²
+        
+        // Diese Daten müssten eigentlich vom Server kommen
+        // Hier simulieren wir es für die Clientberechnung
+        if (selectedMaschine.typ === 'Bagger' && selectedBodenart.name.includes('Sand')) {
+          effizienzFaktor = 1.2;
+          bearbeitungszeit = 0.08;
+        } else if (selectedMaschine.typ === 'Walze' && selectedBodenart.name.includes('Asphalt')) {
+          effizienzFaktor = 1.25;
+          bearbeitungszeit = 0.06;
+        } else if (selectedMaschine.typ === 'Fräse' && selectedBodenart.name.includes('Asphalt')) {
+          effizienzFaktor = 1.5;
+          bearbeitungszeit = 0.05;
+        }
+        
+        // Gesamte Bearbeitungszeit in Stunden
+        const gesamtzeit_minuten = flaeche * bearbeitungszeit / effizienzFaktor;
+        const gesamtzeit_stunden = gesamtzeit_minuten / 60;
+        
+        // Anzahl der Arbeitstage
+        const arbeitsstunden_pro_tag = kalkulationsParameter.arbeitsstunden_pro_tag;
+        const benoetigte_tage = Math.ceil(gesamtzeit_stunden / arbeitsstunden_pro_tag);
+        
+        // Maschinenkosten
+        const maschinenkosten = benoetigte_tage * selectedMaschine.kosten_pro_tag;
+        
+        // Personalkosten
+        const personalkosten = gesamtzeit_stunden * kalkulationsParameter.personalkosten_pro_stunde * kalkulationsParameter.anzahl_personal;
+        
+        // Kraftstoffkosten
+        const kraftstoffkosten = gesamtzeit_stunden * selectedMaschine.kraftstoffverbrauch * 1.50; // 1.50€ pro Liter
+        
+        // Gesamtkosten vor Zusatzkosten
+        const zwischensumme = materialkosten + maschinenkosten + personalkosten + kraftstoffkosten;
+        
+        // Zusatzkosten (Unvorhergesehenes, Verwaltung, etc.)
+        const zusatzkosten = zwischensumme * (kalkulationsParameter.zusatzkosten_prozent / 100);
+        
+        // Gesamtkosten
+        const gesamtkosten = zwischensumme + zusatzkosten;
+        
+        // Kosten pro Meter
+        const kosten_pro_meter = gesamtkosten / strecke;
+        
+        setKalkulation({
+          strecke,
+          breite,
+          tiefe,
+          flaeche,
+          volumen,
+          materialkosten,
+          maschinenkosten,
+          personalkosten,
+          kraftstoffkosten,
+          zusatzkosten,
+          gesamtkosten,
+          kosten_pro_meter,
+          gesamtzeit_stunden,
+          benoetigte_tage
+        });
+      } else {
+        setKalkulation(data);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // PDF-Export der Kalkulation
+  const exportAsPDF = () => {
+    // Diese Funktion würde normalerweise eine PDF-Generierung durchführen
+    alert('PDF-Export-Funktion wird implementiert...');
+  };
+
+  if (loading) {
+    return <div>Lade Daten für Kalkulation...</div>;
+  }
+
+  if (error) {
+    return <div>Fehler: {error}</div>;
+  }
+
+  return (
+    <div className="kostenkalkulation-container">
+      <h2>Kostenkalkulation für Tiefbau</h2>
+      
+      <div className="kalkulation-grid">
+        <div className="kalkulation-inputs">
+          <div className="input-section">
+            <h3>1. Route auswählen</h3>
+            <select 
+              value={selectedRoute?.id || ''} 
+              onChange={(e) => {
+                const route = routen.find(r => r.id === parseInt(e.target.value));
+                handleSelectRoute(route);
+              }}
+            >
+              <option value="">-- Route auswählen --</option>
+              {routen.map(route => (
+                <option key={route.id} value={route.id}>
+                  {route.name} ({(route.distance / 1000).toFixed(2)} km)
+                </option>
+              ))}
+            </select>
+            
+            {selectedRoute && (
+              <div className="route-info">
+                <p>Von: {selectedRoute.start_address}</p>
+                <p>Nach: {selectedRoute.end_address}</p>
+                <p>Länge: {(selectedRoute.distance / 1000).toFixed(2)} km</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/karte'}>
+              Neue Route planen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>2. Bodenart auswählen</h3>
+            <select 
+              value={selectedBodenart?.id || ''} 
+              onChange={(e) => {
+                const bodenart = bodenarten.find(b => b.id === parseInt(e.target.value));
+                handleSelectBodenart(bodenart);
+              }}
+            >
+              <option value="">-- Bodenart auswählen --</option>
+              {bodenarten.map(bodenart => (
+                <option key={bodenart.id} value={bodenart.id}>
+                  {bodenart.name} - {bodenart.belastungsklasse}
+                </option>
+              ))}
+            </select>
+            
+            {selectedBodenart && (
+              <div className="bodenart-info">
+                <p>Materialkosten: {selectedBodenart.material_kosten_pro_m2} €/m²</p>
+                <p>Dichte: {selectedBodenart.dichte} kg/m³</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/bodenanalyse'}>
+              Bodenarten vergleichen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>3. Maschine auswählen</h3>
+            <select 
+              value={selectedMaschine?.id || ''} 
+              onChange={(e) => {
+                const maschine = maschinen.find(m => m.id === parseInt(e.target.value));
+                handleSelectMaschine(maschine);
+              }}
+            >
+              <option value="">-- Maschine auswählen --</option>
+              {maschinen.map(maschine => (
+                <option key={maschine.id} value={maschine.id}>
+                  {maschine.name} ({maschine.typ})
+                </option>
+              ))}
+            </select>
+            
+            {selectedMaschine && (
+              <div className="maschine-info">
+                <p>Tageskosten: {selectedMaschine.kosten_pro_tag} €</p>
+                <p>Kraftstoffverbrauch: {selectedMaschine.kraftstoffverbrauch} l/h</p>
+              </div>
+            )}
+            
+            <button onClick={() => window.location.href = '/tiefbau/maschinen'}>
+              Maschinen vergleichen
+            </button>
+          </div>
+          
+          <div className="input-section">
+            <h3>4. Parameter einstellen</h3>
+            <div className="parameter-inputs">
+              <div className="parameter-item">
+                <label>Breite (m):</label>
+                <input 
+                  type="number" 
+                  name="breite" 
+                  value={kalkulationsParameter.breite} 
+                  onChange={handleParameterChange}
+                  step="0.1"
+                  min="0.5"
+                  max="10"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Tiefe (m):</label>
+                <input 
+                  type="number" 
+                  name="tiefe" 
+                  value={kalkulationsParameter.tiefe} 
+                  onChange={handleParameterChange}
+                  step="0.1"
+                  min="0.1"
+                  max="5"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Arbeitsstunden/Tag:</label>
+                <input 
+                  type="number" 
+                  name="arbeitsstunden_pro_tag" 
+                  value={kalkulationsParameter.arbeitsstunden_pro_tag} 
+                  onChange={handleParameterChange}
+                  min="1"
+                  max="24"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Anzahl Personal:</label>
+                <input 
+                  type="number" 
+                  name="anzahl_personal" 
+                  value={kalkulationsParameter.anzahl_personal} 
+                  onChange={handleParameterChange}
+                  min="1"
+                  max="20"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Personalkosten/Stunde (€):</label>
+                <input 
+                  type="number" 
+                  name="personalkosten_pro_stunde" 
+                  value={kalkulationsParameter.personalkosten_pro_stunde} 
+                  onChange={handleParameterChange}
+                  min="20"
+                  max="100"
+                />
+              </div>
+              
+              <div className="parameter-item">
+                <label>Zusatzkosten (%):</label>
+                <input 
+                  type="number" 
+                  name="zusatzkosten_prozent" 
+                  value={kalkulationsParameter.zusatzkosten_prozent} 
+                  onChange={handleParameterChange}
+                  min="0"
+                  max="50"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            className="berechnen-button"
+            onClick={berechneKosten}
+            disabled={!selectedRoute || !selectedBodenart || !selectedMaschine}
+          >
+            Kosten berechnen
+          </button>
+        </div>
+        
+        {kalkulation && (
+          <div className="kalkulation-ergebnisse">
+            <h3>Kostenberechnung Ergebnis</h3>
+            
+            <div className="ergebnis-zusammenfassung">
+              <h4>Gesamtkosten: {kalkulation.gesamtkosten.toFixed(2)} €</h4>
+              <p>Kosten pro Meter: {kalkulation.kosten_pro_meter.toFixed(2)} €/m</p>
+              <p>Benötigte Zeit: {kalkulation.gesamtzeit_stunden.toFixed(1)} Stunden ({kalkulation.benoetigte_tage} Arbeitstage)</p>
+            </div>
+            
+            <div className="ergebnis-details">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Position</th>
+                    <th>Berechnung</th>
+                    <th>Kosten (€)</th>
+                  </tr>
