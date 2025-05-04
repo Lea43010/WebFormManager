@@ -38,6 +38,9 @@ import GeoMapPlaceholder from "@/pages/geo-map-placeholder";
 import GeoMapNew from "@/pages/geo-map-new";
 import GeoMapSimple from "@/pages/geo-map-simple";
 import TiefbauMap from "@/pages/tiefbau-map";
+// Direkter Import als JSX.Element-Komponente
+import TiefbauMapSearchable from "@/pages/tiefbau-map-searchable";
+import type { ComponentType } from "react";
 import BodenAnalyse from "@/pages/BodenAnalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
@@ -77,6 +80,7 @@ function Router() {
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <ProtectedRoute path="/tiefbau-map" component={() => <TiefbauMap />} />
+      <ProtectedRoute path="/tiefbau-map-searchable" component={TiefbauMapSearchable} />
       <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <Route path="/help">

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useImperativeHandle } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Trash2, Search } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, MapPin, Trash2, Search } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
-// Google Maps-Typdefinitionen für TypeScript
 declare global {
   interface Window {
     google: any;
@@ -23,12 +22,9 @@ interface SearchableGoogleMapProps {
   onMarkerDrag?: (position: { lat: number; lng: number }, index: number) => void;
   onMarkersCleared?: () => void;
   enableControls?: boolean;
-  mapRef?: React.RefObject<{
-    searchAddress: (address: string) => Promise<void>;
-  }>;
 }
 
-// Google Maps Komponente mit Adresssuchfunktion
+// Google Maps Komponente mit Suchfunktion
 const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   defaultCenter = { lat: 48.137154, lng: 11.576124 },
   defaultZoom = 12,
@@ -39,20 +35,21 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   onMarkerDrag,
   onMarkersCleared,
   enableControls = true,
-  mapRef,
 }) => {
   // State für die Karte
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markersCount, setMarkersCount] = useState(0);
   const [searchInput, setSearchInput] = useState("");
-  const [searching, setSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   
   // Referenzen
-  const internalMapRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
   
   // Unique ID für den Karten-Container
   const mapId = useRef(`map-${Math.random().toString(36).substr(2, 9)}`);
@@ -65,13 +62,13 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   
   // Marker hinzufügen
   const addMarker = useCallback((position: any) => {
-    if (!internalMapRef.current) return;
+    if (!mapRef.current) return;
     
     try {
       // Marker erstellen
       const marker = new window.google.maps.Marker({
         position,
-        map: internalMapRef.current,
+        map: mapRef.current,
         draggable: true,
         animation: window.google.maps.Animation.DROP,
       });
@@ -106,7 +103,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   
   // Polyline aktualisieren
   const updatePolyline = useCallback(() => {
-    if (!internalMapRef.current || !polylineRef.current || !window.google) return;
+    if (!mapRef.current || !polylineRef.current || !window.google) return;
     
     try {
       // Positionen extrahieren
@@ -163,49 +160,41 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
     }
   }, [onMarkersCleared, toast]);
   
-  // Adresssuche
-  const searchAddressInternal = useCallback(async (address: string) => {
-    if (!address.trim() || !internalMapRef.current || !window.google) {
-      return;
-    }
+  // Manuelle Adresssuche durchführen
+  const searchAddress = useCallback(() => {
+    if (!searchInput.trim() || !mapRef.current || !window.google) return;
     
-    setSearching(true);
+    setIsSearching(true);
     
     try {
       const geocoder = new window.google.maps.Geocoder();
       
-      return new Promise<void>((resolve, reject) => {
-        geocoder.geocode({ address }, (results: any, status: any) => {
-          if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
-            const location = results[0].geometry.location;
-            
-            // Karte zentrieren
-            internalMapRef.current.setCenter(location);
-            internalMapRef.current.setZoom(15);
-            
-            // Marker setzen
-            addMarker(location);
-            
-            toast({
-              title: "Adresse gefunden",
-              description: results[0].formatted_address,
-              duration: 3000
-            });
-            
-            resolve();
-          } else {
-            toast({
-              title: "Fehler",
-              description: "Die Adresse konnte nicht gefunden werden.",
-              variant: "destructive",
-              duration: 3000
-            });
-            
-            reject(new Error("Adresse nicht gefunden"));
-          }
+      geocoder.geocode({ address: searchInput }, (results: any, status: any) => {
+        if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
+          const location = results[0].geometry.location;
           
-          setSearching(false);
-        });
+          // Karte zentrieren
+          mapRef.current.setCenter(location);
+          mapRef.current.setZoom(15);
+          
+          // Marker setzen
+          addMarker(location);
+          
+          toast({
+            title: "Adresse gefunden",
+            description: results[0].formatted_address,
+            duration: 3000
+          });
+        } else {
+          toast({
+            title: "Fehler",
+            description: "Die Adresse konnte nicht gefunden werden.",
+            variant: "destructive",
+            duration: 3000
+          });
+        }
+        
+        setIsSearching(false);
       });
     } catch (error) {
       console.error('Fehler bei der Adresssuche:', error);
@@ -215,23 +204,56 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
         variant: "destructive",
         duration: 3000
       });
-      setSearching(false);
-      throw error;
+      setIsSearching(false);
+    }
+  }, [searchInput, addMarker, toast]);
+  
+  // Autocomplete für Ortssuche initialisieren
+  const initAutocomplete = useCallback(() => {
+    if (!mapRef.current || !searchInputRef.current || !window.google) return;
+    
+    try {
+      // Autocomplete erstellen
+      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+        types: ['geocode', 'establishment'],
+        fields: ['geometry', 'name', 'formatted_address']
+      });
+      
+      // Event-Listener für Ortsauswahl
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        
+        if (!place.geometry || !place.geometry.location) {
+          // Wenn keine Details vorhanden sind, manuell suchen
+          if (searchInputRef.current) {
+            setSearchInput(searchInputRef.current.value);
+            // searchAddress() hier entfernt, um Abhängigkeitsprobleme zu vermeiden
+          }
+          return;
+        }
+        
+        // Karte zentrieren
+        mapRef.current.setCenter(place.geometry.location);
+        mapRef.current.setZoom(15);
+        
+        // Marker setzen
+        addMarker(place.geometry.location);
+        
+        toast({
+          title: "Adresse gefunden",
+          description: place.formatted_address || place.name,
+          duration: 3000
+        });
+      });
+      
+      // Referenz speichern
+      autocompleteRef.current = autocomplete;
+      
+    } catch (error) {
+      console.error('Fehler beim Initialisieren von Autocomplete:', error);
     }
   }, [addMarker, toast]);
-  
-  // Diese Methode für die externe Nutzung verfügbar machen
-  useImperativeHandle(mapRef, () => ({
-    searchAddress: async (address: string) => {
-      return searchAddressInternal(address);
-    }
-  }), [searchAddressInternal]);
-  
-  // Suchfunktion für Suchfeld in der Karte
-  const handleSearchButtonClick = useCallback(() => {
-    searchAddressInternal(searchInput);
-  }, [searchInput, searchAddressInternal]);
-  
+
   // Karte initialisieren
   const initMap = useCallback(() => {
     try {
@@ -267,16 +289,19 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       });
       
       // Referenzen speichern
-      internalMapRef.current = map;
+      mapRef.current = map;
       polylineRef.current = polyline;
       
       // Loading beenden
       setIsLoading(false);
       
+      // Autocomplete initialisieren
+      initAutocomplete();
+      
       // Hinweis anzeigen
       toast({
         title: "Karte geladen",
-        description: "Klicken Sie auf die Karte, um Marker zu setzen.",
+        description: "Klicken Sie auf die Karte, um Marker zu setzen oder nutzen Sie die Adresssuche.",
         duration: 5000
       });
     } catch (error) {
@@ -284,7 +309,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
       setIsLoading(false);
     }
-  }, [addMarker, defaultCenter, defaultZoom, enableControls, toast]);
+  }, [addMarker, defaultCenter, defaultZoom, enableControls, initAutocomplete, toast]);
   
   // Google Maps API laden
   useEffect(() => {
@@ -298,7 +323,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
     console.log('Lade Google Maps API');
     
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
     script.async = true;
     script.defer = true;
     
@@ -368,23 +393,24 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   return (
     <div className={`relative ${className}`}>
       {/* Suchleiste */}
-      <div className="absolute top-3 left-3 z-10 bg-white bg-opacity-95 rounded-md shadow-md p-2 flex items-center space-x-2 w-72">
+      <div className="absolute top-3 left-3 right-3 z-10 bg-white bg-opacity-95 rounded-md shadow-md p-2 flex items-center space-x-2 max-w-md">
         <Input
+          ref={searchInputRef}
           type="text"
           placeholder="Adresse suchen..."
+          className="h-8 text-sm flex-grow"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearchButtonClick()}
-          className="h-8 text-sm"
+          onKeyDown={(e) => e.key === 'Enter' && searchAddress()}
         />
         <Button
           variant="default"
           size="sm"
-          onClick={handleSearchButtonClick}
-          disabled={searching || !searchInput.trim()}
+          onClick={searchAddress}
+          disabled={isSearching || !searchInput.trim()}
           className="h-8 px-2 py-1"
         >
-          {searching ? (
+          {isSearching ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Search className="h-4 w-4" />
