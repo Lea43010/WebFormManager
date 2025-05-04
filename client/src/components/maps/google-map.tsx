@@ -2,9 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Trash2 } from "lucide-react";
 
-// Google Maps API Schlüssel aus der Umgebungsvariable
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
 interface GoogleMapProps {
   onRouteChange?: (route: Array<{lat: number, lng: number}>) => void;
   onMarkersClear?: () => void;
@@ -16,6 +13,9 @@ interface GoogleMapProps {
 
 const defaultCenter = { lat: 48.137154, lng: 11.576124 }; // München
 
+// TypeScript-Ignorieranweisung für globale Variablen
+// @ts-ignore - Die globale google-Variable wird durch das Skript geladen
+
 const GoogleMap: React.FC<GoogleMapProps> = ({
   onRouteChange,
   onMarkersClear,
@@ -25,9 +25,9 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   className = ''
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const googleMapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
-  const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const googleMapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const polylineRef = useRef<any>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,9 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   
   // Google Maps API laden
   const loadGoogleMapsAPI = useCallback(() => {
-    if (!GOOGLE_MAPS_API_KEY) {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
       setError('Google Maps API-Schlüssel nicht gefunden');
       setIsLoading(false);
       return;
@@ -47,25 +49,32 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       return;
     }
     
+    // Wir fügen die Karte-Initialisierungsfunktion zum globalen Scope hinzu
+    window.initMap = initMap;
+    
     // Script-Tag erstellen und API laden
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=geometry`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap&libraries=geometry`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
       setError('Fehler beim Laden der Google Maps API');
       setIsLoading(false);
     };
-    script.onload = initMap;
     document.head.appendChild(script);
     
     return () => {
       // Cleanup
       if (script.parentNode) {
         script.parentNode.removeChild(script);
+        // TypeScript-sicheres Löschen der optionalen Eigenschaft
+        if (window.initMap) {
+          // @ts-ignore - Notwendig, da TypeScript hier zu streng typisiert
+          window.initMap = null;
+        }
       }
     };
-  }, [GOOGLE_MAPS_API_KEY]);
+  }, []);
   
   // Karte initialisieren
   const initMap = useCallback(() => {
