@@ -37,6 +37,9 @@ import StreetModulesPage from "@/pages/street-modules-new";
 import GeoMapPlaceholder from "@/pages/geo-map-placeholder";
 import GeoMapNew from "@/pages/geo-map-new";
 import GeoMapSimple from "@/pages/geo-map-simple";
+import TiefbauMap from "@/pages/tiefbau-map";
+import BodenAnalyse from "@/pages/BodenAnalyse";
+import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -73,6 +76,9 @@ function Router() {
       <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
+      <ProtectedRoute path="/tiefbau-map" component={TiefbauMap} />
+      <ProtectedRoute path="/bodenanalyse" component={BodenAnalyse} />
+      <ProtectedRoute path="/maschinen-auswahl" component={MaschinenAuswahl} />
       <Route path="/help">
         {() => <Redirect to="/information" />}
       </Route>

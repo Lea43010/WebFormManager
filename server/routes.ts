@@ -37,6 +37,8 @@ import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfu
 import { ZodError, z } from "zod";
 import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import elevationRouter from "./routes/elevation"; // Google Elevation API
+import bodenArtenRouter from "./routes/bodenarten"; // Bodenarten API
+import maschinenRouter from "./routes/maschinen"; // Maschinen API
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
@@ -114,6 +116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Google Elevation API-Routen einrichten
   app.use(elevationRouter);
+  
+  // Bodenarten-API-Routen einrichten
+  app.use(bodenArtenRouter);
+  
+  // Maschinen-API-Routen einrichten
+  app.use(maschinenRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {

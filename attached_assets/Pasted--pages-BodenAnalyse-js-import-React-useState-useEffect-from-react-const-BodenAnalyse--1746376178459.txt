@@ -1,0 +1,141 @@
+// pages/BodenAnalyse.js
+import React, { useState, useEffect } from 'react';
+
+const BodenAnalyse = () => {
+  const [bodenarten, setBodenarten] = useState([]);
+  const [selectedBodenart, setSelectedBodenart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Lade Bodenarten aus der Datenbank
+  useEffect(() => {
+    const fetchBodenarten = async () => {
+      try {
+        const response = await fetch('/api/bodenarten');
+        if (!response.ok) {
+          throw new Error('Fehler beim Laden der Bodenarten');
+        }
+        const data = await response.json();
+        setBodenarten(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchBodenarten();
+  }, []);
+
+  // Zeige Details einer ausgewählten Bodenart
+  const handleSelectBodenart = (bodenart) => {
+    setSelectedBodenart(bodenart);
+  };
+
+  if (loading) {
+    return <div>Lade Bodenarten...</div>;
+  }
+
+  if (error) {
+    return <div>Fehler: {error}</div>;
+  }
+
+  return (
+    <div className="bodenanalyse-container">
+      <h2>Bodenarten & Belastungsklassen</h2>
+      
+      <div className="bodenarten-grid">
+        <div className="bodenarten-liste">
+          <h3>Verfügbare Bodenarten</h3>
+          <ul>
+            {bodenarten.map((bodenart) => (
+              <li 
+                key={bodenart.id} 
+                className={selectedBodenart?.id === bodenart.id ? 'selected' : ''}
+                onClick={() => handleSelectBodenart(bodenart)}
+              >
+                {bodenart.name} - Belastungsklasse: {bodenart.belastungsklasse}
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        {selectedBodenart && (
+          <div className="bodenart-details">
+            <h3>{selectedBodenart.name}</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Beschreibung:</td>
+                  <td>{selectedBodenart.beschreibung}</td>
+                </tr>
+                <tr>
+                  <td>Dichte:</td>
+                  <td>{selectedBodenart.dichte} kg/m³</td>
+                </tr>
+                <tr>
+                  <td>Belastungsklasse:</td>
+                  <td>{selectedBodenart.belastungsklasse}</td>
+                </tr>
+                <tr>
+                  <td>Materialkosten:</td>
+                  <td>{selectedBodenart.material_kosten_pro_m2} €/m²</td>
+                </tr>
+                <tr>
+                  <td>Bearbeitungshinweise:</td>
+                  <td>{selectedBodenart.bearbeitungshinweise}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div className="bodenart-actions">
+              <button onClick={() => window.location.href = `/tiefbau/maschinen?bodenart=${selectedBodenart.id}`}>
+                Geeignete Maschinen anzeigen
+              </button>
+              <button onClick={() => window.location.href = `/tiefbau/kalkulation?bodenart=${selectedBodenart.id}`}>
+                Zur Kostenkalkulation
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="belastungsklassen-info">
+        <h3>Belastungsklassen im Überblick</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Klasse</th>
+              <th>Beschreibung</th>
+              <th>Typische Anwendung</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SLW 30</td>
+              <td>Leichte Belastung, max. 30 kN Achslast</td>
+              <td>Gehwege, Fahrradwege, leichte Zufahrten</td>
+            </tr>
+            <tr>
+              <td>SLW 40</td>
+              <td>Mittlere Belastung, max. 40 kN Achslast</td>
+              <td>Wohnstraßen, Parkplätze</td>
+            </tr>
+            <tr>
+              <td>SLW 50</td>
+              <td>Erhöhte Belastung, max. 50 kN Achslast</td>
+              <td>Sammelstraßen, Gewerbegebiete</td>
+            </tr>
+            <tr>
+              <td>SLW 60</td>
+              <td>Schwere Belastung, max. 60 kN Achslast</td>
+              <td>Hauptverkehrsstraßen, Industriegebiete</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default BodenAnalyse;

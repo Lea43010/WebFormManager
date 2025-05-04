@@ -1,0 +1,103 @@
+-- Schema für die Tiefbau-Erweiterung
+
+-- Tabelle für Bodenarten
+CREATE TABLE IF NOT EXISTS bodenarten (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  beschreibung TEXT,
+  dichte DECIMAL(10, 2),  -- kg/m³
+  belastungsklasse VARCHAR(50),
+  material_kosten_pro_m2 DECIMAL(10, 2),
+  bearbeitungshinweise TEXT
+);
+
+-- Tabelle für gespeicherte Routen
+CREATE TABLE IF NOT EXISTS tiefbau_routen (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  start_address TEXT,
+  end_address TEXT,
+  distance DECIMAL(10, 2),  -- in Metern
+  markers JSONB,  -- Array von Koordinaten
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabelle für Maschinen
+CREATE TABLE IF NOT EXISTS maschinen (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  typ VARCHAR(100),
+  beschreibung TEXT,
+  leistung VARCHAR(50),
+  kosten_pro_stunde DECIMAL(10, 2),
+  kosten_pro_tag DECIMAL(10, 2),
+  kosten_pro_woche DECIMAL(10, 2),
+  kraftstoffverbrauch DECIMAL(10, 2),  -- Liter pro Stunde
+  gewicht DECIMAL(10, 2),  -- kg
+  bild_url TEXT
+);
+
+-- Verknüpfungstabelle für Maschinen und geeignete Bodenarten
+CREATE TABLE IF NOT EXISTS maschinen_bodenarten (
+  id SERIAL PRIMARY KEY,
+  maschine_id INTEGER REFERENCES maschinen(id),
+  bodenart_id INTEGER REFERENCES bodenarten(id),
+  effizienz_faktor DECIMAL(5, 2),  -- Effizienzfaktor für diese Kombination (1.0 = normal)
+  bearbeitungszeit_pro_m2 DECIMAL(10, 2)  -- Zeit in Minuten pro m²
+);
+
+-- Füge einige Beispieldaten für Bodenarten ein
+INSERT INTO bodenarten (name, beschreibung, dichte, belastungsklasse, material_kosten_pro_m2, bearbeitungshinweise)
+VALUES 
+('Asphaltbeton', 'Standard-Asphaltbelag für Straßen', 2400, 'SLW 60', 25.50, 'Verdichtung mit Walzen erforderlich'),
+('Sandboden', 'Lockerer Sandboden', 1600, 'SLW 30', 6.80, 'Leicht zu bearbeiten, benötigt Stabilisierung'),
+('Lehmboden', 'Bindiger Lehmboden', 1800, 'SLW 40', 8.20, 'Bei Nässe schwer zu bearbeiten'),
+('Kiesboden', 'Kies mit verschiedenen Korngrößen', 1900, 'SLW 50', 12.40, 'Gute Drainage, einfach zu verdichten'),
+('Fels', 'Harter Felsuntergrund', 2700, 'SLW 60', 42.00, 'Sprengung oder schwere Maschinen erforderlich');
+
+-- Füge einige Beispieldaten für Maschinen ein
+INSERT INTO maschinen (name, typ, beschreibung, leistung, kosten_pro_stunde, kosten_pro_tag, kosten_pro_woche, kraftstoffverbrauch, gewicht)
+VALUES 
+('CAT 320', 'Bagger', '20-Tonnen Hydraulikbagger', '120 kW', 120.50, 950.00, 4500.00, 18.5, 20000),
+('Bomag BW 213', 'Walze', 'Vibrationswalze für Erdarbeiten', '98 kW', 85.00, 680.00, 3200.00, 12.0, 12500),
+('Wirtgen W 100', 'Fräse', 'Kompakte Kaltfräse', '170 kW', 210.00, 1680.00, 8000.00, 35.0, 18000),
+('Vögele Super 1800-3', 'Asphaltfertiger', 'Straßenfertiger mit hoher Einbaubreite', '129 kW', 230.00, 1840.00, 8800.00, 30.0, 19000),
+('Liebherr PR 736', 'Planierraupe', 'Hydrostatische Planierraupe', '150 kW', 140.00, 1120.00, 5300.00, 22.0, 20170);
+
+-- Füge Verknüpfungen zwischen Maschinen und Bodenarten ein
+INSERT INTO maschinen_bodenarten (maschine_id, bodenart_id, effizienz_faktor, bearbeitungszeit_pro_m2)
+VALUES 
+-- CAT 320 Bagger
+(1, 1, 0.85, 0.12),  -- Asphalt - nicht optimal
+(1, 2, 1.20, 0.08),  -- Sand - sehr gut
+(1, 3, 1.10, 0.09),  -- Lehm - gut
+(1, 4, 1.15, 0.09),  -- Kies - sehr gut
+(1, 5, 0.70, 0.18),  -- Fels - schwierig
+
+-- Bomag Walze
+(2, 1, 1.25, 0.06),  -- Asphalt - sehr gut
+(2, 2, 1.00, 0.07),  -- Sand - gut
+(2, 3, 0.90, 0.09),  -- Lehm - akzeptabel
+(2, 4, 1.20, 0.06),  -- Kies - sehr gut
+(2, 5, 0.50, 0.25),  -- Fels - nicht geeignet
+
+-- Wirtgen Fräse
+(3, 1, 1.50, 0.05),  -- Asphalt - optimal
+(3, 2, 0.60, 0.15),  -- Sand - nicht geeignet
+(3, 3, 0.70, 0.12),  -- Lehm - nicht ideal
+(3, 4, 0.80, 0.12),  -- Kies - akzeptabel
+(3, 5, 1.30, 0.08),  -- Fels - gut
+
+-- Vögele Asphaltfertiger
+(4, 1, 1.60, 0.04),  -- Asphalt - optimal
+(4, 2, 0.40, 0.30),  -- Sand - nicht geeignet
+(4, 3, 0.40, 0.30),  -- Lehm - nicht geeignet
+(4, 4, 0.50, 0.25),  -- Kies - nicht geeignet
+(4, 5, 0.30, 0.40),  -- Fels - nicht geeignet
+
+-- Liebherr Planierraupe
+(5, 1, 0.75, 0.14),  -- Asphalt - nicht ideal
+(5, 2, 1.25, 0.07),  -- Sand - sehr gut
+(5, 3, 1.15, 0.08),  -- Lehm - gut
+(5, 4, 1.30, 0.06),  -- Kies - optimal
+(5, 5, 0.60, 0.20);  -- Fels - schwierig
