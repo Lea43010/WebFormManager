@@ -42,7 +42,7 @@ router.get("/users", requireAdmin(), async (req, res) => {
     logActivity({
       userId: req.user?.id as number,
       component: 'Admin',
-      actionType: ActionType.READ,
+      actionType: ActionType.VIEW,
       entityType: 'user',
       ipAddress: getIpAddress(req),
       details: { message: "Benutzerliste abgerufen" }

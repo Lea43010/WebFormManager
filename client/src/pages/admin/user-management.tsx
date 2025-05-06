@@ -35,7 +35,12 @@ export default function UserManagement() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1"
+            onClick={handleShowUsers}
+          >
             <Users size={16} />
             <span>Benutzer anzeigen</span>
           </Button>
@@ -295,6 +300,24 @@ const USER_INFO = {
                   <li>Reguläre Benutzer haben nach der Registrierung eine 4-wöchige Testphase</li>
                 </ul>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Benutzerliste Tab */}
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                Benutzer verwalten
+              </CardTitle>
+              <CardDescription>
+                Übersicht und Verwaltung aller Benutzerkonten im System
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserManagementComponent />
             </CardContent>
           </Card>
         </TabsContent>
