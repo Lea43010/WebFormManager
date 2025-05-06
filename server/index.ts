@@ -48,24 +48,23 @@ app.use((req, res, next) => {
   // Health-Check-Endpunkte vor der Hauptroutenkonfiguration einrichten
   setupHealthRoutes(app);
   
-  // API-Dokumentation und Tests verzögert einrichten
-  setTimeout(() => {
-    // API-Dokumentation einrichten (nur in Entwicklungsumgebung)
-    try {
-      setupApiDocs(app);
-      logger.info('API-Dokumentation erfolgreich eingerichtet');
-    } catch (error) {
-      logger.error('Fehler beim Einrichten der API-Dokumentation:', error);
-    }
-    
-    // API-Tests einrichten (nur in Entwicklungsumgebung)
-    try {
-      setupApiTests(app);
-      logger.info('API-Tests erfolgreich eingerichtet');
-    } catch (error) {
-      logger.error('Fehler beim Einrichten der API-Tests:', error);
-    }
-  }, 8000); // 8 Sekunden Verzögerung
+  // API-Dokumentation und Tests direkt einrichten (ohne Verzögerung)
+  // try {
+  //   setupApiDocs(app);
+  //   logger.info('API-Dokumentation erfolgreich eingerichtet');
+  // } catch (error) {
+  //   logger.error('Fehler beim Einrichten der API-Dokumentation:', error);
+  // }
+  
+  // // API-Tests einrichten (nur in Entwicklungsumgebung)
+  // try {
+  //   setupApiTests(app);
+  //   logger.info('API-Tests erfolgreich eingerichtet');
+  // } catch (error) {
+  //   logger.error('Fehler beim Einrichten der API-Tests:', error);
+  // }
+  
+  // Vorübergehend deaktiviert, um schnelleren Start zu ermöglichen
   
   // Alle API-Routen registrieren
   const server = await registerRoutes(app);
@@ -112,45 +111,42 @@ app.use((req, res, next) => {
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
       
-      // Initialisiere das Backup-System und Cron-Jobs verzögert, um schnelleren Serverstart zu ermöglichen
-      setTimeout(() => {
-        try {
-          initBackupSystem();
-          logger.info('Backup-System erfolgreich initialisiert');
-        } catch (error) {
-          logger.error('Fehler beim Initialisieren des Backup-Systems:', error);
-        }
-        
-        try {
-          initCronJobs();
-          logger.info('Cron-Jobs erfolgreich initialisiert');
-        } catch (error) {
-          logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
-        }
-      }, 5000);
+      // Verzögerte Initialisierungen temporär deaktiviert für schnelleren Serverstart
       
-      // Starte den einfachen Proxy-Server für öffentlichen Zugriff verzögert
-      if (config.isDevelopment) {
-        process.env.PORT = String(port);
-        setTimeout(() => {
-          try {
-            // Starte den Proxy-Server im Hintergrund
-            logger.info('Starte einfachen Proxy-Server für Tests...');
-            import('child_process').then(({ spawn }) => {
-              const proxyProcess = spawn('node', ['scripts/simple-proxy.js'], {
-                detached: true,
-                stdio: ['inherit', 'inherit', 'inherit']
-              });
-              proxyProcess.unref();
-              logger.info('Proxy-Server wird auf Port 9000 gestartet');
-            }).catch(err => {
-              logger.error('Fehler beim Importieren des child_process-Moduls:', err);
-            });
-          } catch (error) {
-            logger.error('Fehler beim Starten des Proxy-Servers:', error);
-          }
-        }, 10000); // 10 Sekunden Verzögerung
-      }
+      // Backup-System und Cron-Jobs werden nicht automatisch gestartet
+      // try {
+      //   initBackupSystem();
+      //   logger.info('Backup-System erfolgreich initialisiert');
+      // } catch (error) {
+      //   logger.error('Fehler beim Initialisieren des Backup-Systems:', error);
+      // }
+      
+      // try {
+      //   initCronJobs();
+      //   logger.info('Cron-Jobs erfolgreich initialisiert');
+      // } catch (error) {
+      //   logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+      // }
+      
+      // Proxy-Server wird nicht automatisch gestartet
+      // if (config.isDevelopment) {
+      //   process.env.PORT = String(port);
+      //   try {
+      //     logger.info('Starte einfachen Proxy-Server für Tests...');
+      //     import('child_process').then(({ spawn }) => {
+      //       const proxyProcess = spawn('node', ['scripts/simple-proxy.js'], {
+      //         detached: true,
+      //         stdio: ['inherit', 'inherit', 'inherit']
+      //       });
+      //       proxyProcess.unref();
+      //       logger.info('Proxy-Server wird auf Port 9000 gestartet');
+      //     }).catch(err => {
+      //       logger.error('Fehler beim Importieren des child_process-Moduls:', err);
+      //     });
+      //   } catch (error) {
+      //     logger.error('Fehler beim Starten des Proxy-Servers:', error);
+      //   }
+      // }
     })
     .on('error', (err: any) => {
       if (err && typeof err === 'object' && 'code' in err && err.code === 'EADDRINUSE') {

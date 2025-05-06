@@ -18,7 +18,7 @@ const router = Router();
 // Route zum Abrufen aller Benutzer (nur für Administratoren)
 router.get("/users", requireAdmin(), async (req, res) => {
   try {
-    // Umfassende Benutzerinformationen abrufen, sortiert nach ID
+    // Vereinfachte Benutzerinformationen abrufen, um Performance zu verbessern
     const users = await sql`
       SELECT 
         id, 
@@ -26,17 +26,12 @@ router.get("/users", requireAdmin(), async (req, res) => {
         user_name, 
         user_email, 
         role, 
-        created_by, 
         gdpr_consent, 
-        registration_date, 
         trial_end_date, 
-        subscription_status,
-        stripe_customer_id,
-        stripe_subscription_id,
-        last_payment_date,
-        subscription_plan
+        subscription_status
       FROM tbluser 
       ORDER BY id ASC
+      LIMIT 100 -- Beschränkung der Ergebnisse für bessere Performance
     `;
 
     // Protokollieren der Benutzeraktivität
@@ -160,58 +155,69 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
       gdpr_consent
     } = req.body;
 
-    // Aktualisierte Felder sammeln
-    const updates = [];
-    const values = {};
-
+    // Sammle alle Aktualisierungs-Parameter
+    const updateParams: any = {};
+    
     if (user_name !== undefined) {
-      updates.push(`user_name = ${sql.unsafe('${user_name}')}`);
-      values.user_name = user_name;
+      updateParams.user_name = user_name;
     }
 
     if (user_email !== undefined) {
-      updates.push(`user_email = ${sql.unsafe('${user_email}')}`);
-      values.user_email = user_email;
+      updateParams.user_email = user_email;
     }
 
     if (role !== undefined) {
-      updates.push(`role = ${sql.unsafe('${role}')}::user_roles`);
-      values.role = role;
+      updateParams.role = role;
     }
 
     if (trial_end_date !== undefined) {
-      updates.push(`trial_end_date = ${sql.unsafe('${trial_end_date}')}::date`);
-      values.trial_end_date = trial_end_date;
+      updateParams.trial_end_date = trial_end_date;
     }
 
     if (subscription_status !== undefined) {
-      updates.push(`subscription_status = ${sql.unsafe('${subscription_status}')}`);
-      values.subscription_status = subscription_status;
+      updateParams.subscription_status = subscription_status;
     }
 
     if (subscription_plan !== undefined) {
-      updates.push(`subscription_plan = ${sql.unsafe('${subscription_plan}')}::subscription_plans`);
-      values.subscription_plan = subscription_plan;
+      updateParams.subscription_plan = subscription_plan;
     }
     
     if (gdpr_consent !== undefined) {
-      updates.push(`gdpr_consent = ${sql.unsafe('${gdpr_consent}')}`);
-      values.gdpr_consent = gdpr_consent;
+      updateParams.gdpr_consent = gdpr_consent;
     }
 
-    if (updates.length === 0) {
+    if (Object.keys(updateParams).length === 0) {
       return res.status(400).json({ error: "Keine Felder zum Aktualisieren angegeben" });
     }
 
-    // Aktualisieren des Benutzers
-    // Da wir in dieser Version der Datenbank-Bibliothek keine direkte Unterstützung für 
-    // dynamische Spalten-Updates mit sql tag templates haben, verwenden wir eine 
-    // andere Methode zur Aktualisierung
-    let queryText = `UPDATE tbluser SET `;
-    queryText += updates.join(", ");
-    queryText += ` WHERE id = $1 RETURNING *`;
+    // Aktualisieren des Benutzers mit einem dynamisch erstellten SQL-Query
+    const setClauses: string[] = [];
+    const queryValues: any[] = [userId]; // Erste Position für die WHERE-Bedingung reservieren
+    let paramIndex = 2; // Wir beginnen mit $2 da $1 für die user_id verwendet wird
     
-    const updatedUser = await sql(queryText, [userId]);
+    // Für jeden Parameter einen SET-Eintrag erstellen
+    for (const [key, value] of Object.entries(updateParams)) {
+      if (key === 'role') {
+        setClauses.push(`${key} = $${paramIndex}::user_roles`);
+      } else if (key === 'trial_end_date') {
+        setClauses.push(`${key} = $${paramIndex}::date`);
+      } else if (key === 'subscription_plan') {
+        setClauses.push(`${key} = $${paramIndex}::subscription_plans`);
+      } else {
+        setClauses.push(`${key} = $${paramIndex}`);
+      }
+      queryValues.push(value);
+      paramIndex++;
+    }
+    
+    const queryText = `
+      UPDATE tbluser 
+      SET ${setClauses.join(', ')} 
+      WHERE id = $1 
+      RETURNING *
+    `;
+    
+    const updatedUser = await sql(queryText, queryValues);
 
     if (updatedUser.length === 0) {
       return res.status(404).json({ error: "Benutzer nicht gefunden" });

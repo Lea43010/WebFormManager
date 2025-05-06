@@ -125,8 +125,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Maschinen-API-Routen einrichten
   app.use(maschinenRouter);
   
-  // Admin-API-Routen einrichten
-  app.use('/api/admin', adminRouter);
+  // Admin-API-Routen vorübergehend deaktiviert, bis Performance-Probleme behoben sind
+  // app.use('/api/admin', adminRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
