@@ -40,6 +40,7 @@ import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import elevationRouter from "./routes/elevation"; // Google Elevation API
 import bodenArtenRouter from "./routes/bodenarten"; // Bodenarten API
 import maschinenRouter from "./routes/maschinen"; // Maschinen API
+import adminRouter from "./routes/admin-routes"; // Admin-API
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
   insertMaterialSchema, insertComponentSchema, insertAttachmentSchema, insertSoilReferenceDataSchema,
@@ -123,6 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Maschinen-API-Routen einrichten
   app.use(maschinenRouter);
+  
+  // Admin-API-Routen einrichten
+  app.use('/api/admin', adminRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
