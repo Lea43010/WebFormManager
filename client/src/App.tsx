@@ -24,6 +24,7 @@ import UserManagementPage from "@/pages/admin/user-management";
 import BackupStatusPage from "@/pages/admin/backup-status";
 // Import-Korrektur für SystemLogs-Komponente
 import SystemLogsPage from "./pages/admin/system-logs";
+import SQLAnalyticsPage from "@/pages/admin/sql-analytics";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
 import DataQualityDashboard from "@/pages/data-quality-dashboard";
@@ -62,6 +63,7 @@ function Router() {
       <AdminProtectedRoute path="/admin/emails" component={AdminEmailsPage} />
       <AdminProtectedRoute path="/admin/backup-status" component={BackupStatusPage} />
       <AdminProtectedRoute path="/admin/logs" component={SystemLogsPage} />
+      <AdminProtectedRoute path="/admin/sql-analytics" component={SQLAnalyticsPage} />
       
       <ProtectedRoute path="/quick-entry" component={QuickEntryPage} />
       <ProtectedRoute path="/db-migration" component={DownloadPage} />

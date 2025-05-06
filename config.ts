@@ -49,6 +49,13 @@ const logging = {
   disableConsole: false,
   // In Produktion können Logs an ein externes System gesendet werden
   externalLogService: isProduction ? process.env.LOG_SERVICE_URL : undefined,
+  
+  // SQL-Query-Logging-Konfiguration
+  sqlQueryLogging: process.env.ENABLE_SQL_QUERY_LOGGING === 'true' || !isProduction,
+  logAllQueries: process.env.LOG_ALL_QUERIES === 'true' || false,
+  storeSlowQueries: process.env.STORE_SLOW_QUERIES === 'true' || !isProduction,
+  querySamplingRate: parseFloat(process.env.QUERY_SAMPLING_RATE || '0.1'), // 10% der Queries protokollieren
+  queryCleanupDays: parseInt(process.env.QUERY_CLEANUP_DAYS || '30', 10),  // 30 Tage aufbewahren
 };
 
 // Fehlerbehandlung
