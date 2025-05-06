@@ -365,7 +365,7 @@ export function UserManagement() {
                 </Label>
                 <Select
                   value={newUser.role}
-                  onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}
+                  onValueChange={(value: 'administrator' | 'manager' | 'benutzer') => setNewUser({ ...newUser, role: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Rolle auswählen" />
@@ -581,11 +581,11 @@ export function UserManagement() {
                           <div className="space-y-4">
                             <div className="grid gap-4">
                               <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="trialEndDate" className="text-right">
+                                <Label htmlFor={`trialEndDate-${userData.id}`} className="text-right">
                                   Enddatum
                                 </Label>
                                 <Input
-                                  id="trialEndDate"
+                                  id={`trialEndDate-${userData.id}`}
                                   type="date"
                                   defaultValue={
                                     userData.trialEndDate && isValid(new Date(userData.trialEndDate)) ? 
@@ -602,7 +602,7 @@ export function UserManagement() {
                                   variant="outline"
                                   className="justify-start"
                                   onClick={() => {
-                                    const trialEndDate = (document.getElementById('trialEndDate') as HTMLInputElement).value;
+                                    const trialEndDate = (document.getElementById(`trialEndDate-${userData.id}`) as HTMLInputElement).value;
                                     updateTrialMutation.mutate({
                                       userId: userData.id,
                                       trialEndDate,

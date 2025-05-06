@@ -24,6 +24,10 @@ localPort = 5003
 externalPort = 3001
 
 [[ports]]
+localPort = 5005
+externalPort = 4200
+
+[[ports]]
 localPort = 5173
 externalPort = 5173
 
@@ -38,6 +42,38 @@ externalPort = 3002
 [[ports]]
 localPort = 9002
 externalPort = 3003
+
+[[ports]]
+localPort = 9003
+externalPort = 5000
+
+[[ports]]
+localPort = 9004
+externalPort = 6000
+
+[[ports]]
+localPort = 9005
+externalPort = 6800
+
+[[ports]]
+localPort = 9006
+externalPort = 8000
+
+[[ports]]
+localPort = 9007
+externalPort = 8008
+
+[[ports]]
+localPort = 9008
+externalPort = 8080
+
+[[ports]]
+localPort = 9009
+externalPort = 8081
+
+[[ports]]
+localPort = 9010
+externalPort = 8099
 
 [workflows]
 runButton = "Development Server"
