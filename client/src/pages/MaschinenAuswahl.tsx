@@ -83,8 +83,8 @@ const MaschinenAuswahl: React.FC = () => {
         const bodenData = await bodenResponse.json();
         setBodenarten(bodenData);
         
-        // Wenn eine Bodenart-ID im Filter ist, lade spezifische Maschinen für diese Bodenart
-        if (filter.bodenartId) {
+        // Wenn eine Bodenart-ID im Filter ist (und nicht '_all'), lade spezifische Maschinen für diese Bodenart
+        if (filter.bodenartId && filter.bodenartId !== '_all') {
           const geeigneteResponse = await fetch(`/api/maschinen/bodenart/${filter.bodenartId}`);
           if (geeigneteResponse.ok) {
             const geeigneteData = await geeigneteResponse.json();
@@ -112,7 +112,7 @@ const MaschinenAuswahl: React.FC = () => {
     let result = [...maschinen];
     
     // Filter nach Maschinentyp
-    if (filter.typ) {
+    if (filter.typ && filter.typ !== '_all') {
       result = result.filter(maschine => maschine.typ === filter.typ);
     }
     
@@ -212,7 +212,7 @@ const MaschinenAuswahl: React.FC = () => {
                       <SelectValue placeholder="Alle Typen" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Alle Typen</SelectItem>
+                      <SelectItem value="_all">Alle Typen</SelectItem>
                       {maschinenTypen.map(typ => (
                         <SelectItem key={typ} value={typ}>
                           {typ}
@@ -264,7 +264,7 @@ const MaschinenAuswahl: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
               <h3 className="text-lg font-medium mb-4">Verfügbare Maschinen</h3>
-              {filter.bodenartId && (
+              {filter.bodenartId && filter.bodenartId !== '_all' && (
                 <p className="mb-4 text-sm text-muted-foreground">
                   Geeignete Maschinen für Bodenart: {
                     bodenarten.find(b => b.id.toString() === filter.bodenartId)?.name || 'Unbekannt'
@@ -396,7 +396,7 @@ const MaschinenAuswahl: React.FC = () => {
                       <div className="pt-2">
                         <Button 
                           className="w-full" 
-                          onClick={() => window.location.href = `/kosten-kalkulation?maschine=${selectedMaschine.id}${filter.bodenartId ? `&bodenart=${filter.bodenartId}` : ''}`}
+                          onClick={() => window.location.href = `/kosten-kalkulation?maschine=${selectedMaschine.id}${filter.bodenartId && filter.bodenartId !== '_all' ? `&bodenart=${filter.bodenartId}` : ''}`}
                         >
                           Zur Kostenkalkulation
                         </Button>
