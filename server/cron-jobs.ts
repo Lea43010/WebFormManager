@@ -1,92 +1,96 @@
 /**
- * Cron-Jobs für wiederkehrende Aufgaben
+ * Cron-Jobs für regelmäßige Aufgaben
  * 
- * Diese Datei enthält alle zeitgesteuerten Aufgaben wie:
- * - Tägliches Datenbank-Backup
- * - E-Mail-Benachrichtigungen für Testphasen-Ende
- * - Automatische Bereinigungsaufgaben
+ * Dieses Modul initialisiert und verwaltet alle Cron-Jobs der Anwendung,
+ * wie z.B. die tägliche Überprüfung auf ablaufende Testphasen.
  */
 
-import cron from 'node-cron';
+import { CronJob } from 'cron';
 import { logger } from './logger';
-import { trialEmailService } from './trial-email-service';
-import config from '../config';
-// Direkter Import der Backup-Funktion
-import backupModule from './cron-jobs/backup';
+import { trialExpirationService } from './services/trial-expiration-service';
 
-// Logger für dieses Modul erstellen
-const cronLogger = logger.createLogger('cron-jobs');
+// Spezifischer Logger für Cron-Jobs
+const cronLogger = logger.createLogger('cron');
 
 /**
- * Startet alle konfigurierten Cron-Jobs
+ * Manager für alle Cron-Jobs
  */
-export function initCronJobs() {
-  cronLogger.info('Initialisiere Cron-Jobs...');
-  
-  // Tägliches Backup - Um 3:00 Uhr morgens
-  cron.schedule('0 3 * * *', () => {
-    cronLogger.info('Führe tägliches Backup aus...');
+export class CronJobManager {
+  private jobs: CronJob[] = [];
+
+  /**
+   * Initialisiert alle Cron-Jobs
+   */
+  async initialize(): Promise<void> {
     try {
-      backupModule.runBackup();
+      // Initialisiere den Trial-Expiration-Service
+      await trialExpirationService.initialize();
+
+      // Cron-Job für die tägliche Überprüfung auf ablaufende Testphasen (03:00 Uhr)
+      // Format: Sekunde Minute Stunde Tag Monat Wochentag
+      this.addJob('0 0 3 * * *', async () => {
+        cronLogger.info('Starte geplante Überprüfung auf ablaufende Testphasen');
+        await trialExpirationService.checkAndNotifyExpiringTrials();
+      }, 'trial-expiration-check');
+
+      cronLogger.info('Cron-Jobs initialisiert');
     } catch (error) {
-      cronLogger.error('Fehler bei der Ausführung des täglichen Backups:', error);
+      cronLogger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
     }
-  }, {
-    scheduled: true,
-    timezone: "Europe/Berlin"
-  });
-  
-  // Testphasen-Benachrichtigungen - Täglich um 9:00 Uhr
-  cron.schedule('0 9 * * *', async () => {
-    cronLogger.info('Führe Testphasen-Benachrichtigungen aus...');
-    
-    try {
-      // Benachrichtigungen für Testphasen, die in 3 Tagen ablaufen
-      const endingSoon = await trialEmailService.sendTrialEndingNotifications(3);
-      cronLogger.info(`${endingSoon} Benachrichtigungen für bald endende Testphasen gesendet.`);
-      
-      // Benachrichtigungen für abgelaufene Testphasen (1 Tag nach Ablauf)
-      const ended = await trialEmailService.sendTrialEndedNotifications(1);
-      cronLogger.info(`${ended} Benachrichtigungen für abgelaufene Testphasen gesendet.`);
-    } catch (error) {
-      cronLogger.error('Fehler bei der Ausführung der Testphasen-Benachrichtigungen:', error);
-    }
-  }, {
-    scheduled: true,
-    timezone: "Europe/Berlin"
-  });
-  
-  // Wenn wir in Entwicklungsumgebung sind und DEBUG_CRON_JOBS aktiviert ist, 
-  // führe die Jobs sofort aus (für Debugging)
-  if (config.isDevelopment && config.backup.debugCronJobs) {
-    cronLogger.info('DEBUG_CRON_JOBS ist aktiviert. Führe Jobs sofort aus...');
-    
-    // Führe das Backup sofort aus
-    setTimeout(() => {
-      try {
-        cronLogger.info('[DEBUG] Führe sofortiges Backup aus...');
-        backupModule.runBackup();
-      } catch (error) {
-        cronLogger.error('[DEBUG] Fehler bei der Ausführung des sofortigen Backups:', error);
-      }
-    }, 3000); // Warte 3 Sekunden nach Server-Start
-    
-    // Führe die Testphasen-Benachrichtigungen sofort aus
-    setTimeout(async () => {
-      try {
-        const endingSoon = await trialEmailService.sendTrialEndingNotifications(3);
-        cronLogger.info(`[DEBUG] ${endingSoon} Benachrichtigungen für bald endende Testphasen gesendet.`);
-        
-        const ended = await trialEmailService.sendTrialEndedNotifications(1);
-        cronLogger.info(`[DEBUG] ${ended} Benachrichtigungen für abgelaufene Testphasen gesendet.`);
-      } catch (error) {
-        cronLogger.error('[DEBUG] Fehler bei der Ausführung der Testphasen-Benachrichtigungen:', error);
-      }
-    }, 5000); // Warte 5 Sekunden nach Server-Start
   }
-  
-  cronLogger.info('Alle Cron-Jobs wurden initialisiert.');
+
+  /**
+   * Fügt einen neuen Cron-Job hinzu und startet ihn
+   */
+  private addJob(cronTime: string, onTick: () => void, name: string): void {
+    try {
+      const job = new CronJob(
+        cronTime,
+        async () => {
+          try {
+            cronLogger.info(`Cron-Job "${name}" ausgeführt`);
+            await onTick();
+            cronLogger.info(`Cron-Job "${name}" erfolgreich abgeschlossen`);
+          } catch (error) {
+            cronLogger.error(`Fehler bei der Ausführung des Cron-Jobs "${name}":`, error);
+          }
+        },
+        null, // onComplete
+        true, // start
+        'Europe/Berlin' // Zeitzone
+      );
+
+      this.jobs.push(job);
+      cronLogger.info(`Cron-Job "${name}" mit Zeitplan "${cronTime}" initialisiert und gestartet`);
+    } catch (error) {
+      cronLogger.error(`Fehler beim Hinzufügen des Cron-Jobs "${name}":`, error);
+    }
+  }
+
+  /**
+   * Führt den Trial-Expiration-Check manuell aus
+   */
+  async runTrialExpirationCheck(): Promise<void> {
+    try {
+      cronLogger.info('Manueller Trial-Expiration-Check gestartet');
+      await trialExpirationService.checkAndNotifyExpiringTrials();
+      cronLogger.info('Manueller Trial-Expiration-Check abgeschlossen');
+    } catch (error) {
+      cronLogger.error('Fehler beim manuellen Trial-Expiration-Check:', error);
+    }
+  }
+
+  /**
+   * Stoppt alle Cron-Jobs
+   */
+  stopAll(): void {
+    this.jobs.forEach(job => job.stop());
+    this.jobs = [];
+    cronLogger.info('Alle Cron-Jobs gestoppt');
+  }
 }
 
-// Standard-Export
-export default { initCronJobs };
+// Singleton-Instanz
+export const cronJobManager = new CronJobManager();
+
+export default cronJobManager;
