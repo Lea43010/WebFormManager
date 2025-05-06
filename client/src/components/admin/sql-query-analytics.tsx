@@ -434,7 +434,7 @@ const SQLQueryAnalytics: React.FC = () => {
                           <TableCell>{query.rowCount}</TableCell>
                           <TableCell>
                             {query.analyzed ? (
-                              <Badge variant="success" className="flex items-center gap-1">
+                              <Badge variant="outline" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-200">
                                 <CheckCircle2 className="h-3 w-3" /> Analysiert
                               </Badge>
                             ) : query.problematic ? (
