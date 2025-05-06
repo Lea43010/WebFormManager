@@ -753,6 +753,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
+      }
+      
       // Projekte des aktuellen Benutzers abrufen
       const projects = await storage.getProjectsByUser(req.user.id);
       res.json(projects);
@@ -937,6 +947,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
+      }
+      
       const projectId = parseInt(req.params.projectId);
       const project = await storage.getProject(projectId);
       
@@ -961,6 +981,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       const projectId = parseInt(req.params.projectId);
@@ -995,6 +1025,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       const id = parseInt(req.params.id);
@@ -1145,6 +1185,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
+      }
+      
       // Nur Administratoren können alle Ansprechpartner sehen
       if (req.user.role === 'administrator') {
         const persons = await storage.getPersons();
@@ -1184,6 +1234,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       const id = parseInt(req.params.id);
@@ -1234,6 +1294,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
+      }
+      
       // Numerische Felder konvertieren
       const formData = {
         ...req.body,
@@ -1277,6 +1347,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       const id = parseInt(req.params.id);
@@ -1351,6 +1431,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       const id = parseInt(req.params.id);
