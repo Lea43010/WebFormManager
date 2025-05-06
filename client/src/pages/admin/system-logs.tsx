@@ -161,7 +161,7 @@ export default function SystemLogsPage() {
   const getFilteredLogs = () => {
     let logs = activeTab === "activity" ? activityLogs : loginLogs;
     
-    if (filterLevel) {
+    if (filterLevel && filterLevel !== '_all') {
       logs = logs.filter(log => log.level === filterLevel);
     }
     
@@ -289,7 +289,7 @@ export default function SystemLogsPage() {
               <SelectValue placeholder="Nach Level filtern" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle Level</SelectItem>
+              <SelectItem value="_all">Alle Level</SelectItem>
               <SelectItem value="info">Info</SelectItem>
               <SelectItem value="warning">Warnung</SelectItem>
               <SelectItem value="error">Fehler</SelectItem>

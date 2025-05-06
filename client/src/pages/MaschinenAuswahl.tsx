@@ -192,7 +192,7 @@ const MaschinenAuswahl: React.FC = () => {
                       <SelectValue placeholder="Alle Bodenarten" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Alle Bodenarten</SelectItem>
+                      <SelectItem value="_all">Alle Bodenarten</SelectItem>
                       {bodenarten.map(bodenart => (
                         <SelectItem key={bodenart.id} value={bodenart.id.toString()}>
                           {bodenart.name} ({bodenart.belastungsklasse})
