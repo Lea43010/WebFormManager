@@ -3,6 +3,7 @@ import { sql, drizzleSql } from "../db";
 import { requireAdmin } from "../middleware/role-check";
 import { logActivity, ActionType, ActivityLogData } from "../activity-logger";
 import logger from "../logger";
+import { cronJobManager } from "../cron-jobs";
 
 // Hilfsfunktion zum Ermitteln der IP-Adresse
 const getIpAddress = (req: any): string => {
@@ -294,6 +295,43 @@ router.delete("/users/:id", requireAdmin(), async (req, res) => {
   } catch (error) {
     logger.error(`Fehler beim Löschen eines Benutzers: ${error.message}`);
     res.status(500).json({ error: `Fehler beim Löschen eines Benutzers: ${error.message}` });
+  }
+});
+
+// Route zum manuellen Ausführen der Testphasen-Überprüfung
+router.post("/run-trial-expiration-check", requireAdmin(), async (req, res) => {
+  try {
+    logger.info("Administrator hat manuelle Überprüfung der ablaufenden Testphasen gestartet");
+    
+    // Protokollieren der Administratoraktivität
+    try {
+      await logActivity({
+        userId: req.user?.id as number,
+        component: 'Admin',
+        actionType: ActionType.EXECUTE,
+        entityType: 'system',
+        ipAddress: getIpAddress(req),
+        details: { message: "Manuelle Überprüfung der ablaufenden Testphasen gestartet" }
+      });
+    } catch (error) {
+      logger.error(`Fehler beim Protokollieren der Aktivität: ${error}`);
+    }
+    
+    // Trial-Expiration-Check manuell ausführen
+    await cronJobManager.runTrialExpirationCheck();
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Überprüfung der ablaufenden Testphasen erfolgreich durchgeführt" 
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler bei der manuellen Überprüfung der ablaufenden Testphasen: ${errorMessage}`);
+    res.status(500).json({ 
+      success: false, 
+      message: "Fehler bei der Überprüfung der ablaufenden Testphasen", 
+      error: errorMessage
+    });
   }
 });
 

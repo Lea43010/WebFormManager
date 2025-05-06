@@ -6,7 +6,7 @@ import { setupHealthRoutes } from "./health";
 import { setupApiDocs } from "./api-docs";
 import { setupApiTests } from "./api-test";
 import { setupBackupRoutes, initBackupSystem } from "./backup";
-import { initCronJobs } from "./cron-jobs";
+import { cronJobManager } from "./cron-jobs";
 import config from "../config";
 import { logger } from "./logger";
 
@@ -111,9 +111,9 @@ app.use((req, res, next) => {
       logger.info(`Server gestartet auf Port ${port}${environment}`);
       log(`serving on port ${port}`);
       
-      // Verzögerte Initialisierungen temporär deaktiviert für schnelleren Serverstart
+      // Verzögerte Initialisierungen 
       
-      // Backup-System und Cron-Jobs werden nicht automatisch gestartet
+      // Backup-System bleibt temporär deaktiviert für schnelleren Serverstart
       // try {
       //   initBackupSystem();
       //   logger.info('Backup-System erfolgreich initialisiert');
@@ -121,12 +121,14 @@ app.use((req, res, next) => {
       //   logger.error('Fehler beim Initialisieren des Backup-Systems:', error);
       // }
       
-      // try {
-      //   initCronJobs();
-      //   logger.info('Cron-Jobs erfolgreich initialisiert');
-      // } catch (error) {
-      //   logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
-      // }
+      // Cron-Jobs für Testphasen-Ablauf-Benachrichtigungen initialisieren
+      try {
+        cronJobManager.initialize().then(() => {
+          logger.info('Cron-Jobs erfolgreich initialisiert');
+        });
+      } catch (error) {
+        logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+      }
       
       // Proxy-Server wird nicht automatisch gestartet
       // if (config.isDevelopment) {
