@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sql } from "../db";
+import { sql, drizzleSql } from "../db";
 import { requireAdmin } from "../middleware/role-check";
 import { logActivity, ActionType, ActivityLogData } from "../activity-logger";
 import logger from "../logger";
@@ -165,37 +165,37 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
     const values = {};
 
     if (user_name !== undefined) {
-      updates.push("user_name = ${user_name}");
+      updates.push(`user_name = ${sql.unsafe('${user_name}')}`);
       values.user_name = user_name;
     }
 
     if (user_email !== undefined) {
-      updates.push("user_email = ${user_email}");
+      updates.push(`user_email = ${sql.unsafe('${user_email}')}`);
       values.user_email = user_email;
     }
 
     if (role !== undefined) {
-      updates.push("role = ${role}::user_roles");
+      updates.push(`role = ${sql.unsafe('${role}')}::user_roles`);
       values.role = role;
     }
 
     if (trial_end_date !== undefined) {
-      updates.push("trial_end_date = ${trial_end_date}::date");
+      updates.push(`trial_end_date = ${sql.unsafe('${trial_end_date}')}::date`);
       values.trial_end_date = trial_end_date;
     }
 
     if (subscription_status !== undefined) {
-      updates.push("subscription_status = ${subscription_status}");
+      updates.push(`subscription_status = ${sql.unsafe('${subscription_status}')}`);
       values.subscription_status = subscription_status;
     }
 
     if (subscription_plan !== undefined) {
-      updates.push("subscription_plan = ${subscription_plan}::subscription_plans");
+      updates.push(`subscription_plan = ${sql.unsafe('${subscription_plan}')}::subscription_plans`);
       values.subscription_plan = subscription_plan;
     }
     
     if (gdpr_consent !== undefined) {
-      updates.push("gdpr_consent = ${gdpr_consent}");
+      updates.push(`gdpr_consent = ${sql.unsafe('${gdpr_consent}')}`);
       values.gdpr_consent = gdpr_consent;
     }
 
@@ -204,14 +204,14 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
     }
 
     // Aktualisieren des Benutzers
-    const updateQuery = `
-      UPDATE tbluser 
-      SET ${updates.join(", ")} 
-      WHERE id = ${userId} 
-      RETURNING *
-    `;
-
-    const updatedUser = await sql.unsafe(updateQuery, { ...values, userId });
+    // Da wir in dieser Version der Datenbank-Bibliothek keine direkte Unterstützung für 
+    // dynamische Spalten-Updates mit sql tag templates haben, verwenden wir eine 
+    // andere Methode zur Aktualisierung
+    let queryText = `UPDATE tbluser SET `;
+    queryText += updates.join(", ");
+    queryText += ` WHERE id = $1 RETURNING *`;
+    
+    const updatedUser = await sql(queryText, [userId]);
 
     if (updatedUser.length === 0) {
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
@@ -236,6 +236,56 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
   } catch (error) {
     logger.error(`Fehler beim Aktualisieren eines Benutzers: ${error.message}`);
     res.status(500).json({ error: `Fehler beim Aktualisieren eines Benutzers: ${error.message}` });
+  }
+});
+
+// Route zum Löschen eines Benutzers
+router.delete("/users/:id", requireAdmin(), async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Ungültige Benutzer-ID" });
+    }
+    
+    // Verhindere, dass Administratoren sich selbst löschen
+    if (userId === req.user?.id) {
+      return res.status(400).json({
+        message: "Sie können Ihren eigenen Benutzer nicht löschen."
+      });
+    }
+    
+    // Prüfe, ob der zu löschende Benutzer existiert
+    const userExists = await sql`SELECT COUNT(*) FROM tbluser WHERE id = ${userId}`;
+    
+    if (userExists[0].count === '0') {
+      return res.status(404).json({
+        message: "Benutzer nicht gefunden."
+      });
+    }
+    
+    // Lösche den Benutzer
+    await sql`DELETE FROM tbluser WHERE id = ${userId}`;
+    
+    try {
+      await logActivity({
+        userId: req.user?.id as number,
+        component: 'Admin',
+        actionType: ActionType.DELETE,
+        entityType: 'user',
+        entityId: userId,
+        ipAddress: getIpAddress(req),
+        details: { message: `Benutzer gelöscht: ID ${userId}` }
+      });
+    } catch (error) {
+      logger.error(`Fehler beim Protokollieren der Aktivität: ${error}`);
+      // Wir werfen den Fehler nicht weiter, um die Hauptfunktionalität nicht zu beeinträchtigen
+    }
+    
+    res.status(200).json({ message: "Benutzer erfolgreich gelöscht." });
+  } catch (error) {
+    logger.error(`Fehler beim Löschen eines Benutzers: ${error.message}`);
+    res.status(500).json({ error: `Fehler beim Löschen eines Benutzers: ${error.message}` });
   }
 });
 

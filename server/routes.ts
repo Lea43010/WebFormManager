@@ -2304,9 +2304,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Benutzerliste für Admins
+  // HINWEIS: Diese Route ist temporär reaktiviert, bis der Server stabil läuft
   app.get("/api/admin/users", checkAdminRole, async (req, res, next) => {
     try {
-      const users = await storage.getAllUsers();
+      // Direkte SQL-Abfrage verwenden, da storage.getUsers() nicht existiert
+      const users = await sql`
+        SELECT 
+          id, 
+          username, 
+          user_name, 
+          user_email, 
+          role, 
+          created_by, 
+          gdpr_consent, 
+          registration_date, 
+          trial_end_date, 
+          subscription_status,
+          stripe_customer_id,
+          stripe_subscription_id,
+          last_payment_date,
+          subscription_plan
+        FROM tbluser 
+        ORDER BY id ASC
+      `;
       res.json(users);
     } catch (error) {
       next(error);
@@ -2314,6 +2334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Benutzer erstellen (nur Admin)
+  // HINWEIS: Diese Route ist temporär reaktiviert, bis der Server stabil läuft
   app.post("/api/admin/users", checkAdminRole, async (req, res, next) => {
     try {
       // Nur Administratoren können andere Administratoren erstellen
@@ -2351,6 +2372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzer löschen (nur Admin)
+  // HINWEIS: Diese Route ist temporär reaktiviert, bis der Server stabil läuft
   app.delete("/api/admin/users/:id", checkAdminOnly, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.id);
