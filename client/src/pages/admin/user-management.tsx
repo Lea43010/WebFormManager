@@ -4,8 +4,9 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { ClipboardCopy, UserPlus, Users, Mail, Terminal, Shield } from "lucide-react";
+import { ClipboardCopy, UserPlus, Users, Mail, Terminal, Shield, UserCog } from "lucide-react";
 import { useState } from "react";
+import { UserManagement as UserManagementComponent } from "@/components/admin/user-management";
 
 export default function UserManagement() {
   const { toast } = useToast();
@@ -17,6 +18,11 @@ export default function UserManagement() {
       title: "Befehl kopiert",
       description: "Der Befehl wurde in die Zwischenablage kopiert.",
     });
+  };
+  
+  // Benutzer-Button in der Kopfzeile verlinkt zum Benutzer-Tab
+  const handleShowUsers = () => {
+    setActiveTab("users");
   };
 
   return (
@@ -37,8 +43,9 @@ export default function UserManagement() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-4">
+        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="users">Benutzerliste</TabsTrigger>
           <TabsTrigger value="create">Benutzer anlegen</TabsTrigger>
           <TabsTrigger value="emails">E-Mail-Vorlagen</TabsTrigger>
           <TabsTrigger value="permissions">Berechtigungen</TabsTrigger>
@@ -74,6 +81,26 @@ export default function UserManagement() {
                       onClick={() => setActiveTab("create")}
                     >
                       Zur Anleitung
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-muted/40">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <UserCog className="h-4 w-4" />
+                      Benutzerliste
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">Verwalten Sie bestehende Benutzerkonten und prüfen Sie Testphasen</p>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="mt-2 w-full"
+                      onClick={() => setActiveTab("users")}
+                    >
+                      Benutzer verwalten
                     </Button>
                   </CardContent>
                 </Card>
