@@ -35,6 +35,7 @@ import {
 import { checkDatabaseStructureHandler, checkDatabaseStructure } from "./db-structure-quality";
 import { dataQualityChecker } from "./data-quality-checker";
 import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
+import { checkSubscriptionStatus, verifySubscriptionStatus } from "./middleware/auth"; // Abonnementstatus-Prüfung
 import { ZodError, z } from "zod";
 import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import elevationRouter from "./routes/elevation"; // Google Elevation API
@@ -125,8 +126,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Maschinen-API-Routen einrichten
   app.use(maschinenRouter);
   
-  // Admin-API-Routen vorübergehend deaktiviert, bis Performance-Probleme behoben sind
-  // app.use('/api/admin', adminRouter);
+  // Admin-API-Routen (wieder aktiviert mit optimierten SQL-Abfragen)
+  app.use('/api/admin', adminRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
@@ -678,6 +679,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Überprüfung des Abonnementstatus mit der verifySubscriptionStatus-Funktion
+      const subscriptionCheck = verifySubscriptionStatus(req);
+      if (!subscriptionCheck.isValid) {
+        return res.status(403).json({ 
+          message: "Abonnement abgelaufen", 
+          subscriptionExpired: true,
+          errorDetails: subscriptionCheck.errorMessage 
+        });
       }
       
       // Nur Administratoren können alle Projekte sehen

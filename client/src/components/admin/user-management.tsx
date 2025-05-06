@@ -91,7 +91,28 @@ export function UserManagement() {
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/admin/users');
-      return response.json();
+      const data = await response.json();
+      
+      // Logging für Debugging der Daten
+      if (data && Array.isArray(data)) {
+        console.log("Backend-Antwort Users:", data);
+        
+        if (data.length > 0) {
+          console.log("Beispiel Benutzer:", data[0]);
+          
+          if (data[0].registrationDate) {
+            console.log("Registrierungsdatum-Typ:", typeof data[0].registrationDate);
+            console.log("Registrierungsdatum-Wert:", data[0].registrationDate);
+          }
+          
+          if (data[0].trialEndDate) {
+            console.log("Testphase-Enddatum-Typ:", typeof data[0].trialEndDate);
+            console.log("Testphase-Enddatum-Wert:", data[0].trialEndDate);
+          }
+        }
+      }
+      
+      return data;
     },
     // Nur für Administratoren und Manager sichtbar - explizite Typüberprüfung
     enabled: !!user && (['administrator', 'manager'].includes(user.role || '')),
@@ -448,20 +469,61 @@ export function UserManagement() {
                   {userData.registrationDate ? (
                     (() => {
                       try {
+                        // Debug-Ausgabe für Problemanalyse
+                        console.log(`Parsen von registrationDate für User ${userData.id}:`, userData.registrationDate);
+                        console.log(`Typ: ${typeof userData.registrationDate}`);
+                        
+                        let dateValue = null;
+                        
                         // Versuche verschiedene Datums-Parsing-Methoden
-                        const dateValue = 
+                        if (typeof userData.registrationDate === 'string') {
                           // ISO String Format (wie '2024-05-06')
-                          isValid(new Date(userData.registrationDate)) ? new Date(userData.registrationDate) :
-                          // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
-                          isValid(new Date(userData.registrationDate + 'T00:00:00.000Z')) ? new Date(userData.registrationDate + 'T00:00:00.000Z') :
-                          null;
+                          const date1 = new Date(userData.registrationDate);
+                          if (isValid(date1)) {
+                            dateValue = date1;
+                            console.log("Methode 1 erfolgreich:", dateValue);
+                          }
                           
-                        if (!dateValue) return 'Ungültiges Format';
+                          // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
+                          if (!dateValue) {
+                            const date2 = new Date(userData.registrationDate + 'T00:00:00.000Z');
+                            if (isValid(date2)) {
+                              dateValue = date2;
+                              console.log("Methode 2 erfolgreich:", dateValue);
+                            }
+                          }
+                          
+                          // Versuche string in Teile zu zerlegen (yyyy-mm-dd)
+                          if (!dateValue && userData.registrationDate.includes('-')) {
+                            const parts = userData.registrationDate.split('-');
+                            if (parts.length === 3) {
+                              const date3 = new Date(
+                                parseInt(parts[0]), 
+                                parseInt(parts[1]) - 1, // Monate sind 0-basiert
+                                parseInt(parts[2])
+                              );
+                              if (isValid(date3)) {
+                                dateValue = date3;
+                                console.log("Methode 3 erfolgreich:", dateValue);
+                              }
+                            }
+                          }
+                        } else if (typeof userData.registrationDate === 'object' && userData.registrationDate !== null) {
+                          // Bereits ein Datum-Objekt
+                          dateValue = new Date(userData.registrationDate);
+                          console.log("Objekt Methode erfolgreich:", dateValue);
+                        }
+                        
+                        if (!dateValue) {
+                          console.error("Keine Parsing-Methode erfolgreich für:", userData.registrationDate);
+                          return userData.registrationDate?.toString() || 'Ungültiges Format';
+                        }
                         
                         return format(dateValue, 'dd.MM.yyyy', { locale: de });
                       } catch (e) {
                         console.error("Fehler beim Parsen des Registrierungsdatums:", e);
-                        return `Format-Fehler (${typeof userData.registrationDate}: ${userData.registrationDate})`;
+                        // Fallback: Direkte Anzeige des Rohwerts
+                        return String(userData.registrationDate);
                       }
                     })()
                   ) : (
@@ -477,19 +539,59 @@ export function UserManagement() {
                         {userData.trialEndDate ? (
                           (() => {
                             try {
+                              // Debug-Ausgabe für Problemanalyse
+                              console.log(`Parsen von trialEndDate für User ${userData.id}:`, userData.trialEndDate);
+                              console.log(`Typ: ${typeof userData.trialEndDate}`);
+                              
+                              let dateValue = null;
+                              
                               // Versuche verschiedene Datums-Parsing-Methoden
-                              const dateValue = 
+                              if (typeof userData.trialEndDate === 'string') {
                                 // ISO String Format (wie '2024-05-06')
-                                isValid(new Date(userData.trialEndDate)) ? new Date(userData.trialEndDate) :
-                                // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
-                                isValid(new Date(userData.trialEndDate + 'T00:00:00.000Z')) ? new Date(userData.trialEndDate + 'T00:00:00.000Z') :
-                                null;
+                                const date1 = new Date(userData.trialEndDate);
+                                if (isValid(date1)) {
+                                  dateValue = date1;
+                                  console.log("Methode 1 erfolgreich:", dateValue);
+                                }
                                 
-                              if (!dateValue) return 'Ungültiges Format';
+                                // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
+                                if (!dateValue) {
+                                  const date2 = new Date(userData.trialEndDate + 'T00:00:00.000Z');
+                                  if (isValid(date2)) {
+                                    dateValue = date2;
+                                    console.log("Methode 2 erfolgreich:", dateValue);
+                                  }
+                                }
+                                
+                                // Versuche string in Teile zu zerlegen (yyyy-mm-dd)
+                                if (!dateValue && userData.trialEndDate.includes('-')) {
+                                  const parts = userData.trialEndDate.split('-');
+                                  if (parts.length === 3) {
+                                    const date3 = new Date(
+                                      parseInt(parts[0]), 
+                                      parseInt(parts[1]) - 1, // Monate sind 0-basiert
+                                      parseInt(parts[2])
+                                    );
+                                    if (isValid(date3)) {
+                                      dateValue = date3;
+                                      console.log("Methode 3 erfolgreich:", dateValue);
+                                    }
+                                  }
+                                }
+                              } else if (typeof userData.trialEndDate === 'object' && userData.trialEndDate !== null) {
+                                // Bereits ein Datum-Objekt
+                                dateValue = new Date(userData.trialEndDate);
+                                console.log("Objekt Methode erfolgreich:", dateValue);
+                              }
+                              
+                              if (!dateValue) {
+                                console.error("Keine Parsing-Methode erfolgreich für:", userData.trialEndDate);
+                                return userData.trialEndDate?.toString() || 'Ungültiges Format';
+                              }
                               
                               const today = new Date();
                               const isExpired = dateValue < today;
-                                
+                              
                               return (
                                 <span className={`font-mono ${isExpired ? 'text-red-600' : 'text-green-600'}`}>
                                   {format(dateValue, 'dd.MM.yyyy', { locale: de })}
@@ -502,7 +604,8 @@ export function UserManagement() {
                               );
                             } catch (e) {
                               console.error("Fehler beim Parsen des Testphasen-Enddatums:", e);
-                              return `Format-Fehler (${typeof userData.trialEndDate}: ${userData.trialEndDate})`;
+                              // Fallback: Direkte Anzeige des Rohwerts
+                              return String(userData.trialEndDate);
                             }
                           })()
                         ) : (
@@ -542,10 +645,45 @@ export function UserManagement() {
                                 userData.trialEndDate ? (
                                   (() => {
                                     try {
-                                      const dateValue = 
-                                        isValid(new Date(userData.trialEndDate)) ? new Date(userData.trialEndDate) :
-                                        isValid(new Date(userData.trialEndDate + 'T00:00:00.000Z')) ? new Date(userData.trialEndDate + 'T00:00:00.000Z') :
-                                        null;
+                                      // Debug-Ausgabe für Problemanalyse (Dialog)
+                                      console.log(`Dialog: Parsen von trialEndDate für User ${userData.id}:`, userData.trialEndDate);
+                                      
+                                      let dateValue = null;
+                                      
+                                      // Versuche verschiedene Datums-Parsing-Methoden
+                                      if (typeof userData.trialEndDate === 'string') {
+                                        // ISO String Format (wie '2024-05-06')
+                                        const date1 = new Date(userData.trialEndDate);
+                                        if (isValid(date1)) {
+                                          dateValue = date1;
+                                        }
+                                        
+                                        // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
+                                        if (!dateValue) {
+                                          const date2 = new Date(userData.trialEndDate + 'T00:00:00.000Z');
+                                          if (isValid(date2)) {
+                                            dateValue = date2;
+                                          }
+                                        }
+                                        
+                                        // Versuche string in Teile zu zerlegen (yyyy-mm-dd)
+                                        if (!dateValue && userData.trialEndDate.includes('-')) {
+                                          const parts = userData.trialEndDate.split('-');
+                                          if (parts.length === 3) {
+                                            const date3 = new Date(
+                                              parseInt(parts[0]), 
+                                              parseInt(parts[1]) - 1, // Monate sind 0-basiert
+                                              parseInt(parts[2])
+                                            );
+                                            if (isValid(date3)) {
+                                              dateValue = date3;
+                                            }
+                                          }
+                                        }
+                                      } else if (typeof userData.trialEndDate === 'object' && userData.trialEndDate !== null) {
+                                        // Bereits ein Datum-Objekt
+                                        dateValue = new Date(userData.trialEndDate);
+                                      }
                                         
                                       if (!dateValue) return 'Ungültiges Format';
                                       

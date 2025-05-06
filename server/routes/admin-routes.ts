@@ -18,20 +18,21 @@ const router = Router();
 // Route zum Abrufen aller Benutzer (nur für Administratoren)
 router.get("/users", requireAdmin(), async (req, res) => {
   try {
-    // Vereinfachte Benutzerinformationen abrufen, um Performance zu verbessern
+    // Optimierte Abfrage für bessere Performance
     const users = await sql`
       SELECT 
         id, 
         username, 
-        user_name, 
-        user_email, 
+        user_name AS name, 
+        user_email AS email, 
         role, 
-        gdpr_consent, 
-        trial_end_date, 
-        subscription_status
+        gdpr_consent AS gdprConsent, 
+        trial_end_date AS "trialEndDate", 
+        subscription_status AS "subscriptionStatus",
+        registration_date AS "registrationDate"
       FROM tbluser 
       ORDER BY id ASC
-      LIMIT 100 -- Beschränkung der Ergebnisse für bessere Performance
+      LIMIT 50 -- Beschränkung der Ergebnisse für bessere Performance
     `;
 
     // Protokollieren der Benutzeraktivität
@@ -145,14 +146,15 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
       return res.status(400).json({ error: "Ungültige Benutzer-ID" });
     }
 
+    // Frontend sendet camelCase, wir benötigen snake_case in der DB
     const { 
-      user_name, 
-      user_email, 
+      name: user_name, 
+      email: user_email, 
       role, 
-      trial_end_date, 
-      subscription_status,
-      subscription_plan,
-      gdpr_consent
+      trialEndDate: trial_end_date, 
+      subscriptionStatus: subscription_status,
+      subscriptionPlan: subscription_plan,
+      gdprConsent: gdpr_consent
     } = req.body;
 
     // Sammle alle Aktualisierungs-Parameter
