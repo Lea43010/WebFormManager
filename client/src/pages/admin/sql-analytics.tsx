@@ -16,8 +16,8 @@ const SQLAnalyticsPage: React.FC = () => {
     );
   }
   
-  // Überprüfen, ob der Benutzer ein Admin ist
-  if (!user || user.role !== 'admin') {
+  // Überprüfen, ob der Benutzer ein Administrator ist
+  if (!user || user.role !== 'administrator') {
     return <Redirect to="/" />;
   }
   
