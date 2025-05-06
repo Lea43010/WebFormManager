@@ -7,12 +7,24 @@ import { setupApiDocs } from "./api-docs";
 import { setupApiTests } from "./api-test";
 import { setupBackupRoutes, initBackupSystem } from "./backup";
 import { cronJobManager } from "./cron-jobs";
+import { createSQLQueryMonitor } from "./middleware/sql-query-monitor";
+import { initQueryLogging } from "./sql-query-logger"; 
+import { pool } from "./db";
 import config from "../config";
 import { logger } from "./logger";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// SQL Query Monitor einrichten, wenn aktiviert
+if (config.logging.sqlQueryLogging) {
+  app.use(createSQLQueryMonitor(pool));
+  // Datenbankstruktur für Query-Logs erstellen
+  initQueryLogging().catch(err => {
+    logger.error("Fehler beim Initialisieren des SQL-Query-Loggings:", err);
+  });
+}
 
 app.use((req, res, next) => {
   const start = Date.now();

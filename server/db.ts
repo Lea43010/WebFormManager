@@ -1,5 +1,6 @@
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from '@neondatabase/serverless';
 import * as schema from '@shared/schema';
 import { sql as drizzleSql } from 'drizzle-orm';
 import config from '../config';
@@ -17,6 +18,9 @@ const dbUrl = config.database.url || process.env.DATABASE_URL;
 if (!dbUrl) {
   throw new Error('Keine Datenbankverbindung konfiguriert. Bitte DATABASE_URL in .env definieren.');
 }
+
+// PostgreSQL Pool für direkte Verbindung
+export const pool = new Pool({ connectionString: dbUrl });
 
 // Protokollierung der Datenbankverbindung in Entwicklungs- und Staging-Umgebungen
 if (config.isDevelopment || config.isStaging) {
