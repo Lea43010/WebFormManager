@@ -39,14 +39,20 @@ router.get("/users", requireAdmin(), async (req, res) => {
       ORDER BY id ASC
     `;
 
-    logActivity({
-      userId: req.user?.id as number,
-      component: 'Admin',
-      actionType: ActionType.VIEW,
-      entityType: 'user',
-      ipAddress: getIpAddress(req),
-      details: { message: "Benutzerliste abgerufen" }
-    });
+    // Protokollieren der Benutzeraktivität
+    try {
+      await logActivity({
+        userId: req.user?.id as number,
+        component: 'Admin',
+        actionType: ActionType.VIEW,
+        entityType: 'user',
+        ipAddress: getIpAddress(req),
+        details: { message: "Benutzerliste abgerufen" }
+      });
+    } catch (error) {
+      logger.error(`Fehler beim Protokollieren der Aktivität: ${error}`);
+      // Wir werfen den Fehler nicht weiter, um die Hauptfunktionalität nicht zu beeinträchtigen
+    }
     res.json(users);
   } catch (error) {
     logger.error(`Fehler beim Abrufen der Benutzerliste: ${error.message}`);
@@ -113,13 +119,20 @@ router.post("/users", requireAdmin(), async (req, res) => {
       RETURNING *
     `;
 
-    logActivity({
-      userId: req.user?.id,
-      ipAddress: getIpAddress(req),
-      entityType: 'user',
-      entityId: newUser[0].id,
-      description: `Benutzer erstellt: ${username}`
-    });
+    try {
+      await logActivity({
+        userId: req.user?.id as number,
+        component: 'Admin',
+        actionType: ActionType.CREATE,
+        entityType: 'user',
+        entityId: newUser[0].id,
+        ipAddress: getIpAddress(req),
+        details: { message: `Benutzer erstellt: ${username}` }
+      });
+    } catch (error) {
+      logger.error(`Fehler beim Protokollieren der Aktivität: ${error}`);
+      // Wir werfen den Fehler nicht weiter, um die Hauptfunktionalität nicht zu beeinträchtigen
+    }
 
     res.status(201).json(newUser[0]);
   } catch (error) {
@@ -198,13 +211,20 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
       return res.status(404).json({ error: "Benutzer nicht gefunden" });
     }
 
-    logActivity({
-      userId: req.user?.id,
-      ipAddress: getIpAddress(req),
-      entityType: 'user',
-      entityId: userId,
-      description: `Benutzer aktualisiert: ID ${userId}`
-    });
+    try {
+      await logActivity({
+        userId: req.user?.id as number,
+        component: 'Admin',
+        actionType: ActionType.UPDATE,
+        entityType: 'user',
+        entityId: userId,
+        ipAddress: getIpAddress(req),
+        details: { message: `Benutzer aktualisiert: ID ${userId}` }
+      });
+    } catch (error) {
+      logger.error(`Fehler beim Protokollieren der Aktivität: ${error}`);
+      // Wir werfen den Fehler nicht weiter, um die Hauptfunktionalität nicht zu beeinträchtigen
+    }
 
     res.json(updatedUser[0]);
   } catch (error) {
