@@ -4,8 +4,20 @@ import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { InsertUser, User } from '@shared/schema';
 import { useAuth } from '@/hooks/use-auth';
-import { format, isValid } from 'date-fns';
+import { addDays, format, isValid } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { 
+  Ban,
+  CalendarPlus,
+  CheckCircle, 
+  HelpCircle, 
+  Loader2, 
+  RefreshCw, 
+  Smile,
+  Trash2, 
+  UserPlus, 
+  XCircle 
+} from 'lucide-react';
 
 // UI-Komponenten
 import {
@@ -48,7 +60,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, UserPlus, Trash2, CheckCircle, XCircle, HelpCircle, RefreshCw } from 'lucide-react';
 
 export function UserManagement() {
   const { user } = useAuth();
@@ -124,6 +135,55 @@ export function UserManagement() {
   
   // State für detaillierte Fehlermeldungen
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  
+  // Mutation zum Aktualisieren des DSGVO-Status eines Benutzers
+  const updateGdprStatusMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: number, status: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/admin/users/${userId}`, {
+        gdpr_consent: status
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler beim Aktualisieren des DSGVO-Status",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Mutation zum Aktualisieren der Testphase eines Benutzers
+  const updateTrialMutation = useMutation({
+    mutationFn: async ({ 
+      userId, 
+      trialEndDate,
+      subscriptionStatus 
+    }: { 
+      userId: number, 
+      trialEndDate?: string, 
+      subscriptionStatus?: string 
+    }) => {
+      const response = await apiRequest('PATCH', `/api/admin/users/${userId}`, {
+        trial_end_date: trialEndDate,
+        subscription_status: subscriptionStatus
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler beim Aktualisieren der Testphase",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
   
   // Mutation zum Löschen eines Benutzers (nur für Administratoren)
   const deleteUserMutation = useMutation({
@@ -305,7 +365,7 @@ export function UserManagement() {
                 </Label>
                 <Select
                   value={newUser.role}
-                  onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+                  onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Rolle auswählen" />
@@ -396,9 +456,9 @@ export function UserManagement() {
                           isValid(new Date(userData.registrationDate + 'T00:00:00.000Z')) ? new Date(userData.registrationDate + 'T00:00:00.000Z') :
                           null;
                           
-                        return dateValue ? 
-                          format(dateValue, 'dd.MM.yyyy', { locale: de }) : 
-                          'Ungültiges Format';
+                        if (!dateValue) return 'Ungültiges Format';
+                        
+                        return format(dateValue, 'dd.MM.yyyy', { locale: de });
                       } catch (e) {
                         console.error("Fehler beim Parsen des Registrierungsdatums:", e);
                         return `Format-Fehler (${typeof userData.registrationDate}: ${userData.registrationDate})`;
@@ -411,43 +471,218 @@ export function UserManagement() {
                 
                 {/* Testphase-Enddatum */}
                 <TableCell>
-                  {userData.trialEndDate ? (
-                    (() => {
-                      try {
-                        // Versuche verschiedene Datums-Parsing-Methoden
-                        const dateValue = 
-                          // ISO String Format (wie '2024-05-06')
-                          isValid(new Date(userData.trialEndDate)) ? new Date(userData.trialEndDate) :
-                          // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
-                          isValid(new Date(userData.trialEndDate + 'T00:00:00.000Z')) ? new Date(userData.trialEndDate + 'T00:00:00.000Z') :
-                          null;
-                          
-                        if (!dateValue) return 'Ungültiges Format';
-                        
-                        const today = new Date();
-                        const isExpired = dateValue < today;
-                          
-                        return (
-                          <span className={`font-mono ${isExpired ? 'text-red-600' : 'text-green-600'}`}>
-                            {format(dateValue, 'dd.MM.yyyy', { locale: de })}
-                            {isExpired && 
-                              <span className="ml-2 text-xs bg-red-100 px-1 py-0.5 rounded text-red-800">
-                                Abgelaufen
-                              </span>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" className="p-0 h-auto text-left">
+                        {userData.trialEndDate ? (
+                          (() => {
+                            try {
+                              // Versuche verschiedene Datums-Parsing-Methoden
+                              const dateValue = 
+                                // ISO String Format (wie '2024-05-06')
+                                isValid(new Date(userData.trialEndDate)) ? new Date(userData.trialEndDate) :
+                                // PostgreSQL Datum mit Zeitzone (wie '2024-05-06T00:00:00.000Z')
+                                isValid(new Date(userData.trialEndDate + 'T00:00:00.000Z')) ? new Date(userData.trialEndDate + 'T00:00:00.000Z') :
+                                null;
+                                
+                              if (!dateValue) return 'Ungültiges Format';
+                              
+                              const today = new Date();
+                              const isExpired = dateValue < today;
+                                
+                              return (
+                                <span className={`font-mono ${isExpired ? 'text-red-600' : 'text-green-600'}`}>
+                                  {format(dateValue, 'dd.MM.yyyy', { locale: de })}
+                                  {isExpired && 
+                                    <span className="ml-2 text-xs bg-red-100 px-1 py-0.5 rounded text-red-800">
+                                      Abgelaufen
+                                    </span>
+                                  }
+                                </span>
+                              );
+                            } catch (e) {
+                              console.error("Fehler beim Parsen des Testphasen-Enddatums:", e);
+                              return `Format-Fehler (${typeof userData.trialEndDate}: ${userData.trialEndDate})`;
                             }
-                          </span>
-                        );
-                      } catch (e) {
-                        console.error("Fehler beim Parsen des Testphasen-Enddatums:", e);
-                        return `Format-Fehler (${typeof userData.trialEndDate}: ${userData.trialEndDate})`;
-                      }
-                    })()
-                  ) : (
-                    'Nicht gesetzt'
-                  )}
+                          })()
+                        ) : (
+                          'Nicht gesetzt'
+                        )}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Testphase für {userData.username}</DialogTitle>
+                        <DialogDescription>
+                          Hier können Sie die Testphase dieses Benutzers verwalten.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 py-4">
+                        <div className="p-4 border rounded-md">
+                          <div className="font-medium">Aktueller Status:</div>
+                          <div className="mt-2">
+                            <div className="flex items-center">
+                              <span className={`
+                                px-2 py-1 rounded-full text-xs mr-2
+                                ${userData.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' : ''}
+                                ${userData.subscriptionStatus === 'trial' ? 'bg-blue-100 text-blue-800' : ''}
+                                ${userData.subscriptionStatus === 'expired' ? 'bg-red-100 text-red-800' : ''}
+                                ${!userData.subscriptionStatus ? 'bg-gray-100 text-gray-800' : ''}
+                              `}>
+                                {userData.subscriptionStatus === 'active' ? 'Aktiv' : 
+                                 userData.subscriptionStatus === 'trial' ? 'Testphase' : 
+                                 userData.subscriptionStatus === 'expired' ? 'Abgelaufen' : 
+                                 'Unbekannt'}
+                              </span>
+                            </div>
+                            
+                            <div className="mt-2">
+                              <strong>Testphase bis:</strong> {
+                                userData.trialEndDate ? (
+                                  (() => {
+                                    try {
+                                      const dateValue = 
+                                        isValid(new Date(userData.trialEndDate)) ? new Date(userData.trialEndDate) :
+                                        isValid(new Date(userData.trialEndDate + 'T00:00:00.000Z')) ? new Date(userData.trialEndDate + 'T00:00:00.000Z') :
+                                        null;
+                                        
+                                      if (!dateValue) return 'Ungültiges Format';
+                                      
+                                      const today = new Date();
+                                      const isExpired = dateValue < today;
+                                      const daysRemaining = isExpired ? 0 : Math.ceil((dateValue.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                                        
+                                      return (
+                                        <span className={isExpired ? 'text-red-600' : 'text-green-600'}>
+                                          {format(dateValue, 'dd.MM.yyyy', { locale: de })}
+                                          {isExpired ? 
+                                            <span className="ml-2 text-xs bg-red-100 px-1 py-0.5 rounded text-red-800">
+                                              Abgelaufen
+                                            </span> :
+                                            <span className="ml-2 text-xs bg-green-100 px-1 py-0.5 rounded text-green-800">
+                                              {daysRemaining} {daysRemaining === 1 ? 'Tag' : 'Tage'} verbleibend
+                                            </span>
+                                          }
+                                        </span>
+                                      );
+                                    } catch (e) {
+                                      return 'Fehler beim Parsen des Datums';
+                                    }
+                                  })()
+                                ) : 'Nicht gesetzt'
+                              }
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="font-medium mb-2">Testphase verwalten:</div>
+                          <div className="space-y-4">
+                            <div className="grid gap-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="trialEndDate" className="text-right">
+                                  Enddatum
+                                </Label>
+                                <Input
+                                  id="trialEndDate"
+                                  type="date"
+                                  defaultValue={
+                                    userData.trialEndDate && isValid(new Date(userData.trialEndDate)) ? 
+                                      format(new Date(userData.trialEndDate), 'yyyy-MM-dd') : 
+                                      format(addDays(new Date(), 30), 'yyyy-MM-dd')
+                                  }
+                                  className="col-span-3"
+                                  placeholder="YYYY-MM-DD"
+                                />
+                              </div>
+                              
+                              <div className="flex flex-col space-y-2 mt-4">
+                                <Button
+                                  variant="outline"
+                                  className="justify-start"
+                                  onClick={() => {
+                                    const trialEndDate = (document.getElementById('trialEndDate') as HTMLInputElement).value;
+                                    updateTrialMutation.mutate({
+                                      userId: userData.id,
+                                      trialEndDate,
+                                      subscriptionStatus: 'trial'
+                                    });
+                                    toast({
+                                      title: "Testphase aktualisiert",
+                                      description: `Testphase für ${userData.username} verlängert.`,
+                                    });
+                                  }}
+                                  disabled={updateTrialMutation.isPending}
+                                >
+                                  {updateTrialMutation.isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <CalendarPlus className="h-4 w-4 text-blue-600 mr-2" />
+                                  )}
+                                  Testphase verlängern
+                                </Button>
+                                
+                                <Button
+                                  variant="outline"
+                                  className="justify-start"
+                                  onClick={() => {
+                                    updateTrialMutation.mutate({
+                                      userId: userData.id,
+                                      subscriptionStatus: 'active'
+                                    });
+                                    toast({
+                                      title: "Abonnement aktiviert",
+                                      description: `Vollzugriff für ${userData.username} aktiviert.`,
+                                    });
+                                  }}
+                                  disabled={updateTrialMutation.isPending}
+                                >
+                                  {updateTrialMutation.isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Smile className="h-4 w-4 text-green-600 mr-2" />
+                                  )}
+                                  Vollzugriff aktivieren
+                                </Button>
+                                
+                                <Button
+                                  variant="outline"
+                                  className="justify-start"
+                                  onClick={() => {
+                                    updateTrialMutation.mutate({
+                                      userId: userData.id,
+                                      subscriptionStatus: 'expired'
+                                    });
+                                    toast({
+                                      title: "Zugriff beendet",
+                                      description: `Zugriff für ${userData.username} beendet.`,
+                                      variant: "destructive"
+                                    });
+                                  }}
+                                  disabled={updateTrialMutation.isPending}
+                                >
+                                  {updateTrialMutation.isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Ban className="h-4 w-4 text-red-600 mr-2" />
+                                  )}
+                                  Zugriff beenden
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button variant="secondary">Schließen</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </TableCell>
                 
-                {/* Abonnement-Status */}
+                {/* Subscription Status */}
                 <TableCell>
                   <span className={`
                     px-2 py-1 rounded-full text-xs
@@ -459,26 +694,31 @@ export function UserManagement() {
                     {userData.subscriptionStatus === 'active' ? 'Aktiv' : 
                      userData.subscriptionStatus === 'trial' ? 'Testphase' : 
                      userData.subscriptionStatus === 'expired' ? 'Abgelaufen' : 
-                     'Unbekannt'}
+                     'Nicht gesetzt'}
                   </span>
                 </TableCell>
                 
+                {/* DSGVO Status */}
                 <TableCell>
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" className="p-0 h-auto">
-                        {userData.gdprConsent === true ? (
-                          <div className="flex items-center text-green-600" title="DSGVO-Zustimmung erteilt">
-                            <CheckCircle className="h-5 w-5" />
-                          </div>
-                        ) : userData.gdprConsent === false ? (
-                          <div className="flex items-center text-red-600" title="Keine DSGVO-Zustimmung">
-                            <XCircle className="h-5 w-5" />
-                          </div>
+                      <Button 
+                        variant="ghost" 
+                        className={`
+                          py-0.5 h-auto text-left px-2 rounded-full text-xs
+                          ${userData.gdprConsent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                        `}
+                      >
+                        {userData.gdprConsent ? (
+                          <span className="flex items-center">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Zugestimmt
+                          </span>
                         ) : (
-                          <div className="flex items-center text-yellow-600" title="DSGVO-Status unbekannt">
-                            <HelpCircle className="h-5 w-5" />
-                          </div>
+                          <span className="flex items-center">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Nicht zugestimmt
+                          </span>
                         )}
                       </Button>
                     </DialogTrigger>
@@ -486,30 +726,32 @@ export function UserManagement() {
                       <DialogHeader>
                         <DialogTitle>DSGVO-Status für {userData.username}</DialogTitle>
                         <DialogDescription>
-                          Hier können Sie den DSGVO-Zustimmungsstatus für diesen Benutzer einsehen und ändern.
+                          Hier können Sie den DSGVO-Zustimmungsstatus dieses Benutzers einsehen und ändern.
                         </DialogDescription>
                       </DialogHeader>
                       
                       <div className="space-y-4 py-4">
                         <div className="p-4 border rounded-md">
                           <div className="font-medium">Aktueller Status:</div>
-                          <div className="mt-2 flex items-center">
-                            {userData.gdprConsent === true ? (
-                              <>
-                                <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                                <span>DSGVO-Zustimmung erteilt</span>
-                              </>
-                            ) : userData.gdprConsent === false ? (
-                              <>
-                                <XCircle className="h-5 w-5 text-red-600 mr-2" />
-                                <span>Keine DSGVO-Zustimmung</span>
-                              </>
-                            ) : (
-                              <>
-                                <HelpCircle className="h-5 w-5 text-yellow-600 mr-2" />
-                                <span>DSGVO-Status unbekannt</span>
-                              </>
-                            )}
+                          <div className="mt-2">
+                            <span
+                              className={`
+                                px-2 py-1 rounded-full text-xs
+                                ${userData.gdprConsent ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
+                              `}
+                            >
+                              {userData.gdprConsent ? (
+                                <span className="flex items-center">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Hat der DSGVO zugestimmt
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Hat der DSGVO nicht zugestimmt
+                                </span>
+                              )}
+                            </span>
                           </div>
                         </div>
                         
@@ -520,15 +762,22 @@ export function UserManagement() {
                               variant="outline"
                               className="justify-start"
                               onClick={() => {
-                                // Implementieren Sie hier die Mutation zum Ändern des DSGVO-Status
-                                // TODO: toggleGdprStatus(userData.id, true);
+                                updateGdprStatusMutation.mutate({
+                                  userId: userData.id,
+                                  status: true
+                                });
                                 toast({
                                   title: "DSGVO-Status geändert",
                                   description: `DSGVO-Zustimmung für ${userData.username} erteilt.`,
                                 });
                               }}
+                              disabled={updateGdprStatusMutation.isPending}
                             >
-                              <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                              {updateGdprStatusMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              ) : (
+                                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                              )}
                               Zustimmung erteilen
                             </Button>
                             
@@ -536,14 +785,17 @@ export function UserManagement() {
                               variant="outline"
                               className="justify-start"
                               onClick={() => {
-                                // Implementieren Sie hier die Mutation zum Ändern des DSGVO-Status
-                                // TODO: toggleGdprStatus(userData.id, false);
+                                updateGdprStatusMutation.mutate({
+                                  userId: userData.id,
+                                  status: false
+                                });
                                 toast({
                                   title: "DSGVO-Status geändert",
                                   description: `DSGVO-Zustimmung für ${userData.username} zurückgezogen.`,
                                   variant: "destructive"
                                 });
                               }}
+                              disabled={updateGdprStatusMutation.isPending}
                             >
                               <XCircle className="h-4 w-4 text-red-600 mr-2" />
                               Zustimmung zurückziehen

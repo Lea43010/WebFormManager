@@ -156,7 +156,8 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
       role, 
       trial_end_date, 
       subscription_status,
-      subscription_plan
+      subscription_plan,
+      gdpr_consent
     } = req.body;
 
     // Aktualisierte Felder sammeln
@@ -191,6 +192,11 @@ router.patch("/users/:id", requireAdmin(), async (req, res) => {
     if (subscription_plan !== undefined) {
       updates.push("subscription_plan = ${subscription_plan}::subscription_plans");
       values.subscription_plan = subscription_plan;
+    }
+    
+    if (gdpr_consent !== undefined) {
+      updates.push("gdpr_consent = ${gdpr_consent}");
+      values.gdpr_consent = gdpr_consent;
     }
 
     if (updates.length === 0) {
