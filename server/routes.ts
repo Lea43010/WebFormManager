@@ -22,6 +22,7 @@ import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
 import { registerBackupApiRoutes } from "./routes/backup-routes"; // Neue Backup-API
+import queryAnalyticsRouter from "./routes/query-analytics-routes"; // SQL-Query-Analytics
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
@@ -128,6 +129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Admin-API-Routen (wieder aktiviert mit optimierten SQL-Abfragen)
   app.use('/api/admin', adminRouter);
+  
+  // SQL-Query-Analytics-Routen (nur für Administratoren)
+  app.use('/api/admin/query-analytics', queryAnalyticsRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {

@@ -13,11 +13,13 @@ import config from '../config';
 const sqlLogger = logger.createLogger('sql-query');
 
 // Schwellenwerte für Abfrage-Ausführungszeiten (in Millisekunden)
-const QUERY_THRESHOLDS = {
+export const QUERY_THRESHOLDS = {
   INFO: 100,    // Abfragen über 100ms werden als INFO protokolliert
   WARN: 500,    // Abfragen über 500ms werden als WARNUNG protokolliert
   ERROR: 2000   // Abfragen über 2s werden als FEHLER protokolliert
 };
+
+
 
 // Interface für Abfrage-Metriken
 export interface QueryMetrics {
