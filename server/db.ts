@@ -4,9 +4,12 @@ import { Pool } from '@neondatabase/serverless';
 import * as schema from '@shared/schema';
 import { sql as drizzleSql } from 'drizzle-orm';
 import config from '../config';
+import ws from 'ws';
 
 // Configure neon
 neonConfig.fetchConnectionCache = true;
+// WebSocket für Neon setzen
+neonConfig.webSocketConstructor = ws;
 
 // Konfigurierbare Timeouts über die zentrale Konfiguration
 const DB_QUERY_TIMEOUT = config.database.connectionTimeout || 5000; 
