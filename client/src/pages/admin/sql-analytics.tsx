@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminLayout from '@/components/admin/admin-layout';
+import { AdminLayout } from '@/components/admin/admin-layout';
 import SQLQueryAnalytics from '@/components/admin/sql-query-analytics';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
