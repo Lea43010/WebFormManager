@@ -7,10 +7,11 @@
 
 import { EntityCache } from './entity-cache';
 import { storage } from './storage';
-import { createLogger } from './logger';
+import logger from './logger';
 import { env } from './env';
 
-const logger = createLogger('cache-manager');
+// Namespace für das Logging
+const logPrefix = '[cache-manager]';
 
 // Cache-Konfiguration aus Umgebungsvariablen
 const cacheConfig = {

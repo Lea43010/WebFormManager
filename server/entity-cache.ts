@@ -5,9 +5,7 @@
  * Implementiert Cache-Invalidierung, automatische Bereinigung und Statistiken.
  */
 
-import { createLogger } from './logger';
-
-const logger = createLogger('entity-cache');
+import logger from './logger';
 
 // Cache-Konfiguration
 export interface EntityCacheConfig {

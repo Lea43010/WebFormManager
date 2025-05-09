@@ -100,6 +100,21 @@ export function verifySubscriptionStatus(req: Request): {isValid: boolean, error
   };
 }
 
+// Admin-Rolle prüfen
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Nicht authentifiziert. Bitte melden Sie sich an.' });
+  }
+  
+  const user = req.user as any;
+  
+  if (user.role !== 'administrator') {
+    return res.status(403).json({ message: 'Keine ausreichenden Berechtigungen. Administratorzugriff erforderlich.' });
+  }
+  
+  next();
+}
+
 // Mehrstufiges Authentifizierungs-Middleware
 export function requireTwoFactor(req: Request, res: Response, next: NextFunction) {
   // Prüfen, ob der Benutzer angemeldet ist
