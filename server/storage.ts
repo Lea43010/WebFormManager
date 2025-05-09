@@ -37,6 +37,7 @@ export interface IStorage {
   deleteUser(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
   getProjectsByUser(userId: number): Promise<Project[]>;
+  invalidateUserCache(userId: number): void;
 
   // Company operations
   getCompanies(): Promise<Company[]>;
@@ -162,6 +163,9 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
+// Import des Benutzer-Cache-Service
+import { userCache } from './user-cache';
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -174,14 +178,40 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // User operations
+  // Neue Cache-Invalidierungs-Methode
+  invalidateUserCache(userId: number): void {
+    userCache.invalidate(userId);
+  }
+
+  // Optimierte User operations mit Cache
   async getUser(id: number): Promise<User | undefined> {
+    // Erst im Cache nachsehen
+    const cachedUser = userCache.get(id);
+    if (cachedUser) {
+      return cachedUser;
+    }
+
+    // Falls nicht im Cache, aus der Datenbank holen
     const [user] = await db.select().from(users).where(eq(users.id, id)) as User[];
+    
+    // Im Cache speichern, falls gefunden
+    if (user) {
+      userCache.set(user);
+    }
+    
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    // Kein Cache für die Benutzersuche nach Benutzername, da dies hauptsächlich bei der Anmeldung verwendet wird
+    // und es wichtig ist, die aktuellsten Daten zu haben
     const [user] = await db.select().from(users).where(eq(users.username, username)) as User[];
+    
+    // Wenn ein Benutzer gefunden wurde, speichern wir ihn im Cache für zukünftige ID-Lookups
+    if (user) {
+      userCache.set(user);
+    }
+    
     return user;
   }
 
@@ -216,6 +246,12 @@ export class DatabaseStorage implements IStorage {
       .set(user)
       .where(eq(users.id, id))
       .returning() as User[];
+    
+    // Benutzer aus dem Cache invalidieren, wenn ein Update durchgeführt wurde
+    if (updatedUser) {
+      this.invalidateUserCache(id);
+    }
+    
     return updatedUser;
   }
 
@@ -249,6 +285,9 @@ export class DatabaseStorage implements IStorage {
       if (dependencies.constructionDiaries > 0) {
         throw new Error(`Der Benutzer hat noch ${dependencies.constructionDiaries} Bautagebücher. Bitte weisen Sie diese einem anderen Benutzer zu, bevor Sie diesen Benutzer löschen.`);
       }
+
+      // Benutzer aus dem Cache entfernen, bevor er gelöscht wird
+      this.invalidateUserCache(id);
 
       // Dann den Benutzer löschen
       await db.delete(users).where(eq(users.id, id));

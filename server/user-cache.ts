@@ -39,9 +39,11 @@ class UserCacheService {
    */
   private startCleanupTimer(): void {
     if (this.cleanupTimer) {
+      // @ts-ignore - NodeJS.Timer vs Timeout Kompatibilitätsproblem
       clearInterval(this.cleanupTimer);
     }
 
+    // @ts-ignore - NodeJS.Timer vs Timeout Kompatibilitätsproblem
     this.cleanupTimer = setInterval(() => {
       this.cleanExpiredEntries();
     }, CLEANUP_INTERVAL);
@@ -54,6 +56,7 @@ class UserCacheService {
     const now = Date.now();
     let expiredCount = 0;
 
+    // @ts-ignore - Iterator-Kompatibilitätsproblem in stricteren TypeScript-Einstellungen
     for (const [key, entry] of this.cache.entries()) {
       if (entry.expiresAt <= now) {
         this.cache.delete(key);

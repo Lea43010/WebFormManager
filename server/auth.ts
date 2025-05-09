@@ -87,6 +87,7 @@ export function setupAuth(app: Express) {
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
+      // Hier wird der User-Cache automatisch durch die getUser-Methode verwendet
       const user = await storage.getUser(id);
       done(null, user);
     } catch (error) {
