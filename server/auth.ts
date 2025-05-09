@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser, type InsertLoginLog, type InsertVerificationCode } from "@shared/schema";
 import { generateVerificationCode, sendVerificationCode } from "./email";
+import { userCache } from "./user-cache";
 
 declare global {
   namespace Express {
@@ -29,7 +30,7 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-async function logLoginEvent(req: Request, eventType: 'login' | 'logout' | 'register' | 'failed_login', userId?: number, success: boolean = true, failReason?: string) {
+async function logLoginEvent(req: Request, eventType: 'login' | 'logout' | 'register' | 'failed_login', userId?: number | null, success: boolean = true, failReason?: string) {
   try {
     const ipAddress = req.ip;
     const userAgent = req.get('User-Agent') || '';
@@ -142,7 +143,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", async (err, user, info) => {
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
         // Erfasse Fehler bei der Authentifizierung
         logLoginEvent(req, 'failed_login', null, false, String(err));
@@ -285,7 +286,13 @@ export function setupAuth(app: Express) {
       
       // Reset-Link per E-Mail senden
       const resetLink = `${req.protocol}://${req.get('host')}/auth/reset-password?code=${code}&userId=${user.id}`;
-      await sendVerificationCode(user.email, code, resetLink);
+      // Sicherstellen, dass die E-Mail nicht null ist
+      const userEmail = user.email || '';
+      if (userEmail) {
+        await sendVerificationCode(userEmail, code, resetLink);
+      } else {
+        console.warn(`Konnte keine Passwort-Reset-Email senden: Keine E-Mail-Adresse für Benutzer ${user.id} (${user.username}) hinterlegt`);
+      }
       
       res.status(200).json({ message: "Falls ein Konto mit dieser E-Mail-Adresse existiert, wurde ein Passwort-Reset-Link gesendet." });
     } catch (error) {
