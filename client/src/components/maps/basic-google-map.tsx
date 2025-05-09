@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, Loader2 } from "lucide-react";
+import { Trash2, Search, Loader2, Map } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
+import { loadGoogleMapsApi, isGoogleMapsLoaded } from '@/utils/google-maps-loader';
 
 /**
- * Eine sehr einfache DOM-basierte Google Maps Komponente ohne komplexe React-Patterns
+ * Eine optimierte Google Maps Komponente mit verbessertem Laden der API
  */
 interface BasicGoogleMapProps {
   onRouteChange?: (route: Array<{lat: number, lng: number}>, startAddress?: string, endAddress?: string) => void;
@@ -15,7 +16,7 @@ interface BasicGoogleMapProps {
   height?: string;
   className?: string;
   showSearch?: boolean;
-  searchOutsideMap?: boolean; // Neue Option, um die Suche außerhalb der Karte anzuzeigen
+  searchOutsideMap?: boolean; // Option, um die Suche außerhalb der Karte anzuzeigen
 }
 
 const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
@@ -30,104 +31,149 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
 }) => {
   // Unique ID für den Map Container
   const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
-  const markersRef = useRef<any[]>([]);
-  const polylineRef = useRef<any>(null);
-  const mapRef = useRef<any>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
   const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null); 
+  const placeAutocompleteRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   
-  const [markersCount, setMarkersCount] = React.useState(0);
+  const [markersCount, setMarkersCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Map initialisieren sobald die Komponente gemountet wird
   useEffect(() => {
-    // Script Tag erstellen und zur Seite hinzufügen
-    const script = document.createElement('script');
-    // API-Key direkt verwenden, da die Umgebungsvariable nicht richtig geladen wird
-    const apiKey = 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
-    console.log('Google Maps API Key:', apiKey);
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`;
-    script.async = true;
-    script.defer = true;
-    script.onload = initMap;
+    // API-Key aus Umgebungsvariable oder Fallback
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
     
-    // Falls Google Maps bereits geladen ist, direkt initialisieren
-    if (window.google) {
+    // Google Maps API laden
+    if (isGoogleMapsLoaded()) {
       initMap();
-    } else {
-      document.head.appendChild(script);
+      return;
     }
     
-    // Aufräumen beim Unmount
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
+    loadGoogleMapsApi({
+      apiKey,
+      libraries: ['places', 'geometry'],
+      callback: initMap
+    }).catch(err => {
+      console.error('Fehler beim Laden von Google Maps:', err);
+      setError('Google Maps konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.');
+      setIsLoading(false);
+    });
+    
+    // Hier kein Cleanup, da der zentrale Loader die API-Instanz verwaltet
   }, []);
   
   // Map initialisieren
   function initMap() {
-    console.log('Lade Google Maps API');
     // Element finden
     const mapElement = document.getElementById(mapId.current);
     if (!mapElement) {
-      console.error('Google Maps nicht verfügbar oder Container nicht gefunden');
+      console.error('Google Maps Container nicht gefunden: ', mapId.current);
+      setError('Map-Container konnte nicht gefunden werden.');
+      setIsLoading(false);
       return;
     }
     
-    console.log('Google Maps API geladen');
-    
-    // Map erstellen
-    const map = new google.maps.Map(mapElement, {
-      center: initialCenter,
-      zoom: initialZoom,
-      mapTypeId: google.maps.MapTypeId.ROADMAP,
-      mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-    });
-    
-    // Polyline erstellen
-    const polyline = new google.maps.Polyline({
-      path: [],
-      geodesic: true,
-      strokeColor: '#3b82f6',
-      strokeOpacity: 1.0,
-      strokeWeight: 3,
-      map: map
-    });
-    
-    // Event-Listener für Klicks auf die Karte
-    map.addListener('click', (event: any) => {
-      addMarker(event.latLng);
-    });
-    
-    // Geocoder für Adresssuche initialisieren
-    geocoderRef.current = new google.maps.Geocoder();
-    
-    // Autocomplete für Suchfeld initialisieren (wird später verwendet)
-    if (searchInputRef.current) {
-      autocompleteRef.current = new google.maps.places.Autocomplete(searchInputRef.current, {
-        types: ['geocode', 'establishment']
+    try {
+      // Map erstellen
+      const map = new google.maps.Map(mapElement, {
+        center: initialCenter,
+        zoom: initialZoom,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+        zoomControl: true,
       });
       
-      // Event-Listener für Auswahl eines Autocomplete-Eintrags
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current?.getPlace();
-        if (place && place.geometry && place.geometry.location) {
-          handleSearchResult(place.geometry.location);
+      // Polyline erstellen
+      const polyline = new google.maps.Polyline({
+        path: [],
+        geodesic: true,
+        strokeColor: '#3b82f6',
+        strokeOpacity: 1.0,
+        strokeWeight: 3,
+        map: map
+      });
+      
+      // Event-Listener für Klicks auf die Karte
+      map.addListener('click', (event: google.maps.MapMouseEvent) => {
+        if (event.latLng) {
+          addMarker(event.latLng);
         }
       });
+      
+      // Geocoder für Adresssuche initialisieren
+      geocoderRef.current = new google.maps.Geocoder();
+      
+      // Referenzen speichern
+      mapRef.current = map;
+      polylineRef.current = polyline;
+      
+      // Wenn alle Initialisierungen abgeschlossen sind, Loading-Status aktualisieren
+      setIsLoading(false);
+      
+      // Nach dem Initialisieren das PlaceAutocompleteElement erstellen
+      if (searchInputRef.current && 'places' in google.maps) {
+        initPlaceAutocomplete();
+      }
+    } catch (error) {
+      console.error('Fehler beim Initialisieren der Karte:', error);
+      setError('Fehler beim Initialisieren der Karte: ' + (error instanceof Error ? error.message : String(error)));
+      setIsLoading(false);
     }
+  }
+  
+  // Initialisiere das moderne PlaceAutocompleteElement
+  function initPlaceAutocomplete() {
+    if (!searchInputRef.current || !mapRef.current) return;
     
-    // Referenzen speichern
-    mapRef.current = map;
-    polylineRef.current = polyline;
+    try {
+      // Prüfe, ob die neuere PlaceAutocompleteElement API verfügbar ist
+      if ('PlaceAutocompleteElement' in google.maps.places) {
+        // Neuen Container für PlaceAutocompleteElement erstellen
+        const containerDiv = document.createElement('div');
+        containerDiv.style.display = 'none';
+        document.body.appendChild(containerDiv);
+        
+        // PlaceAutocompleteElement erstellen
+        const placeAutocompleteElement = new google.maps.places.PlaceAutocompleteElement({
+          inputElement: searchInputRef.current,
+          types: ['geocode', 'establishment'],
+        });
+        
+        // Event-Listener für PlacesChanged
+        placeAutocompleteElement.addListener('place_changed', () => {
+          const place = placeAutocompleteElement.getPlace();
+          if (place && place.geometry && place.geometry.location) {
+            handleSearchResult(place.geometry.location);
+          }
+        });
+        
+        placeAutocompleteRef.current = placeAutocompleteElement;
+      } else {
+        // Fallback zur alten Autocomplete API
+        const autocomplete = new google.maps.places.Autocomplete(searchInputRef.current, {
+          types: ['geocode', 'establishment']
+        });
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place && place.geometry && place.geometry.location) {
+            handleSearchResult(place.geometry.location);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('PlaceAutocomplete konnte nicht initialisiert werden:', error);
+      // Kein fataler Fehler, wir können trotzdem die manuelle Suche nutzen
+    }
   }
   
   // Adresssuche durchführen
@@ -179,14 +225,15 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   }
   
   // Marker hinzufügen
-  function addMarker(position: any) {
+  function addMarker(position: google.maps.LatLng) {
     if (!mapRef.current) return;
     
     // Marker erstellen
     const marker = new google.maps.Marker({
       position,
       map: mapRef.current,
-      draggable: true
+      draggable: true,
+      animation: google.maps.Animation.DROP
     });
     
     // Marker zur Liste hinzufügen
@@ -202,10 +249,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   
   // Adresse für eine Position abrufen
   async function getAddressForLocation(location: {lat: number, lng: number}): Promise<string> {
-    console.log('Versuche Adresse für Position abzurufen:', location);
-    
     if (!geocoderRef.current) {
-      console.warn('Geocoder nicht verfügbar');
       return `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
     }
     
@@ -215,18 +259,11 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
       });
       
       if (result.results && result.results.length > 0) {
-        const address = result.results[0].formatted_address;
-        console.log('Adresse gefunden:', address);
-        return address;
-      } else {
-        console.warn('Keine Adresse für Position gefunden');
+        return result.results[0].formatted_address;
       }
     } catch (error) {
       console.error("Geocoding Fehler:", error);
       // Bei Google Places API Fehler alternative Adresse verwenden
-      if (error.toString().includes('API project is not authorized')) {
-        console.warn('API-Berechtigungsfehler, verwende Koordinaten als Fallback');
-      }
     }
     
     // Fallback: Verwende Koordinaten als "Adresse"
@@ -240,6 +277,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     // Positionen extrahieren
     const path = markersRef.current.map(marker => {
       const position = marker.getPosition();
+      if (!position) return { lat: 0, lng: 0 }; // Sollte nie passieren
       return { lat: position.lat(), lng: position.lng() };
     });
     
@@ -279,6 +317,43 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     if (onMarkersClear) {
       onMarkersClear();
     }
+  }
+  
+  // Wenn die Karte noch lädt oder ein Fehler aufgetreten ist
+  if (isLoading) {
+    return (
+      <div 
+        className={`w-full ${className} flex items-center justify-center bg-gray-100 rounded-md`}
+        style={{ height }}
+      >
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+          <span className="text-sm text-muted-foreground">Google Maps wird geladen...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div 
+        className={`w-full ${className} flex items-center justify-center bg-gray-100 rounded-md`}
+        style={{ height }}
+      >
+        <div className="flex flex-col items-center text-center p-4">
+          <Map className="h-8 w-8 text-destructive mb-2" />
+          <h3 className="text-lg font-medium">Kartenfehler</h3>
+          <p className="text-sm text-muted-foreground mb-3">{error}</p>
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => window.location.reload()}
+          >
+            Seite neu laden
+          </Button>
+        </div>
+      </div>
+    );
   }
   
   // Suchkomponente, die sowohl innerhalb als auch außerhalb der Karte verwendet werden kann

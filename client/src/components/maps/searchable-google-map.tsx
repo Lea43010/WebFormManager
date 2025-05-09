@@ -2,14 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, MapPin, Trash2, Search } from 'lucide-react';
+import { Loader2, MapPin, Trash2, Search, Map } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
+import { loadGoogleMapsApi, isGoogleMapsLoaded } from '@/utils/google-maps-loader';
 
 // Eigenschaften für die SearchableGoogleMap-Komponente
 interface SearchableGoogleMapProps {
@@ -24,7 +19,7 @@ interface SearchableGoogleMapProps {
   enableControls?: boolean;
 }
 
-// Google Maps Komponente mit Suchfunktion
+// Google Maps Komponente mit Suchfunktion - optimierte Version
 const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   defaultCenter = { lat: 48.137154, lng: 11.576124 },
   defaultZoom = 12,
@@ -44,15 +39,15 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   
   // Referenzen
-  const mapRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
-  const polylineRef = useRef<any>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<any>(null);
+  const placeAutocompleteRef = useRef<google.maps.places.PlaceAutocompleteElement | any>(null);
   
   // Unique ID für den Karten-Container
-  const mapId = useRef(`map-${Math.random().toString(36).substr(2, 9)}`);
+  const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
   
   // Toast-Hook
   const { toast } = useToast();
@@ -61,16 +56,16 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCzmiIk0Xi0bKKPaqg0I53rULhQzmA5-cg';
   
   // Marker hinzufügen
-  const addMarker = useCallback((position: any) => {
+  const addMarker = useCallback((position: google.maps.LatLng) => {
     if (!mapRef.current) return;
     
     try {
       // Marker erstellen
-      const marker = new window.google.maps.Marker({
+      const marker = new google.maps.Marker({
         position,
         map: mapRef.current,
         draggable: true,
-        animation: window.google.maps.Animation.DROP,
+        animation: google.maps.Animation.DROP,
       });
       
       // Marker zur Liste hinzufügen
@@ -83,8 +78,10 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
         
         if (onMarkerDrag) {
           const pos = marker.getPosition();
-          const index = markersRef.current.indexOf(marker);
-          onMarkerDrag({ lat: pos.lat(), lng: pos.lng() }, index);
+          if (pos) {
+            const index = markersRef.current.indexOf(marker);
+            onMarkerDrag({ lat: pos.lat(), lng: pos.lng() }, index);
+          }
         }
       });
       
@@ -94,7 +91,9 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       // Callback für Map-Click
       if (onMapClick) {
         const pos = marker.getPosition();
-        onMapClick({ lat: pos.lat(), lng: pos.lng() });
+        if (pos) {
+          onMapClick({ lat: pos.lat(), lng: pos.lng() });
+        }
       }
     } catch (error) {
       console.error('Fehler beim Hinzufügen des Markers:', error);
@@ -103,12 +102,13 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   
   // Polyline aktualisieren
   const updatePolyline = useCallback(() => {
-    if (!mapRef.current || !polylineRef.current || !window.google) return;
+    if (!mapRef.current || !polylineRef.current) return;
     
     try {
       // Positionen extrahieren
       const path = markersRef.current.map(marker => {
         const position = marker.getPosition();
+        if (!position) return { lat: 0, lng: 0 }; // Sollte nie passieren
         return { lat: position.lat(), lng: position.lng() };
       });
       
@@ -162,20 +162,22 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   
   // Manuelle Adresssuche durchführen
   const searchAddress = useCallback(() => {
-    if (!searchInput.trim() || !mapRef.current || !window.google) return;
+    if (!searchInput.trim() || !mapRef.current) return;
     
     setIsSearching(true);
     
     try {
-      const geocoder = new window.google.maps.Geocoder();
+      const geocoder = new google.maps.Geocoder();
       
-      geocoder.geocode({ address: searchInput }, (results: any, status: any) => {
-        if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
+      geocoder.geocode({ address: searchInput }, (results, status) => {
+        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
           const location = results[0].geometry.location;
           
           // Karte zentrieren
-          mapRef.current.setCenter(location);
-          mapRef.current.setZoom(15);
+          if (mapRef.current) {
+            mapRef.current.setCenter(location);
+            mapRef.current.setZoom(15);
+          }
           
           // Marker setzen
           addMarker(location);
@@ -208,13 +210,77 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
     }
   }, [searchInput, addMarker, toast]);
   
-  // Autocomplete für Ortssuche initialisieren
-  const initAutocomplete = useCallback(() => {
-    if (!mapRef.current || !searchInputRef.current || !window.google) return;
+  // Initialisiere das moderne PlaceAutocompleteElement
+  const initPlaceAutocomplete = useCallback(() => {
+    if (!searchInputRef.current || !mapRef.current) return;
+    
+    try {
+      // Prüfe, ob die neuere PlaceAutocompleteElement API verfügbar ist
+      if ('places' in google.maps && 'PlaceAutocompleteElement' in google.maps.places) {
+        // Neuen Container für PlaceAutocompleteElement erstellen
+        const containerDiv = document.createElement('div');
+        containerDiv.style.display = 'none';
+        document.body.appendChild(containerDiv);
+        
+        try {
+          // Verwende das neue PlaceAutocompleteElement
+          const placeAutocompleteElement = new google.maps.places.PlaceAutocompleteElement({
+            types: ['geocode', 'establishment'],
+          });
+          
+          // Das Element an das Eingabefeld koppeln
+          if (searchInputRef.current) {
+            placeAutocompleteElement.input = searchInputRef.current;
+          }
+          
+          // Event-Listener für PlacesChanged
+          placeAutocompleteElement.addEventListener('place_changed', () => {
+            try {
+              const place = placeAutocompleteElement.getPlace();
+              if (place && place.geometry && place.geometry.location) {
+                // Karte zentrieren
+                if (mapRef.current) {
+                  mapRef.current.setCenter(place.geometry.location);
+                  mapRef.current.setZoom(15);
+                }
+                
+                // Marker setzen
+                addMarker(place.geometry.location);
+                
+                toast({
+                  title: "Adresse gefunden",
+                  description: place.formatted_address || place.name || "",
+                  duration: 3000
+                });
+              }
+            } catch (error) {
+              console.error('Fehler bei der Place-Auswahl:', error);
+            }
+          });
+          
+          placeAutocompleteRef.current = placeAutocompleteElement;
+        } catch (error) {
+          console.warn('Fehler beim Erstellen von PlaceAutocompleteElement:', error);
+          // Fallback zur alten API
+          initLegacyAutocomplete();
+        }
+      } else {
+        // Fallback zur alten Autocomplete API
+        initLegacyAutocomplete();
+      }
+    } catch (error) {
+      console.warn('PlaceAutocomplete konnte nicht initialisiert werden:', error);
+      // Kein fataler Fehler, wir können trotzdem die manuelle Suche nutzen
+    }
+  }, [addMarker, toast]);
+  
+  // Fallback zur alten Autocomplete API
+  const initLegacyAutocomplete = useCallback(() => {
+    if (!searchInputRef.current || !mapRef.current) return;
     
     try {
       // Autocomplete erstellen
-      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+      const autocomplete = new google.maps.places.Autocomplete(searchInputRef.current, {
         types: ['geocode', 'establishment'],
         fields: ['geometry', 'name', 'formatted_address']
       });
@@ -227,27 +293,28 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
           // Wenn keine Details vorhanden sind, manuell suchen
           if (searchInputRef.current) {
             setSearchInput(searchInputRef.current.value);
-            // searchAddress() hier entfernt, um Abhängigkeitsprobleme zu vermeiden
           }
           return;
         }
         
         // Karte zentrieren
-        mapRef.current.setCenter(place.geometry.location);
-        mapRef.current.setZoom(15);
+        if (mapRef.current) {
+          mapRef.current.setCenter(place.geometry.location);
+          mapRef.current.setZoom(15);
+        }
         
         // Marker setzen
         addMarker(place.geometry.location);
         
         toast({
           title: "Adresse gefunden",
-          description: place.formatted_address || place.name,
+          description: place.formatted_address || place.name || "",
           duration: 3000
         });
       });
       
       // Referenz speichern
-      autocompleteRef.current = autocomplete;
+      placeAutocompleteRef.current = autocomplete;
       
     } catch (error) {
       console.error('Fehler beim Initialisieren von Autocomplete:', error);
@@ -257,16 +324,20 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
   // Karte initialisieren
   const initMap = useCallback(() => {
     try {
-      if (!mapContainerRef.current || !window.google || !window.google.maps) {
-        console.error('Google Maps nicht verfügbar oder Container nicht gefunden');
+      // Element finden
+      const mapElement = document.getElementById(mapId.current);
+      if (!mapElement) {
+        console.error('Google Maps Container nicht gefunden: ', mapId.current);
+        setError('Map-Container konnte nicht gefunden werden.');
+        setIsLoading(false);
         return;
       }
       
       // Map erstellen
-      const map = new window.google.maps.Map(document.getElementById(mapId.current), {
+      const map = new google.maps.Map(mapElement, {
         center: defaultCenter,
         zoom: defaultZoom,
-        mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapTypeControl: enableControls,
         streetViewControl: enableControls,
         fullscreenControl: enableControls,
@@ -274,7 +345,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       });
       
       // Polyline erstellen
-      const polyline = new window.google.maps.Polyline({
+      const polyline = new google.maps.Polyline({
         path: [],
         geodesic: true,
         strokeColor: '#3b82f6',
@@ -284,8 +355,10 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       });
       
       // Event-Listener für Klicks auf die Karte
-      map.addListener('click', (event: any) => {
-        addMarker(event.latLng);
+      map.addListener('click', (event: google.maps.MapMouseEvent) => {
+        if (event.latLng) {
+          addMarker(event.latLng);
+        }
       });
       
       // Referenzen speichern
@@ -296,7 +369,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       setIsLoading(false);
       
       // Autocomplete initialisieren
-      initAutocomplete();
+      initPlaceAutocomplete();
       
       // Hinweis anzeigen
       toast({
@@ -306,27 +379,20 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       });
     } catch (error) {
       console.error('Fehler beim Initialisieren der Karte:', error);
-      setError('Fehler beim Initialisieren der Karte. Bitte laden Sie die Seite neu.');
+      setError('Fehler beim Initialisieren der Karte: ' + (error instanceof Error ? error.message : String(error)));
       setIsLoading(false);
     }
-  }, [addMarker, defaultCenter, defaultZoom, enableControls, initAutocomplete, toast]);
+  }, [addMarker, defaultCenter, defaultZoom, enableControls, initPlaceAutocomplete, toast]);
   
   // Google Maps API laden
   useEffect(() => {
-    // Prüfen, ob die API bereits geladen ist
-    if (window.google && window.google.maps) {
-      console.log('Google Maps bereits geladen');
+    // Google Maps API laden mit dem zentralen Loader
+    if (isGoogleMapsLoaded()) {
       initMap();
       return;
     }
     
-    console.log('Lade Google Maps API');
-    
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry`;
-    script.async = true;
-    script.defer = true;
-    
+    // Ladehinweis anzeigen wenn es länger dauert
     const timeoutId = setTimeout(() => {
       toast({
         title: "Hinweis",
@@ -335,25 +401,20 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
       });
     }, 3000);
     
-    script.onload = () => {
-      clearTimeout(timeoutId);
-      console.log('Google Maps API geladen');
-      setTimeout(initMap, 500);
-    };
-    
-    script.onerror = () => {
-      clearTimeout(timeoutId);
-      setError('Fehler beim Laden der Google Maps API');
+    loadGoogleMapsApi({
+      apiKey,
+      libraries: ['places', 'geometry'],
+      callback: initMap
+    }).catch(err => {
+      console.error('Fehler beim Laden von Google Maps:', err);
+      setError('Google Maps konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.');
       setIsLoading(false);
-    };
-    
-    document.head.appendChild(script);
+    }).finally(() => {
+      clearTimeout(timeoutId);
+    });
     
     return () => {
       clearTimeout(timeoutId);
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
     };
   }, [initMap, toast, apiKey]);
   
@@ -362,11 +423,7 @@ const SearchableGoogleMap: React.FC<SearchableGoogleMapProps> = ({
     return (
       <Card className={className}>
         <CardContent className="pt-6 flex flex-col items-center justify-center" style={{ height }}>
-          <div className="text-destructive mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+          <Map className="h-10 w-10 text-destructive mb-2" />
           <h3 className="text-lg font-medium text-center">Kartenfehler</h3>
           <p className="text-muted-foreground text-center mt-2">{error}</p>
           <Button className="mt-4" onClick={() => window.location.reload()}>
