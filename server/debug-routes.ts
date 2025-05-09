@@ -4,7 +4,7 @@
  * Diese Routen sind nur für Entwicklungszwecke gedacht und sollten in Produktion deaktiviert werden.
  */
 
-import { Router } from 'express';
+import { Router, Express } from 'express';
 import { userCache } from './user-cache';
 import { storage } from './storage';
 import { db } from './db';
@@ -15,7 +15,7 @@ const debugRouter = Router();
 const debugLogger = logger.createLogger('debug-api');
 
 // Middleware, das sicherstellt, dass die Debug-API nur in Entwicklungsumgebungen verfügbar ist
-const devOnlyMiddleware = (req, res, next) => {
+const devOnlyMiddleware = (req: any, res: any, next: any) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(404).json({ error: 'Not found in production mode' });
   }
@@ -23,14 +23,14 @@ const devOnlyMiddleware = (req, res, next) => {
 };
 
 // Route für Cache-Statistiken
-debugRouter.get('/cache-stats', devOnlyMiddleware, (req, res) => {
+debugRouter.get('/cache-stats', devOnlyMiddleware, (req: any, res: any) => {
   const stats = userCache.getStats();
   debugLogger.info(`Cache-Statistiken abgerufen: ${stats.size} Einträge, ${stats.memory} Speicher`);
   res.json(stats);
 });
 
 // Route zum Leeren des Caches
-debugRouter.post('/clear-cache', devOnlyMiddleware, (req, res) => {
+debugRouter.post('/clear-cache', devOnlyMiddleware, (req: any, res: any) => {
   const statsBefore = userCache.getStats();
   userCache.clear();
   debugLogger.info(`Cache geleert (vorher: ${statsBefore.size} Einträge)`);
@@ -38,7 +38,7 @@ debugRouter.post('/clear-cache', devOnlyMiddleware, (req, res) => {
 });
 
 // Test-Route für Cache-Effizienz - prüft Performance des Cache vs. direkte DB-Abfragen
-debugRouter.get('/cache-test/:userId/:iterations', devOnlyMiddleware, async (req, res) => {
+debugRouter.get('/cache-test/:userId/:iterations', devOnlyMiddleware, async (req: any, res: any) => {
   const userId = parseInt(req.params.userId);
   const iterations = parseInt(req.params.iterations) || 10;
   
@@ -85,7 +85,7 @@ debugRouter.get('/cache-test/:userId/:iterations', devOnlyMiddleware, async (req
 });
 
 // Test-Route für Cache-Konsistenz - prüft, ob Cache aktualisiert wird, wenn Benutzer geändert werden
-debugRouter.get('/cache-consistency/:userId', devOnlyMiddleware, async (req, res) => {
+debugRouter.get('/cache-consistency/:userId', devOnlyMiddleware, async (req: any, res: any) => {
   const userId = parseInt(req.params.userId);
   
   if (isNaN(userId)) {
@@ -114,6 +114,10 @@ debugRouter.get('/cache-consistency/:userId', devOnlyMiddleware, async (req, res
     // Schritt 4: Benutzer erneut laden und prüfen, ob Cache aktualisiert wurde
     const user2 = await storage.getUser(userId);
     
+    if (!user2 || !updatedUser) {
+      return res.status(500).json({ error: 'Fehler beim Aktualisieren oder erneuten Laden des Benutzers' });
+    }
+    
     // Ergebnisse zusammenstellen
     const results = {
       originalName: user1.name,
@@ -132,7 +136,7 @@ debugRouter.get('/cache-consistency/:userId', devOnlyMiddleware, async (req, res
 });
 
 // Route zur Cache-Vorwärmung für häufig abgerufene Benutzer
-debugRouter.post('/warm-cache/:count', devOnlyMiddleware, async (req, res) => {
+debugRouter.post('/warm-cache/:count', devOnlyMiddleware, async (req: any, res: any) => {
   try {
     const count = parseInt(req.params.count) || 10;
     
@@ -164,7 +168,7 @@ debugRouter.post('/warm-cache/:count', devOnlyMiddleware, async (req, res) => {
 });
 
 // Route zum Aktivieren/Deaktivieren des Caches
-debugRouter.post('/toggle-cache', devOnlyMiddleware, (req, res) => {
+debugRouter.post('/toggle-cache', devOnlyMiddleware, (req: any, res: any) => {
   const currentStatus = userCache.isEnabled();
   const newStatus = !currentStatus;
   
@@ -179,7 +183,7 @@ debugRouter.post('/toggle-cache', devOnlyMiddleware, (req, res) => {
 });
 
 // Route für detaillierte Cache-Statistiken
-debugRouter.get('/detailed-cache-stats', devOnlyMiddleware, (req, res) => {
+debugRouter.get('/detailed-cache-stats', devOnlyMiddleware, (req: any, res: any) => {
   if (!userCache.isEnabled()) {
     return res.json({ 
       warning: 'Cache ist deaktiviert',
@@ -197,7 +201,7 @@ debugRouter.get('/detailed-cache-stats', devOnlyMiddleware, (req, res) => {
   });
 });
 
-export function setupDebugRoutes(app) {
+export function setupDebugRoutes(app: Express) {
   app.use('/debug/api', debugRouter);
   debugLogger.info('Debug-API-Endpunkte für Systemtests aktiviert');
   
