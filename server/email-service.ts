@@ -437,26 +437,31 @@ class EmailQueueService {
         }));
       }
       
-      // @ts-ignore - Neon DB Typen sind nicht immer korrekt
+      // Verbesserte Typsicherheit für Neon DB
       const result = await db.execute(sql`
         INSERT INTO email_queue (
           recipient, subject, html_content, text_content, 
           template_id, template_data, status, created_at, attachments
         ) VALUES (
-          ${recipient}, 
-          ${options.subject}, 
-          ${options.html || null}, 
-          ${options.text || null}, 
-          ${options.templateId?.toString() || null}, 
+          ${String(recipient)}, 
+          ${String(options.subject)}, 
+          ${options.html ? String(options.html) : null}, 
+          ${options.text ? String(options.text) : null}, 
+          ${options.templateId ? String(options.templateId) : null}, 
           ${options.templateData ? JSON.stringify(options.templateData) : null}, 
           'pending', 
-          ${now}, 
+          ${now.toISOString()}, 
           ${attachmentsJson ? JSON.stringify(attachmentsJson) : null}
         ) RETURNING id
       `);
       
-      // @ts-ignore - Neon DB Typen sind nicht immer korrekt
-      const id = result.rows[0].id;
+      // Typüberprüfung für ID aus Rückgabewert
+      const rows = result.rows as any[];
+      if (!rows || rows.length === 0 || !rows[0].id) {
+        throw new Error('Fehler beim Hinzufügen der E-Mail: Keine ID zurückgegeben');
+      }
+      
+      const id = Number(rows[0].id);
       emailLogger.info(`E-Mail zur Warteschlange hinzugefügt mit ID: ${id}`);
       return id;
     } catch (error) {
@@ -510,7 +515,7 @@ class EmailQueueService {
    */
   async getNextPendingEmail(): Promise<EmailQueueItem | null> {
     try {
-      // @ts-ignore - Neon DB Typen sind nicht immer korrekt
+      // Verbesserte Typenbehandlung
       const result = await db.execute(sql`
         SELECT * FROM email_queue
         WHERE status = 'pending' AND retry_count < ${MAX_RETRY_COUNT}
@@ -518,30 +523,36 @@ class EmailQueueService {
         LIMIT 1
       `);
       
-      // @ts-ignore - Neon DB Typen sind nicht immer korrekt
-      if (result.rows.length === 0) {
+      // Bessere Typsicherheit für Neon DB-Ergebnisse
+      const rows = result.rows as any[];
+      if (rows.length === 0) {
         return null;
       }
       
-      // @ts-ignore - Neon DB Typen sind nicht immer korrekt
-      const emailData = result.rows[0];
+      const emailData = rows[0];
       
-      // Wandle die Daten in ein EmailQueueItem um
+      // Typüberprüfungen für bessere Zuverlässigkeit
+      if (!emailData || typeof emailData.id !== 'number') {
+        emailLogger.warn('Ungültige E-Mail-Daten in der Warteschlange gefunden:', emailData);
+        return null;
+      }
+      
+      // Wandle die Daten in ein EmailQueueItem um mit Typsicherheit
       return {
-        id: emailData.id,
-        recipient: emailData.recipient,
-        subject: emailData.subject,
-        html: emailData.html_content,
-        text: emailData.text_content,
-        templateId: emailData.template_id,
-        templateData: emailData.template_data ? JSON.parse(emailData.template_data) : undefined,
-        attachments: emailData.attachments ? JSON.parse(emailData.attachments) : undefined,
-        status: emailData.status,
-        errorMessage: emailData.error_message,
-        retryCount: emailData.retry_count,
-        createdAt: new Date(emailData.created_at),
+        id: Number(emailData.id),
+        recipient: String(emailData.recipient || ''),
+        subject: String(emailData.subject || ''),
+        html: emailData.html_content ? String(emailData.html_content) : undefined,
+        text: emailData.text_content ? String(emailData.text_content) : undefined,
+        templateId: emailData.template_id ? String(emailData.template_id) : undefined,
+        templateData: emailData.template_data ? JSON.parse(String(emailData.template_data)) : undefined,
+        attachments: emailData.attachments ? JSON.parse(String(emailData.attachments)) : undefined,
+        status: String(emailData.status) as 'pending' | 'processing' | 'sent' | 'failed',
+        errorMessage: emailData.error_message ? String(emailData.error_message) : undefined,
+        retryCount: Number(emailData.retry_count || 0),
+        createdAt: emailData.created_at ? new Date(emailData.created_at) : new Date(),
         sentAt: emailData.sent_at ? new Date(emailData.sent_at) : undefined,
-        provider: emailData.provider
+        provider: emailData.provider ? String(emailData.provider) : undefined
       };
     } catch (error) {
       emailLogger.error('Fehler beim Abrufen der nächsten E-Mail aus der Warteschlange:', error);
@@ -549,14 +560,43 @@ class EmailQueueService {
     }
   }
   
+  // Zähler für leere Abfragen, um die Häufigkeit zu reduzieren
+  private emptyQueueCounter: number = 0;
+  private readonly MAX_EMPTY_COUNT: number = 5; // Nach 5 leeren Abfragen wird die Überprüfung ausgesetzt
+  private queueLastCheckedAt: Date | null = null;
+  
   /**
    * Verarbeitet die E-Mail-Warteschlange (wird regelmäßig aufgerufen)
+   * Optimiert: Intelligente Reduzierung der Abfragen bei leerer Warteschlange
    */
   async processQueue(emailService: EmailService): Promise<void> {
+    // Überprüfen, ob wir kürzlich mehrfach eine leere Warteschlange gefunden haben
+    if (this.emptyQueueCounter >= this.MAX_EMPTY_COUNT) {
+      const now = new Date();
+      // Wenn die letzte Überprüfung weniger als 15 Minuten her ist, überspringen
+      if (this.queueLastCheckedAt && 
+          (now.getTime() - this.queueLastCheckedAt.getTime() < 15 * 60 * 1000)) {
+        // Überspringe, aber logge dies nur bei jeder 10. Gelegenheit, um das Log nicht zu überfüllen
+        if (this.emptyQueueCounter % 10 === 0) {
+          emailLogger.debug(`E-Mail-Warteschlange-Überprüfung ausgesetzt (leere Warteschlange, zuletzt geprüft: ${this.queueLastCheckedAt.toISOString()})`);
+        }
+        return;
+      } else {
+        // Setze den Zähler zurück nach 15 Minuten
+        this.emptyQueueCounter = 0;
+      }
+    }
+    
     const pendingEmail = await this.getNextPendingEmail();
     if (!pendingEmail || !pendingEmail.id) {
+      // Erhöhe den Zähler für leere Warteschlangen
+      this.emptyQueueCounter++;
+      this.queueLastCheckedAt = new Date();
       return; // Nichts zu tun
     }
+    
+    // Zurücksetzen des Zählers, da wir eine E-Mail gefunden haben
+    this.emptyQueueCounter = 0;
     
     try {
       // Markiere die E-Mail als "wird verarbeitet"
@@ -650,17 +690,19 @@ class EmailService {
   
   /**
    * Startet den Prozessor für die E-Mail-Warteschlange
+   * Optimiert: Längeres Intervall (5 Minuten statt 1 Minute)
    */
   private startQueueProcessor(): void {
-    // Warteschlangen-Prozessor alle 60 Sekunden ausführen
+    // Warteschlangen-Prozessor alle 5 Minuten (300 Sekunden) ausführen statt 60 Sekunden
+    // Dies reduziert die Datenbankbelastung erheblich
     // @ts-ignore - Timer-Kompatibilitätsproblem zwischen Node-Typen ignorieren
     this.queueProcessorInterval = setInterval(() => {
       this.queueService.processQueue(this).catch(error => {
         emailLogger.error('Fehler beim Verarbeiten der E-Mail-Warteschlange:', error);
       });
-    }, 60000);
+    }, 300000);
     
-    emailLogger.info('E-Mail-Warteschlangen-Prozessor gestartet');
+    emailLogger.info('E-Mail-Warteschlangen-Prozessor gestartet (5-Minuten-Intervall)');
   }
   
   /**
