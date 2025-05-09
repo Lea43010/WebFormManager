@@ -4019,6 +4019,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Fehler bei der Kostenkalkulation' });
     }
   });
+  
+  // Bildoptimierungsrouten einrichten
+  setupImageRoutes(app);
+  
+  // Setup image analysis routes
+  setupImageAnalysisRoutes(app);
+  
+  // Setup surface analysis routes
+  setupSurfaceAnalysisRoutes(app);
+  setupSurfaceAnalysisAPIRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

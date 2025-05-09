@@ -1,203 +1,171 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
+import OptimizedImage from './optimized-image';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+
+/**
+ * Bildgrößen für verschiedene Breakpoints
+ */
+interface BreakpointSizes {
+  sm?: string;  // 640px
+  md?: string;  // 768px
+  lg?: string;  // 1024px
+  xl?: string;  // 1280px
+  '2xl'?: string; // 1536px
+}
 
 interface ResponsiveImageProps {
   src: string;
   alt: string;
   className?: string;
-  width?: number | string;
-  height?: number | string;
-  placeholderColor?: string;
-  lowQualitySrc?: string;
-  lazyLoad?: boolean;
-  onLoad?: () => void;
-  onError?: () => void;
-  /**
-   * Gibt an, ob die Bildquelle einen Token für den Download benötigt.
-   * Bei Wert 'true' wird automatisch ein Token angefordert und an die URL angehängt.
-   */
-  requiresToken?: boolean;
+  aspectRatio?: 'auto' | 'square' | 'video' | 'portrait' | 'landscape' | 'ultra-wide';
+  fit?: 'contain' | 'cover' | 'fill';
+  position?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  priority?: boolean;
+  sizes?: BreakpointSizes;
+  rounded?: boolean | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  overlay?: boolean | 'light' | 'dark';
+  loading?: 'lazy' | 'eager';
+  caption?: string;
+  fallbackSrc?: string;
 }
 
 /**
- * ResponsiveImage Komponente
+ * Responsive Bildkomponente
  * 
- * Eine verbesserte Bildkomponente mit folgenden Funktionen:
- * - Progressives Laden (LQIP - Low Quality Image Placeholder)
- * - Lazy Loading für bessere Performance
- * - Fehlerbehandlung mit Fallback
- * - Platzhalterelement während des Ladens
+ * Verwendet die OptimizedImage-Komponente und fügt zusätzliche Funktionen hinzu:
+ * - Vordefinierte Seitenverhältnisse
+ * - Responsive Größenanpassungen
+ * - Bildabrundugen
+ * - Overlay-Optionen
+ * - Bildunterschriften
  * 
- * @param src - URL des Bildes
- * @param alt - Alternativer Text für das Bild
+ * @param src - Bild-URL
+ * @param alt - Alternativer Text
  * @param className - CSS-Klassen
- * @param width - Breite des Bildes
- * @param height - Höhe des Bildes
- * @param placeholderColor - Hintergrundfarbe während des Ladens
- * @param lowQualitySrc - Niedrig aufgelöste Version des Bildes für schnelleres Laden
- * @param lazyLoad - Ob das Bild erst geladen werden soll, wenn es sichtbar ist
- * @param onLoad - Callback, der aufgerufen wird, wenn das Bild geladen wurde
- * @param onError - Callback, der bei Ladefehler aufgerufen wird
+ * @param aspectRatio - Seitenverhältnis ('auto', 'square', 'video', 'portrait', 'landscape', 'ultra-wide')
+ * @param fit - Wie das Bild in seinen Container passt ('contain', 'cover', 'fill')
+ * @param position - Position des Bildes im Container, wenn fit nicht 'fill' ist
+ * @param priority - Gibt an, ob das Bild priorisiert geladen werden soll
+ * @param sizes - Responsive Größenangaben für verschiedene Breakpoints
+ * @param rounded - Abrundungsgrad der Ecken (true für 'md', oder spezifischer Wert)
+ * @param overlay - Ob ein Overlay über dem Bild angezeigt werden soll
+ * @param loading - Ladeverhalten ('lazy' oder 'eager')
+ * @param caption - Bildunterschrift
+ * @param fallbackSrc - Fallback-Bild bei Ladefehler
  */
 export const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
   src,
   alt,
   className,
-  width,
-  height,
-  placeholderColor = "#f3f4f6",
-  lowQualitySrc,
-  lazyLoad = true,
-  onLoad,
-  onError,
-  requiresToken = false
+  aspectRatio = 'auto',
+  fit = 'cover',
+  position = 'center',
+  priority = false,
+  sizes,
+  rounded = false,
+  overlay = false,
+  loading = 'lazy',
+  caption,
+  fallbackSrc,
 }) => {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState<string>(lowQualitySrc || '');
-  const [tokenizedSrc, setTokenizedSrc] = useState<string>(src);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // Seitenverhältnis-Klassen
+  const aspectRatioClasses = {
+    'auto': '',
+    'square': 'aspect-square',
+    'video': 'aspect-video',
+    'portrait': 'aspect-[3/4]',
+    'landscape': 'aspect-[4/3]',
+    'ultra-wide': 'aspect-[21/9]',
+  };
 
-  // Automatisch Token anfordern, wenn die Bildquelle eine Attachment-URL ist
-  useEffect(() => {
-    const fetchToken = async () => {
-      // Automatisch Token-Anforderung aktivieren, wenn die URL ein Attachment ist
-      const needsToken = requiresToken || src.includes('/api/attachments/');
-      
-      if (!needsToken) {
-        setTokenizedSrc(src);
-        return;
-      }
+  // Fit-Klassen
+  const fitClasses = {
+    'contain': 'object-contain',
+    'cover': 'object-cover',
+    'fill': 'object-fill',
+  };
 
-      try {
-        // Extrahiere die Attachment-ID aus der URL
-        const match = src.match(/\/api\/attachments\/(\d+)\/download/);
-        if (!match) {
-          setTokenizedSrc(src);
-          return;
-        }
+  // Positions-Klassen
+  const positionClasses = {
+    'center': 'object-center',
+    'top': 'object-top',
+    'bottom': 'object-bottom',
+    'left': 'object-left',
+    'right': 'object-right',
+  };
 
-        const attachmentId = match[1];
-        const response = await fetch(`/api/attachments/${attachmentId}/token`);
+  // Rundings-Klassen
+  const getRoundedClass = () => {
+    if (!rounded) return '';
+    if (rounded === true) return 'rounded-md';
+    return `rounded-${rounded}`;
+  };
+
+  // Overlay-Klassen
+  const getOverlayClass = () => {
+    if (!overlay) return '';
+    if (overlay === 'light') return 'after:absolute after:inset-0 after:bg-white after:bg-opacity-20';
+    if (overlay === 'dark') return 'after:absolute after:inset-0 after:bg-black after:bg-opacity-20';
+    return 'after:absolute after:inset-0 after:bg-black after:bg-opacity-10';
+  };
+
+  // Größen-String für srcSet
+  const getSizesString = () => {
+    if (!sizes) return '100vw';
+
+    const sizeEntries = Object.entries(sizes);
+    if (sizeEntries.length === 0) return '100vw';
+
+    return sizeEntries
+      .map(([breakpoint, size]) => {
+        const breakpointMap: Record<string, string> = {
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+          '2xl': '1536px'
+        };
         
-        if (!response.ok) {
-          throw new Error("Fehler beim Anfordern des Tokens");
+        // Für den größten Breakpoint keinen Media-Query verwenden
+        if (breakpoint === '2xl') {
+          return size;
         }
         
-        const data = await response.json();
-        setTokenizedSrc(`${src}?token=${data.token}`);
-      } catch (error) {
-        console.error("Fehler beim Abrufen des Tokens:", error);
-        setHasError(true);
-        toast({
-          title: "Bildladefehler",
-          description: "Das Bild konnte nicht geladen werden. Sicherheitstoken konnte nicht abgerufen werden.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchToken();
-  }, [src, requiresToken, toast]);
-
-  // Bild laden, wenn es im Viewport sichtbar wird oder sofort, wenn lazyLoad = false
-  useEffect(() => {
-    if (!tokenizedSrc) return; // Warte auf Tokenisierung (falls nötig)
-
-    const loadImage = () => {
-      const img = new Image();
-      img.src = tokenizedSrc;
-      
-      img.onload = () => {
-        setCurrentSrc(tokenizedSrc);
-        setIsLoading(false);
-        onLoad?.();
-      };
-      
-      img.onerror = () => {
-        setHasError(true);
-        setIsLoading(false);
-        onError?.();
-      };
-    };
-
-    if (lazyLoad) {
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          loadImage();
-          if (imgRef.current && observerRef.current) {
-            observerRef.current.unobserve(imgRef.current);
-          }
-        }
-      });
-      
-      if (imgRef.current) {
-        observerRef.current.observe(imgRef.current);
-      }
-    } else {
-      loadImage();
-    }
-
-    return () => {
-      if (observerRef.current && imgRef.current) {
-        observerRef.current.unobserve(imgRef.current);
-        observerRef.current.disconnect();
-      }
-    };
-  }, [tokenizedSrc, lazyLoad, onLoad, onError]);
-
-  // Stil-Klassen basierend auf dem Zustand
-  const imageClasses = cn(
-    'transition-opacity duration-300',
-    isLoading ? 'opacity-0' : 'opacity-100',
-    className
-  );
-
-  // Fallback bei Ladefehlern
-  if (hasError) {
-    return (
-      <div 
-        className={cn(
-          'flex items-center justify-center bg-gray-100 text-gray-400 text-xs', 
-          className
-        )}
-        style={{ width, height, backgroundColor: placeholderColor }}
-      >
-        Bild konnte nicht geladen werden
-      </div>
-    );
-  }
+        return `(max-width: ${breakpointMap[breakpoint]}) ${size}`;
+      })
+      .join(', ');
+  };
 
   return (
-    <div
-      className="relative overflow-hidden"
-      style={{ 
-        width, 
-        height, 
-        backgroundColor: placeholderColor,
-      }}
-    >
-      {/* Bild-Element */}
-      <img
-        ref={imgRef}
-        src={currentSrc || tokenizedSrc} 
-        alt={alt}
-        className={imageClasses}
-        width={typeof width === 'number' ? width : undefined}
-        height={typeof height === 'number' ? height : undefined}
-        loading={lazyLoad ? "lazy" : "eager"}
-      />
-      
-      {/* Ladeindikator */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-50">
-          <div className="w-8 h-8 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
-        </div>
+    <figure className={cn('relative', className)}>
+      <div className={cn(
+        'relative overflow-hidden',
+        aspectRatioClasses[aspectRatio],
+        getRoundedClass(),
+        getOverlayClass(),
+      )}>
+        <OptimizedImage
+          src={src}
+          alt={alt}
+          className={cn(
+            'w-full h-full',
+            fitClasses[fit],
+            positionClasses[position],
+            getRoundedClass()
+          )}
+          priority={priority}
+          sizes={getSizesString()}
+          lazyLoad={loading === 'lazy' && !priority}
+          onError={() => console.log('Fehler beim Laden des Bildes')}
+        />
+      </div>
+
+      {caption && (
+        <figcaption className="mt-2 text-sm text-gray-500">
+          {caption}
+        </figcaption>
       )}
-    </div>
+    </figure>
   );
 };
 
