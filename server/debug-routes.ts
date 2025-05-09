@@ -52,8 +52,8 @@ debugRouter.get('/cache-test/:userId/:iterations', devOnlyMiddleware, async (req
   // Test: Direkte Datenbankabfragen (ohne Cache)
   const dbStartTime = Date.now();
   for (let i = 0; i < iterations; i++) {
-    // @ts-ignore - Wir umgehen hier die Storage-Schicht, um direkt die DB zu treffen
-    const [user] = await db.execute(
+    // Direkte DB-Abfrage ohne Cache
+    await db.execute(
       sql`SELECT * FROM tbluser WHERE id = ${userId}`
     );
   }
