@@ -18,6 +18,7 @@ import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
+import { setupImageRoutes } from "./routes/image-routes"; // Bildoptimierungs-Routes
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service

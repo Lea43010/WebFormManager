@@ -149,16 +149,20 @@ export async function optimizeImage(
   let width = originalWidth;
   let height = originalHeight;
   
-  if (width > options.maxWidth || height > options.maxHeight) {
+  // Sichere Defaults für maxWidth und maxHeight
+  const maxWidth = options.maxWidth ?? DEFAULT_OPTIONS.maxWidth ?? 1920;
+  const maxHeight = options.maxHeight ?? DEFAULT_OPTIONS.maxHeight ?? 1080;
+  
+  if (width > maxWidth || height > maxHeight) {
     const aspectRatio = width / height;
     
-    if (width > options.maxWidth) {
-      width = options.maxWidth;
+    if (width > maxWidth) {
+      width = maxWidth;
       height = Math.round(width / aspectRatio);
     }
     
-    if (height > options.maxHeight) {
-      height = options.maxHeight;
+    if (height > maxHeight) {
+      height = maxHeight;
       width = Math.round(height * aspectRatio);
     }
   }
@@ -204,11 +208,15 @@ export async function optimizeImage(
 
     // Thumbnail erstellen wenn gewünscht
     if (options.generateThumbnail) {
+      // Sichere Defaults für Thumbnail-Größen
+      const thumbnailWidth = options.thumbnailWidth ?? DEFAULT_OPTIONS.thumbnailWidth ?? 320;
+      const thumbnailHeight = options.thumbnailHeight ?? DEFAULT_OPTIONS.thumbnailHeight ?? 240;
+      
       thumbnailPromises.push(
         sharp(inputPath)
           .resize({
-            width: options.thumbnailWidth,
-            height: options.thumbnailHeight,
+            width: thumbnailWidth,
+            height: thumbnailHeight,
             fit: 'cover'
           })
           .jpeg({ quality: options.quality })
@@ -220,8 +228,8 @@ export async function optimizeImage(
         thumbnailPromises.push(
           sharp(inputPath)
             .resize({
-              width: options.thumbnailWidth,
-              height: options.thumbnailHeight,
+              width: thumbnailWidth,
+              height: thumbnailHeight,
               fit: 'cover'
             })
             .webp({ quality: options.quality })
@@ -273,8 +281,9 @@ export async function optimizeImage(
     
     return result;
   } catch (error) {
-    logger.error(`Fehler bei der Bildoptimierung: ${error}`);
-    throw new Error(`Bildoptimierung fehlgeschlagen: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler bei der Bildoptimierung: ${errorMessage}`);
+    throw new Error(`Bildoptimierung fehlgeschlagen: ${errorMessage}`);
   }
 }
 
@@ -282,5 +291,5 @@ export async function optimizeImage(
  * Prüft, ob der Browser WebP unterstützt basierend auf dem Accept-Header
  */
 export function browserSupportsWebP(acceptHeader: string): boolean {
-  return acceptHeader && acceptHeader.includes('image/webp');
+  return Boolean(acceptHeader && acceptHeader.includes('image/webp'));
 }
