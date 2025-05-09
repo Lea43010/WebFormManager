@@ -131,6 +131,72 @@ debugRouter.get('/cache-consistency/:userId', devOnlyMiddleware, async (req, res
   }
 });
 
+// Route zur Cache-Vorwärmung für häufig abgerufene Benutzer
+debugRouter.post('/warm-cache/:count', devOnlyMiddleware, async (req, res) => {
+  try {
+    const count = parseInt(req.params.count) || 10;
+    
+    // Prüfen, ob Cache aktiviert ist
+    if (!userCache.isEnabled()) {
+      return res.status(400).json({ 
+        error: 'Cache ist deaktiviert', 
+        message: 'Aktivieren Sie zuerst den Cache mit /debug/api/toggle-cache'
+      });
+    }
+    
+    // Vorwärmen basierend auf Zugriffsfrequenz
+    await userCache.warmupMostFrequent(count, async (id) => {
+      return await storage.getUser(id);
+    });
+    
+    const stats = userCache.getStats();
+    
+    debugLogger.info(`Cache-Vorwärmung für ${count} Benutzer durchgeführt. Aktuelle Cache-Größe: ${stats.size}`);
+    res.json({ 
+      success: true, 
+      message: `Cache-Vorwärmung für die ${count} am häufigsten abgerufenen Benutzer abgeschlossen`,
+      stats
+    });
+  } catch (error) {
+    debugLogger.error(`Fehler bei der Cache-Vorwärmung: ${error}`);
+    res.status(500).json({ error: 'Fehler bei der Cache-Vorwärmung', details: String(error) });
+  }
+});
+
+// Route zum Aktivieren/Deaktivieren des Caches
+debugRouter.post('/toggle-cache', devOnlyMiddleware, (req, res) => {
+  const currentStatus = userCache.isEnabled();
+  const newStatus = !currentStatus;
+  
+  userCache.setEnabled(newStatus);
+  
+  debugLogger.info(`Cache-Status geändert: ${newStatus ? 'aktiviert' : 'deaktiviert'}`);
+  res.json({ 
+    success: true, 
+    cache: newStatus ? 'aktiviert' : 'deaktiviert',
+    stats: newStatus ? userCache.getStats() : null
+  });
+});
+
+// Route für detaillierte Cache-Statistiken
+debugRouter.get('/detailed-cache-stats', devOnlyMiddleware, (req, res) => {
+  if (!userCache.isEnabled()) {
+    return res.json({ 
+      warning: 'Cache ist deaktiviert',
+      stats: { size: 0, enabled: false }
+    });
+  }
+  
+  const detailedStats = userCache.getDetailedStats();
+  const basicStats = userCache.getStats();
+  
+  debugLogger.info(`Detaillierte Cache-Statistiken abgerufen: ${basicStats.size} Einträge, ${basicStats.frequencyTracking} Frequenzzähler`);
+  res.json({
+    summary: basicStats,
+    details: detailedStats
+  });
+});
+
 export function setupDebugRoutes(app) {
   app.use('/debug/api', debugRouter);
   debugLogger.info('Debug-API-Endpunkte für Systemtests aktiviert');

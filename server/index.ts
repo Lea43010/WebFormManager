@@ -12,6 +12,8 @@ import { initQueryLogging } from "./sql-query-logger";
 import { pool } from "./db";
 import config from "../config";
 import { logger } from "./logger";
+import { userCache } from "./user-cache";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -140,6 +142,35 @@ app.use((req, res, next) => {
         });
       } catch (error) {
         logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+      }
+      
+      // Benutzer-Cache beim Start vorwärmen für bessere Performance
+      try {
+        // Prüfen, ob Cache aktiviert ist
+        if (userCache.isEnabled()) {
+          // Top 20 am häufigsten zugegriffene Benutzer in den Cache laden (falls Nutzungsdaten vorhanden)
+          userCache.warmupMostFrequent(20, async (id) => {
+            return await storage.getUser(id);
+          }).then((warmupResult) => {
+            logger.info('Benutzer-Cache beim Serverstart vorgewärmt');
+          });
+          
+          // Zusätzlich die 10 neuesten Benutzer vorwärmen (unabhängig von Nutzungshäufigkeit)
+          storage.getRecentUsers(10).then((recentUsers: any[]) => {
+            if (recentUsers && recentUsers.length > 0) {
+              const recentUserIds = recentUsers.map((user: any) => user.id);
+              userCache.warmup(recentUserIds, async (id) => {
+                return await storage.getUser(id);
+              }).then(() => {
+                logger.info(`${recentUsers.length} kürzlich registrierte Benutzer in Cache geladen`);
+              });
+            }
+          }).catch((error: any) => {
+            logger.warn('Fehler beim Laden kürzlich registrierter Benutzer:', error);
+          });
+        }
+      } catch (error) {
+        logger.warn('Fehler beim Vorwärmen des Benutzer-Caches:', error);
       }
       
       // Proxy-Server wird nicht automatisch gestartet

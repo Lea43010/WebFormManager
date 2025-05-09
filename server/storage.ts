@@ -36,6 +36,7 @@ export interface IStorage {
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  getRecentUsers(limit: number): Promise<User[]>;
   getProjectsByUser(userId: number): Promise<Project[]>;
   invalidateUserCache(userId: number): void;
 
@@ -233,6 +234,31 @@ export class DatabaseStorage implements IStorage {
       stripeSubscriptionId: users.stripeSubscriptionId,
       lastPaymentDate: users.lastPaymentDate
     }).from(users);
+  }
+  
+  async getRecentUsers(limit: number): Promise<User[]> {
+    // Neueste Benutzer basierend auf Registrierungsdatum holen
+    const result = await db.select({
+      id: users.id,
+      username: users.username,
+      password: users.password,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      createdBy: users.createdBy,
+      gdprConsent: users.gdprConsent,
+      registrationDate: users.registrationDate,
+      trialEndDate: users.trialEndDate,
+      subscriptionStatus: users.subscriptionStatus,
+      stripeCustomerId: users.stripeCustomerId,
+      stripeSubscriptionId: users.stripeSubscriptionId,
+      lastPaymentDate: users.lastPaymentDate
+    })
+    .from(users)
+    .orderBy(desc(users.registrationDate))
+    .limit(limit);
+    
+    return result as User[];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
