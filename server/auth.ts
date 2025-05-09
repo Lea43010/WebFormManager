@@ -33,7 +33,21 @@ async function logLoginEvent(req: Request, eventType: 'login' | 'logout' | 'regi
   try {
     const ipAddress = req.ip;
     const userAgent = req.get('User-Agent') || '';
-    const username = userId ? (await storage.getUser(userId))?.username || 'unknown' : req.body.username || 'unknown';
+    
+    // Verbesserte Username-Ermittlung mit Null-Sicherheit
+    let username = 'unknown';
+    if (userId) {
+      // Benutzen des Caches für bessere Performance wenn verfügbar
+      const userFromCache = userCache.get(userId);
+      if (userFromCache) {
+        username = userFromCache.username;
+      } else {
+        const user = await storage.getUser(userId);
+        username = user?.username || 'unknown';
+      }
+    } else if (req.body && req.body.username) {
+      username = req.body.username;
+    }
     
     const logData: InsertLoginLog = {
       userId: userId || null,
