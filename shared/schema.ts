@@ -162,6 +162,13 @@ export const attachments = pgTable("tblattachment", {
   createdAt: timestamp("created_at").defaultNow(),
   description: text("description"),
   tags: varchar("tags", { length: 500 }),
+  // Neue Felder für Bildoptimierung
+  originalSize: integer("original_size"),
+  optimizedSize: integer("optimized_size"),
+  optimizationSavings: integer("optimization_savings"),
+  originalFormat: varchar("original_format", { length: 20 }),
+  webpPath: varchar("webp_path", { length: 1000 }),
+  isOptimized: boolean("is_optimized").default(false),
 });
 
 // Bedarfs- und Kapazitätsplanung table
@@ -537,7 +544,16 @@ export const insertProjectSchema = createInsertSchema(projects).transform((data)
 });
 export const insertMaterialSchema = createInsertSchema(materials);
 export const insertComponentSchema = createInsertSchema(components);
-export const insertAttachmentSchema = createInsertSchema(attachments);
+export const insertAttachmentSchema = createInsertSchema(attachments).transform((data) => {
+  return {
+    ...data,
+    // Umwandlung für die Bildoptimierungsfelder
+    originalSize: data.originalSize !== undefined ? (typeof data.originalSize === 'string' ? parseInt(data.originalSize, 10) : data.originalSize) : undefined,
+    optimizedSize: data.optimizedSize !== undefined ? (typeof data.optimizedSize === 'string' ? parseInt(data.optimizedSize, 10) : data.optimizedSize) : undefined,
+    optimizationSavings: data.optimizationSavings !== undefined ? (typeof data.optimizationSavings === 'string' ? parseInt(data.optimizationSavings, 10) : data.optimizationSavings) : undefined,
+    isOptimized: data.isOptimized !== undefined ? (typeof data.isOptimized === 'string' ? data.isOptimized === 'true' : data.isOptimized) : false
+  };
+});
 export const insertSurfaceAnalysisSchema = createInsertSchema(surfaceAnalyses).transform((data) => {
   return {
     ...data,
