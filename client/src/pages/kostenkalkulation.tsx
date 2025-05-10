@@ -585,7 +585,7 @@ export default function KostenKalkulationPage() {
                       resultElement.scrollIntoView({ behavior: 'smooth' });
                     }
                   } else {
-                    calculateCosts();
+                    berechneKosten();
                   }
                 }}
               >
