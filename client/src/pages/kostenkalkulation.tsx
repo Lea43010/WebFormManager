@@ -730,69 +730,69 @@ export default function KostenKalkulationPage() {
                 <Calculator className="h-3 w-3 text-[#76a730]" />
                 <span>Kostenberechnung Ergebnis</span>
               </CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardDescription className="text-[9px]">
                 Detaillierte Aufstellung der berechneten Projektkosten
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="rounded-md border p-4 bg-primary/5">
-                  <div className="text-sm font-semibold pb-1">Gesamtkosten</div>
-                  <div className="text-xl font-bold text-primary">
-                    {kalkulation.gesamtkosten.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-md border p-3 bg-primary/5">
+                  <div className="text-xs font-semibold pb-1">Gesamtkosten</div>
+                  <div className="text-lg font-bold text-primary">
+                    {parseFloat(String(kalkulation.gesamtkosten)).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                   </div>
                 </div>
-                <div className="rounded-md border p-4">
-                  <div className="text-sm font-semibold pb-1">Kosten pro Meter</div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs font-semibold pb-1">Kosten pro Meter</div>
                   <div className="text-base font-bold">
-                    {kalkulation.kosten_pro_meter.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })}/m
+                    {parseFloat(String(kalkulation.kosten_pro_meter)).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })}/m
                   </div>
                 </div>
-                <div className="rounded-md border p-4">
-                  <div className="text-sm font-semibold pb-1">Benötigte Zeit</div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs font-semibold pb-1">Benötigte Zeit</div>
                   <div className="text-base font-bold">
                     {kalkulation.benoetigte_tage} Arbeitstage
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    ({kalkulation.gesamtzeit_stunden.toFixed(1)} Arbeitsstunden)
+                  <div className="text-[8px] text-muted-foreground">
+                    ({parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Arbeitsstunden)
                   </div>
                 </div>
               </div>
 
-              <Table>
+              <Table className="text-[9px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px] text-[10px]">Position</TableHead>
-                    <TableHead className="text-[10px]">Berechnung</TableHead>
-                    <TableHead className="text-right text-[10px]">Kosten (€)</TableHead>
+                    <TableHead className="w-[200px] text-[8px] py-1">Position</TableHead>
+                    <TableHead className="text-[8px] py-1">Berechnung</TableHead>
+                    <TableHead className="text-right text-[8px] py-1">Kosten (€)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-[10px]">Materialkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-[10px]">
-                      {kalkulation.flaeche.toFixed(0)} m² × Materialkosten
+                    <TableCell className="font-medium text-[8px] py-1">Materialkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[8px] py-1">
+                      {parseFloat(String(kalkulation.flaeche)).toFixed(0)} m² × Materialkosten
                     </TableCell>
-                    <TableCell className="text-right text-[10px]">
-                      {kalkulation.materialkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-right text-[8px] py-1">
+                      {parseFloat(String(kalkulation.materialkosten)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-[10px]">Maschinenkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-[10px]">
+                    <TableCell className="font-medium text-[8px] py-1">Maschinenkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[8px] py-1">
                       {kalkulation.benoetigte_tage} Tage × Tagesmiete
                     </TableCell>
-                    <TableCell className="text-right text-[10px]">
-                      {kalkulation.maschinenkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-right text-[8px] py-1">
+                      {parseFloat(String(kalkulation.maschinenkosten)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-[10px]">Personalkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-[10px]">
-                      {kalkulation.gesamtzeit_stunden.toFixed(1)} h × {kalkulationsParameter.anzahl_personal} Pers. × {kalkulationsParameter.personalkosten_pro_stunde} €/h
+                    <TableCell className="font-medium text-[8px] py-1">Personalkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[8px] py-1">
+                      {parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} h × {kalkulationsParameter.anzahl_personal} P. × {kalkulationsParameter.personalkosten_pro_stunde} €/h
                     </TableCell>
-                    <TableCell className="text-right text-[10px]">
-                      {kalkulation.personalkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-right text-[8px] py-1">
+                      {parseFloat(String(kalkulation.personalkosten)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
