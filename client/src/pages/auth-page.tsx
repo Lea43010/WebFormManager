@@ -106,10 +106,10 @@ export default function AuthPage() {
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [resetUserId, setResetUserId] = useState<number | null>(null);
 
-  // If user is already logged in, redirect to projects page
+  // If user is already logged in, redirect to dashboard page
   useEffect(() => {
     if (user) {
-      navigate("/projects");
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 

@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { DataTable } from "@/components/ui/data-table";
 import { Company } from "@shared/schema";
 import CompanyForm from "@/components/company/company-form";
+import { CompanyGrid } from "@/components/company/company-grid";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowLeft } from "lucide-react";
+import { PlusCircle, ArrowLeft, Grid, List } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CompanyPage() {
@@ -24,6 +25,8 @@ export default function CompanyPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Ansichtsumschaltung
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   
   // Fetch companies
   const { data: companies = [], isLoading } = useQuery<Company[]>({
@@ -183,26 +186,64 @@ export default function CompanyPage() {
     >
       {!isEditing ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={handleAddCompany}>
-              <PlusCircle className="mr-2 h-4 w-4" />
+          {/* Aktionsleiste */}
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
+            {/* Ansichtsoptionen - Mobile-optimiert */}
+            <div className="flex gap-2 w-full sm:w-auto mb-2 sm:mb-0">
+              <Button 
+                variant={viewMode === 'list' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <List className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Liste
+              </Button>
+              <Button 
+                variant={viewMode === 'grid' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <Grid className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Kacheln
+              </Button>
+            </div>
+            
+            {/* Neues Unternehmen Button */}
+            <Button 
+              onClick={handleAddCompany}
+              className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
+            >
+              <PlusCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Neues Unternehmen
             </Button>
           </div>
-          <DataTable
-            data={companies}
-            columns={columns}
-            isLoading={isLoading}
-            onEdit={handleEditCompany}
-            onDelete={handleDeleteCompany}
-            title="Unternehmensliste"
-          />
+
+          {viewMode === 'list' ? (
+            <DataTable
+              data={companies}
+              columns={columns}
+              isLoading={isLoading}
+              onEdit={handleEditCompany}
+              onDelete={handleDeleteCompany}
+              title="Unternehmensliste"
+            />
+          ) : (
+            <CompanyGrid
+              companies={companies}
+              isLoading={isLoading}
+              onEdit={handleEditCompany}
+              onDelete={handleDeleteCompany}
+              onViewChange={() => setViewMode('list')}
+            />
+          )}
         </div>
       ) : null}
       
       {isEditing && (
         <div className="mt-8">
-          <div className="flex justify-end mb-6">
+          <div className="flex mb-6">
             <Button
               variant="outline"
               onClick={() => setIsEditing(false)}

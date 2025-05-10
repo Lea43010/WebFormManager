@@ -7,8 +7,9 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import CustomerForm from "@/components/customer/customer-form";
+import { CustomerGrid } from "@/components/customer/customer-grid";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowLeft } from "lucide-react";
+import { PlusCircle, ArrowLeft, Grid, List } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,8 @@ export default function CustomerPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // Ansichtsumschaltung
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   
   // Fetch customers
   const { data: customers = [], isLoading } = useQuery<Customer[]>({
@@ -183,26 +186,64 @@ export default function CustomerPage() {
     >
       {!isEditing ? (
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={handleAddCustomer}>
-              <PlusCircle className="mr-2 h-4 w-4" />
+          {/* Aktionsleiste */}
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
+            {/* Ansichtsoptionen - Mobile-optimiert */}
+            <div className="flex gap-2 w-full sm:w-auto mb-2 sm:mb-0">
+              <Button 
+                variant={viewMode === 'list' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <List className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Liste
+              </Button>
+              <Button 
+                variant={viewMode === 'grid' ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="flex-1 sm:flex-none h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <Grid className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Kacheln
+              </Button>
+            </div>
+            
+            {/* Neuer Kunde Button */}
+            <Button 
+              onClick={handleAddCustomer}
+              className="w-full sm:w-auto h-9 sm:h-10 text-xs sm:text-sm"
+            >
+              <PlusCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Neuer Kunde
             </Button>
           </div>
-          <DataTable
-            data={customers}
-            columns={columns as any}
-            isLoading={isLoading}
-            onEdit={handleEditCustomer}
-            onDelete={handleDeleteCustomer}
-            title="Kundenliste"
-          />
+          
+          {viewMode === 'list' ? (
+            <DataTable
+              data={customers}
+              columns={columns as any}
+              isLoading={isLoading}
+              onEdit={handleEditCustomer}
+              onDelete={handleDeleteCustomer}
+              title="Kundenliste"
+            />
+          ) : (
+            <CustomerGrid
+              customers={customers}
+              isLoading={isLoading}
+              onEdit={handleEditCustomer}
+              onDelete={handleDeleteCustomer}
+              onViewChange={() => setViewMode('list')}
+            />
+          )}
         </div>
       ) : null}
       
       {isEditing && (
         <div className="mt-8">
-          <div className="flex justify-end mb-6">
+          <div className="flex mb-6">
             <Button
               variant="outline"
               onClick={() => setIsEditing(false)}
