@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import jsPDF from "jspdf";
+import 'jspdf-autotable';
 
 // Mock-Daten für die erste Implementierung
 const mockBodenarten = [
@@ -190,6 +192,98 @@ export default function KostenKalkulationPage() {
       ...prev,
       [name]: parseFloat(value) || 0
     }));
+  };
+  
+  // PDF Export Funktion
+  const exportToPDF = () => {
+    if (!kalkulation) return;
+    
+    const doc = new jsPDF();
+    const logoImg = new Image();
+    
+    // Seitentitel und Metadaten
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Bau-Structura Kostenkalkulation", 15, 15);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Erstellt am: ${format(new Date(), 'dd.MM.yyyy', { locale: de })}`, 15, 25);
+    
+    // Projekttitel
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    
+    const selectedRoute = routen.find(r => r.id === selectedRouteId);
+    const selectedBodenart = mockBodenarten.find(b => b.id === Number(selectedBodenartId));
+    const selectedMaschine = mockMaschinen.find(m => m.id === Number(selectedMaschineId));
+    
+    doc.text(`Streckenprojekt: ${selectedRoute?.name || ""}`, 15, 35);
+    
+    // Projektdetails
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    
+    const details = [
+      [`Strecke: ${kalkulation.strecke} m`, `Breite: ${kalkulation.breite} m`, `Tiefe: ${kalkulation.tiefe} m`],
+      [`Fläche: ${parseFloat(String(kalkulation.flaeche)).toFixed(1)} m²`, `Volumen: ${parseFloat(String(kalkulation.volumen)).toFixed(1)} m³`],
+      [`Bodenart: ${selectedBodenart?.name || ""}`, `Maschine: ${selectedMaschine?.name || ""}`],
+      [`Dauer: ${kalkulation.benoetigte_tage} Tage (${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Stunden)`]
+    ];
+    
+    let y = 45;
+    details.forEach(line => {
+      doc.text(line.join("   "), 15, y);
+      y += 6;
+    });
+    
+    // Kosten Tabelle
+    doc.autoTable({
+      startY: y + 5,
+      head: [['Position', 'Berechnung', 'Kosten (€)']],
+      body: [
+        ['Materialkosten', `${parseFloat(String(kalkulation.flaeche)).toFixed(0)} m² × Materialkosten`, parseFloat(String(kalkulation.materialkosten)).toFixed(2)],
+        ['Maschinenkosten', `${kalkulation.benoetigte_tage} Tage × Tageskosten`, parseFloat(String(kalkulation.maschinenkosten)).toFixed(2)],
+        ['Personalkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Stunden × Stundenkosten × Anzahl`, parseFloat(String(kalkulation.personalkosten)).toFixed(2)],
+        ['Kraftstoffkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Stunden × Verbrauch × Preis/Liter`, parseFloat(String(kalkulation.kraftstoffkosten)).toFixed(2)],
+        ['Zwischensumme', '', parseFloat(String(kalkulation.zwischensumme)).toFixed(2)],
+        ['Zusatzkosten', `${kalkulationsParameter.zusatzkosten_prozent}% der Zwischensumme`, parseFloat(String(kalkulation.zusatzkosten)).toFixed(2)],
+        ['Gesamtkosten', '', parseFloat(String(kalkulation.gesamtkosten)).toFixed(2)],
+        ['Kosten pro Meter', '', `${parseFloat(String(kalkulation.kosten_pro_meter)).toFixed(2)} €/m`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [118, 167, 48] }, // Grün entsprechend dem Farbschema
+      styles: { font: 'helvetica', fontSize: 10 }
+    });
+    
+    // Fußzeile
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        'Bau-Structura App - Kostenkalkulation',
+        15,
+        doc.internal.pageSize.height - 10
+      );
+      doc.text(
+        `Seite ${i} von ${pageCount}`,
+        doc.internal.pageSize.width - 30,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    // PDF herunterladen
+    const projektName = selectedRoute?.name?.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'strecke';
+    const dateiname = `bau_structura_kostenkalkulation_${projektName}_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    
+    doc.save(dateiname);
+    
+    toast({
+      title: "PDF erstellt",
+      description: `Die Kostenkalkulation wurde als ${dateiname} gespeichert.`,
+    });
   };
 
   // Führe Kalkulation durch
@@ -822,7 +916,7 @@ export default function KostenKalkulationPage() {
 
               <div className="flex justify-end">
                 <Button 
-                  onClick={exportAsPDF} 
+                  onClick={exportToPDF} 
                   className="flex items-center text-[10px] bg-[#76a730] hover:bg-[#6a961f] text-white py-1 h-7"
                 >
                   <FileText className="h-3 w-3 mr-1" />
