@@ -1866,35 +1866,35 @@ export default function InformationPage() {
           
           {/* Kontakt & Support */}
           <div id="kontakt" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
-            <h2 className="text-2xl font-semibold mb-6 border-b pb-2 flex items-center gap-2">
-              <Phone className="h-5 w-5 text-primary" />
+            <h2 className="text-2xl font-semibold mb-6 border-b pb-2 flex items-center gap-2 text-[#111827]">
+              <Phone className="h-5 w-5 text-[#6a961f]" />
               Kontakt & Support
             </h2>
             
             <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5 text-primary" />
+              <Card className="shadow-sm border border-gray-100">
+                <CardHeader className="bg-white pb-2">
+                  <CardTitle className="flex items-center gap-2 text-[#111827]">
+                    <Mail className="h-5 w-5 text-[#6a961f]" />
                     E-Mail Support
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-[#111827]/80">
                     Unser Support-Team steht für alle Fragen zur Verfügung
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm">
+                  <p className="text-sm text-[#111827]">
                     Bei technischen Fragen, Problemen mit der Anwendung oder Anregungen zur Verbesserung 
                     können Sie uns jederzeit per E-Mail kontaktieren. Wir bemühen uns, alle Anfragen 
                     innerhalb von 24 Stunden zu beantworten.
                   </p>
                   
-                  <div className="p-3 bg-gray-50 rounded-md flex items-center justify-between">
-                    <span className="font-medium">support@bau-structura.de</span>
+                  <div className="p-3 bg-[#F3F4F6] rounded-md flex items-center justify-between border border-[#6a961f]/10">
+                    <span className="font-medium text-[#111827]">support@bau-structura.de</span>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex items-center gap-1"
+                      className="flex items-center gap-1 text-[#6a961f] border-[#6a961f]/30 hover:bg-[#6a961f]/5 hover:text-[#6a961f]"
                       onClick={() => window.location.href = 'mailto:support@bau-structura.de'}
                     >
                       <Mail className="h-3 w-3" />
@@ -1904,25 +1904,25 @@ export default function InformationPage() {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-primary" />
+              <Card className="shadow-sm border border-gray-100">
+                <CardHeader className="bg-white pb-2">
+                  <CardTitle className="flex items-center gap-2 text-[#111827]">
+                    <Phone className="h-5 w-5 text-[#6a961f]" />
                     Telefonischer Support
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-[#111827]/80">
                     Direkte Hilfe bei dringenden Anliegen
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm">
+                  <p className="text-sm text-[#111827]">
                     Für dringende Fälle und komplexere Anliegen bieten wir auch telefonischen Support an. 
                     Unsere Hotline ist von Montag bis Freitag zwischen 9:00 und 17:00 Uhr (CET) besetzt.
                   </p>
                   
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <p className="font-medium">+49 (0) 89 / 123 456 789</p>
-                    <p className="text-xs text-gray-500 mt-1">Mo-Fr 9:00-17:00 Uhr (CET)</p>
+                  <div className="p-3 bg-[#F3F4F6] rounded-md border border-[#6a961f]/10">
+                    <p className="font-medium text-[#111827]">+49 (0) 89 / 123 456 789</p>
+                    <p className="text-xs text-[#111827]/70 mt-1">Mo-Fr 9:00-17:00 Uhr (CET)</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1931,14 +1931,14 @@ export default function InformationPage() {
             <Separator className="my-8" />
             
             <div className="mb-6">
-              <h3 className="text-lg font-medium mb-4">Fehlermeldung einreichen</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-lg font-medium mb-4 text-[#111827]">Fehlermeldung einreichen</h3>
+              <p className="text-[#111827] mb-4">
                 Haben Sie einen Fehler in der Anwendung entdeckt? Helfen Sie uns, die Bau-Structura App zu verbessern, 
                 indem Sie uns detaillierte Informationen zum aufgetretenen Problem mitteilen.
               </p>
               
               <div className="flex justify-end">
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button variant="outline" className="flex items-center gap-2 border-[#6a961f]/30 text-[#6a961f] hover:bg-[#6a961f]/5 hover:text-[#6a961f]">
                   <FileText className="h-4 w-4" />
                   Fehlerbericht erstellen
                 </Button>
