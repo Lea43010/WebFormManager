@@ -59,6 +59,17 @@ const ImageOptimizationDemo: React.FC = () => {
       originalSize: 64000,
       optimizedSize: 32000,
       savings: 50
+    },
+    {
+      original: '/uploads/IMG_1507.jpg',
+      optimized: '/uploads/IMG_1507.jpg',
+      webp: '/uploads/IMG_1507.jpg',
+      blurHash: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAGAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAeEAABBAIDAQAAAAAAAAAAAAABAAIDBBEFITFRYf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAFhEBAQEAAAAAAAAAAAAAAAAAADEh/9oADAMBAAIRAxEAPwCiS3H+OwLVmplM5bK7TJoNA6OOvntERFJQ3//Z',
+      width: 1024,
+      height: 768,
+      originalSize: 400000,
+      optimizedSize: 200000,
+      savings: 50
     }
   ];
 
