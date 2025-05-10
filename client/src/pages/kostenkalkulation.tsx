@@ -559,11 +559,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white" 
+                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center" 
                 variant="default"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
-                <Truck className="h-4 w-4 mr-2 inline-block" />
+                <Truck className="h-4 w-4 mr-2" />
                 Maschinen vergleichen
               </Button>
             </CardContent>
@@ -671,15 +671,15 @@ export default function KostenKalkulationPage() {
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
               {isCalculating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin inline-block" />
-                  Berechnung läuft...
-                </>
+                <div className="flex items-center justify-center">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span>Berechnung läuft...</span>
+                </div>
               ) : (
-                <>
-                  <Calculator className="mr-2 h-4 w-4 inline-block" />
-                  Kosten berechnen
-                </>
+                <div className="flex items-center justify-center">
+                  <Calculator className="mr-2 h-4 w-4" />
+                  <span>Kosten berechnen</span>
+                </div>
               )}
             </Button>
           </CardFooter>
