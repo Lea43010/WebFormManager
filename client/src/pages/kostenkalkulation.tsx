@@ -400,9 +400,9 @@ export default function KostenKalkulationPage() {
                   variant="default"
                   size="sm"
                   onClick={() => setLocation("/tiefbau-map")}
-                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white"
+                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center"
                 >
-                  <Map className="h-4 w-4 mr-1 inline-block" />
+                  <Map className="h-4 w-4 mr-2" />
                   Neue Route planen
                 </Button>
                 
@@ -411,7 +411,7 @@ export default function KostenKalkulationPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => deleteRoute(selectedRouteId)}
-                    className="bg-white border border-gray-200 hover:bg-gray-100 text-destructive"
+                    className="bg-white border border-gray-200 hover:bg-gray-100 text-destructive flex items-center justify-center"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -503,11 +503,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white" 
+                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center" 
                 variant="default"
                 onClick={() => setLocation("/bodenanalyse")}
               >
-                <Database className="h-4 w-4 mr-2 inline-block" />
+                <Database className="h-4 w-4 mr-2" />
                 Bodenarten vergleichen
               </Button>
             </CardContent>
