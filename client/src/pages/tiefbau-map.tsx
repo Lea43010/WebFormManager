@@ -400,6 +400,13 @@ const TiefbauMap: React.FC = () => {
     setStartAddress('');
     setEndAddress('');
     setShowElevationChart(false);
+    
+    // Benachrichtigung, dass die Route gelöscht wurde
+    toast({
+      title: "Route zurückgesetzt",
+      description: "Die Route wurde erfolgreich gelöscht und der Speicher freigegeben.",
+      duration: 3000
+    });
   };
   
   // Höhendaten von der Google Elevation API abrufen

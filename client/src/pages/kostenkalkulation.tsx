@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download, Calculator, FileText, Map, Database, Truck } from "lucide-react";
+import { Loader2, Download, Calculator, FileText, Map, Database, Truck, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -72,6 +72,49 @@ export default function KostenKalkulationPage() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [selectedBodenartId, setSelectedBodenartId] = useState<string | null>(null);
   const [selectedMaschineId, setSelectedMaschineId] = useState<string | null>(null);
+  
+  // Funktion zum Löschen einer Route
+  const deleteRoute = async (routeId: string) => {
+    try {
+      // Bestätigungsdialog
+      if (!window.confirm('Möchten Sie diese Route wirklich löschen?')) {
+        return;
+      }
+      
+      // API-Anfrage zum Löschen der Route
+      const response = await fetch(`/api/routes/${routeId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Route konnte nicht gelöscht werden');
+      }
+      
+      // Erfolgsbenachrichtigung
+      toast({
+        title: "Route gelöscht",
+        description: "Die Route wurde erfolgreich gelöscht.",
+      });
+      
+      // Routen neu laden
+      const routenResponse = await fetch('/api/routes');
+      const routenData = await routenResponse.json();
+      setRouten(routenData);
+      
+      // Falls die gelöschte Route ausgewählt war, Auswahl zurücksetzen
+      if (selectedRouteId === routeId) {
+        setSelectedRouteId(null);
+      }
+      
+    } catch (error) {
+      console.error('Fehler beim Löschen der Route:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: 'Die Route konnte nicht gelöscht werden.',
+      });
+    }
+  };
   
   // Parameter für die Kalkulation
   const [kalkulationsParameter, setKalkulationsParameter] = useState({
@@ -338,13 +381,42 @@ export default function KostenKalkulationPage() {
                   <SelectValue placeholder="-- Route auswählen --" />
                 </SelectTrigger>
                 <SelectContent>
-                  {routen.map(route => (
-                    <SelectItem key={route.id} value={route.id.toString()}>
-                      {route.name} ({(route.distance / 1000).toFixed(2)} km)
-                    </SelectItem>
-                  ))}
+                  {routen.length > 0 ? (
+                    routen.map(route => (
+                      <SelectItem key={route.id} value={route.id.toString()}>
+                        {route.name} ({(route.distance / 1000).toFixed(2)} km)
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1 text-sm text-muted-foreground">
+                      Keine Routen vorhanden
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
+              
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation("/tiefbau-map")}
+                  className="flex-1"
+                >
+                  <Map className="h-4 w-4 mr-1" />
+                  Neue Route planen
+                </Button>
+                
+                {selectedRouteId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => deleteRoute(selectedRouteId)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
 
               {selectedRouteId && (
                 <div className="rounded-md border p-3 bg-muted/50">
@@ -353,6 +425,18 @@ export default function KostenKalkulationPage() {
                     if (!route) return null;
                     return (
                       <>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-medium">{route.name}</div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-destructive" 
+                            onClick={() => deleteRoute(selectedRouteId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Route löschen</span>
+                          </Button>
+                        </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="text-muted-foreground">Von:</div>
                           <div className="font-medium">{route.start_address}</div>

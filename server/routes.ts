@@ -3836,6 +3836,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Route löschen
+  app.delete('/api/routes/:id', async (req, res) => {
+    try {
+      const routeId = parseInt(req.params.id);
+      
+      if (isNaN(routeId)) {
+        return res.status(400).json({ error: 'Ungültige Routen-ID' });
+      }
+      
+      // Route in der Datenbank löschen
+      try {
+        await sql`DELETE FROM routes WHERE id = ${routeId}`;
+        return res.status(204).send(); // Erfolgreiche Löschung, kein Inhalt zurückgeben
+      } catch (error) {
+        console.error('Fehler beim Löschen der Route:', error);
+        return res.status(500).json({ error: 'Fehler beim Löschen der Route' });
+      }
+    } catch (error) {
+      console.error('Allgemeiner Fehler beim Löschen der Route:', error);
+      res.status(500).json({ error: 'Fehler beim Löschen der Route' });
+    }
+  });
+
   // Neue Route speichern
   app.post('/api/routes', async (req, res) => {
     try {

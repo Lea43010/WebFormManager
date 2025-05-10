@@ -112,15 +112,15 @@ const TiefbauPDFGenerator = ({
         
         // Überschriftenzeile mit grauem Hintergrund
         pdf.setFillColor(200, 200, 200);
-        pdf.rect(14, routeYPos + 5, 170, 8, 'F'); // Breitere Tabelle
+        pdf.rect(14, routeYPos + 5, 170, 10, 'F'); // Breitere und höhere Tabelle
         pdf.setTextColor(0);
         pdf.setFontSize(10);
-        pdf.text("Eigenschaft", 17, routeYPos + 10);
-        pdf.text("Wert", 60, routeYPos + 10);
+        pdf.text("Eigenschaft", 17, routeYPos + 11);
+        pdf.text("Wert", 60, routeYPos + 11);
         
         // Zeilen mit Routeninformationen
         const startY = routeYPos + 13;
-        const rowHeight = 7;
+        const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
         
         // Funktion zum Zeichnen einer Zeile
         const addRow = (index: number, label: string, value: string) => {
@@ -145,7 +145,7 @@ const TiefbauPDFGenerator = ({
         
         // Rahmen um die Tabelle zeichnen
         pdf.setDrawColor(0);
-        pdf.rect(14, routeYPos + 5, 170, 5 + (5 * rowHeight), 'D');
+        pdf.rect(14, routeYPos + 5, 170, 8 + (5 * rowHeight), 'D');
         
         // --- Höhenprofil, falls vorhanden ---
         if (chartContainerId) {
@@ -203,15 +203,15 @@ const TiefbauPDFGenerator = ({
           
           // Überschriftenzeile mit grauem Hintergrund
           pdf.setFillColor(200, 200, 200);
-          pdf.rect(14, bodenYPos, 170, 8, 'F'); // Breitere Tabelle
+          pdf.rect(14, bodenYPos, 170, 10, 'F'); // Breitere und höhere Tabelle
           pdf.setTextColor(0);
           pdf.setFontSize(10);
-          pdf.text("Eigenschaft", 17, bodenYPos + 5);
-          pdf.text("Wert", 60, bodenYPos + 5);
+          pdf.text("Eigenschaft", 17, bodenYPos + 6);
+          pdf.text("Wert", 60, bodenYPos + 6);
           
           // Zeilen mit Bodenanalyse
-          const bodenStartY = bodenYPos + 8;
-          const rowHeight = 8;
+          const bodenStartY = bodenYPos + 10;
+          const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
           
           // Funktion zum Zeichnen einer Zeile für Bodenanalyse
           const addBodenRow = (index: number, label: string, value: string) => {
@@ -235,7 +235,7 @@ const TiefbauPDFGenerator = ({
           
           // Rahmen um die Tabelle zeichnen
           pdf.setDrawColor(0);
-          pdf.rect(14, bodenYPos, 170, 8 + (4 * rowHeight), 'D');
+          pdf.rect(14, bodenYPos, 170, 10 + (4 * rowHeight), 'D');
         } else {
           pdf.setFontSize(10);
           pdf.text('Keine Bodenanalyse verfügbar.', 14, 25);
@@ -261,7 +261,7 @@ const TiefbauPDFGenerator = ({
           pdf.text("Kosten/Stunde", 137, tableY + 5);
           
           // Zeilen mit Maschinenempfehlungen
-          const maschinenRowHeight = 8;
+          const maschinenRowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
           
           maschinenData.forEach((maschine, index) => {
             const y = tableY + 8 + (index * maschinenRowHeight);
