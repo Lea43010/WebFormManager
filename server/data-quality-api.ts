@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
-import { spawn } from 'child_process';
+// Temporär deaktiviert, um den Server korrekt zu starten
+// import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 // Für die Rollen- und Authentifizierungsprüfung
@@ -103,49 +104,33 @@ router.post('/data-quality/run', isAuthenticated, requireAdmin(), async (req: Re
       // Nichtvorhandensein der Tabelle ist kein kritischer Fehler
     }
     
-    // Python-Skript asynchron starten
-    const pythonProcess = spawn('python', args);
+    // Python-Skript asynchron starten - temporär deaktiviert
+    console.log('[Datenqualität] Datenqualitätsprüfung ist temporär deaktiviert');
     
-    let output = '';
+    let output = 'Datenqualitätsprüfung ist temporär deaktiviert';
     let errorOutput = '';
     
-    pythonProcess.stdout.on('data', (data) => {
-      const chunk = data.toString();
-      output += chunk;
-      console.log(`[Datenqualität] ${chunk.trim()}`);
-    });
-    
-    pythonProcess.stderr.on('data', (data) => {
-      const chunk = data.toString();
-      errorOutput += chunk;
-      console.error(`[Datenqualität-Fehler] ${chunk.trim()}`);
-    });
-    
-    pythonProcess.on('close', async (code) => {
-      console.log(`Datenqualitätsprüfung beendet mit Code ${code}`);
-      
-      // Aktualisiere den Run-Status, wenn eine ID vorhanden ist
-      if (runId !== null) {
-        try {
-          await query(`
-            UPDATE data_quality_runs 
-            SET 
-              ended_at = NOW(), 
-              status = $1, 
-              output = $2, 
-              error_output = $3
-            WHERE id = $4
-          `, [
-            code === 0 ? 'completed' : 'failed',
-            output,
-            errorOutput,
-            runId
-          ]);
-        } catch (error) {
-          console.error('Fehler beim Aktualisieren des DataQualityRun-Eintrags:', error);
-        }
+    // Aktualisiere den Run-Status, wenn eine ID vorhanden ist
+    if (runId !== null) {
+      try {
+        await query(`
+          UPDATE data_quality_runs 
+          SET 
+            ended_at = NOW(), 
+            status = $1, 
+            output = $2, 
+            error_output = $3
+          WHERE id = $4
+        `, [
+          'skipped',
+          output,
+          errorOutput,
+          runId
+        ]);
+      } catch (error) {
+        console.error('Fehler beim Aktualisieren des DataQualityRun-Eintrags:', error);
       }
-    });
+    }
     
     // Sofortige Antwort senden, da das Skript im Hintergrund läuft
     return res.status(202).json({

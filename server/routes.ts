@@ -45,6 +45,7 @@ import bodenArtenRouter from "./routes/bodenarten"; // Bodenarten API
 import maschinenRouter from "./routes/maschinen"; // Maschinen API
 import adminRouter from "./routes/admin-routes"; // Admin-API
 import cacheRoutes from "./routes/cache-routes"; // Cache-Verwaltungs-API
+// Hier kein Import für die Tiefbau-PDF-Route, wir implementieren sie direkt
 import cacheManager from "./cache-manager"; // Cache-Manager für Cache-Funktionalitäten
 import { 
   insertCompanySchema, insertCustomerSchema, insertProjectSchema, 
@@ -129,6 +130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Maschinen-API-Routen einrichten
   app.use(maschinenRouter);
+  
+  // Tiefbau-Routen - PDF wird jetzt clientseitig generiert
   
   // Admin-API-Routen (wieder aktiviert mit optimierten SQL-Abfragen)
   app.use('/api/admin', adminRouter);
