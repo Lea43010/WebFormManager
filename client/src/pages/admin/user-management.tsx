@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { ClipboardCopy, UserPlus, Users, Mail, Terminal, Shield, UserCog } from "lucide-react";
 import { useState } from "react";
-import { UserManagement as UserManagementComponent } from "@/components/admin/user-management";
+import { UserManagement as UserManagementComponent } from "@/components/admin/user-management-cards";
 
 export default function UserManagement() {
   const { toast } = useToast();

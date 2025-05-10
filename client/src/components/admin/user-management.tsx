@@ -430,27 +430,35 @@ export function UserManagement() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Table>
-          <TableCaption>Liste aller Benutzer im System</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Benutzername</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>E-Mail</TableHead>
-              <TableHead>Rolle</TableHead>
-              <TableHead>Registriert am</TableHead>
-              <TableHead>Testphase bis</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>DSGVO</TableHead>
-              {user.role === 'administrator' && <TableHead className="text-right">Aktionen</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <div>
+          <h3 className="text-lg font-medium mb-4">Liste aller Benutzer im System ({users?.length || 0} Benutzer)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {users && users.map((userData) => (
-              <TableRow key={userData.id}>
-                <TableCell className="font-medium">{userData.id}</TableCell>
-                <TableCell>{userData.username}</TableCell>
+              <Card key={userData.id} className="overflow-hidden hover:shadow-md transition-shadow border">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {userData.role === 'administrator' && <Shield className="h-5 w-5 text-red-500" />}
+                      {userData.role === 'manager' && <UserCog className="h-5 w-5 text-blue-500" />}
+                      {userData.role === 'benutzer' && <Smile className="h-5 w-5 text-green-500" />}
+                      <span>{userData.name || userData.username}</span>
+                    </CardTitle>
+                    <span className={`
+                      px-2 py-1 rounded-full text-xs
+                      ${userData.role === 'administrator' ? 'bg-red-100 text-red-800' : ''}
+                      ${userData.role === 'manager' ? 'bg-blue-100 text-blue-800' : ''}
+                      ${userData.role === 'benutzer' ? 'bg-green-100 text-green-800' : ''}
+                    `}>
+                      {userData.role}
+                    </span>
+                  </div>
+                  <CardDescription className="flex flex-col space-y-1 mt-1">
+                    <span className="flex items-center text-sm">
+                      <span className="font-medium mr-2">ID:</span> {userData.id}
+                    </span>
+                    <span className="flex items-center text-sm truncate">
+                      <span className="font-medium mr-2">Benutzername:</span> {userData.username}
+                    </span>
                 <TableCell>{userData.name}</TableCell>
                 <TableCell>{userData.email}</TableCell>
                 <TableCell>
