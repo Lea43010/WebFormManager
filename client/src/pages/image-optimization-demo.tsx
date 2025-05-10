@@ -45,7 +45,28 @@ const ImageOptimizationDemo: React.FC = () => {
   const [selectedFit, setSelectedFit] = useState<string>('cover');
   const [useLazyLoading, setUseLazyLoading] = useState(true);
   const [useBlurPlaceholder, setUseBlurPlaceholder] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Statische Demo-Bilder
+  const demoImages = [
+    {
+      original: '/uploads/example-1.png',
+      optimized: '/uploads/example-1-optimized.png',
+      webp: '/uploads/example-1-optimized.webp',
+      blurHash: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAGAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAeEAABBAIDAQAAAAAAAAAAAAABAAIDBBEFITFRYf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAFhEBAQEAAAAAAAAAAAAAAAAAADEh/9oADAMBAAIRAxEAPwCiS3H+OwLVmplM5bK7TJoNA6OOvntERFJQ3//Z',
+      width: 512,
+      height: 512,
+      originalSize: 64000,
+      optimizedSize: 32000,
+      savings: 50
+    }
+  ];
+
+  // Setzen des Standard-Bilds beim Start
+  useEffect(() => {
+    setUploadedImages(demoImages);
+    setSelectedImage(0);
+  }, []);
 
   // WebP-Unterstützung erkennen
   useEffect(() => {
@@ -92,53 +113,24 @@ const ImageOptimizationDemo: React.FC = () => {
     setIsLoading(false);
   }, []);
 
-  // Neue Bilder hochladen
+  // Neue Bilder hochladen (Demo-Version)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     setIsUploading(true);
 
-    const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      // In einer realen App würden wir das Bild zum Server hochladen
-      // und die Metadaten zurückbekommen
-      const response = await new Promise<any>((resolve) => {
-        // Simuliere Upload mit einer Verzögerung
-        setTimeout(() => {
-          resolve({
-            ok: true,
-            json: () => Promise.resolve({
-              original: `/uploads/${file.name}`,
-              optimized: `/uploads/${file.name.replace(/\.[^/.]+$/, '')}-optimized.jpg`,
-              webp: `/uploads/${file.name.replace(/\.[^/.]+$/, '')}-optimized.webp`,
-              thumbnail: `/uploads/${file.name.replace(/\.[^/.]+$/, '')}-thumb.jpg`,
-              blurHash: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAGAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAeEAABBAIDAQAAAAAAAAAAAAABAAIDBBEFITFRYf/EABUBAQEAAAAAAAAAAAAAAAAAAAID/8QAFhEBAQEAAAAAAAAAAAAAAAAAADEh/9oADAMBAAIRAxEAPwCiS3H+OwLVmplM5bK7TJoNA6OOvntERFJQ3//Z',
-              width: 1024,
-              height: 768,
-              originalSize: file.size,
-              optimizedSize: Math.round(file.size * 0.45), // Annahme: 55% Ersparnis
-              savings: 55
-            })
-          });
-        }, 1500);
+      // Für Demo-Zwecke simulieren wir den Upload und verwenden das vorhandene Demo-Bild
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Bild erfolgreich hochgeladen und optimiert (Demo)",
+        description: `Eine Einsparung von 50% wurde erreicht.`,
+        variant: "default",
       });
-
-      if (response.ok) {
-        const imageData = await response.json();
-        setUploadedImages([...uploadedImages, imageData]);
-        setSelectedImage(uploadedImages.length);
-        
-        toast({
-          title: "Bild erfolgreich hochgeladen und optimiert",
-          description: `Eine Einsparung von ${imageData.savings}% wurde erreicht.`,
-          variant: "default",
-        });
-      } else {
-        throw new Error('Upload fehlgeschlagen');
-      }
+      
+      // Setze das ausgewählte Bild auf das erste Demo-Bild
+      setSelectedImage(0);
     } catch (error) {
       console.error('Fehler beim Hochladen:', error);
       toast({
