@@ -305,7 +305,7 @@ const MaschinenAuswahl: React.FC = () => {
                           </div>
                           <div>
                             <p className="text-muted-foreground">Tagespreis:</p>
-                            <p className="font-medium">{maschine.kosten_pro_tag.toFixed(2)} €</p>
+                            <p className="font-medium">{parseFloat(String(maschine.kosten_pro_tag)).toFixed(2)} €</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Verbrauch:</p>
@@ -365,15 +365,15 @@ const MaschinenAuswahl: React.FC = () => {
                         <ul className="space-y-2">
                           <li className="flex justify-between">
                             <span>Stundensatz:</span>
-                            <span className="font-medium">{selectedMaschine.kosten_pro_stunde.toFixed(2)} €</span>
+                            <span className="font-medium">{parseFloat(String(selectedMaschine.kosten_pro_stunde)).toFixed(2)} €</span>
                           </li>
                           <li className="flex justify-between">
                             <span>Tagessatz:</span>
-                            <span className="font-medium">{selectedMaschine.kosten_pro_tag.toFixed(2)} €</span>
+                            <span className="font-medium">{parseFloat(String(selectedMaschine.kosten_pro_tag)).toFixed(2)} €</span>
                           </li>
                           <li className="flex justify-between">
                             <span>Wochensatz:</span>
-                            <span className="font-medium">{selectedMaschine.kosten_pro_woche.toFixed(2)} €</span>
+                            <span className="font-medium">{parseFloat(String(selectedMaschine.kosten_pro_woche)).toFixed(2)} €</span>
                           </li>
                         </ul>
                       </div>
@@ -387,7 +387,7 @@ const MaschinenAuswahl: React.FC = () => {
                               selectedMaschine.effizienz_faktor >= 1.0 ? 'Gut' :
                               selectedMaschine.effizienz_faktor >= 0.8 ? 'Ausreichend' : 'Nicht optimal'
                             }</p>
-                            <p><span className="font-medium">Faktor:</span> {selectedMaschine.effizienz_faktor.toFixed(2)}</p>
+                            <p><span className="font-medium">Faktor:</span> {parseFloat(String(selectedMaschine.effizienz_faktor)).toFixed(2)}</p>
                             <p><span className="font-medium">Bearbeitungszeit:</span> {selectedMaschine.bearbeitungszeit_pro_m2?.toFixed(2)} min/m²</p>
                           </div>
                         </div>
