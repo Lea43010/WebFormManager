@@ -4,7 +4,6 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 interface TiefbauPDFGeneratorProps {
   projectName: string | null;
@@ -106,25 +105,47 @@ const TiefbauPDFGenerator = ({
         pdf.setFontSize(14);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
-        // @ts-ignore - jspdf-autotable erweiterung
-        pdf.autoTable({
-          startY: routeYPos + 5,
-          head: [['Eigenschaft', 'Wert']],
-          body: [
-            ['Start', routeData.start],
-            ['Ziel', routeData.end],
-            ['Distanz', `${routeData.distance.toFixed(2)} km`],
-            ['Höhenmeter (Aufstieg)', `${routeData.elevationGain.toFixed(2)} m`],
-            ['Höhenmeter (Abstieg)', `${routeData.elevationLoss.toFixed(2)} m`]
-          ],
-          theme: 'grid',
-          headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-          margin: { left: 14 },
-          columnStyles: {
-            0: { cellWidth: 50 },
-            1: { cellWidth: 100 }
+        // Streckeninformationen als einfache Textausgabe mit Rahmen
+        pdf.setFontSize(10);
+        pdf.setDrawColor(0);
+        pdf.setFillColor(240, 240, 240);
+        
+        // Überschriftenzeile mit grauem Hintergrund
+        pdf.setFillColor(200, 200, 200);
+        pdf.rect(14, routeYPos + 5, 80, 8, 'F');
+        pdf.setTextColor(0);
+        pdf.setFontSize(10);
+        pdf.text("Eigenschaft", 17, routeYPos + 10);
+        pdf.text("Wert", 60, routeYPos + 10);
+        
+        // Zeilen mit Routeninformationen
+        const startY = routeYPos + 13;
+        const rowHeight = 7;
+        
+        // Funktion zum Zeichnen einer Zeile
+        const addRow = (index: number, label: string, value: string) => {
+          const y = startY + (index * rowHeight);
+          
+          // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
+          if (index % 2 === 0) {
+            pdf.setFillColor(245, 245, 245);
+            pdf.rect(14, y, 80, rowHeight, 'F');
           }
-        });
+          
+          pdf.text(label, 17, y + 5);
+          pdf.text(value, 60, y + 5);
+        };
+        
+        // Daten einfügen
+        addRow(0, "Start", routeData.start);
+        addRow(1, "Ziel", routeData.end);
+        addRow(2, "Distanz", `${routeData.distance.toFixed(2)} km`);
+        addRow(3, "Höhenmeter (Aufstieg)", `${routeData.elevationGain.toFixed(2)} m`);
+        addRow(4, "Höhenmeter (Abstieg)", `${routeData.elevationLoss.toFixed(2)} m`);
+        
+        // Rahmen um die Tabelle zeichnen
+        pdf.setDrawColor(0);
+        pdf.rect(14, routeYPos + 5, 80, 5 + (5 * rowHeight), 'D');
         
         // --- Höhenprofil, falls vorhanden ---
         if (chartContainerId) {
@@ -141,8 +162,8 @@ const TiefbauPDFGenerator = ({
                 backgroundColor: null
               });
               
-              // @ts-ignore - lastAutoTable ist in der typedefinition nicht enthalten
-              const chartYPos = pdf.lastAutoTable?.finalY + 10 || 140;
+              // Feste Position für das Höhenprofil
+              const chartYPos = 140;
               
               // Wenn nicht genug Platz auf der Seite, neue Seite hinzufügen
               if (chartYPos + 40 > pageHeight) {
@@ -177,60 +198,99 @@ const TiefbauPDFGenerator = ({
         pdf.text('Bodenanalyse', 14, 20);
         
         if (bodenartData) {
-          // @ts-ignore - jspdf-autotable erweiterung
-          pdf.autoTable({
-            startY: 25,
-            head: [['Eigenschaft', 'Wert']],
-            body: [
-              ['Bodenart', bodenartData.name],
-              ['Beschreibung', bodenartData.beschreibung],
-              ['Kosten pro m²', `${bodenartData.kostenProM2.toFixed(2)} €`],
-              ['Geschätzte Gesamtkosten', `${bodenartData.gesamtkosten.toFixed(2)} €`]
-            ],
-            theme: 'grid',
-            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-            margin: { left: 14 },
-            columnStyles: {
-              0: { cellWidth: 50 },
-              1: { cellWidth: 100 }
+          // Manuelle Tabelle für Bodenanalyse
+          const bodenYPos = 25;
+          
+          // Überschriftenzeile mit grauem Hintergrund
+          pdf.setFillColor(200, 200, 200);
+          pdf.rect(14, bodenYPos, 80, 8, 'F');
+          pdf.setTextColor(0);
+          pdf.setFontSize(10);
+          pdf.text("Eigenschaft", 17, bodenYPos + 5);
+          pdf.text("Wert", 60, bodenYPos + 5);
+          
+          // Zeilen mit Bodenanalyse
+          const bodenStartY = bodenYPos + 8;
+          const rowHeight = 8;
+          
+          // Funktion zum Zeichnen einer Zeile für Bodenanalyse
+          const addBodenRow = (index: number, label: string, value: string) => {
+            const y = bodenStartY + (index * rowHeight);
+            
+            // Abwechselnde Zeilenhintergründe
+            if (index % 2 === 0) {
+              pdf.setFillColor(245, 245, 245);
+              pdf.rect(14, y, 80, rowHeight, 'F');
             }
-          });
+            
+            pdf.text(label, 17, y + 5);
+            pdf.text(value, 60, y + 5);
+          };
+          
+          // Daten einfügen
+          addBodenRow(0, "Bodenart", bodenartData.name);
+          addBodenRow(1, "Beschreibung", bodenartData.beschreibung);
+          addBodenRow(2, "Kosten pro m²", `${bodenartData.kostenProM2.toFixed(2)} €`);
+          addBodenRow(3, "Geschätzte Gesamtkosten", `${bodenartData.gesamtkosten.toFixed(2)} €`);
+          
+          // Rahmen um die Tabelle zeichnen
+          pdf.setDrawColor(0);
+          pdf.rect(14, bodenYPos, 80, 8 + (4 * rowHeight), 'D');
         } else {
           pdf.setFontSize(10);
           pdf.text('Keine Bodenanalyse verfügbar.', 14, 25);
         }
         
         // --- Maschinenempfehlungen ---
-        // @ts-ignore - lastAutoTable ist in der typedefinition nicht enthalten
-        const maschinenYPos = pdf.lastAutoTable?.finalY + 10 || 60;
+        const maschinenYPos = 80; // Fester Y-Wert für Maschinenempfehlungen
         pdf.setFontSize(14);
         pdf.text('Empfohlene Maschinen', 14, maschinenYPos);
         
         if (maschinenData && maschinenData.length > 0) {
-          const maschinenTableData = maschinenData.map(maschine => [
-            maschine.name,
-            maschine.typ,
-            maschine.leistung,
-            `${maschine.kostenProStunde.toFixed(2)} €`
-          ]);
+          // Überschriftenzeile mit grauem Hintergrund
+          const tableY = maschinenYPos + 5;
+          pdf.setFillColor(200, 200, 200);
+          pdf.rect(14, tableY, 160, 8, 'F');
+          pdf.setTextColor(0);
+          pdf.setFontSize(10);
           
-          // @ts-ignore - jspdf-autotable erweiterung
-          pdf.autoTable({
-            startY: maschinenYPos + 5,
-            head: [['Name', 'Typ', 'Leistung', 'Kosten pro Stunde']],
-            body: maschinenTableData,
-            theme: 'grid',
-            headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-            margin: { left: 14 }
+          // Spaltenüberschriften
+          pdf.text("Name", 17, tableY + 5);
+          pdf.text("Typ", 57, tableY + 5);
+          pdf.text("Leistung", 97, tableY + 5);
+          pdf.text("Kosten/Stunde", 137, tableY + 5);
+          
+          // Zeilen mit Maschinenempfehlungen
+          const maschinenRowHeight = 8;
+          
+          maschinenData.forEach((maschine, index) => {
+            const y = tableY + 8 + (index * maschinenRowHeight);
+            
+            // Abwechselnde Zeilenhintergründe
+            if (index % 2 === 0) {
+              pdf.setFillColor(245, 245, 245);
+              pdf.rect(14, y, 160, maschinenRowHeight, 'F');
+            }
+            
+            // Daten einfügen
+            pdf.text(maschine.name, 17, y + 5);
+            pdf.text(maschine.typ, 57, y + 5);
+            pdf.text(maschine.leistung, 97, y + 5);
+            pdf.text(`${maschine.kostenProStunde.toFixed(2)} €`, 137, y + 5);
           });
+          
+          // Rahmen um die Tabelle zeichnen
+          pdf.setDrawColor(0);
+          pdf.rect(14, tableY, 160, 8 + (maschinenData.length * maschinenRowHeight), 'D');
         } else {
           pdf.setFontSize(10);
           pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 5);
         }
         
         // --- Fußzeile auf jeder Seite ---
-        // @ts-ignore - getNumberOfPages ist in jspdf verfügbar, aber in der typedefinition fehlt es
-        const totalPages = pdf.internal.getNumberOfPages(); 
+        // Sichere Methode, um die Anzahl der Seiten zu erhalten
+        const totalPages = pdf.getNumberOfPages ? pdf.getNumberOfPages() : 
+                          (pdf.internal.pages ? pdf.internal.pages.length - 1 : 2);
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i);
           pdf.setFontSize(8);
