@@ -250,11 +250,14 @@ const TiefbauPDFGenerator = ({
           maschinenEndY = maschinenYPos + 15;
         }
         
-        // --- Höhenprofil unter den Maschinenempfehlungen ---
+        // --- Höhenprofil auf einer neuen Seite ---
         if (chartContainerId) {
           const chartElement = document.getElementById(chartContainerId);
           if (chartElement) {
             try {
+              // Neue Seite für das Höhenprofil
+              pdf.addPage();
+              
               const chartCanvas = await html2canvas(chartElement, {
                 useCORS: true,
                 allowTaint: true,
@@ -265,14 +268,24 @@ const TiefbauPDFGenerator = ({
                 backgroundColor: 'white' // Weißer Hintergrund statt transparent/schwarz
               });
               
-              pdf.setFontSize(14);
-              pdf.text('Höhenprofil', 14, maschinenEndY);
+              pdf.setFontSize(20);
+              pdf.setTextColor(0, 0, 0);
+              pdf.text('Höhenprofil', 14, 20);
               
-              const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
-              const chartWidth = 120;
+              // Größeres Format für die bessere Sichtbarkeit
+              const chartImgData = chartCanvas.toDataURL('image/jpeg', 1.0);
+              const chartWidth = 160; // Breiteres Bild
               const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
               
-              pdf.addImage(chartImgData, 'JPEG', 14, maschinenEndY + 5, chartWidth, chartHeight);
+              // Mehr Platz nach oben für den Titel
+              pdf.addImage(chartImgData, 'JPEG', 14, 30, chartWidth, chartHeight);
+              
+              // Informationstext unter dem Höhenprofil
+              const chartInfoY = 30 + chartHeight + 5;
+              pdf.setFontSize(10);
+              pdf.text('Das Höhenprofil zeigt die Höhenunterschiede entlang der geplanten Strecke.', 14, chartInfoY);
+              pdf.text('Die blaue Linie zeigt die Höhe in Metern über Normalnull (m ü. NN).', 14, chartInfoY + 5);
+              
             } catch (chartError) {
               console.error('Fehler beim Rendern des Höhenprofils:', chartError);
             }
