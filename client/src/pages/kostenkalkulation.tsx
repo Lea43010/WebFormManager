@@ -400,7 +400,7 @@ export default function KostenKalkulationPage() {
                   variant="default"
                   size="sm"
                   onClick={() => setLocation("/tiefbau-map")}
-                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs"
+                  className="flex-1 bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs"
                 >
                   <Map className="h-4 w-4 mr-1.5" />
                   Neue Route planen
@@ -503,7 +503,7 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs" 
+                className="w-full bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs" 
                 variant="default"
                 onClick={() => setLocation("/bodenanalyse")}
               >
@@ -559,7 +559,7 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs" 
+                className="w-full bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs" 
                 variant="default"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
@@ -666,7 +666,7 @@ export default function KostenKalkulationPage() {
           <CardFooter className="flex justify-end">
             <Button 
               variant="default"
-              className="w-full sm:w-auto bg-[#6a961f] hover:bg-[#5b851a] text-white"
+              className="w-full sm:w-auto bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center"
               onClick={berechneKosten}
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
