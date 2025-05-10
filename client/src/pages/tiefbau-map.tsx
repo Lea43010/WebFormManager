@@ -123,6 +123,7 @@ const TiefbauMap: React.FC = () => {
           throw new Error('Projekte konnten nicht geladen werden');
         }
         const data = await response.json();
+        console.log('Geladene Projekte:', data);
         setProjects(data);
       } catch (error) {
         console.error('Fehler beim Laden der Projekte:', error);
@@ -494,7 +495,7 @@ const TiefbauMap: React.FC = () => {
         distance: Math.round(Number(distance || 100)), // Fallback-Abstand, falls keine Berechnung möglich war
         route_data: simplifiedCoordinates,
         project_id: selectedProject, // Verknüpfe die Route mit dem ausgewählten Projekt
-        project_name: projectData?.project_name || '',
+        project_name: projectData?.projectName || '',
         bodenart_id: selectedBodenart ? parseInt(selectedBodenart) : null,
         bodenart_name: selectedBodenartObj?.name || '',
         kosten_pro_m2: streckenkostenProM2,
@@ -586,13 +587,24 @@ const TiefbauMap: React.FC = () => {
               ) : (
                 <>
                   <SelectItem value="0">Alle Projekte</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.project_name || 
-                       `${project.project_cluster || ''} ${project.project_art || ''}`.trim() || 
-                       `Projekt ${project.id}`}
-                    </SelectItem>
-                  ))}
+                  {projects.map((project) => {
+                    // Debug-Ausgabe für jedes Projekt
+                    console.log('Projekt-Details:', project.id, 
+                                'Name:', project.projectName,
+                                'Cluster:', project.projectCluster,
+                                'Art:', project.projectArt);
+                    
+                    // Expliziter Name für die Anzeige konstruieren
+                    const displayName = project.projectName 
+                      ? `${project.projectName} (${project.projectArt || 'Projekt'})`
+                      : `Projekt ${project.id}`;
+                    
+                    return (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {displayName}
+                      </SelectItem>
+                    );
+                  })}
                 </>
               )}
             </SelectContent>
