@@ -526,7 +526,7 @@ export default function InformationPage() {
                     toast({
                       title: "PDF erstellt",
                       description: "Das Benutzerhandbuch wurde erfolgreich als PDF heruntergeladen.",
-                      variant: "success",
+                      variant: "default",
                     });
                   } catch (error) {
                     console.error('PDF Generierungsfehler:', error);
@@ -543,10 +543,10 @@ export default function InformationPage() {
               </Button>
             </div>
             
-            <Alert>
-              <Info className="h-4 w-4 mr-2" />
-              <AlertTitle>Aktuelle Version</AlertTitle>
-              <AlertDescription>
+            <Alert className="border-[#6a961f]/20 bg-[#6a961f]/5">
+              <Info className="h-4 w-4 mr-2 text-[#6a961f]" />
+              <AlertTitle className="text-[#111827] font-semibold">Aktuelle Version</AlertTitle>
+              <AlertDescription className="text-[#111827]">
                 Das Benutzerhandbuch wird regelmäßig aktualisiert. Die aktuelle Version ist vom 28.04.2025.
                 Bei Fragen oder für Support wenden Sie sich bitte an Ihren Administrator.
               </AlertDescription>
@@ -558,21 +558,21 @@ export default function InformationPage() {
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Datenqualitätsmodul</h2>
             
             <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-medium mb-3 text-primary">Umfassende Anleitung zum Datenqualitätsmodul</h3>
-                <p className="text-gray-700 mb-2">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-xl font-medium mb-3 text-[#111827]">Umfassende Anleitung zum Datenqualitätsmodul</h3>
+                <p className="text-[#111827] mb-2">
                   Das Datenqualitätsmodul bietet umfassende Funktionen zur Überwachung, Analyse und Verbesserung der Datenqualität in der Bau-Structura Anwendung.
                 </p>
-                <p className="text-gray-700 mb-4">
+                <p className="text-[#111827] mb-4">
                   Vollständige PDF-Dokumentation mit Erklärungen und Beispielen.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                  <Button variant="outline" className="flex items-center" onClick={() => window.open('/public/docs/datenqualitaet-dokumentation.pdf', '_blank')}>
+                  <Button className="flex items-center bg-[#6a961f] hover:bg-[#5a8519] text-white" onClick={() => window.open('/public/docs/datenqualitaet-dokumentation.pdf', '_blank')}>
                     <FileText className="h-4 w-4 mr-2" />
                     Ansehen
                   </Button>
-                  <Button variant="outline" className="flex items-center" onClick={() => {
+                  <Button className="flex items-center border-[#6a961f] text-[#6a961f] hover:bg-[#6a961f]/10" variant="outline" onClick={() => {
                     const link = document.createElement('a');
                     link.href = '/public/docs/datenqualitaet-dokumentation.pdf';
                     link.setAttribute('download', 'datenqualitaet-dokumentation.pdf');
@@ -671,21 +671,21 @@ export default function InformationPage() {
                 </CardContent>
               </Card>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Spezialfunktionen</CardTitle>
-                  <CardDescription>
+              <Card className="shadow-sm border border-gray-100">
+                <CardHeader className="bg-white pb-2">
+                  <CardTitle className="text-[#111827]">Spezialfunktionen</CardTitle>
+                  <CardDescription className="text-[#111827]/80">
                     Entitäten für erweiterte Funktionalitäten der Anwendung
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="border-t pt-4">
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-sm">
                       <thead>
-                        <tr className="bg-primary/10 border-b">
-                          <th className="text-left p-2 font-medium">Funktion</th>
-                          <th className="text-left p-2 font-medium">Tabelle</th>
-                          <th className="text-left p-2 font-medium">Beschreibung</th>
+                        <tr className="bg-[#6a961f]/10 border-b">
+                          <th className="text-left p-2 font-semibold text-[#111827]">Funktion</th>
+                          <th className="text-left p-2 font-semibold text-[#111827]">Tabelle</th>
+                          <th className="text-left p-2 font-semibold text-[#111827]">Beschreibung</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
