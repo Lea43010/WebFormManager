@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Download, Calculator, FileText, Map, Database, Truck, Trash2 } from "lucide-react";
+import { Loader2, Download, Calculator, FileText, Map, Database, Truck, Trash2, Settings } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -685,9 +685,12 @@ export default function KostenKalkulationPage() {
         </Card>
 
         {kalkulation && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Kostenberechnung Ergebnis</CardTitle>
+          <Card className="bg-white shadow rounded-lg mt-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+                <Calculator className="h-5 w-5 text-[#6a961f]" />
+                <span>Kostenberechnung Ergebnis</span>
+              </CardTitle>
               <CardDescription>
                 Detaillierte Aufstellung der berechneten Projektkosten
               </CardDescription>
