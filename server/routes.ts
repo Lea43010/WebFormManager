@@ -268,6 +268,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/companies", requireManagerOrAbove(), async (req, res, next) => {
     try {
       // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      // Nullable-Check für TypeScript
+      if (!req.user) {
+        return res.status(401).json({ message: 'Nicht authentifiziert' });
+      }
+      
       console.log(`Benutzer mit Rolle ${req.user.role} erstellt eine neue Firma`);
       
       // Stelle sicher, dass numerische Felder korrekt konvertiert werden

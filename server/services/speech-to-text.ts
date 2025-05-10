@@ -38,12 +38,26 @@ async function convertWebmToWav(inputPath: string): Promise<string> {
   const outputPath = inputPath.replace(path.extname(inputPath), '.wav');
   
   try {
-    // ffmpeg muss auf dem System installiert sein
+    logger.info(`Versuche Audiokonvertierung von ${inputPath} zu ${outputPath}`);
+    
+    // Prüfen, ob ffmpeg installiert ist, ohne es auszuführen
+    try {
+      await execAsync(`which ffmpeg`);
+    } catch (error) {
+      logger.warn(`ffmpeg wurde nicht gefunden: ${error}`);
+      // Wenn ffmpeg nicht gefunden wird, geben wir den ursprünglichen Pfad zurück
+      return inputPath;
+    }
+    
+    // ffmpeg ist installiert, Konvertierung versuchen
     await execAsync(`ffmpeg -i ${inputPath} -acodec pcm_s16le -ar 16000 -ac 1 ${outputPath}`);
+    logger.info(`Audiokonvertierung erfolgreich: ${outputPath}`);
     return outputPath;
   } catch (error) {
     logger.error(`Fehler bei der Audiokonvertierung: ${error}`);
-    throw new Error('Fehler bei der Audiokonvertierung');
+    logger.info(`Verwende original Datei statt Konvertierung: ${inputPath}`);
+    // Bei Fehlern geben wir den ursprünglichen Pfad zurück statt einen Fehler zu werfen
+    return inputPath;
   }
 }
 

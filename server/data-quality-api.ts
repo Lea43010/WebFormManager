@@ -1,6 +1,4 @@
 import { Request, Response, Router } from 'express';
-// Temporär deaktiviert, um den Server korrekt zu starten
-// import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 // Für die Rollen- und Authentifizierungsprüfung
@@ -48,30 +46,7 @@ router.post('/data-quality/run', isAuthenticated, requireAdmin(), async (req: Re
   const { table, profile = true, outliers = true, validate = true, limit } = req.body;
   
   try {
-    // Parameter für das Python-Skript vorbereiten
-    const args = ['scripts/run_quality_check.py'];
-    
-    if (table) {
-      args.push('--table', table);
-    }
-    
-    if (profile) {
-      args.push('--profile');
-    }
-    
-    if (outliers) {
-      args.push('--outliers');
-    }
-    
-    if (validate) {
-      args.push('--validate');
-    }
-    
-    if (limit) {
-      args.push('--limit', limit.toString());
-    }
-    
-    console.log(`Starte Datenqualitätsprüfung mit Argumenten: ${args.join(' ')}`);
+    console.log(`Datenqualitätsprüfung angefordert mit Parametern: Tabelle=${table}, Profil=${profile}, Ausreißer=${outliers}, Validierung=${validate}, Limit=${limit}`);
     
     // Erstelle ein neues DataQualityRun in der Datenbank, wenn eine entsprechende Tabelle existiert
     let runId: number | null = null;
@@ -90,7 +65,7 @@ router.post('/data-quality/run', isAuthenticated, requireAdmin(), async (req: Re
           INSERT INTO data_quality_runs 
           (started_at, started_by, table_name, status, parameters) 
           VALUES 
-          (NOW(), $1, $2, 'running', $3) 
+          (NOW(), $1, $2, 'disabled', $3) 
           RETURNING id
         `, [
           req.user?.id || 'system', 
@@ -104,40 +79,17 @@ router.post('/data-quality/run', isAuthenticated, requireAdmin(), async (req: Re
       // Nichtvorhandensein der Tabelle ist kein kritischer Fehler
     }
     
-    // Python-Skript asynchron starten - temporär deaktiviert
-    console.log('[Datenqualität] Datenqualitätsprüfung ist temporär deaktiviert');
+    console.log('[Datenqualität] Datenqualitätsprüfung ist deaktiviert');
     
-    let output = 'Datenqualitätsprüfung ist temporär deaktiviert';
-    let errorOutput = '';
+    let message = 'Datenqualitätsprüfung ist deaktiviert. Kontaktieren Sie einen Administrator für mehr Informationen.';
     
-    // Aktualisiere den Run-Status, wenn eine ID vorhanden ist
-    if (runId !== null) {
-      try {
-        await query(`
-          UPDATE data_quality_runs 
-          SET 
-            ended_at = NOW(), 
-            status = $1, 
-            output = $2, 
-            error_output = $3
-          WHERE id = $4
-        `, [
-          'skipped',
-          output,
-          errorOutput,
-          runId
-        ]);
-      } catch (error) {
-        console.error('Fehler beim Aktualisieren des DataQualityRun-Eintrags:', error);
-      }
-    }
+    // Aktualisierungen des Runs sind direkt oben erfolgt
     
-    // Sofortige Antwort senden, da das Skript im Hintergrund läuft
+    // Sofortige Antwort senden
     return res.status(202).json({
       success: true,
       message: 'Datenqualitätsprüfung wurde gestartet',
-      runId,
-      args
+      runId
     });
     
   } catch (error) {

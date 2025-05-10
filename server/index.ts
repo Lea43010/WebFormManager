@@ -15,194 +15,121 @@ import { logger } from "./logger";
 import { userCache } from "./user-cache";
 import { storage } from "./storage";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Sofortige Server-Start-Funktion
+(async function startServer() {
+  const app = express();
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
 
-// SQL Query Monitor einrichten, wenn aktiviert
-if (config.logging.sqlQueryLogging) {
-  app.use(createSQLQueryMonitor(pool));
-  // Datenbankstruktur für Query-Logs erstellen
-  initQueryLogging().catch(err => {
-    logger.error("Fehler beim Initialisieren des SQL-Query-Loggings:", err);
-  });
-}
+  // SQL Query Monitor einrichten, wenn aktiviert
+  if (config.logging.sqlQueryLogging) {
+    app.use(createSQLQueryMonitor(pool));
+    // Datenbankstruktur für Query-Logs erstellen
+    initQueryLogging().catch(err => {
+      logger.error("Fehler beim Initialisieren des SQL-Query-Loggings:", err);
+    });
+  }
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  // API-Dokumentation (Swagger) einrichten, wenn aktiviert
+  if (config.isDevelopment) {
+    setupApiDocs(app);
+  }
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
-(async () => {
-  // Health-Check-Endpunkte vor der Hauptroutenkonfiguration einrichten
+  // Health-Check-Endpunkte einrichten
   setupHealthRoutes(app);
-  
-  // API-Dokumentation und Tests direkt einrichten (ohne Verzögerung)
-  // try {
-  //   setupApiDocs(app);
-  //   logger.info('API-Dokumentation erfolgreich eingerichtet');
-  // } catch (error) {
-  //   logger.error('Fehler beim Einrichten der API-Dokumentation:', error);
-  // }
-  
-  // // API-Tests einrichten (nur in Entwicklungsumgebung)
-  // try {
-  //   setupApiTests(app);
-  //   logger.info('API-Tests erfolgreich eingerichtet');
-  // } catch (error) {
-  //   logger.error('Fehler beim Einrichten der API-Tests:', error);
-  // }
-  
-  // Vorübergehend deaktiviert, um schnelleren Start zu ermöglichen
-  
-  // Alle API-Routen registrieren
+
+  // Debugging/Test-Endpunkte im Entwicklungsmodus aktivieren
+  if (config.isDevelopment) {
+    setupApiTests(app);
+  }
+
+  // Backup-Routen aktivieren
+  setupBackupRoutes(app);
+
+  // Registriere alle Routen
   const server = await registerRoutes(app);
-  
-  // Nicht gefundene Routen abfangen (nach allen definierten Routen)
+
+  // Fehlerbehandlung
   app.use(notFoundHandler);
-  
-  // Zentrale Fehlerbehandlung mit Umgebungsunterscheidung
   app.use(errorHandler);
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  // Statische Dateien bereitstellen (Vite-Dev-Server im Entwicklungsmodus)
+  if (config.isDevelopment) {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // Use a different port if 5000 is in use
-  // this serves both the API and the client.
-  const ports = [5000, 5001, 5002, 5003, 5004, 5005];
-  let currentPortIndex = 0;
+  // Vereinfachte Port-Konfiguration - nur ein Port für die Einfachheit
+  // Port 5000 für Replit (wird vom Replit Workflow System erwartet)
+  const PORT = 5000;
   let serverStarted = false;
 
-  const tryPort = () => {
-    if (currentPortIndex >= ports.length) {
-      log(`Failed to start server: all ports (${ports.join(', ')}) are in use`);
-      return;
-    }
-    
-    const port = ports[currentPortIndex];
-    
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    })
+  // Server starten
+  server.listen(PORT, "0.0.0.0")
     .on('listening', () => {
       serverStarted = true;
       
       // Umgebungsspezifische Startmeldung
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
-      logger.info(`Server gestartet auf Port ${port}${environment}`);
-      log(`serving on port ${port}`);
+      logger.info(`Server gestartet auf Port ${PORT}${environment}`);
+      log(`serving on port ${PORT}`);
       
-      // Verzögerte Initialisierungen 
-      
-      // Backup-System bleibt temporär deaktiviert für schnelleren Serverstart
-      // try {
-      //   initBackupSystem();
-      //   logger.info('Backup-System erfolgreich initialisiert');
-      // } catch (error) {
-      //   logger.error('Fehler beim Initialisieren des Backup-Systems:', error);
-      // }
+      // Verzögerte Initialisierungen - auf ein Minimum reduziert
       
       // Cron-Jobs für Testphasen-Ablauf-Benachrichtigungen initialisieren
-      try {
-        cronJobManager.initialize().then(() => {
-          logger.info('Cron-Jobs erfolgreich initialisiert');
-        });
-      } catch (error) {
-        logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
-      }
-      
-      // Benutzer-Cache beim Start vorwärmen für bessere Performance
-      try {
-        // Prüfen, ob Cache aktiviert ist
-        if (userCache.isEnabled()) {
-          // Top 20 am häufigsten zugegriffene Benutzer in den Cache laden (falls Nutzungsdaten vorhanden)
-          userCache.warmupMostFrequent(20, async (id) => {
-            return await storage.getUser(id);
-          }).then((warmupResult) => {
-            logger.info('Benutzer-Cache beim Serverstart vorgewärmt');
+      // Als verzögerte Operation, um den anfänglichen Serverstart zu beschleunigen
+      setTimeout(() => {
+        try {
+          cronJobManager.initialize().then(() => {
+            logger.info('Cron-Jobs erfolgreich initialisiert');
           });
-          
-          // Zusätzlich die 10 neuesten Benutzer vorwärmen (unabhängig von Nutzungshäufigkeit)
-          storage.getRecentUsers(10).then((recentUsers: any[]) => {
-            if (recentUsers && recentUsers.length > 0) {
-              const recentUserIds = recentUsers.map((user: any) => user.id);
-              userCache.warmup(recentUserIds, async (id) => {
-                return await storage.getUser(id);
-              }).then(() => {
-                logger.info(`${recentUsers.length} kürzlich registrierte Benutzer in Cache geladen`);
-              });
-            }
-          }).catch((error: any) => {
-            logger.warn('Fehler beim Laden kürzlich registrierter Benutzer:', error);
-          });
+        } catch (error) {
+          logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
         }
-      } catch (error) {
-        logger.warn('Fehler beim Vorwärmen des Benutzer-Caches:', error);
-      }
+      }, 5000); // 5 Sekunden Verzögerung
       
-      // Proxy-Server wird nicht automatisch gestartet
-      // if (config.isDevelopment) {
-      //   process.env.PORT = String(port);
-      //   try {
-      //     logger.info('Starte einfachen Proxy-Server für Tests...');
-      //     import('child_process').then(({ spawn }) => {
-      //       const proxyProcess = spawn('node', ['scripts/simple-proxy.js'], {
-      //         detached: true,
-      //         stdio: ['inherit', 'inherit', 'inherit']
-      //       });
-      //       proxyProcess.unref();
-      //       logger.info('Proxy-Server wird auf Port 9000 gestartet');
-      //     }).catch(err => {
-      //       logger.error('Fehler beim Importieren des child_process-Moduls:', err);
-      //     });
-      //   } catch (error) {
-      //     logger.error('Fehler beim Starten des Proxy-Servers:', error);
-      //   }
-      // }
+      // Benutzer-Cache beim Start vorwärmen für bessere Performance - vorübergehend deaktiviert
+      logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
     })
     .on('error', (err: any) => {
-      if (err && typeof err === 'object' && 'code' in err && err.code === 'EADDRINUSE') {
-        log(`Port ${port} is in use, trying next port...`);
-        currentPortIndex++;
-        tryPort();
+      if (err.code === 'EADDRINUSE') {
+        logger.error(`Port ${PORT} ist bereits in Verwendung. Server kann nicht gestartet werden.`);
+        console.error(`[express] KRITISCHER FEHLER: Port ${PORT} ist bereits in Verwendung! Server kann nicht gestartet werden.`);
+        
+        // Bei Portkonflikt versuchen wir Port 3000
+        const FALLBACK_PORT = 3000;
+        console.log(`[express] Versuche alternativen Port ${FALLBACK_PORT}...`);
+        
+        server.listen(FALLBACK_PORT, "0.0.0.0")
+          .on('listening', () => {
+            serverStarted = true;
+            logger.info(`Server gestartet auf Fallback-Port ${FALLBACK_PORT}${config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)'}`);
+            log(`serving on fallback port ${FALLBACK_PORT}`);
+            
+            // Verzögerte Initialisierungen auf Fallback-Port
+            setTimeout(() => {
+              try {
+                cronJobManager.initialize().then(() => {
+                  logger.info('Cron-Jobs erfolgreich initialisiert');
+                });
+              } catch (error) {
+                logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+              }
+            }, 5000);
+            
+            logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
+          })
+          .on('error', (fallbackErr: any) => {
+            // Auch der Fallback-Port ist nicht verfügbar
+            logger.error(`Auch Fallback-Port ${FALLBACK_PORT} ist nicht verfügbar. Server kann nicht gestartet werden.`);
+            console.error(`[express] KRITISCHER FEHLER: Auch Fallback-Port ${FALLBACK_PORT} ist nicht verfügbar! Server kann nicht gestartet werden.`);
+            process.exit(1);
+          });
       } else {
-        log(`Error starting server: ${err.message}`);
+        // Anderer Fehler beim Starten des Servers
+        logger.error('Fehler beim Starten des Servers:', err);
+        process.exit(1); // Beende den Prozess mit Fehlercode
       }
     });
-  };
-
-  tryPort();
 })();
