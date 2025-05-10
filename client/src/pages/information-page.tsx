@@ -471,44 +471,43 @@ export default function InformationPage() {
         {/* Hauptinhalt */}
         <div className="lg:w-3/4 order-1 lg:order-2 space-y-8" ref={contentRef}>
           {/* Benutzerhandbuch Sektion */}
-          <div id="benutzerhandbuch" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
+          <div id="benutzerhandbuch" className="scroll-mt-4 bg-white p-8 rounded-lg shadow">
             <h2 className="text-2xl font-semibold mb-6 border-b pb-2">Benutzerhandbuch</h2>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className="text-[#111827] mb-6 leading-relaxed">
               Das vollständige Benutzerhandbuch für die Bau - Structura App enthält detaillierte Anleitungen
               zu allen Funktionen und Bereichen der Anwendung. Es bietet sowohl für Anfänger als auch für 
               fortgeschrittene Nutzer wichtige Informationen zur optimalen Nutzung des Systems.
             </p>
             
-            <Card className="mb-6">
+            <Card className="mb-6 border shadow">
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-[#111827]">
+                  <FileText className="h-5 w-5 text-[#6a961f]" />
                   Benutzerhandbuch-Übersicht
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600">
                   Die wichtigsten Themen im Benutzerhandbuch auf einen Blick
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 list-disc pl-5">
-                  <li>Einführung und Grundkonzepte</li>
-                  <li>Anmeldung und Registrierung</li>
-                  <li>Dashboard und Navigation</li>
-                  <li>Projektverwaltung</li>
-                  <li>Bautagebuch-Nutzung</li>
-                  <li>Meilensteine und Zeitplanung</li>
-                  <li>Oberflächenanalyse-Tools</li>
-                  <li>Bedarfs- und Kapazitätsplanung</li>
-                  <li>Dokumentenverwaltung</li>
-                  <li>Administrative Funktionen</li>
+                <ul className="space-y-2 list-disc pl-5 text-[#111827]">
+                  <li className="font-medium">Einführung und Grundkonzepte</li>
+                  <li className="font-medium">Anmeldung und Registrierung</li>
+                  <li className="font-medium">Dashboard und Navigation</li>
+                  <li className="font-medium">Projektverwaltung</li>
+                  <li className="font-medium">Bautagebuch-Nutzung</li>
+                  <li className="font-medium">Meilensteine und Zeitplanung</li>
+                  <li className="font-medium">Oberflächenanalyse-Tools</li>
+                  <li className="font-medium">Bedarfs- und Kapazitätsplanung</li>
+                  <li className="font-medium">Dokumentenverwaltung</li>
+                  <li className="font-medium">Administrative Funktionen</li>
                 </ul>
               </CardContent>
             </Card>
             
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <Button 
-                className="flex-1 flex items-center justify-center gap-2"
-                variant="default" 
+                className="flex-1 flex items-center justify-center gap-2 bg-[#6a961f] hover:bg-[#5a8519] text-white"
                 asChild
               >
                 <a href="/docs/Benutzerhandbuch.md" target="_blank">
@@ -518,7 +517,7 @@ export default function InformationPage() {
               </Button>
               
               <Button 
-                className="flex-1 flex items-center justify-center gap-2"
+                className="flex-1 flex items-center justify-center gap-2 border-[#6a961f] text-[#6a961f] hover:bg-[#6a961f]/10"
                 variant="outline"
                 onClick={async () => {
                   try {
@@ -527,7 +526,7 @@ export default function InformationPage() {
                     toast({
                       title: "PDF erstellt",
                       description: "Das Benutzerhandbuch wurde erfolgreich als PDF heruntergeladen.",
-                      variant: "default",
+                      variant: "success",
                     });
                   } catch (error) {
                     console.error('PDF Generierungsfehler:', error);
