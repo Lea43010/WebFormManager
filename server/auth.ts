@@ -123,10 +123,17 @@ export function setupAuth(app: Express) {
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 28); // 4 Wochen (28 Tage)
       
+      // Prüfen, ob DSGVO-Zustimmung gegeben wurde
+      if (req.body.gdprConsent !== true) {
+        await logLoginEvent(req, 'register', null, false, 'DSGVO-Zustimmung erforderlich');
+        return res.status(400).json({ message: "Sie müssen den Datenschutzbestimmungen zustimmen, um sich zu registrieren" });
+      }
+
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
         trialEndDate, // Ablaufdatum der Testphase hinzufügen
+        gdprConsent: req.body.gdprConsent, // DSGVO-Zustimmung speichern
       });
 
       req.login(user, (err) => {

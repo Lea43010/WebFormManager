@@ -559,17 +559,24 @@ export const constructionDiaryEmployeesRelations = relations(constructionDiaryEm
 }));
 
 // Create insert schemas
-export const insertUserSchema = createInsertSchema(users).transform(data => {
-  // Setze das Ende der Testphase automatisch auf 4 Wochen ab jetzt
-  const fourWeeksFromNow = new Date();
-  fourWeeksFromNow.setDate(fourWeeksFromNow.getDate() + 28);
-  
-  return {
-    ...data,
-    trialEndDate: data.trialEndDate || fourWeeksFromNow,
-    subscriptionStatus: data.subscriptionStatus || 'trial',
-  };
-});
+export const insertUserSchema = createInsertSchema(users)
+  .extend({
+    // Explicitly add gdprConsent field to schema with validation
+    gdprConsent: z.boolean().refine(value => value === true, {
+      message: "Sie müssen den Datenschutzbestimmungen zustimmen, um sich zu registrieren"
+    }),
+  })
+  .transform(data => {
+    // Setze das Ende der Testphase automatisch auf 4 Wochen ab jetzt
+    const fourWeeksFromNow = new Date();
+    fourWeeksFromNow.setDate(fourWeeksFromNow.getDate() + 28);
+    
+    return {
+      ...data,
+      trialEndDate: data.trialEndDate || fourWeeksFromNow,
+      subscriptionStatus: data.subscriptionStatus || 'trial',
+    };
+  });
 
 // Insert-Schema für Abonnementpläne
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).transform((data) => {
