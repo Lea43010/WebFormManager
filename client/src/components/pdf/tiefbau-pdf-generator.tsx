@@ -112,7 +112,7 @@ const TiefbauPDFGenerator = ({
         
         // Überschriftenzeile mit grauem Hintergrund
         pdf.setFillColor(200, 200, 200);
-        pdf.rect(14, routeYPos + 5, 80, 8, 'F');
+        pdf.rect(14, routeYPos + 5, 170, 8, 'F'); // Breitere Tabelle
         pdf.setTextColor(0);
         pdf.setFontSize(10);
         pdf.text("Eigenschaft", 17, routeYPos + 10);
@@ -129,7 +129,7 @@ const TiefbauPDFGenerator = ({
           // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
           if (index % 2 === 0) {
             pdf.setFillColor(245, 245, 245);
-            pdf.rect(14, y, 80, rowHeight, 'F');
+            pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
           }
           
           pdf.text(label, 17, y + 5);
@@ -145,7 +145,7 @@ const TiefbauPDFGenerator = ({
         
         // Rahmen um die Tabelle zeichnen
         pdf.setDrawColor(0);
-        pdf.rect(14, routeYPos + 5, 80, 5 + (5 * rowHeight), 'D');
+        pdf.rect(14, routeYPos + 5, 170, 5 + (5 * rowHeight), 'D');
         
         // --- Höhenprofil, falls vorhanden ---
         if (chartContainerId) {
@@ -203,7 +203,7 @@ const TiefbauPDFGenerator = ({
           
           // Überschriftenzeile mit grauem Hintergrund
           pdf.setFillColor(200, 200, 200);
-          pdf.rect(14, bodenYPos, 80, 8, 'F');
+          pdf.rect(14, bodenYPos, 170, 8, 'F'); // Breitere Tabelle
           pdf.setTextColor(0);
           pdf.setFontSize(10);
           pdf.text("Eigenschaft", 17, bodenYPos + 5);
@@ -220,7 +220,7 @@ const TiefbauPDFGenerator = ({
             // Abwechselnde Zeilenhintergründe
             if (index % 2 === 0) {
               pdf.setFillColor(245, 245, 245);
-              pdf.rect(14, y, 80, rowHeight, 'F');
+              pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
             }
             
             pdf.text(label, 17, y + 5);
@@ -235,7 +235,7 @@ const TiefbauPDFGenerator = ({
           
           // Rahmen um die Tabelle zeichnen
           pdf.setDrawColor(0);
-          pdf.rect(14, bodenYPos, 80, 8 + (4 * rowHeight), 'D');
+          pdf.rect(14, bodenYPos, 170, 8 + (4 * rowHeight), 'D');
         } else {
           pdf.setFontSize(10);
           pdf.text('Keine Bodenanalyse verfügbar.', 14, 25);
