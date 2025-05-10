@@ -348,7 +348,7 @@ export default function DataQualityPage() {
                         <AlertCircle className="h-3 w-3" />
                         Hoch: {issues.filter(issue => !issue.resolvedAt && issue.severity === "high").length}
                       </Badge>
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+                      <Badge variant="default" className="bg-amber-500 text-white flex items-center gap-1">
                         <AlertCircle className="h-3 w-3" />
                         Mittel: {issues.filter(issue => !issue.resolvedAt && issue.severity === "medium").length}
                       </Badge>

@@ -392,6 +392,7 @@ export function DataQualityManagement() {
                                   issue.severity === "high" ? "destructive" : 
                                   issue.severity === "medium" ? "default" : "outline"
                                 }
+                                className={issue.severity === "medium" ? "bg-amber-500 text-white" : ""}
                               >
                                 {issue.count}
                               </Badge>
@@ -484,6 +485,7 @@ export function DataQualityManagement() {
                                 issue.severity === "high" ? "destructive" : 
                                 issue.severity === "medium" ? "default" : "outline"
                               }
+                              className={issue.severity === "medium" ? "bg-amber-500 text-white" : ""}
                             >
                               {issue.severity === "high" ? "Hoch" : 
                                issue.severity === "medium" ? "Mittel" : "Niedrig"}
