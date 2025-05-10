@@ -454,15 +454,6 @@ export default function KostenKalkulationPage() {
                   })()}
                 </div>
               )}
-
-              <Button 
-                className="w-full" 
-                variant="outline"
-                onClick={() => setLocation("/tiefbau-map")}
-              >
-                <Map className="h-4 w-4 mr-2" />
-                Neue Route planen
-              </Button>
             </CardContent>
           </Card>
 

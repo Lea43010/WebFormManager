@@ -188,7 +188,7 @@ export default function SimpleLoginPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                  className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending && (

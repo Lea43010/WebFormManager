@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @layer utilities {
   /* Sehr kleine Schriftgröße für mobile Geräte */
   .text-2xs {
@@ -152,11 +154,22 @@ html {
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-[#F3F4F6] text-[#111827];
+    font-family: 'Inter', sans-serif;
   }
   
   /* Bilder immer responsiv machen */
   img {
     @apply max-w-full h-auto;
+  }
+  
+  /* Einheitliches Card-Design */
+  .card {
+    @apply bg-white rounded-lg shadow-md border border-gray-100;
+  }
+  
+  /* Einheitlicher Button-Stil */
+  .btn-primary {
+    @apply bg-[#3B82F6] text-white;
   }
 }
