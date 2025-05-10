@@ -376,9 +376,9 @@ export default function InformationPage() {
   }, []);
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 bg-[#F3F4F6]">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-bold">Hilfe & Info</h1>
+        <h1 className="text-3xl font-bold text-[#111827]">Hilfe & Info</h1>
         
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
@@ -387,7 +387,7 @@ export default function InformationPage() {
               placeholder="Suche in Hilfe & Info..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full"
+              className="pl-10 pr-4 py-2 w-full border-[#6a961f] focus:ring-[#6a961f] focus:border-[#6a961f]"
             />
             <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             {searchTerm && (
@@ -402,7 +402,7 @@ export default function InformationPage() {
             )}
           </div>
           
-          <Button asChild variant="outline" className="gap-2 hidden md:flex">
+          <Button asChild variant="outline" className="gap-2 hidden md:flex border-[#6a961f] text-[#6a961f] hover:bg-[#6a961f]/10">
             <Link to="/">
               <ArrowLeft className="h-4 w-4" />
               Zurück zur Übersicht
@@ -413,21 +413,21 @@ export default function InformationPage() {
       
       {/* Suchergebnisse */}
       {searchResults.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 animate-in fade-in">
-          <h3 className="font-medium text-lg mb-4 pb-2 border-b flex items-center">
-            <Search className="h-4 w-4 mr-2 text-primary" />
+        <div className="bg-white rounded-lg shadow p-4 mb-6 animate-in fade-in">
+          <h3 className="font-medium text-lg mb-4 pb-2 border-b flex items-center text-[#111827]">
+            <Search className="h-4 w-4 mr-2 text-[#6a961f]" />
             Suchergebnisse für "{searchTerm}" ({searchResults.length})
           </h3>
           <div className="space-y-4">
             {searchResults.map((result, index) => (
               <div key={index} className="p-3 hover:bg-gray-50 rounded-md border cursor-pointer" onClick={() => navigateToResult(result)}>
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="font-normal">
+                  <Badge variant="outline" className="font-normal border-[#6a961f] text-[#6a961f]">
                     {result.sectionTitle}
                   </Badge>
-                  <ChevronRight className="h-3 w-3 text-gray-400" />
+                  <ChevronRight className="h-3 w-3 text-[#6a961f]" />
                 </div>
-                <p className="text-sm text-gray-700">{result.contentPreview}</p>
+                <p className="text-sm text-[#111827]">{result.contentPreview}</p>
               </div>
             ))}
           </div>
@@ -439,8 +439,8 @@ export default function InformationPage() {
         {/* Sticky-Seitenmenü */}
         <div className="lg:w-1/4 order-2 lg:order-1">
           <div className="lg:sticky lg:top-4">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h3 className="font-medium text-lg mb-4 pb-2 border-b">Navigieren</h3>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-medium text-lg mb-4 pb-2 border-b text-[#111827]">Navigieren</h3>
               <ScrollArea className="h-[calc(100vh-250px)] pr-3">
                 <div className="space-y-2">
                   {sections.map((section) => (
@@ -449,8 +449,8 @@ export default function InformationPage() {
                       href={`#${section.id}`}
                       className={`flex items-center p-2 rounded-md transition-colors ${
                         activeSection === section.id
-                          ? "bg-primary text-white font-medium"
-                          : "hover:bg-gray-100"
+                          ? "bg-[#6a961f] text-white font-medium"
+                          : "hover:bg-gray-100 text-[#111827]"
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
