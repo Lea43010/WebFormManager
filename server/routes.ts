@@ -55,7 +55,7 @@ import {
   bodenklassenEnum, bodentragfaehigkeitsklassenEnum
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
-import { upload, getFileType, handleUploadErrors, cleanupOnError } from "./upload";
+import { upload, getFileType, handleUploadErrors, cleanupOnError, optimizedUpload } from "./upload";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dokumentations-PDFs mit korrektem Content-Type bereitstellen
@@ -1549,7 +1549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post(
     "/api/projects/:projectId/attachments",
-    upload.single("file"),
+    ...optimizedUpload.single("file"),
     handleUploadErrors,
     cleanupOnError,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -1578,16 +1578,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Keine Berechtigung, um Anhänge zu diesem Projekt hinzuzufügen" });
         }
         
-        const attachmentData = {
-          projectId,
-          fileName: req.file.originalname,
-          originalName: req.file.originalname,
-          fileType: getFileType(req.file.mimetype),
-          filePath: req.file.path,
-          fileSize: req.file.size,
-          // mimeType wurde aus der Tabelle entfernt
-          description: req.body.description || null
-        };
+        // Prüfen, ob optimierte Anhangsdaten vorhanden sind
+        let attachmentData: any;
+        
+        // Für Bilder: optimierte Daten aus dem Request verwenden
+        if ((req as any).attachmentData && (req as any).attachmentData.file) {
+          attachmentData = (req as any).attachmentData.file;
+          console.log('Verwende optimierte Bildanhangsdaten:', attachmentData.isOptimized ? 'Optimiert' : 'Nicht optimiert');
+        } else {
+          // Für andere Dateitypen: Standardanhangsdaten erstellen
+          attachmentData = {
+            projectId,
+            fileName: req.file.originalname,
+            originalName: req.file.originalname,
+            fileType: getFileType(req.file.mimetype),
+            filePath: req.file.path,
+            fileSize: req.file.size,
+            description: req.body.description || null,
+            isOptimized: false,
+            originalSize: req.file.size,
+            optimizedSize: null,
+            optimizationSavings: null,
+            originalFormat: null,
+            webpPath: null
+          };
+        }
         
         const attachment = await storage.createAttachment(attachmentData);
         res.status(201).json(attachment);
@@ -1597,6 +1612,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Bei einem Fehler die Datei löschen, falls sie existiert
         if (req.file) {
           await fs.remove(req.file.path).catch(() => {});
+          
+          // Auch optimierte Dateien löschen falls vorhanden
+          if ((req as any).optimizedFiles && (req as any).optimizedFiles.length > 0) {
+            for (const optimizedFile of (req as any).optimizedFiles) {
+              if (optimizedFile.optimization && optimizedFile.optimization.optimizedPath) {
+                await fs.remove(optimizedFile.optimization.optimizedPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.webpPath) {
+                await fs.remove(optimizedFile.optimization.webpPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.thumbnailPath) {
+                await fs.remove(optimizedFile.optimization.thumbnailPath).catch(() => {});
+              }
+            }
+          }
         }
         
         next(error);
@@ -1835,7 +1865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
   app.post(
     "/api/attachments/upload",
-    upload.single("file"),
+    ...optimizedUpload.single("file"),
     handleUploadErrors,
     cleanupOnError,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -1870,17 +1900,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Keine Berechtigung, um Anhänge zu diesem Projekt hinzuzufügen" });
         }
         
-        const attachmentData = {
-          projectId,
-          fileName: req.file.originalname,
-          originalName: req.file.originalname,
-          fileType: getFileType(req.file.mimetype),
-          fileCategory: req.body.fileCategory || "Andere",
-          filePath: req.file.path,
-          fileSize: req.file.size,
-          description: req.body.description || null,
-          tags: req.body.tags || null
-        };
+        // Prüfen, ob optimierte Anhangsdaten vorhanden sind
+        let attachmentData: any;
+        
+        // Für Bilder: optimierte Daten aus dem Request verwenden
+        if ((req as any).attachmentData && (req as any).attachmentData.file) {
+          attachmentData = (req as any).attachmentData.file;
+          console.log('Verwende optimierte Bildanhangsdaten:', attachmentData.isOptimized ? 'Optimiert' : 'Nicht optimiert');
+        } else {
+          // Für andere Dateitypen: Standardanhangsdaten erstellen
+          attachmentData = {
+            projectId,
+            fileName: req.file.originalname,
+            originalName: req.file.originalname,
+            fileType: getFileType(req.file.mimetype),
+            fileCategory: req.body.fileCategory || "Andere",
+            filePath: req.file.path,
+            fileSize: req.file.size,
+            description: req.body.description || null,
+            tags: req.body.tags || null,
+            isOptimized: false,
+            originalSize: req.file.size,
+            optimizedSize: null,
+            optimizationSavings: null,
+            originalFormat: null,
+            webpPath: null
+          };
+        }
         
         const attachment = await storage.createAttachment(attachmentData);
         res.status(201).json(attachment);
@@ -1890,6 +1936,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Bei einem Fehler die Datei löschen, falls sie existiert
         if (req.file) {
           await fs.remove(req.file.path).catch(() => {});
+          
+          // Auch optimierte Dateien löschen falls vorhanden
+          if ((req as any).optimizedFiles && (req as any).optimizedFiles.length > 0) {
+            for (const optimizedFile of (req as any).optimizedFiles) {
+              if (optimizedFile.optimization && optimizedFile.optimization.optimizedPath) {
+                await fs.remove(optimizedFile.optimization.optimizedPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.webpPath) {
+                await fs.remove(optimizedFile.optimization.webpPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.thumbnailPath) {
+                await fs.remove(optimizedFile.optimization.thumbnailPath).catch(() => {});
+              }
+            }
+          }
         }
         
         next(error);
