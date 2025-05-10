@@ -21,7 +21,8 @@ import {
   FileCheck,
   HelpCircle,
   Shovel,
-  Truck
+  Truck,
+  Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMobile } from "@/hooks/use-mobile";
@@ -87,6 +88,12 @@ const navItems: NavItem[] = [
     icon: FileCheck,
     showFor: ['administrator', 'manager'],
     tooltip: "Datenqualität überwachen und verbessern",
+  },
+  {
+    title: "Bildoptimierung",
+    href: "/image-optimization",
+    icon: Image,
+    tooltip: "Bildoptimierungs-Demo und Technologien",
   },
   {
     title: "Hilfe & Info",
