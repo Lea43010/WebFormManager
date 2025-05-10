@@ -356,15 +356,16 @@ export function UserManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-[#F3F4F6] p-6 rounded-lg">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold tracking-tight">Benutzerverwaltung</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[#111827]">Benutzerverwaltung</h2>
           <Button 
             variant="outline" 
             size="icon" 
             onClick={handleRefresh} 
             title="Benutzerliste aktualisieren"
+            className="bg-white hover:bg-gray-50"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -372,7 +373,7 @@ export function UserManagement() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-[#76a730] hover:bg-[#6a961f] text-white">
               <UserPlus className="mr-2 h-4 w-4" />
               Neuen Benutzer anlegen
             </Button>
@@ -485,31 +486,31 @@ export function UserManagement() {
 
       {isLoading ? (
         <div className="flex justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#76a730]" />
         </div>
       ) : (
         <div>
-          <h3 className="text-lg font-medium mb-4">Liste aller Benutzer im System ({users?.length || 0} Benutzer)</h3>
+          <h3 className="text-lg font-medium mb-4 text-[#111827]">Liste aller Benutzer im System ({users?.length || 0} Benutzer)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {users && users.map((userData) => (
-              <Card key={userData.id} className="overflow-hidden hover:shadow-md transition-shadow border">
+              <Card key={userData.id} className="overflow-hidden hover:shadow-md transition-shadow bg-white shadow-sm rounded-lg">
                 <CardHeader className="p-4 pb-2">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2 text-[#111827]">
                       {userData.role === 'administrator' && <Shield className="h-5 w-5 text-red-500" />}
                       {userData.role === 'manager' && <UserCog className="h-5 w-5 text-blue-500" />}
-                      {userData.role === 'benutzer' && <Smile className="h-5 w-5 text-green-500" />}
+                      {userData.role === 'benutzer' && <Smile className="h-5 w-5 text-[#76a730]" />}
                       <span>{userData.name || userData.username}</span>
                     </CardTitle>
                     <Badge className={`
                       ${userData.role === 'administrator' ? 'bg-red-100 text-red-800 hover:bg-red-100' : ''}
                       ${userData.role === 'manager' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : ''}
-                      ${userData.role === 'benutzer' ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}
+                      ${userData.role === 'benutzer' ? 'bg-[#e9f0dd] text-[#76a730] hover:bg-[#e9f0dd]' : ''}
                     `}>
                       {userData.role}
                     </Badge>
                   </div>
-                  <CardDescription className="flex flex-col space-y-1 mt-1">
+                  <CardDescription className="flex flex-col space-y-1 mt-1 text-gray-600">
                     <span className="flex items-center text-sm">
                       <span className="font-medium mr-2">ID:</span> {userData.id}
                     </span>
@@ -566,7 +567,7 @@ export function UserManagement() {
                         variant="outline" 
                         size="sm"
                         onClick={() => extendTrial(userData.id)}
-                        className="text-xs h-8"
+                        className="text-xs h-8 bg-white hover:bg-gray-50 border-[#76a730] text-[#76a730]"
                       >
                         <CalendarPlus className="h-3.5 w-3.5 mr-1" />
                         +30 Tage
@@ -601,6 +602,7 @@ export function UserManagement() {
                             <AlertDialogAction
                               onClick={() => confirmDeleteUser(userData)}
                               disabled={deleteUserMutation.isPending}
+                              className="bg-[#76a730] hover:bg-[#6a961f] text-white"
                             >
                               {deleteUserMutation.isPending && userToDelete?.id === userData.id && (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
