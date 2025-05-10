@@ -666,7 +666,7 @@ export default function KostenKalkulationPage() {
           <CardFooter className="flex justify-end">
             <Button 
               variant="default"
-              className="w-full sm:w-auto bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center"
+              className="w-full sm:w-auto bg-[#76a730] hover:bg-[#6a961f] text-white"
               onClick={berechneKosten}
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
