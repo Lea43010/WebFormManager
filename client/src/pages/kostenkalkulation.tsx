@@ -520,7 +520,7 @@ export default function KostenKalkulationPage() {
                 <span>3. Maschine auswählen</span>
               </CardTitle>
               <CardDescription>
-                Wählen Sie die geeignete Maschine für Ihren Bodentyp
+                Wählen Sie die geeignete Maschine aus
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
