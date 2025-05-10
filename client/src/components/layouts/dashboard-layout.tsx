@@ -29,11 +29,11 @@ export default function DashboardLayout({
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden bg-[#F3F4F6]">
       <Sidebar />
       
       <div className="flex flex-col w-full flex-1 overflow-hidden">
-        <header className="relative z-10 flex-shrink-0 flex h-16 sm:h-20 bg-white border-b border-gray-200">
+        <header className="relative z-10 flex-shrink-0 flex h-16 sm:h-20 bg-white border-b border-gray-200 shadow-sm">
           <div className="flex-1 px-responsive flex justify-between">
             <div className="flex-1 flex items-center">
               {/* Platzhalter für Menü-Button auf mobilen Geräten */}
@@ -86,8 +86,8 @@ export default function DashboardLayout({
           </div>
         </header>
         
-        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-white">
-          <div className="py-3 sm:py-6">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-[#F3F4F6]">
+          <div className="py-4 sm:py-6">
             <div className="max-w-7xl mx-auto px-responsive">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-responsive">
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">{title}</h1>
@@ -98,7 +98,7 @@ export default function DashboardLayout({
             </div>
             
             <div className="max-w-7xl mx-auto px-responsive mt-responsive">
-              <div className="border-t border-gray-200 pt-responsive">
+              <div className="pt-responsive">
                 {tabs && tabs.length > 0 && (
                   <>
                     <div className="border-b border-gray-200 mb-responsive overflow-x-auto -mx-3 px-3 sm:-mx-0 sm:px-0">
@@ -112,7 +112,7 @@ export default function DashboardLayout({
                             <TabsTrigger
                               key={tab}
                               value={tab}
-                              className="text-sm sm:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 sm:py-3 px-2 sm:px-4 border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary font-medium whitespace-nowrap min-touch-target"
+                              className="text-sm sm:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 sm:py-3 px-2 sm:px-4 border-b-2 data-[state=active]:border-[#6a961f] data-[state=active]:text-[#6a961f] font-medium whitespace-nowrap min-touch-target"
                             >
                               {tab}
                             </TabsTrigger>

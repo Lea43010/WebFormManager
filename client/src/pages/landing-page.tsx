@@ -65,7 +65,7 @@ export default function LandingPage() {
           <div className="flex items-center space-x-4">
             <Button 
               variant="outline" 
-              className="text-[#6a961f] border-[#6a961f] hover:bg-[#6a961f] hover:text-white"
+              className="text-[#3B82F6] border-[#3B82F6] hover:bg-[#3B82F6] hover:text-white"
               onClick={() => setShowLoginForm(!showLoginForm)}
             >
               {showLoginForm ? "Anmeldeformular schließen" : "Anmelden"}
@@ -123,7 +123,7 @@ export default function LandingPage() {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-[#6a961f] hover:bg-[#5a8418] text-white"
+                    className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white"
                     disabled={loginMutation.isPending}
                   >
                     {loginMutation.isPending && (

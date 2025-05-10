@@ -117,7 +117,7 @@ export function Sidebar() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white text-gray-800 border-r border-gray-200">
-      <div className="flex items-center h-20 flex-shrink-0 px-4 bg-primary-dark">
+      <div className="flex items-center h-20 flex-shrink-0 px-4 bg-white border-b border-gray-200">
         <div className="flex items-center">
           <img 
             src={logoImage} 
@@ -126,11 +126,11 @@ export function Sidebar() {
             loading="eager" 
             style={{ objectFit: 'contain' }}
           />
-          <span className="text-xl font-medium text-white">Bau - Structura</span>
+          <span className="text-xl font-medium text-[#6a961f]">Bau - Structura</span>
         </div>
         {isMobile && (
           <TooltipButton tooltipText="Menü schließen" side="bottom">
-            <Button variant="ghost" className="ml-auto text-white hover:bg-primary-dark/80" onClick={toggleMobileMenu}>
+            <Button variant="ghost" className="ml-auto text-[#6a961f] hover:bg-gray-100" onClick={toggleMobileMenu}>
               <X className="h-6 w-6" />
             </Button>
           </TooltipButton>
@@ -154,11 +154,11 @@ export function Sidebar() {
                   className={cn(
                     "group flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors duration-150",
                     isActive
-                      ? "bg-primary-light text-primary"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+                      ? "bg-green-50 text-[#6a961f]"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-[#6a961f]"
                   )}
                 >
-                  <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-primary" : "text-gray-500")} />
+                  <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-[#6a961f]" : "text-gray-500")} />
                   {item.title}
                 </div>
               );
@@ -202,7 +202,7 @@ export function Sidebar() {
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
               <Avatar className="border-2 border-gray-200">
-                <AvatarFallback className="bg-primary text-white">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-[#6a961f] text-white">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-sm font-medium text-gray-800">{user.username}</p>
