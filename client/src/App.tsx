@@ -42,6 +42,7 @@ import BodenAnalyse from "@/pages/BodenAnalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import KostenKalkulationPage from "@/pages/kostenkalkulation";
 import ImageOptimizationDemo from "@/pages/image-optimization-demo";
+import SimpleImageOptimizationDemo from "@/pages/image-optimization-demo-simple";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
