@@ -392,7 +392,7 @@ export function DataQualityManagement() {
                                   issue.severity === "high" ? "destructive" : 
                                   issue.severity === "medium" ? "default" : "outline"
                                 }
-                                className={issue.severity === "medium" ? "bg-amber-500 text-white" : ""}
+                                className={`text-xs py-0 px-2 h-5 ${issue.severity === "medium" ? "bg-amber-500 text-white" : ""}`}
                               >
                                 {issue.count}
                               </Badge>
@@ -485,14 +485,14 @@ export function DataQualityManagement() {
                                 issue.severity === "high" ? "destructive" : 
                                 issue.severity === "medium" ? "default" : "outline"
                               }
-                              className={issue.severity === "medium" ? "bg-amber-500 text-white" : ""}
+                              className={`text-xs py-0 px-2 h-6 ${issue.severity === "medium" ? "bg-amber-500 text-white" : ""}`}
                             >
                               {issue.severity === "high" ? "Hoch" : 
                                issue.severity === "medium" ? "Mittel" : "Niedrig"}
                             </Badge>
                             <CardTitle className="text-lg">{issue.entityType}: {issue.entityName}</CardTitle>
                           </div>
-                          <Badge variant={issue.resolved ? "outline" : "secondary"}>
+                          <Badge variant={issue.resolved ? "outline" : "secondary"} className="text-xs py-0 px-2 h-6">
                             {issue.resolved ? "Gelöst" : "Offen"}
                           </Badge>
                         </div>

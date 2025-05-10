@@ -343,16 +343,16 @@ export default function DataQualityPage() {
                     <div className="text-4xl font-bold text-amber-500 mb-2">
                       {issues.filter(issue => !issue.resolvedAt).length}
                     </div>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="destructive" className="flex items-center gap-1">
+                    <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                      <Badge variant="destructive" className="flex items-center gap-1 text-xs py-0 px-2 h-6">
                         <AlertCircle className="h-3 w-3" />
                         Hoch: {issues.filter(issue => !issue.resolvedAt && issue.severity === "high").length}
                       </Badge>
-                      <Badge variant="default" className="bg-amber-500 text-white flex items-center gap-1">
+                      <Badge variant="default" className="bg-amber-500 text-white flex items-center gap-1 text-xs py-0 px-2 h-6">
                         <AlertCircle className="h-3 w-3" />
                         Mittel: {issues.filter(issue => !issue.resolvedAt && issue.severity === "medium").length}
                       </Badge>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 text-xs py-0 px-2 h-6">
                         <AlertCircle className="h-3 w-3" />
                         Niedrig: {issues.filter(issue => !issue.resolvedAt && issue.severity === "low").length}
                       </Badge>
