@@ -407,58 +407,62 @@ export default function KostenKalkulationPage() {
                 </SelectContent>
               </Select>
               
-              <div className="flex items-center gap-2 mt-2">
+              <div className="mt-2">
                 <Button
                   variant="default"
                   size="sm"
                   onClick={() => setLocation("/tiefbau-map")}
-                  className="flex-1 bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs"
+                  className="w-full bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs"
                 >
                   <Map className="h-4 w-4 mr-1.5" />
                   Neue Route planen
                 </Button>
-                
-                {selectedRouteId && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteRoute(selectedRouteId)}
-                    className="bg-white border border-gray-200 hover:bg-gray-100 text-destructive flex items-center justify-center"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
 
               {selectedRouteId && (
-                <div className="rounded-md border p-3 bg-muted/50">
+                <div className="rounded-md border p-3 bg-card">
                   {(() => {
                     const route = routen.find(r => r.id.toString() === selectedRouteId);
                     if (!route) return null;
                     return (
                       <>
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="font-medium">{route.name}</div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-destructive" 
-                            onClick={() => deleteRoute(selectedRouteId)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Route löschen</span>
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-muted-foreground">Von:</div>
-                          <div className="font-medium">{route.start_address}</div>
-                          <div className="text-muted-foreground">Nach:</div>
-                          <div className="font-medium">{route.end_address}</div>
-                          <div className="text-muted-foreground">Länge:</div>
-                          <div className="font-medium">{(route.distance / 1000).toFixed(2)} km</div>
-                          <div className="text-muted-foreground">Erstellt:</div>
-                          <div className="font-medium">
-                            {format(new Date(route.created_at), 'dd.MM.yyyy', { locale: de })}
+                        <div className="relative">
+                          <div className="absolute top-0 right-0">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 w-6 p-0 text-destructive" 
+                              onClick={() => deleteRoute(selectedRouteId)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Route löschen</span>
+                            </Button>
+                          </div>
+                          
+                          <h3 className="text-base font-semibold mb-2">
+                            Route von {route.start_address.split(',')[0]} nach {route.end_address.split(',')[0]}
+                          </h3>
+                          
+                          <div className="text-[10px] space-y-2">
+                            <div className="grid grid-cols-4 gap-1">
+                              <span className="text-muted-foreground col-span-1">Von:</span>
+                              <span className="col-span-3 truncate">{route.start_address}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-1">
+                              <span className="text-muted-foreground col-span-1">Nach:</span>
+                              <span className="col-span-3 truncate">{route.end_address}</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-1">
+                              <span className="text-muted-foreground col-span-1">Länge:</span>
+                              <span className="col-span-3">{(route.distance / 1000).toFixed(2)} km</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-1">
+                              <span className="text-muted-foreground col-span-1">Erstellt:</span>
+                              <span className="col-span-3">{format(new Date(route.created_at), 'dd.MM.yyyy', { locale: de })}</span>
+                            </div>
                           </div>
                         </div>
                       </>
