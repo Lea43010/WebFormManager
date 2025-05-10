@@ -400,9 +400,9 @@ export default function KostenKalkulationPage() {
                   variant="default"
                   size="sm"
                   onClick={() => setLocation("/tiefbau-map")}
-                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center"
+                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs"
                 >
-                  <Map className="h-4 w-4 mr-2" />
+                  <Map className="h-4 w-4 mr-1.5" />
                   Neue Route planen
                 </Button>
                 
@@ -503,11 +503,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center" 
+                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs" 
                 variant="default"
                 onClick={() => setLocation("/bodenanalyse")}
               >
-                <Database className="h-4 w-4 mr-2" />
+                <Database className="h-4 w-4 mr-1.5" />
                 Bodenarten vergleichen
               </Button>
             </CardContent>
@@ -559,11 +559,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center" 
+                className="w-full bg-[#6a961f] hover:bg-[#5b851a] text-white flex items-center justify-center text-xs" 
                 variant="default"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
-                <Truck className="h-4 w-4 mr-2" />
+                <Truck className="h-4 w-4 mr-1.5" />
                 Maschinen vergleichen
               </Button>
             </CardContent>
@@ -671,13 +671,13 @@ export default function KostenKalkulationPage() {
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
               {isCalculating ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <div className="flex items-center justify-center text-xs">
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                   <span>Berechnung läuft...</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center">
-                  <Calculator className="mr-2 h-4 w-4" />
+                <div className="flex items-center justify-center text-xs">
+                  <Calculator className="mr-1.5 h-4 w-4" />
                   <span>Kosten berechnen</span>
                 </div>
               )}
