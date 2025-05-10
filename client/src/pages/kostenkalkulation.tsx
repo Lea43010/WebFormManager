@@ -676,24 +676,40 @@ export default function KostenKalkulationPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button 
-              variant="default"
-              className="w-full sm:w-auto bg-[#76a730] hover:bg-[#6a961f] text-white"
-              onClick={berechneKosten}
+            <button 
+              className="flex items-center justify-center text-xs w-full sm:w-auto px-4 py-2 rounded-md bg-[#76a730] hover:bg-[#6a961f] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => {
+                console.log("Button wurde geklickt!");
+                console.log("Routen:", routen);
+                console.log("Ausgewählte Route ID:", selectedRouteId);
+                console.log("Ausgewählte Bodenart ID:", selectedBodenartId);
+                console.log("Ausgewählte Maschine ID:", selectedMaschineId);
+                
+                if (!selectedRouteId || !selectedBodenartId || !selectedMaschineId) {
+                  toast({
+                    title: "Eingaben unvollständig",
+                    description: "Bitte wählen Sie Route, Bodenart und Maschine aus.",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                berechneKosten();
+              }}
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
               {isCalculating ? (
-                <div className="flex items-center justify-center text-xs">
+                <>
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                   <span>Berechnung läuft...</span>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center justify-center text-xs">
+                <>
                   <Calculator className="mr-1.5 h-4 w-4" />
                   <span>Kosten berechnen</span>
-                </div>
+                </>
               )}
-            </Button>
+            </button>
           </CardFooter>
         </Card>
 
