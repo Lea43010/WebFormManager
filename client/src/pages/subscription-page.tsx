@@ -128,8 +128,8 @@ const SubscriptionPage = () => {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="text-sm font-medium text-muted-foreground">Status</div>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium font-inter text-[#4b5563]">Status</div>
+                        <div className="text-sm font-medium font-inter text-[#111827]">
                           {subscription.status === 'trial' && 'Testphase'}
                           {subscription.status === 'active' && 'Aktiv'}
                           {subscription.status === 'past_due' && 'Zahlung überfällig'}
@@ -137,13 +137,13 @@ const SubscriptionPage = () => {
                           {subscription.status === 'expired' && 'Abgelaufen'}
                         </div>
                         
-                        <div className="text-sm font-medium text-muted-foreground">Plan</div>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium font-inter text-[#4b5563]">Plan</div>
+                        <div className="text-sm font-medium font-inter text-[#111827]">
                           {subscription.planDetails?.name || 'Unbekannt'}
                         </div>
                         
-                        <div className="text-sm font-medium text-muted-foreground">Preis</div>
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium font-inter text-[#4b5563]">Preis</div>
+                        <div className="text-sm font-medium font-inter text-[#111827]">
                           {subscription.planDetails ? 
                             new Intl.NumberFormat('de-DE', { 
                               style: 'currency', 
@@ -157,22 +157,22 @@ const SubscriptionPage = () => {
                         
                         {subscription.startDate && (
                           <>
-                            <div className="text-sm font-medium text-muted-foreground">Startdatum</div>
-                            <div className="text-sm font-medium">{formatDate(subscription.startDate)}</div>
+                            <div className="text-sm font-medium font-inter text-[#4b5563]">Startdatum</div>
+                            <div className="text-sm font-medium font-inter text-[#111827]">{formatDate(subscription.startDate)}</div>
                           </>
                         )}
                         
                         {subscription.nextBillingDate && (
                           <>
-                            <div className="text-sm font-medium text-muted-foreground">Nächste Abrechnung</div>
-                            <div className="text-sm font-medium">{formatDate(subscription.nextBillingDate)}</div>
+                            <div className="text-sm font-medium font-inter text-[#4b5563]">Nächste Abrechnung</div>
+                            <div className="text-sm font-medium font-inter text-[#111827]">{formatDate(subscription.nextBillingDate)}</div>
                           </>
                         )}
                         
                         {subscription.cancellationDate && (
                           <>
-                            <div className="text-sm font-medium text-muted-foreground">Gekündigt am</div>
-                            <div className="text-sm font-medium">{formatDate(subscription.cancellationDate)}</div>
+                            <div className="text-sm font-medium font-inter text-[#4b5563]">Gekündigt am</div>
+                            <div className="text-sm font-medium font-inter text-[#111827]">{formatDate(subscription.cancellationDate)}</div>
                           </>
                         )}
                       </div>
@@ -180,13 +180,13 @@ const SubscriptionPage = () => {
                       {subscription.status === 'active' && (
                         <Button 
                           variant="outline" 
-                          className="w-full mt-4"
+                          className="w-full mt-4 bg-white border-[#6a961f] text-[#6a961f] hover:bg-[#f3f9ea] hover:text-[#6a961f] font-inter"
                           onClick={handleCancelSubscription}
                           disabled={isCancelling}
                         >
                           {isCancelling ? (
                             <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#6a961f]" />
                               Wird verarbeitet...
                             </>
                           ) : (
@@ -196,9 +196,9 @@ const SubscriptionPage = () => {
                       )}
 
                       {subscription.status === 'past_due' && (
-                        <Alert variant="destructive" className="mt-4">
-                          <AlertTitle>Zahlung überfällig</AlertTitle>
-                          <AlertDescription>
+                        <Alert variant="destructive" className="mt-4 border-red-500 bg-red-50">
+                          <AlertTitle className="font-inter text-red-800 font-semibold">Zahlung überfällig</AlertTitle>
+                          <AlertDescription className="font-inter text-red-700">
                             Ihre letzte Zahlung war nicht erfolgreich. Bitte aktualisieren Sie Ihre Zahlungsinformationen.
                           </AlertDescription>
                         </Alert>
@@ -220,7 +220,7 @@ const SubscriptionPage = () => {
                   <CardContent>
                     <div className="space-y-4">
                       {/* Hier könnte eine Rechnungshistorie angezeigt werden, wenn die Daten verfügbar sind */}
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm font-inter text-[#111827]">
                         Die Rechnungshistorie ist derzeit nicht verfügbar.
                       </p>
                     </div>
