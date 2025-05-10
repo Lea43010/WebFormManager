@@ -1799,11 +1799,11 @@ export default function InformationPage() {
                 </AccordionContent>
               </AccordionItem>
               
-              <AccordionItem value="item-2" className="border rounded-md px-4">
-                <AccordionTrigger className="text-left font-medium py-4">
+              <AccordionItem value="item-2" className="border border-[#6a961f]/20 rounded-md px-4 mb-3 shadow-sm">
+                <AccordionTrigger className="text-left font-medium py-4 text-[#111827] hover:text-[#6a961f]">
                   Wie funktioniert die Strecken- und Flächenmessung auf der Karte?
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 text-gray-600">
+                <AccordionContent className="pb-4 text-[#111827]">
                   In der Geo-Ansicht können Sie über die Werkzeugleiste am oberen Rand die Messfunktion aktivieren. 
                   Wählen Sie zwischen Streckenmessung (Lineal-Symbol) und Flächenmessung (Polygon-Symbol). 
                   Klicken Sie dann nacheinander auf die Punkte auf der Karte, um die Strecke oder Fläche zu definieren. 
@@ -1812,11 +1812,11 @@ export default function InformationPage() {
                 </AccordionContent>
               </AccordionItem>
               
-              <AccordionItem value="item-3" className="border rounded-md px-4">
-                <AccordionTrigger className="text-left font-medium py-4">
+              <AccordionItem value="item-3" className="border border-[#6a961f]/20 rounded-md px-4 mb-3 shadow-sm">
+                <AccordionTrigger className="text-left font-medium py-4 text-[#111827] hover:text-[#6a961f]">
                   Kann ich Bilder von Straßenschäden automatisch klassifizieren lassen?
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 text-gray-600">
+                <AccordionContent className="pb-4 text-[#111827]">
                   Ja, die App bietet eine KI-gestützte Bildanalyse für Straßenschäden. Navigieren Sie zum Abschnitt 
                   "Straßenschäden" in einem Projekt und laden Sie ein Bild hoch oder nehmen Sie direkt eines mit der 
                   Kamera auf. Die KI analysiert automatisch das Bild und schlägt eine Klassifizierung des Schadens vor. 
@@ -1824,11 +1824,11 @@ export default function InformationPage() {
                 </AccordionContent>
               </AccordionItem>
               
-              <AccordionItem value="item-4" className="border rounded-md px-4">
-                <AccordionTrigger className="text-left font-medium py-4">
+              <AccordionItem value="item-4" className="border border-[#6a961f]/20 rounded-md px-4 mb-3 shadow-sm">
+                <AccordionTrigger className="text-left font-medium py-4 text-[#111827] hover:text-[#6a961f]">
                   Wie erstelle ich ein Bautagebuch?
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 text-gray-600">
+                <AccordionContent className="pb-4 text-[#111827]">
                   Bautagebücher können über den Abschnitt "Bautagebuch" in der Projektansicht erstellt werden. 
                   Klicken Sie auf "Neuer Eintrag" und füllen Sie das Formular mit Datum, Wetterbedingungen, 
                   ausgeführten Arbeiten und eingesetztem Personal aus. Sie können auch Fotos anhängen und die 
