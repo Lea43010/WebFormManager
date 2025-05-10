@@ -716,11 +716,11 @@ export default function KostenKalkulationPage() {
         {kalkulation && (
           <Card className="bg-white shadow rounded-lg mt-6">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-[#111827]">
-                <Calculator className="h-4 w-4 text-[#76a730]" />
+              <CardTitle className="flex items-center gap-2 text-sm text-[#111827]">
+                <Calculator className="h-3 w-3 text-[#76a730]" />
                 <span>Kostenberechnung Ergebnis</span>
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-[10px]">
                 Detaillierte Aufstellung der berechneten Projektkosten
               </CardDescription>
             </CardHeader>
@@ -752,54 +752,54 @@ export default function KostenKalkulationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px] text-xs">Position</TableHead>
-                    <TableHead className="text-xs">Berechnung</TableHead>
-                    <TableHead className="text-right text-xs">Kosten (€)</TableHead>
+                    <TableHead className="w-[300px] text-[10px]">Position</TableHead>
+                    <TableHead className="text-[10px]">Berechnung</TableHead>
+                    <TableHead className="text-right text-[10px]">Kosten (€)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-xs">Materialkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="font-medium text-[10px]">Materialkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[10px]">
                       {kalkulation.flaeche.toFixed(0)} m² × Materialkosten
                     </TableCell>
-                    <TableCell className="text-right text-xs">
+                    <TableCell className="text-right text-[10px]">
                       {kalkulation.materialkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-xs">Maschinenkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="font-medium text-[10px]">Maschinenkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[10px]">
                       {kalkulation.benoetigte_tage} Tage × Tagesmiete
                     </TableCell>
-                    <TableCell className="text-right text-xs">
+                    <TableCell className="text-right text-[10px]">
                       {kalkulation.maschinenkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-xs">Personalkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="font-medium text-[10px]">Personalkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[10px]">
                       {kalkulation.gesamtzeit_stunden.toFixed(1)} h × {kalkulationsParameter.anzahl_personal} Pers. × {kalkulationsParameter.personalkosten_pro_stunde} €/h
                     </TableCell>
-                    <TableCell className="text-right text-xs">
+                    <TableCell className="text-right text-[10px]">
                       {kalkulation.personalkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-xs">Kraftstoffkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="font-medium text-[10px]">Kraftstoffkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[10px]">
                       {kalkulation.gesamtzeit_stunden.toFixed(1)} h × Verbrauch × 1,50 €/l
                     </TableCell>
-                    <TableCell className="text-right text-xs">
+                    <TableCell className="text-right text-[10px]">
                       {kalkulation.kraftstoffkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium border-b-0 text-xs">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
-                    <TableCell className="text-muted-foreground border-b-0 text-xs">
+                    <TableCell className="font-medium border-b-0 text-[10px]">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
+                    <TableCell className="text-muted-foreground border-b-0 text-[10px]">
                       Zwischensumme × {kalkulationsParameter.zusatzkosten_prozent}%
                     </TableCell>
-                    <TableCell className="text-right border-b-0 text-xs">
+                    <TableCell className="text-right border-b-0 text-[10px]">
                       {kalkulation.zusatzkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
@@ -809,9 +809,9 @@ export default function KostenKalkulationPage() {
               <div className="flex justify-end">
                 <Button 
                   onClick={exportAsPDF} 
-                  className="flex items-center text-xs bg-[#76a730] hover:bg-[#6a961f] text-white"
+                  className="flex items-center text-[10px] bg-[#76a730] hover:bg-[#6a961f] text-white py-1 h-7"
                 >
-                  <FileText className="h-4 w-4 mr-1.5" />
+                  <FileText className="h-3 w-3 mr-1" />
                   Als PDF exportieren
                 </Button>
               </div>
