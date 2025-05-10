@@ -314,7 +314,7 @@ const MaschinenAuswahl: React.FC = () => {
                           {maschine.effizienz_faktor && (
                             <div className="col-span-2">
                               <p className="text-muted-foreground">Effizienz für diese Bodenart:</p>
-                              <p className="font-medium">{(maschine.effizienz_faktor * 100).toFixed(0)}%</p>
+                              <p className="font-medium">{parseFloat(String(maschine.effizienz_faktor * 100)).toFixed(0)}%</p>
                             </div>
                           )}
                         </div>
@@ -388,7 +388,7 @@ const MaschinenAuswahl: React.FC = () => {
                               selectedMaschine.effizienz_faktor >= 0.8 ? 'Ausreichend' : 'Nicht optimal'
                             }</p>
                             <p><span className="font-medium">Faktor:</span> {parseFloat(String(selectedMaschine.effizienz_faktor)).toFixed(2)}</p>
-                            <p><span className="font-medium">Bearbeitungszeit:</span> {selectedMaschine.bearbeitungszeit_pro_m2?.toFixed(2)} min/m²</p>
+                            <p><span className="font-medium">Bearbeitungszeit:</span> {selectedMaschine.bearbeitungszeit_pro_m2 ? parseFloat(String(selectedMaschine.bearbeitungszeit_pro_m2)).toFixed(2) : '-'} min/m²</p>
                           </div>
                         </div>
                       )}
