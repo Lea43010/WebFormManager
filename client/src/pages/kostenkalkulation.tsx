@@ -573,10 +573,20 @@ export default function KostenKalkulationPage() {
               <Button 
                 className="w-full bg-[#76a730] hover:bg-[#6a961f] text-white flex items-center justify-center text-xs" 
                 variant="default"
-                onClick={() => setLocation("/maschinen-auswahl")}
+                onClick={() => {
+                  // Scroll zum Ergebnis wenn verfügbar, sonst berechnen
+                  if (kalkulation) {
+                    const resultElement = document.getElementById('ergebnis-section');
+                    if (resultElement) {
+                      resultElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  } else {
+                    calculateCosts();
+                  }
+                }}
               >
                 <Truck className="h-4 w-4 mr-1.5" />
-                Maschinen vergleichen
+                Ergebnis anzeigen
               </Button>
             </CardContent>
           </Card>
@@ -714,7 +724,7 @@ export default function KostenKalkulationPage() {
         </Card>
 
         {kalkulation && (
-          <Card className="bg-white shadow rounded-lg mt-6">
+          <Card className="bg-white shadow rounded-lg mt-6" id="ergebnis-section">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm text-[#111827]">
                 <Calculator className="h-3 w-3 text-[#76a730]" />
