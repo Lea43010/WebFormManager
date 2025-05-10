@@ -354,10 +354,10 @@ export default function KostenKalkulationPage() {
 
   return (
     <DashboardLayout title="Kostenkalkulation" description="Berechnung von Projektkosten im Tiefbau">
-      <div className="space-y-6">
+      <div className="space-y-6 bg-[#F3F4F6] p-6 rounded-lg">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold">Kostenkalkulation für Tiefbau</h2>
+            <h2 className="text-xl font-semibold text-[#111827]">Kostenkalkulation für Tiefbau</h2>
             <p className="text-muted-foreground">
               Berechnen Sie die Projektkosten basierend auf Route, Bodenart und Maschinenauswahl
             </p>
@@ -365,10 +365,10 @@ export default function KostenKalkulationPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5 text-primary" />
+          <Card className="bg-white shadow rounded-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+                <Map className="h-5 w-5 text-[#6a961f]" />
                 <span>1. Route auswählen</span>
               </CardTitle>
               <CardDescription>
@@ -397,10 +397,10 @@ export default function KostenKalkulationPage() {
               
               <div className="flex items-center gap-2 mt-2">
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={() => setLocation("/tiefbau-map")}
-                  className="flex-1"
+                  className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white"
                 >
                   <Map className="h-4 w-4 mr-1" />
                   Neue Route planen
