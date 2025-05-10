@@ -93,7 +93,13 @@ const navItems: NavItem[] = [
     title: "Bildoptimierung",
     href: "/image-optimization",
     icon: Image,
-    tooltip: "Bildoptimierungs-Demo und Technologien",
+    tooltip: "Komplexe Bildoptimierungs-Demo mit allen Funktionen",
+  },
+  {
+    title: "Bildoptimierung (Einfach)",
+    href: "/image-optimization-simple",
+    icon: Image,
+    tooltip: "Vereinfachte Bildoptimierungs-Demo mit grundlegenden Funktionen",
   },
   {
     title: "Hilfe & Info",

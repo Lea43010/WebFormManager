@@ -58,11 +58,7 @@ const ImageOptimizationDemo: React.FC = () => {
       height: 512,
       originalSize: 64000,
       optimizedSize: 32000,
-      savings: 50,
-      // Zusätzliche Eigen-URLs direkt nutzen (keine API-Aufrufe)
-      imageUrl: '/uploads/example-1.png',
-      optimizedUrl: '/uploads/example-1-optimized.png',
-      webpUrl: '/uploads/example-1-optimized.webp',
+      savings: 50
     },
     {
       original: '/uploads/IMG_1507.jpg',
@@ -73,11 +69,7 @@ const ImageOptimizationDemo: React.FC = () => {
       height: 768,
       originalSize: 400000,
       optimizedSize: 200000,
-      savings: 50,
-      // Zusätzliche Eigen-URLs direkt nutzen (keine API-Aufrufe)
-      imageUrl: '/uploads/IMG_1507.jpg',
-      optimizedUrl: '/uploads/IMG_1507.jpg',
-      webpUrl: '/uploads/IMG_1507.jpg',
+      savings: 50
     }
   ];
 
@@ -252,7 +244,7 @@ const ImageOptimizationDemo: React.FC = () => {
                     <CardContent className="p-2">
                       <div className="border rounded-lg overflow-hidden">
                         <img 
-                          src={selectedImageData.optimizedUrl || selectedImageData.optimized}
+                          src={selectedImageData.optimized}
                           alt="Optimiertes Bild"
                           className="w-full"
                         />

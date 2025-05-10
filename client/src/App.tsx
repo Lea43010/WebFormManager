@@ -93,6 +93,7 @@ function Router() {
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
       <ProtectedRoute path="/image-optimization" component={ImageOptimizationDemo} />
+      <ProtectedRoute path="/image-optimization-simple" component={SimpleImageOptimizationDemo} />
       <Route path="/help">
         {() => <Redirect to="/information" />}
       </Route>
