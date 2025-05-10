@@ -588,7 +588,9 @@ const TiefbauMap: React.FC = () => {
                   <SelectItem value="0">Alle Projekte</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.project_name || project.name || `Projekt ${project.id}`}
+                      {project.project_name || 
+                       `${project.project_cluster || ''} ${project.project_art || ''}`.trim() || 
+                       `Projekt ${project.id}`}
                     </SelectItem>
                   ))}
                 </>
