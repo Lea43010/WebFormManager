@@ -6,6 +6,10 @@ import { relations } from "drizzle-orm";
 // Re-export createInsertSchema für Verwendung in routes.ts
 export { createInsertSchema };
 
+// Define subscription-related enums
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['trial', 'active', 'expired', 'cancelled', 'past_due']);
+export const subscriptionIntervalEnum = pgEnum('subscription_interval', ['month', 'year']);
+
 // Define enums if needed
 export const companyTypes = pgEnum('company_types', ['Subunternehmen', 'Generalunternehmen']);
 export const fileTypes = pgEnum('file_types', ['pdf', 'excel', 'image', 'other']);
@@ -334,6 +338,38 @@ export const loginLogs = pgTable("tbllogin_logs", {
   failReason: text("fail_reason"),
 });
 
+// Abonnementpläne-Tabelle - Speichert die verfügbaren Abonnementpläne
+export const subscriptionPlans = pgTable("tblsubscription_plans", {
+  id: serial("id").primaryKey(),
+  planId: varchar("plan_id", { length: 100 }).notNull().unique(), // z.B. 'basic', 'professional', 'enterprise'
+  name: varchar("name", { length: 100 }).notNull(), // z.B. 'Basis', 'Professional', 'Enterprise'
+  description: text("description").notNull(),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  interval: subscriptionIntervalEnum("interval").default('month').notNull(),
+  features: text("features").notNull(), // JSON-String mit Features-Array
+  stripePriceId: varchar("stripe_price_id", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Benutzer-Abonnements-Tabelle - Verbindet Benutzer mit ihren Abonnements
+export const userSubscriptions = pgTable("tbluser_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: subscriptionStatusEnum("status").default('trial').notNull(),
+  planId: varchar("plan_id", { length: 100 }), // Referenz auf subscriptionPlans.planId
+  trialEndDate: timestamp("trial_end_date"),
+  lastPaymentDate: timestamp("last_payment_date"),
+  nextPaymentDate: timestamp("next_payment_date"),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Verification Codes table - Für die Zwei-Faktor-Authentifizierung
 export const verificationCodes = pgTable("tblverification_codes", {
   id: serial("id").primaryKey(),
@@ -347,11 +383,31 @@ export const verificationCodes = pgTable("tblverification_codes", {
 });
 
 // Define relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   createdProjects: many(projects, { relationName: 'createdByUser' }),
   createdUsers: many(users, { relationName: 'createdByAdmin' }),
   loginEvents: many(loginLogs),
   verificationCodes: many(verificationCodes),
+  subscription: one(userSubscriptions, {
+    fields: [users.id],
+    references: [userSubscriptions.userId],
+  }),
+}));
+
+// Relations für SubscriptionPlans und UserSubscriptions
+export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
+  userSubscriptions: many(userSubscriptions),
+}));
+
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSubscriptions.userId],
+    references: [users.id],
+  }),
+  plan: one(subscriptionPlans, {
+    fields: [userSubscriptions.planId],
+    references: [subscriptionPlans.planId],
+  }),
 }));
 
 export const companiesRelations = relations(companies, ({ many, one }) => ({
@@ -515,6 +571,25 @@ export const insertUserSchema = createInsertSchema(users).transform(data => {
   };
 });
 
+// Insert-Schema für Abonnementpläne
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).transform((data) => {
+  return {
+    ...data,
+    features: data.features || '[]', // Leeres Features-Array als Standard
+    isActive: data.isActive ?? true,
+    sortOrder: data.sortOrder || 0,
+  };
+});
+
+// Insert-Schema für Benutzer-Abonnements
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).transform((data) => {
+  return {
+    ...data,
+    status: data.status || 'trial',
+    cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
+  };
+});
+
 export const insertCompanySchema = createInsertSchema(companies).transform((data) => {
   return {
     ...data,
@@ -640,6 +715,12 @@ export type Component = typeof components.$inferSelect;
 
 export type InsertAttachment = z.infer<typeof insertAttachmentSchema>;
 export type Attachment = typeof attachments.$inferSelect;
+
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+
+export type InsertUserSubscription = z.infer<typeof insertUserSubscriptionSchema>;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
 
 export type InsertSurfaceAnalysis = z.infer<typeof insertSurfaceAnalysisSchema>;
 export type SurfaceAnalysis = typeof surfaceAnalyses.$inferSelect;

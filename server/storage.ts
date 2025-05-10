@@ -23,7 +23,9 @@ import {
   verificationCodes, type VerificationCode, type InsertVerificationCode,
   permissions, type Permission, type InsertPermission,
   constructionDiaries, type ConstructionDiary, type InsertConstructionDiary,
-  constructionDiaryEmployees, type ConstructionDiaryEmployee, type InsertConstructionDiaryEmployee
+  constructionDiaryEmployees, type ConstructionDiaryEmployee, type InsertConstructionDiaryEmployee,
+  subscriptionPlans, type SubscriptionPlan, type InsertSubscriptionPlan,
+  userSubscriptions, type UserSubscription, type InsertUserSubscription
 } from "@shared/schema";
 
 // PostgresSessionStore wurde oben definiert
@@ -39,6 +41,20 @@ export interface IStorage {
   getRecentUsers(limit: number): Promise<User[]>;
   getProjectsByUser(userId: number): Promise<Project[]>;
   invalidateUserCache(userId: number): void;
+  
+  // Subscription Plan operations
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(planId: string, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+  deleteSubscriptionPlan(planId: string): Promise<void>;
+  
+  // User Subscription operations
+  getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
+  getUserSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | undefined>;
+  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined>;
+  deleteUserSubscription(id: number): Promise<void>;
 
   // Company operations
   getCompanies(): Promise<Company[]>;
@@ -1132,6 +1148,120 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(constructionDiaryEmployees)
       .where(eq(constructionDiaryEmployees.id, id));
+  }
+
+  // Subscription Plan operations
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).orderBy(asc(subscriptionPlans.sortOrder)) as SubscriptionPlan[];
+  }
+
+  async getSubscriptionPlan(planId: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.planId, planId)) as SubscriptionPlan[];
+    return plan;
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [createdPlan] = await db.insert(subscriptionPlans).values(plan).returning() as SubscriptionPlan[];
+    return createdPlan;
+  }
+
+  async updateSubscriptionPlan(planId: string, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set(plan)
+      .where(eq(subscriptionPlans.planId, planId))
+      .returning() as SubscriptionPlan[];
+    return updatedPlan;
+  }
+
+  async deleteSubscriptionPlan(planId: string): Promise<void> {
+    await db.delete(subscriptionPlans).where(eq(subscriptionPlans.planId, planId));
+  }
+
+  // User Subscription operations
+  async getUserSubscription(userId: number): Promise<UserSubscription | undefined> {
+    const [subscription] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, userId)) as UserSubscription[];
+    return subscription;
+  }
+
+  async getUserSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.stripeSubscriptionId, stripeSubscriptionId)) as UserSubscription[];
+    return subscription;
+  }
+
+  async createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription> {
+    const [createdSubscription] = await db.insert(userSubscriptions).values(subscription).returning() as UserSubscription[];
+    
+    // Auch den Benutzerstatus aktualisieren
+    if (createdSubscription) {
+      await db
+        .update(users)
+        .set({ 
+          subscriptionStatus: subscription.status, 
+          stripeCustomerId: subscription.stripeCustomerId,
+          stripeSubscriptionId: subscription.stripeSubscriptionId 
+        })
+        .where(eq(users.id, subscription.userId));
+        
+      // Benutzer-Cache invalidieren
+      this.invalidateUserCache(subscription.userId);
+    }
+    
+    return createdSubscription;
+  }
+
+  async updateUserSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined> {
+    const [updatedSubscription] = await db
+      .update(userSubscriptions)
+      .set(subscription)
+      .where(eq(userSubscriptions.id, id))
+      .returning() as UserSubscription[];
+    
+    // Auch den Benutzerstatus aktualisieren, wenn notwendig
+    if (updatedSubscription && subscription.status) {
+      await db
+        .update(users)
+        .set({ 
+          subscriptionStatus: subscription.status,
+          stripeCustomerId: subscription.stripeCustomerId,
+          stripeSubscriptionId: subscription.stripeSubscriptionId
+        })
+        .where(eq(users.id, updatedSubscription.userId));
+        
+      // Benutzer-Cache invalidieren
+      this.invalidateUserCache(updatedSubscription.userId);
+    }
+    
+    return updatedSubscription;
+  }
+
+  async deleteUserSubscription(id: number): Promise<void> {
+    // Bevor wir das Abonnement löschen, finden wir den zugehörigen Benutzer
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.id, id)) as UserSubscription[];
+    
+    if (subscription) {
+      // Benutzer auf Trial zurücksetzen
+      await db
+        .update(users)
+        .set({ 
+          subscriptionStatus: 'trial',
+          stripeCustomerId: null,
+          stripeSubscriptionId: null
+        })
+        .where(eq(users.id, subscription.userId));
+        
+      // Benutzer-Cache invalidieren
+      this.invalidateUserCache(subscription.userId);
+    }
+    
+    // Abonnement löschen
+    await db.delete(userSubscriptions).where(eq(userSubscriptions.id, id));
   }
 }
 

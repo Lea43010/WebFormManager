@@ -24,6 +24,7 @@ import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
 import { registerBackupApiRoutes } from "./routes/backup-routes"; // Neue Backup-API
 import queryAnalyticsRouter from "./routes/query-analytics-routes"; // SQL-Query-Analytics
+import subscriptionRouter from "./routes/subscription-routes"; // Abonnement-Verwaltung
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
@@ -4132,6 +4133,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup surface analysis routes
   setupSurfaceAnalysisRoutes(app);
   setupSurfaceAnalysisAPIRoutes(app);
+  
+  // Setup subscription routes
+  app.use('/api/subscription', subscriptionRouter);
 
   const httpServer = createServer(app);
   return httpServer;

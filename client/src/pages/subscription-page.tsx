@@ -1,151 +1,238 @@
-import { useEffect } from "react";
-import DashboardLayout from "@/components/layouts/dashboard-layout";
-import { SubscriptionInfo } from "@/components/subscription/subscription-info";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2, CreditCard, CheckCircle2, XCircle } from "lucide-react";
-import { Redirect, useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import React from 'react';
+import { useTitle } from '@/hooks/use-title';
+import { SubscriptionPlans } from '@/components/subscription/subscription-plans';
+import { useUser } from '@/hooks/use-user';
+import { Header } from '@/components/header';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarIcon, CreditCard, FileText, Loader2, Settings, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export default function SubscriptionPage() {
-  const { user, isLoading } = useAuth();
+const SubscriptionPage = () => {
+  useTitle('Abonnement - Bau-Structura');
+  const { user, isLoading: isUserLoading } = useUser();
   const { toast } = useToast();
-  const [location] = useLocation();
 
-  // URLSearchParams für Query-Parameter auswerten
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const sessionId = searchParams.get('session_id');
-    const success = searchParams.get('success');
-    const canceled = searchParams.get('canceled');
+  // Benutzerabonnement abrufen
+  const { 
+    data: subscription,
+    isLoading: isSubscriptionLoading
+  } = useQuery({
+    queryKey: ['/api/subscription/user'],
+    enabled: !!user,
+  });
 
-    // Erfolgreiche Zahlung
-    if (success === 'true' && sessionId) {
-      // Session-ID an den Backend-Endpunkt senden
-      apiRequest('GET', `/api/subscription/success?session_id=${sessionId}`)
-        .then(() => {
-          toast({
-            title: "Abonnement erfolgreich abgeschlossen",
-            description: "Vielen Dank für Ihren Kauf. Ihr Abonnement ist jetzt aktiv.",
-            variant: "default",
-          });
-          
-          // Nach dem erfolgreichen Toast die Query-Parameter aus der URL entfernen
-          window.history.replaceState({}, document.title, '/subscription');
-        })
-        .catch(error => {
-          console.error("Fehler bei der Verarbeitung der Zahlung:", error);
-          toast({
-            title: "Fehler bei der Zahlungsverarbeitung",
-            description: "Bitte kontaktieren Sie uns für weitere Unterstützung.",
-            variant: "destructive",
-          });
-        });
-    }
-
-    // Abgebrochene Zahlung
-    if (canceled === 'true') {
-      toast({
-        title: "Zahlung abgebrochen",
-        description: "Der Zahlungsvorgang wurde abgebrochen. Sie können es jederzeit erneut versuchen.",
-        variant: "default",
+  // Abonnement kündigen
+  const { mutate: cancelSubscription, isPending: isCancelling } = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('PUT', `/api/subscription/user/${user?.id}`, {
+        status: 'cancelled',
+        cancellationDate: new Date().toISOString(),
       });
-      
-      // Nach dem Toast die Query-Parameter aus der URL entfernen
-      window.history.replaceState({}, document.title, '/subscription');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Abonnement gekündigt",
+        description: "Ihr Abonnement wurde erfolgreich gekündigt.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/user'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler bei der Kündigung",
+        description: error.message || "Ein unbekannter Fehler ist aufgetreten.",
+        variant: "destructive",
+      });
     }
-  }, [location, toast]);
+  });
 
-  // Wenn der Benutzer noch nicht geladen ist, zeige Lade-Animation
+  const handleCancelSubscription = () => {
+    if (window.confirm('Möchten Sie Ihr Abonnement wirklich kündigen? Sie können die Dienste bis zum Ende der Abrechnungsperiode weiterhin nutzen.')) {
+      cancelSubscription();
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Nicht verfügbar';
+    return new Date(dateString).toLocaleDateString('de-DE');
+  };
+
+  const isLoading = isUserLoading || isSubscriptionLoading;
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container py-10">
+        <Header title="Abonnement" />
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
-  // Wenn kein Benutzer eingeloggt ist, zur Login-Seite weiterleiten
-  if (!user) {
-    return <Redirect to="/auth" />;
-  }
-
-  // URLSearchParams für Query-Parameter auswerten
-  const searchParams = new URLSearchParams(window.location.search);
-  const success = searchParams.get('success');
-  const canceled = searchParams.get('canceled');
-
   return (
-    <DashboardLayout title="Mein Abonnement" tabs={[]}>
-      <div className="flex flex-col gap-6">
-        {success === 'true' && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertTitle>Zahlung erfolgreich</AlertTitle>
-            <AlertDescription>
-              Vielen Dank für Ihren Kauf. Ihr Abonnement ist jetzt aktiv.
-            </AlertDescription>
-          </Alert>
-        )}
+    <div className="container py-10">
+      <Header title="Abonnement" />
+      
+      <Tabs defaultValue="plans" className="mt-6">
+        <TabsList className="mb-6">
+          <TabsTrigger value="plans">Abonnement-Pläne</TabsTrigger>
+          {subscription && (
+            <TabsTrigger value="details">Abonnement-Details</TabsTrigger>
+          )}
+        </TabsList>
 
-        {canceled === 'true' && (
-          <Alert className="bg-amber-50 border-amber-200">
-            <XCircle className="h-4 w-4 text-amber-600" />
-            <AlertTitle>Zahlung abgebrochen</AlertTitle>
-            <AlertDescription>
-              Der Zahlungsvorgang wurde abgebrochen. Sie können es jederzeit erneut versuchen.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <SubscriptionInfo />
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Über das Bau-Structura Abonnement
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-slate max-w-none">
-              <p>
-                Bau-Structura bietet eine leistungsstarke Software-Lösung für die Verwaltung von Bauprojekten, 
-                Mitarbeitern und Ressourcen. Mit unserem Abonnement erhalten Sie:
-              </p>
-              
-              <ul>
-                <li>Vollständiger Zugriff auf alle Funktionen der Bau-Structura App</li>
-                <li>Unbegrenzte Projektverwaltung mit Dokumentenablage</li>
-                <li>Intelligente KI-basierte Baustellenanalyse und Materialschätzung</li>
-                <li>GPS-Tracking und Geodatenanalyse für Ihre Bauprojekte</li>
-                <li>Automatisierte Berichte und Bautagebuch-Funktionen</li>
-                <li>Professioneller E-Mail-Support</li>
-              </ul>
-              
-              <h3>Abonnement-Details</h3>
-              <p>
-                Abonnieren Sie jetzt und optimieren Sie Ihr Baustellenmanagement mit modernster Technologie. 
-                Die ersten 4 Wochen sind kostenlos, danach beträgt die monatliche Gebühr €XX,XX (zzgl. MwSt). 
-                Sie können Ihr Abonnement jederzeit mit einer Frist von 30 Tagen kündigen.
-              </p>
-              
-              <h3>Kostenlose Testphase</h3>
-              <p>
-                Jeder neue Benutzer erhält automatisch eine kostenlose 4-wöchige Testphase mit vollem 
-                Funktionsumfang. Nach Ablauf dieser Phase wird ein aktives Abonnement benötigt, um weiterhin 
-                auf Ihre Projekte und Daten zugreifen zu können.
-              </p>
-              
-              <p className="text-sm text-gray-500 mt-4">
-                Mit Ihrem Abonnement akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinien.
-              </p>
+        <TabsContent value="plans">
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold tracking-tight">Verfügbare Pläne</h2>
+                <p className="text-muted-foreground">
+                  Wählen Sie den Abonnementplan, der am besten zu Ihren Anforderungen passt.
+                </p>
+              </div>
+              <Separator />
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+
+            <SubscriptionPlans user={user} />
+          </div>
+        </TabsContent>
+
+        {subscription && (
+          <TabsContent value="details">
+            <div className="space-y-6">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Abonnement-Details</h2>
+                  <p className="text-muted-foreground">
+                    Hier finden Sie alle Informationen zu Ihrem aktuellen Abonnement.
+                  </p>
+                </div>
+                <Separator />
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Abonnement-Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-sm font-medium text-muted-foreground">Status</div>
+                        <div className="text-sm font-medium">
+                          {subscription.status === 'trial' && 'Testphase'}
+                          {subscription.status === 'active' && 'Aktiv'}
+                          {subscription.status === 'past_due' && 'Zahlung überfällig'}
+                          {subscription.status === 'cancelled' && 'Gekündigt'}
+                          {subscription.status === 'expired' && 'Abgelaufen'}
+                        </div>
+                        
+                        <div className="text-sm font-medium text-muted-foreground">Plan</div>
+                        <div className="text-sm font-medium">
+                          {subscription.planDetails?.name || 'Unbekannt'}
+                        </div>
+                        
+                        <div className="text-sm font-medium text-muted-foreground">Preis</div>
+                        <div className="text-sm font-medium">
+                          {subscription.planDetails ? 
+                            new Intl.NumberFormat('de-DE', { 
+                              style: 'currency', 
+                              currency: 'EUR',
+                              minimumFractionDigits: 2
+                            }).format(subscription.planDetails.price / 100) 
+                            : 'Unbekannt'
+                          }
+                          {subscription.planDetails?.interval === 'month' ? '/Monat' : '/Jahr'}
+                        </div>
+                        
+                        {subscription.startDate && (
+                          <>
+                            <div className="text-sm font-medium text-muted-foreground">Startdatum</div>
+                            <div className="text-sm font-medium">{formatDate(subscription.startDate)}</div>
+                          </>
+                        )}
+                        
+                        {subscription.nextBillingDate && (
+                          <>
+                            <div className="text-sm font-medium text-muted-foreground">Nächste Abrechnung</div>
+                            <div className="text-sm font-medium">{formatDate(subscription.nextBillingDate)}</div>
+                          </>
+                        )}
+                        
+                        {subscription.cancellationDate && (
+                          <>
+                            <div className="text-sm font-medium text-muted-foreground">Gekündigt am</div>
+                            <div className="text-sm font-medium">{formatDate(subscription.cancellationDate)}</div>
+                          </>
+                        )}
+                      </div>
+                      
+                      {subscription.status === 'active' && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full mt-4"
+                          onClick={handleCancelSubscription}
+                          disabled={isCancelling}
+                        >
+                          {isCancelling ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Wird verarbeitet...
+                            </>
+                          ) : (
+                            'Abonnement kündigen'
+                          )}
+                        </Button>
+                      )}
+
+                      {subscription.status === 'past_due' && (
+                        <Alert variant="destructive" className="mt-4">
+                          <AlertTitle>Zahlung überfällig</AlertTitle>
+                          <AlertDescription>
+                            Ihre letzte Zahlung war nicht erfolgreich. Bitte aktualisieren Sie Ihre Zahlungsinformationen.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <FileText className="mr-2 h-5 w-5" />
+                      Rechnungen
+                    </CardTitle>
+                    <CardDescription>
+                      Ihre letzten Rechnungen und Zahlungshistorie
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Hier könnte eine Rechnungshistorie angezeigt werden, wenn die Daten verfügbar sind */}
+                      <p className="text-sm text-muted-foreground">
+                        Die Rechnungshistorie ist derzeit nicht verfügbar.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
   );
-}
+};
+
+export default SubscriptionPage;
