@@ -11,15 +11,20 @@
    - [Meilensteine](#meilensteine)
    - [Oberflächenanalyse](#oberflächenanalyse)
    - [Bedarfs- und Kapazitätsplanung](#bedarfs--und-kapazitätsplanung)
+   - [Kostenkalkulation](#kostenkalkulation)
    - [Dokumenten-Management](#dokumenten-management)
+   - [Straßenbau-Module](#straßenbau-module)
+   - [Tiefbau-Erweiterung](#tiefbau-erweiterung)
+   - [Bodenanalyse](#bodenanalyse)
 4. [Administration](#administration)
    - [Benutzerverwaltung](#benutzerverwaltung)
    - [System-Logs](#system-logs)
    - [Testphasen-Management](#testphasen-management)
    - [Datensicherung](#datensicherung)
    - [Datenqualität](#datenqualität)
-5. [Häufig gestellte Fragen (FAQ)](#häufig-gestellte-fragen-faq)
-6. [Support und Kontakt](#support-und-kontakt)
+5. [Abonnement und Bezahlung](#abonnement-und-bezahlung)
+6. [Häufig gestellte Fragen (FAQ)](#häufig-gestellte-fragen-faq)
+7. [Support und Kontakt](#support-und-kontakt)
 
 ## Einführung
 
@@ -190,6 +195,48 @@ Diese Funktion unterstützt die Ressourcenplanung für Projekte.
 - Identifizieren Sie Engpässe
 - Planen Sie vorausschauend
 
+### Kostenkalkulation
+
+Die Kostenkalkulation ermöglicht eine detaillierte Berechnung der Projektkosten im Tiefbau.
+
+#### Berechnung durchführen
+
+1. Navigieren Sie zur "Kostenkalkulation"-Seite
+2. Wählen Sie eine Strecke aus der Liste der verfügbaren Routen
+3. Wählen Sie die Bodenart für das Projekt
+4. Wählen Sie die benötigte Maschine
+5. Passen Sie die Parameter an:
+   - Breite (in Metern)
+   - Tiefe (in Metern)
+   - Arbeitsstunden pro Tag
+   - Personalkosten pro Stunde
+   - Anzahl des Personals
+   - Zusatzkosten-Prozentsatz
+6. Klicken Sie auf "Kalkulation berechnen"
+
+#### Ergebnisse der Kostenkalkulation
+
+Die Ergebnisse zeigen detaillierte Berechnungen für:
+- Materialkosten basierend auf Fläche und Bodenart
+- Maschinenkosten basierend auf Maschinenwahl und Dauer
+- Personalkosten basierend auf Arbeitsstunden und Personaleinsatz
+- Kraftstoffkosten basierend auf Maschinenverbrauch
+- Zusatzkosten als prozentualer Aufschlag
+- Gesamtkosten und Kosten pro Meter
+
+#### PDF-Export der Kostenkalkulation
+
+1. Führen Sie eine Kalkulation durch
+2. Klicken Sie auf den Button "Als PDF exportieren"
+3. Das PDF wird automatisch mit folgenden Informationen erstellt:
+   - Projektname und aktuelle Datum
+   - Streckendetails (Länge, Breite, Tiefe)
+   - Ausgewählte Bodenart und Maschine
+   - Detaillierte Kostenaufstellung in tabellarischer Form
+   - Gesamtkosten und Kosten pro Meter
+4. Das PDF wird im Browser zum Download angeboten
+5. Der Dateiname enthält automatisch den Projektnamen und das aktuelle Datum
+
 ### Dokumenten-Management
 
 Verwalten Sie alle projektbezogenen Dokumente zentral.
@@ -205,11 +252,31 @@ Verwalten Sie alle projektbezogenen Dokumente zentral.
    - Tags für bessere Auffindbarkeit
 5. Laden Sie die Datei hoch
 
+#### Kamera-Integration
+
+1. Klicken Sie auf den "Kamera"-Button in der Dokumentenansicht
+2. Erlauben Sie den Kamerazugriff, wenn Sie dazu aufgefordert werden
+3. Machen Sie ein Foto oder wählen Sie ein vorhandenes Bild aus Ihrer Galerie
+4. Das aufgenommene Bild wird automatisch in die App hochgeladen
+5. Fügen Sie Metadaten wie bei regulären Dokumenten hinzu
+
+#### KI-basierte Bildklassifizierung
+
+Die App verwendet KI zur automatischen Analyse und Kategorisierung von Bildern:
+
+1. Laden Sie ein Foto hoch (über Hochladen oder Kamera)
+2. Die KI analysiert das Bild automatisch und schlägt vor:
+   - Geeignete Kategorie basierend auf dem Bildinhalt
+   - Schlagworte für eine bessere Auffindbarkeit
+   - Potenzielle Verbindungen zu bestehenden Projekten
+3. Sie können die KI-Vorschläge akzeptieren oder anpassen
+
 #### Dokumente organisieren
 
 - Nutzen Sie die KI-gestützte Kategorisierungsvorschläge
 - Suchen Sie nach Dokumenten mit Volltextsuche
 - Filtern Sie nach Kategorien und Tags
+- Nutzen Sie die verbesserte Suchfunktion mit Vorschau der Suchergebnisse
 
 ## Administration
 
@@ -264,6 +331,116 @@ Die Datenqualitätsprüfung zeigt:
 - Konsistenzprüfungen
 - Verbesserungsvorschläge
 
+Die verbesserte Datenqualitätsansicht bietet jetzt:
+- Echtzeit-Überwachung der Datenintegrität
+- Grafische Darstellung von Datenqualitätsmetriken
+- Automatische Benachrichtigungen bei kritischen Qualitätsproblemen
+- Exportierbaren Datenqualitätsbericht im PDF-Format
+
+## Abonnement und Bezahlung
+
+Die Bau-Structura App bietet drei verschiedene Abonnement-Modelle, um den unterschiedlichen Anforderungen gerecht zu werden.
+
+### Verfügbare Abonnement-Modelle
+
+1. **Basic (24€/Monat)**
+   - Grundlegende Projektverwaltung
+   - Bautagebuch
+   - Dokumentenmanagement (begrenzt)
+
+2. **Professional (49€/Monat)**
+   - Alle Funktionen des Basic-Pakets
+   - Unbegrenzte Dokumentenverwaltung
+   - Meilensteinverwaltung
+   - Kapazitätsplanung
+   - Kostenkalkulation mit PDF-Export
+
+3. **Enterprise (69€/Monat)**
+   - Alle Funktionen des Professional-Pakets
+   - KI-basierte Oberflächenanalyse
+   - Tiefbau-Erweiterung
+   - Erweiterte Datenqualitätsfunktionen
+   - Multi-User-Management
+   - Prioritäts-Support
+
+### Abonnement verwalten
+
+1. Gehen Sie zum Menüpunkt "Abonnement" im Benutzermenü
+2. Hier können Sie:
+   - Ihr aktuelles Abonnement einsehen
+   - Auf ein höheres Paket upgraden
+   - Zahlungsmethoden verwalten
+   - Rechnungen einsehen und herunterladen
+
+### Zahlungsmethoden
+
+Die folgenden Zahlungsmethoden werden unterstützt:
+- Kreditkarte (Visa, Mastercard)
+- SEPA-Lastschrift
+- PayPal
+- Rechnung (nur für Enterprise-Kunden)
+
+### Testphase
+
+Neue Benutzer erhalten automatisch eine 14-tägige Testphase mit Zugriff auf alle Funktionen des Professional-Pakets. Kurz vor Ablauf der Testphase werden Sie benachrichtigt, um ein Abonnement auszuwählen.
+
+## Straßenbau-Module
+
+Das Straßenbau-Modul bietet spezialisierte Funktionen für Straßenbauprojekte.
+
+### Belastungsklassen nach RStO 12
+
+Der Bereich enthält:
+- Tabellen mit Belastungsklassen (Bk0.3 bis Bk100)
+- Zuordnung von Belastungsklassen zu Bauklassen
+- Empfohlene Schichtstärken für jede Belastungsklasse
+
+### Streckenmessung
+
+1. Wählen Sie auf der Karte den Messungsmodus aus
+2. Setzen Sie Messpunkte auf der Karte, um eine Strecke zu definieren
+3. Die Anwendung berechnet automatisch:
+   - Gesamtlänge der Strecke
+   - Anzahl der Messpunkte
+   - Länge der einzelnen Abschnitte
+
+### Flächenmessung
+
+1. Aktivieren Sie den Flächenmessmodus
+2. Definieren Sie die zu messende Fläche durch Setzen von Punkten auf der Karte
+3. Die Anwendung berechnet automatisch:
+   - Gesamtfläche in Quadratmetern
+   - Umfang der markierten Fläche
+
+## Tiefbau-Erweiterung
+
+Die Tiefbau-Erweiterung bietet spezialisierte Tools für Tiefbauprojekte.
+
+### Maschinenauswahl
+
+1. Navigieren Sie zur "Maschinenauswahl"-Seite
+2. Hier finden Sie eine Übersicht aller verfügbaren Baumaschinen
+3. Filtern Sie nach:
+   - Maschinentyp (Bagger, Walzen, Fräsen, etc.)
+   - Leistungsparametern
+   - Verfügbarkeit
+4. Wählen Sie eine Maschine für detaillierte Informationen aus
+
+### Bodenanalyse
+
+Die Bodenanalyse hilft bei der Klassifizierung und Bewertung von Bodenmaterialien.
+
+1. Navigieren Sie zur "Bodenanalyse"-Seite
+2. Sie können Bodenarten:
+   - Aus einer Datenbank auswählen
+   - Durch Bodenproben fotografieren und automatisch klassifizieren lassen
+   - Manuell erfassen und kategorisieren
+3. Für jede Bodenart werden technische Parameter angezeigt:
+   - Tragfähigkeit
+   - Dichte
+   - Material-Kosten
+   - Verarbeitungsempfehlungen
+
 ## Häufig gestellte Fragen (FAQ)
 
 ### Allgemein
@@ -280,7 +457,19 @@ A: Ja, die Bau - Structura App ist responsiv gestaltet und funktioniert auf Smar
 A: Versuchen Sie, Ihren Browser-Cache zu leeren und die Seite neu zu laden. Falls das Problem weiterhin besteht, kontaktieren Sie den Support.
 
 **F: Kann ich Daten aus der App exportieren?**  
-A: Ja, viele Bereiche bieten Export-Funktionen für PDF, Excel oder CSV.
+A: Ja, viele Bereiche bieten Export-Funktionen für PDF, Excel oder CSV. Die neue PDF-Export-Funktion für Kostenkalkulationen steht im Professional- und Enterprise-Abonnement zur Verfügung.
+
+**F: Wie kann ich die Kostenkalkulation als PDF exportieren?**  
+A: Nach Durchführung einer Kalkulation klicken Sie einfach auf den Button "Als PDF exportieren" am unteren Rand der Ergebnisseite. Die Datei wird automatisch mit Projektname und Datum generiert und zum Download angeboten.
+
+**F: Welche Neuerungen wurden in der Dokumentenverwaltung eingeführt?**  
+A: Die Dokumentenverwaltung wurde um eine Kamera-Integration und KI-basierte Bildklassifizierung erweitert. Sie können jetzt Fotos direkt in der App aufnehmen und automatisch kategorisieren lassen.
+
+**F: Was beinhaltet die neue Tiefbau-Erweiterung?**  
+A: Die Tiefbau-Erweiterung umfasst spezielle Module für Bodenanalyse, Maschinenauswahl und detaillierte RStO 12-Belastungsklassen, die für Tiefbauprojekte optimiert sind.
+
+**F: Wie funktioniert die verbesserte Datenqualitätsansicht?**  
+A: Die verbesserte Datenqualitätsansicht bietet Echtzeit-Überwachung, grafische Darstellungen und exportierbare Berichte, um die Integrität Ihrer Projektdaten zu gewährleisten.
 
 ## Support und Kontakt
 
@@ -291,3 +480,7 @@ Bei Fragen oder Problemen stehen wir Ihnen gerne zur Verfügung:
 - **Geschäftszeiten**: Mo-Fr 8:00 - 17:00 Uhr
 
 Für Feature-Anfragen oder Feedback nutzen Sie bitte die Feedback-Funktion in der App oder kontaktieren Sie direkt unseren Support.
+
+---
+
+**Letzte Aktualisierung:** 10.05.2025

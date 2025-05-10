@@ -547,7 +547,7 @@ export default function InformationPage() {
               <Info className="h-4 w-4 mr-2 text-[#6a961f]" />
               <AlertTitle className="text-[#111827] font-semibold">Aktuelle Version</AlertTitle>
               <AlertDescription className="text-[#111827]">
-                Das Benutzerhandbuch wird regelmäßig aktualisiert. Die aktuelle Version ist vom 28.04.2025.
+                Das Benutzerhandbuch wird regelmäßig aktualisiert. Die aktuelle Version ist vom 10.05.2025.
                 Bei Fragen oder für Support wenden Sie sich bitte an Ihren Administrator.
               </AlertDescription>
             </Alert>

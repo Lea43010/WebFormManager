@@ -539,7 +539,7 @@ export default function KostenKalkulationPage() {
                 <Map className="h-5 w-5 text-[#6a961f]" />
                 <span>1. Route auswählen</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Wählen Sie die Strecke für Ihr Bauprojekt
               </CardDescription>
             </CardHeader>
@@ -635,7 +635,7 @@ export default function KostenKalkulationPage() {
                 <Database className="h-5 w-5 text-[#6a961f]" />
                 <span>2. Bodenart auswählen</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm">
                 Wählen Sie die relevante Bodenart für das Projekt
               </CardDescription>
             </CardHeader>
@@ -687,11 +687,11 @@ export default function KostenKalkulationPage() {
 
           <Card className="bg-white shadow rounded-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-[#111827]">
-                <Truck className="h-4 w-4 text-[#6a961f]" />
+              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+                <Truck className="h-5 w-5 text-[#6a961f]" />
                 <span>3. Maschine auswählen</span>
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-sm">
                 Wählen Sie die geeignete Maschine aus
               </CardDescription>
             </CardHeader>

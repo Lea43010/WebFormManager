@@ -176,15 +176,20 @@ export const generateUserManualPdf = async (): Promise<void> => {
    - Meilensteine
    - Oberflächenanalyse
    - Bedarfs- und Kapazitätsplanung
+   - Kostenkalkulation
    - Dokumenten-Management
+   - Straßenbau-Module
+   - Tiefbau-Erweiterung
+   - Bodenanalyse
 4. Administration
    - Benutzerverwaltung
    - System-Logs
    - Testphasen-Management
    - Datensicherung
    - Datenqualität
-5. Häufig gestellte Fragen (FAQ)
-6. Support und Kontakt
+5. Abonnement und Bezahlung
+6. Häufig gestellte Fragen (FAQ)
+7. Support und Kontakt
 
 ## Einführung
 
