@@ -1892,7 +1892,12 @@ export default function InformationPage() {
                   
                   <div className="p-3 bg-gray-50 rounded-md flex items-center justify-between">
                     <span className="font-medium">support@bau-structura.de</span>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-1"
+                      onClick={() => window.location.href = 'mailto:support@bau-structura.de'}
+                    >
                       <Mail className="h-3 w-3" />
                       E-Mail senden
                     </Button>
