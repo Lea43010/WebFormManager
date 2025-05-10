@@ -102,11 +102,42 @@ const TiefbauMap: React.FC = () => {
   const [streckenkostenProM2, setStreckenkostenProM2] = useState(0);
   const [gesamtstreckenkosten, setGesamtstreckenkosten] = useState(0);
   
+  // State für Projekte
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+  
   // Loading-State
   const [loading, setLoading] = useState(false);
   
   // Toast-Hook
   const { toast } = useToast();
+  
+  // Lade Projekte beim ersten Laden
+  useEffect(() => {
+    const loadProjects = async () => {
+      setIsLoadingProjects(true);
+      try {
+        const response = await fetch('/api/projects');
+        if (!response.ok) {
+          throw new Error('Projekte konnten nicht geladen werden');
+        }
+        const data = await response.json();
+        setProjects(data);
+      } catch (error) {
+        console.error('Fehler beim Laden der Projekte:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Fehler',
+          description: 'Projekte konnten nicht geladen werden.'
+        });
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+    
+    loadProjects();
+  }, [toast]);
   
   // Lade Bodenarten beim ersten Laden
   useEffect(() => {
@@ -479,14 +510,46 @@ const TiefbauMap: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" size="sm" asChild className="mr-2">
-          <Link to="/dashboard">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Zurück
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">Tiefbau-Streckenplanung</h1>
+      <div className="flex flex-col md:flex-row md:items-center mb-6">
+        <div className="flex items-center mb-4 md:mb-0 md:mr-6">
+          <Button variant="ghost" size="sm" asChild className="mr-2">
+            <Link to="/dashboard">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Zurück
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold">Tiefbau-Streckenplanung</h1>
+        </div>
+        
+        {/* Projekt-Auswahl */}
+        <div className="flex-grow md:max-w-xs">
+          <Select 
+            value={selectedProject?.toString() || "0"} 
+            onValueChange={(value) => {
+              const projectId = parseInt(value);
+              setSelectedProject(projectId === 0 ? null : projectId);
+            }}
+            disabled={isLoadingProjects}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Projekt auswählen" />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoadingProjects ? (
+                <div className="p-2 text-center">Projekte werden geladen...</div>
+              ) : (
+                <>
+                  <SelectItem value="0">Alle Projekte</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.project_name || project.name || `Projekt ${project.id}`}
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <Tabs defaultValue="karte" className="mb-6">
