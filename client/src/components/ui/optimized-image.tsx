@@ -233,7 +233,6 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         height={typeof height === 'number' ? height : undefined}
         loading={lazyLoad && !priority ? "lazy" : "eager"}
         decoding={priority ? "sync" : "async"}
-        fetchPriority={priority ? "high" : "auto"}
       />
       
       {/* Ladeindikator */}
