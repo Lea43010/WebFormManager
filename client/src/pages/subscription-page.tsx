@@ -77,14 +77,14 @@ const SubscriptionPage = () => {
   }
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 bg-[#F3F4F6] min-h-screen">
       <Header title="Abonnement" />
       
       <Tabs defaultValue="plans" className="mt-6">
-        <TabsList className="mb-6">
-          <TabsTrigger value="plans">Abonnement-Pläne</TabsTrigger>
+        <TabsList className="mb-6 bg-white">
+          <TabsTrigger value="plans" className="data-[state=active]:bg-[#6a961f] data-[state=active]:text-white">Abonnement-Pläne</TabsTrigger>
           {subscription && (
-            <TabsTrigger value="details">Abonnement-Details</TabsTrigger>
+            <TabsTrigger value="details" className="data-[state=active]:bg-[#6a961f] data-[state=active]:text-white">Abonnement-Details</TabsTrigger>
           )}
         </TabsList>
 
@@ -118,10 +118,10 @@ const SubscriptionPage = () => {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <Card>
+                <Card className="bg-white rounded-xl shadow">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <CreditCard className="mr-2 h-5 w-5" />
+                    <CardTitle className="flex items-center text-[#111827] font-inter">
+                      <CreditCard className="mr-2 h-5 w-5 text-[#6a961f]" />
                       Abonnement-Status
                     </CardTitle>
                   </CardHeader>
@@ -207,13 +207,13 @@ const SubscriptionPage = () => {
                   </CardContent>
                 </Card>
                 
-                <Card>
+                <Card className="bg-white rounded-xl shadow">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <FileText className="mr-2 h-5 w-5" />
+                    <CardTitle className="flex items-center text-[#111827] font-inter">
+                      <FileText className="mr-2 h-5 w-5 text-[#6a961f]" />
                       Rechnungen
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-[#111827] font-inter">
                       Ihre letzten Rechnungen und Zahlungshistorie
                     </CardDescription>
                   </CardHeader>

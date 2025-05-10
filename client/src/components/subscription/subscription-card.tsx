@@ -60,13 +60,13 @@ export function SubscriptionCard({
 
   return (
     <Card 
-      className={`w-full md:max-w-md transition-all duration-300 ${
-        isSelected ? 'border-primary border-2 shadow-lg' : 'shadow'
+      className={`w-full md:max-w-md transition-all duration-300 bg-white rounded-xl ${
+        isSelected ? 'border-[#6a961f] border-2 shadow-lg' : 'shadow'
       } ${isActivePlan && !isPastDue && !isCancelled && !isExpired ? 'bg-green-50' : ''}`}
     >
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{plan.name}</CardTitle>
-        <CardDescription className="text-xl font-bold">
+        <CardTitle className="text-2xl font-inter text-[#111827]">{plan.name}</CardTitle>
+        <CardDescription className="text-xl font-bold text-[#111827]">
           {formatPrice(plan.price)}/{plan.interval === 'month' ? 'Monat' : 'Jahr'}
         </CardDescription>
         {isActivePlan && (
@@ -82,8 +82,8 @@ export function SubscriptionCard({
         <ul className="space-y-2">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start">
-              <CheckCircle2 className="h-5 w-5 text-green-600 mr-2 shrink-0 mt-0.5" />
-              <span>{feature}</span>
+              <CheckCircle2 className="h-5 w-5 text-[#6a961f] mr-2 shrink-0 mt-0.5" />
+              <span className="text-[#111827] font-inter">{feature}</span>
             </li>
           ))}
         </ul>
@@ -92,7 +92,7 @@ export function SubscriptionCard({
         <Button 
           onClick={() => onSelect && onSelect(plan)} 
           disabled={isLoading || (isActivePlan && !isPastDue && !isExpired)}
-          className="w-full"
+          className="w-full bg-[#6a961f] hover:bg-[#5a841a] text-white font-inter"
           variant={isSelected ? "default" : "outline"}
         >
           {isLoading ? 'Laden...' : isActivePlan ? 'Aktueller Plan' : 'Auswählen'}
