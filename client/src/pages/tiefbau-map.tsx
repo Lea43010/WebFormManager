@@ -125,6 +125,9 @@ const TiefbauMap: React.FC = () => {
         const data = await response.json();
         console.log('Geladene Projekte:', data);
         setProjects(data);
+        
+        // Standardmäßig ist "Keine Auswahl" aktiv, daher setzen wir es auf null
+        setSelectedProject(null);
       } catch (error) {
         console.error('Fehler beim Laden der Projekte:', error);
         toast({
@@ -586,7 +589,7 @@ const TiefbauMap: React.FC = () => {
                 <div className="p-2 text-center">Projekte werden geladen...</div>
               ) : (
                 <>
-                  <SelectItem value="0">Alle Projekte</SelectItem>
+                  <SelectItem value="0">Keine Auswahl</SelectItem>
                   {projects.map((project) => {
                     // Debug-Ausgabe für jedes Projekt
                     console.log('Projekt-Details:', project.id, 
