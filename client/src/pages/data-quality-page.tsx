@@ -297,297 +297,360 @@ export default function DataQualityPage() {
 
   return (
     <DashboardLayout title="Datenqualitätsmanagement" description="Überwachen und verbessern Sie die Qualität Ihrer Daten">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart className="h-4 w-4" />
-            <span>Dashboard</span>
-          </TabsTrigger>
-          <TabsTrigger value="issues" className="flex items-center gap-2">
-            <FileWarning className="h-4 w-4" />
-            <span>Probleme</span>
-          </TabsTrigger>
-          <TabsTrigger value="rules" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Regeln</span>
-          </TabsTrigger>
-        </TabsList>
+      <div className="bg-[#F3F4F6] p-6 rounded-lg">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-white shadow">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 data-[state=active]:bg-[#6a961f] data-[state=active]:text-white">
+              <BarChart className="h-4 w-4" />
+              <span>Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="issues" className="flex items-center gap-2 data-[state=active]:bg-[#6a961f] data-[state=active]:text-white">
+              <FileWarning className="h-4 w-4" />
+              <span>Probleme</span>
+            </TabsTrigger>
+            <TabsTrigger value="rules" className="flex items-center gap-2 data-[state=active]:bg-[#6a961f] data-[state=active]:text-white">
+              <Settings className="h-4 w-4" />
+              <span>Regeln</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Dashboard-Tab */}
-        <TabsContent value="dashboard" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Gesamtqualität</CardTitle>
-                <CardDescription>Durchschnittliche Datenqualität über alle Entitäten</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-primary mb-2">{overallQualityScore}%</div>
-                  <Progress value={overallQualityScore} className="h-2 w-full" />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Basierend auf allen Datenqualitätsregeln
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Offene Probleme</CardTitle>
-                <CardDescription>Anzahl der ungelösten Datenqualitätsprobleme</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center">
-                  <div className="text-4xl font-bold text-amber-500 mb-2">
-                    {issues.filter(issue => !issue.resolvedAt).length}
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Hoch: {issues.filter(issue => !issue.resolvedAt && issue.severity === "high").length}
-                    </Badge>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Mittel: {issues.filter(issue => !issue.resolvedAt && issue.severity === "medium").length}
-                    </Badge>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Niedrig: {issues.filter(issue => !issue.resolvedAt && issue.severity === "low").length}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Aktionen</CardTitle>
-                <CardDescription>Datenqualität überprüfen und verbessern</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <Button 
-                    onClick={runDataQualityCheck} 
-                    disabled={isRunningCheck} 
-                    className="w-full flex items-center justify-center gap-2"
-                  >
-                    {isRunningCheck ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Prüfung läuft...
-                      </>
-                    ) : (
-                      <>
-                        <FileCheck className="h-4 w-4" />
-                        Datenqualität prüfen
-                      </>
-                    )}
-                  </Button>
-                  
-                  {isRunningCheck && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Fortschritt:</span>
-                        <span>{checkProgress}%</span>
-                      </div>
-                      <Progress value={checkProgress} className="h-2" />
-                    </div>
-                  )}
-                  
-                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
-                    <Download className="h-4 w-4" />
-                    Bericht exportieren
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <h3 className="text-lg font-medium mb-4">Qualität nach Entitätstyp</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {metrics.map((metric) => (
-              <Card key={metric.entityType} className="overflow-hidden">
+          {/* Dashboard-Tab */}
+          <TabsContent value="dashboard" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <Card className="bg-white shadow rounded-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg capitalize">
-                    {metric.entityType === "customers" && "Kunden"}
-                    {metric.entityType === "companies" && "Unternehmen"}
-                    {metric.entityType === "projects" && "Projekte"}
-                    {metric.entityType === "employees" && "Mitarbeiter"}
-                    {metric.entityType === "attachments" && "Anhänge"} 
-                  </CardTitle>
-                  <CardDescription>
-                    {metric.totalRecords} Datensätze | Letzte Prüfung: {new Date(metric.lastChecked).toLocaleString('de-DE', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </CardDescription>
+                  <CardTitle className="text-lg text-[#111827]">Gesamtqualität</CardTitle>
+                  <CardDescription>Durchschnittliche Datenqualität über alle Entitäten</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Qualitätsbewertung:</span>
-                      <span className={`font-medium ${getQualityScoreColor(metric.qualityScore)}`}>
-                        {metric.qualityScore}%
-                      </span>
+                  <div className="flex flex-col items-center">
+                    <div className="text-4xl font-bold text-[#6a961f] mb-2">{overallQualityScore}%</div>
+                    <Progress value={overallQualityScore} className="h-2 w-full bg-gray-200" />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Basierend auf allen Datenqualitätsregeln
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow rounded-lg">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg text-[#111827]">Offene Probleme</CardTitle>
+                  <CardDescription>Anzahl der ungelösten Datenqualitätsprobleme</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center">
+                    <div className="text-4xl font-bold text-amber-500 mb-2">
+                      {issues.filter(issue => !issue.resolvedAt).length}
                     </div>
-                    <Progress 
-                      value={metric.qualityScore} 
-                      className={`h-2 ${getQualityScoreProgressColor(metric.qualityScore)}`} 
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Vollständig</span>
-                        <span className="font-medium text-green-600">{metric.completeRecords}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground">Unvollständig</span>
-                        <span className="font-medium text-amber-600">{metric.incompleteRecords}</span>
-                      </div>
+                    <div className="flex gap-2 mt-2">
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Hoch: {issues.filter(issue => !issue.resolvedAt && issue.severity === "high").length}
+                      </Badge>
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Mittel: {issues.filter(issue => !issue.resolvedAt && issue.severity === "medium").length}
+                      </Badge>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Niedrig: {issues.filter(issue => !issue.resolvedAt && issue.severity === "low").length}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </TabsContent>
 
-        {/* Probleme-Tab */}
-        <TabsContent value="issues" className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between">
-            <div className="flex gap-2">
-              <Select value={selectedEntity} onValueChange={(value) => setSelectedEntity(value as EntityType)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Entität wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="customers">Kunden</SelectItem>
-                  <SelectItem value="companies">Unternehmen</SelectItem>
-                  <SelectItem value="projects">Projekte</SelectItem>
-                  <SelectItem value="employees">Mitarbeiter</SelectItem>
-                  <SelectItem value="attachments">Anhänge</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={filterSeverity} onValueChange={setFilterSeverity}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Schweregrad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle Schweregrade</SelectItem>
-                  <SelectItem value="high">Hoch</SelectItem>
-                  <SelectItem value="medium">Mittel</SelectItem>
-                  <SelectItem value="low">Niedrig</SelectItem>
-                </SelectContent>
-              </Select>
+              <Card className="bg-white shadow rounded-lg">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg text-[#111827]">Aktionen</CardTitle>
+                  <CardDescription>Datenqualität überprüfen und verbessern</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Button 
+                      onClick={runDataQualityCheck} 
+                      disabled={isRunningCheck} 
+                      className="w-full flex items-center justify-center gap-2 bg-[#6a961f] hover:bg-[#5b851a]"
+                    >
+                      {isRunningCheck ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Prüfung läuft...
+                        </>
+                      ) : (
+                        <>
+                          <FileCheck className="h-4 w-4" />
+                          Datenqualität prüfen
+                        </>
+                      )}
+                    </Button>
+                    
+                    {isRunningCheck && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Fortschritt:</span>
+                          <span>{checkProgress}%</span>
+                        </div>
+                        <Progress value={checkProgress} className="h-2 bg-gray-200" />
+                      </div>
+                    )}
+                    
+                    <Button variant="outline" className="w-full flex items-center justify-center gap-2 border-[#6a961f] text-[#6a961f]">
+                      <Download className="h-4 w-4" />
+                      Bericht exportieren
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={runDataQualityCheck}
-              disabled={isRunningCheck}
-            >
-              {isRunningCheck ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              Neu prüfen
-            </Button>
-          </div>
 
-          {filteredIssues.length === 0 ? (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-700">Keine Probleme gefunden</AlertTitle>
-              <AlertDescription className="text-green-600">
-                Es wurden keine Datenqualitätsprobleme für die ausgewählten Filter gefunden.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle>Datenqualitätsprobleme</CardTitle>
+            <h3 className="text-lg font-medium mb-4 text-[#111827]">Qualität nach Entitätstyp</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {metrics.map((metric) => (
+                <Card key={metric.entityType} className="bg-white shadow rounded-lg overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg text-[#111827]">
+                      {metric.entityType === "customers" && "Kunden"}
+                      {metric.entityType === "companies" && "Unternehmen"}
+                      {metric.entityType === "projects" && "Projekte"}
+                      {metric.entityType === "employees" && "Mitarbeiter"}
+                      {metric.entityType === "attachments" && "Anhänge"} 
+                    </CardTitle>
+                    <CardDescription>
+                      {metric.totalRecords} Datensätze | Letzte Prüfung: {new Date(metric.lastChecked).toLocaleString('de-DE', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Qualitätsbewertung:</span>
+                        <span className={`font-medium ${getQualityScoreColor(metric.qualityScore)}`}>
+                          {metric.qualityScore}%
+                        </span>
+                      </div>
+                      <Progress 
+                        value={metric.qualityScore} 
+                        className={`h-2 ${getQualityScoreProgressColor(metric.qualityScore)}`} 
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground">Vollständig</span>
+                          <span className="font-medium">{metric.completeRecords} ({Math.round(metric.completeRecords / metric.totalRecords * 100)}%)</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-muted-foreground">Unvollständig</span>
+                          <span className="font-medium">{metric.incompleteRecords} ({Math.round(metric.incompleteRecords / metric.totalRecords * 100)}%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Probleme-Tab */}
+          <TabsContent value="issues" className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <Card className="w-full md:w-1/3 bg-white shadow rounded-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg text-[#111827]">Filter</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Entitätstyp</label>
+                    <Select 
+                      value={selectedEntity || "all"} 
+                      onValueChange={(value) => setSelectedEntity(value === "all" ? undefined : value as EntityType)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Alle Entitäten" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Entitäten</SelectItem>
+                        <SelectItem value="customers">Kunden</SelectItem>
+                        <SelectItem value="companies">Unternehmen</SelectItem>
+                        <SelectItem value="projects">Projekte</SelectItem>
+                        <SelectItem value="employees">Mitarbeiter</SelectItem>
+                        <SelectItem value="attachments">Anhänge</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Schweregrad</label>
+                    <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Alle Schweregrade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Schweregrade</SelectItem>
+                        <SelectItem value="high">Hoch</SelectItem>
+                        <SelectItem value="medium">Mittel</SelectItem>
+                        <SelectItem value="low">Niedrig</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center justify-center gap-2 border-[#6a961f] text-[#6a961f]"
+                      onClick={() => {
+                        setSelectedEntity(undefined);
+                        setFilterSeverity("all");
+                      }}
+                    >
+                      <Filter className="h-4 w-4" />
+                      Filter zurücksetzen
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="w-full md:w-2/3 bg-white shadow rounded-lg">
+                <CardHeader>
+                  <CardTitle className="text-lg text-[#111827]">Datenqualitätsprobleme</CardTitle>
+                  <CardDescription>
+                    {filteredIssues.length} {filteredIssues.length === 1 ? 'Problem' : 'Probleme'} gefunden
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px]">
+                    {filteredIssues.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-[300px] text-center p-4">
+                        <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                        <h3 className="text-lg font-medium mb-1">Keine Probleme gefunden</h3>
+                        <p className="text-muted-foreground">
+                          Für die ausgewählten Filter wurden keine Datenqualitätsprobleme gefunden.
+                        </p>
+                      </div>
+                    ) : (
+                      filteredIssues.map((issue) => (
+                        <div key={issue.id} className="border-b py-4 last:border-0 last:pb-0 first:pt-0">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge 
+                                  variant={
+                                    issue.severity === "high" ? "destructive" : 
+                                    issue.severity === "medium" ? "outline" : 
+                                    "outline"
+                                  }
+                                  className={
+                                    issue.severity === "medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                    issue.severity === "low" ? "bg-blue-50 text-blue-700 border-blue-200" : ""
+                                  }
+                                >
+                                  {issue.severity === "high" ? "Hoch" : issue.severity === "medium" ? "Mittel" : "Niedrig"}
+                                </Badge>
+                                <span className="text-sm font-medium">
+                                  {getEntityTypeLabel(issue.entityType)}: {issue.entityName}
+                                </span>
+                              </div>
+                              <h4 className="font-medium">{getFieldLabel(issue.fieldName)}: {issue.issueType === "missing_value" ? "Wert fehlt" : "Ungültiges Format"}</h4>
+                              <p className="text-sm text-muted-foreground mt-1">{issue.issueDescription}</p>
+                              <div className="text-xs text-muted-foreground mt-2">
+                                Erkannt am: {new Date(issue.createdAt).toLocaleString('de-DE')}
+                              </div>
+                            </div>
+                            <div>
+                              {issue.resolvedAt ? (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  Gelöst
+                                </Badge>
+                              ) : (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => resolveIssue(issue.id)}
+                                  className="text-[#6a961f] border-[#6a961f]"
+                                >
+                                  Als gelöst markieren
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Regeln-Tab */}
+          <TabsContent value="rules" className="space-y-4">
+            <Card className="bg-white shadow rounded-lg">
+              <CardHeader>
+                <CardTitle className="text-lg text-[#111827]">Datenqualitätsregeln</CardTitle>
                 <CardDescription>
-                  {filteredIssues.length} {filteredIssues.length === 1 ? 'Problem' : 'Probleme'} gefunden
+                  Konfigurieren Sie die Regeln für die Datenqualitätsprüfung
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px] rounded-md">
+                <ScrollArea className="h-[500px]">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Entität</TableHead>
-                        <TableHead>Feld</TableHead>
-                        <TableHead>Problem</TableHead>
-                        <TableHead>Schweregrad</TableHead>
-                        <TableHead>Datum</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Aktion</TableHead>
+                        <TableHead className="w-[200px]">Entitätstyp</TableHead>
+                        <TableHead className="w-[200px]">Feld</TableHead>
+                        <TableHead className="w-[250px]">Regel</TableHead>
+                        <TableHead className="w-[100px]">Schweregrad</TableHead>
+                        <TableHead className="w-[100px]">Status</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredIssues.map((issue) => (
-                        <TableRow key={issue.id}>
-                          <TableCell className="font-medium">
-                            {getEntityTypeLabel(issue.entityType)}: {issue.entityName}
-                          </TableCell>
-                          <TableCell>{getFieldLabel(issue.fieldName)}</TableCell>
-                          <TableCell className="max-w-[240px] truncate" title={issue.issueDescription}>
-                            {issue.issueDescription}
+                      {rules.map((rule) => (
+                        <TableRow key={rule.id}>
+                          <TableCell>{getEntityTypeLabel(rule.entityType)}</TableCell>
+                          <TableCell>{getFieldLabel(rule.fieldName)}</TableCell>
+                          <TableCell>
+                            <div>
+                              <span className="font-medium">{getRuleLabel(rule.ruleName)}</span>
+                              <p className="text-xs text-muted-foreground mt-1">{rule.ruleDescription}</p>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <Badge
+                            <Badge 
                               variant={
-                                issue.severity === "high" 
-                                  ? "destructive" 
-                                  : issue.severity === "medium" 
-                                    ? "default" 
-                                    : "outline"
+                                rule.severity === "high" ? "destructive" : 
+                                rule.severity === "medium" ? "outline" : 
+                                "outline"
                               }
                               className={
-                                issue.severity === "medium" 
-                                  ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
-                                  : issue.severity === "low" 
-                                    ? "bg-blue-50 text-blue-700 border-blue-200" 
-                                    : ""
+                                rule.severity === "medium" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                rule.severity === "low" ? "bg-blue-50 text-blue-700 border-blue-200" : ""
                               }
                             >
-                              {issue.severity === "high" && "Hoch"}
-                              {issue.severity === "medium" && "Mittel"}
-                              {issue.severity === "low" && "Niedrig"}
+                              {rule.severity === "high" ? "Hoch" : rule.severity === "medium" ? "Mittel" : "Niedrig"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm">
-                            {new Date(issue.createdAt).toLocaleDateString('de-DE')}
-                          </TableCell>
                           <TableCell>
-                            {issue.resolvedAt ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                Gelöst
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                                Offen
-                              </Badge>
-                            )}
+                            <Badge variant={rule.active ? "default" : "outline"} 
+                              className={rule.active ? "bg-[#6a961f]" : ""}
+                            >
+                              {rule.active ? "Aktiv" : "Inaktiv"}
+                            </Badge>
                           </TableCell>
-                          <TableCell>
-                            {!issue.resolvedAt && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => resolveIssue(issue.id)}
-                                className="h-8 text-xs px-2"
-                              >
-                                Als gelöst markieren
-                              </Button>
-                            )}
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleRuleActive(rule.id)}
+                            >
+                              {rule.active ? "Deaktivieren" : "Aktivieren"}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -596,93 +659,9 @@ export default function DataQualityPage() {
                 </ScrollArea>
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
-
-        {/* Regeln-Tab */}
-        <TabsContent value="rules" className="space-y-4">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium">Datenqualitätsregeln</h3>
-            <Button className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Neue Regel erstellen
-            </Button>
-          </div>
-
-          <Card>
-            <CardContent className="pt-6">
-              <ScrollArea className="h-[500px] rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Entität</TableHead>
-                      <TableHead>Feld</TableHead>
-                      <TableHead>Regel</TableHead>
-                      <TableHead>Beschreibung</TableHead>
-                      <TableHead>Schweregrad</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Aktion</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rules.map((rule) => (
-                      <TableRow key={rule.id}>
-                        <TableCell>{getEntityTypeLabel(rule.entityType)}</TableCell>
-                        <TableCell>{getFieldLabel(rule.fieldName)}</TableCell>
-                        <TableCell>{getRuleLabel(rule.ruleName)}</TableCell>
-                        <TableCell>{rule.ruleDescription}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              rule.severity === "high" 
-                                ? "destructive" 
-                                : rule.severity === "medium" 
-                                  ? "default" 
-                                  : "outline"
-                            }
-                            className={
-                              rule.severity === "medium" 
-                                ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
-                                : rule.severity === "low" 
-                                  ? "bg-blue-50 text-blue-700 border-blue-200" 
-                                  : ""
-                            }
-                          >
-                            {rule.severity === "high" && "Hoch"}
-                            {rule.severity === "medium" && "Mittel"}
-                            {rule.severity === "low" && "Niedrig"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={rule.active 
-                              ? "bg-green-50 text-green-700 border-green-200" 
-                              : "bg-gray-50 text-gray-700 border-gray-200"
-                            }
-                          >
-                            {rule.active ? "Aktiv" : "Inaktiv"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleRuleActive(rule.id)}
-                            className="h-8 text-xs px-2"
-                          >
-                            {rule.active ? "Deaktivieren" : "Aktivieren"}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 }
@@ -706,11 +685,11 @@ function getFieldLabel(fieldName: string): string {
     case "last_name": return "Nachname";
     case "customer_email": return "E-Mail";
     case "company_name": return "Firmenname";
+    case "company_phone": return "Telefon";
     case "project_name": return "Projektname";
     case "project_startdate": return "Startdatum";
     case "project_enddate": return "Enddatum";
     case "postal_code": return "Postleitzahl";
-    case "company_phone": return "Telefonnummer";
     default: return fieldName;
   }
 }
@@ -718,7 +697,7 @@ function getFieldLabel(fieldName: string): string {
 function getRuleLabel(ruleName: string): string {
   switch (ruleName) {
     case "required": return "Pflichtfeld";
-    case "email_format": return "E-Mail Format";
+    case "email_format": return "E-Mail-Format";
     case "valid_date": return "Gültiges Datum";
     case "date_after": return "Datum nach";
     default: return ruleName;
@@ -726,13 +705,13 @@ function getRuleLabel(ruleName: string): string {
 }
 
 function getQualityScoreColor(score: number): string {
-  if (score >= 90) return "text-green-600";
+  if (score >= 90) return "text-[#6a961f]"; // Corporate green for good scores
   if (score >= 70) return "text-amber-600";
   return "text-red-600";
 }
 
 function getQualityScoreProgressColor(score: number): string {
-  if (score >= 90) return "bg-green-600";
+  if (score >= 90) return "bg-[#6a961f]"; // Corporate green for good scores
   if (score >= 70) return "bg-amber-500";
   return "bg-red-500";
 }
