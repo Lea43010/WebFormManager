@@ -150,17 +150,23 @@ export default function KostenKalkulationPage() {
       try {
         setLoading(true);
         
-        // Routen aus der API laden
-        const routenResponse = await fetch('/api/routes');
-        
-        if (!routenResponse.ok) {
-          throw new Error('Fehler beim Laden der Routen');
+        // Temporäre Lösung: Verwende Mock-Daten, wenn API noch nicht verfügbar
+        try {
+          // Routen aus der API laden
+          const routenResponse = await fetch('/api/routes');
+          
+          if (!routenResponse.ok) {
+            throw new Error('Fehler beim Laden der Routen');
+          }
+          
+          const routenData = await routenResponse.json();
+          
+          // Setze die geladenen Routen in den State
+          setRouten(routenData);
+        } catch (apiError) {
+          console.warn('API noch nicht verfügbar, verwende Mock-Daten:', apiError);
+          setRouten(mockRouten);
         }
-        
-        const routenData = await routenResponse.json();
-        
-        // Setze die geladenen Routen in den State
-        setRouten(routenData);
         
         // In Zukunft: Auch Bodenarten und Maschinen aus der API laden
         // const bodenResponse = await fetch('/api/bodenarten');
@@ -188,6 +194,12 @@ export default function KostenKalkulationPage() {
 
   // Führe Kalkulation durch
   const berechneKosten = async () => {
+    console.log("berechneKosten wurde aufgerufen");
+    console.log("Routen:", routen);
+    console.log("Ausgewählte Route ID:", selectedRouteId);
+    console.log("Ausgewählte Bodenart ID:", selectedBodenartId);
+    console.log("Ausgewählte Maschine ID:", selectedMaschineId);
+    
     if (!selectedRouteId || !selectedBodenartId || !selectedMaschineId) {
       toast({
         title: "Eingaben unvollständig",
