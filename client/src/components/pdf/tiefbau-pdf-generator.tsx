@@ -68,22 +68,15 @@ const TiefbauPDFGenerator = ({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Titel und Datum - kompaktere Version
-      pdf.setFontSize(16); // Kleinere Schriftgröße
+      // Titel und Datum
+      pdf.setFontSize(20);
       pdf.setTextColor(0, 0, 0);
+      const titleText = `Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
+      pdf.text(titleText, 14, 20);
       
-      // Kürze lange Projektnamen bei Bedarf
-      let projectTitle = projectName || 'Tiefbau-Projekt';
-      if (projectTitle.length > 25) {
-        projectTitle = projectTitle.substring(0, 22) + '...';
-      }
-      
-      const titleText = `Tiefbau-Streckenbericht: ${projectTitle}`;
-      pdf.text(titleText, 14, 16);
-      
-      pdf.setFontSize(8); // Noch kleinere Schrift für Datum
+      pdf.setFontSize(10);
       const dateText = `Erstellt am: ${new Date().toLocaleDateString('de-DE')}`;
-      pdf.text(dateText, 14, 22);
+      pdf.text(dateText, 14, 27);
       
       // --- Karte in PDF einfügen ---
       try {
@@ -107,26 +100,27 @@ const TiefbauPDFGenerator = ({
         
         pdf.addImage(imgData, 'JPEG', 14, 40, imgWidth, imgHeight);
         
-        // --- Streckeninformationen und Höhenprofil nebeneinander anordnen ---
+        // --- Streckeninformationen als Tabelle ---
         const routeYPos = 40 + imgHeight + 10;
         pdf.setFontSize(14);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
-        // Streckeninformationen als kompakte Tabelle
-        pdf.setFontSize(9); // Kleinere Schriftgröße für kompaktere Darstellung
+        // Streckeninformationen als einfache Textausgabe mit Rahmen
+        pdf.setFontSize(10);
         pdf.setDrawColor(0);
         pdf.setFillColor(240, 240, 240);
         
         // Überschriftenzeile mit grauem Hintergrund
         pdf.setFillColor(200, 200, 200);
-        pdf.rect(14, routeYPos + 5, 80, 7, 'F'); // Schmalere und niedrigere Tabelle
+        pdf.rect(14, routeYPos + 5, 170, 10, 'F'); // Breitere und höhere Tabelle
         pdf.setTextColor(0);
-        pdf.text("Eigenschaft", 16, routeYPos + 10);
-        pdf.text("Wert", 55, routeYPos + 10);
+        pdf.setFontSize(10);
+        pdf.text("Eigenschaft", 17, routeYPos + 11);
+        pdf.text("Wert", 60, routeYPos + 11);
         
         // Zeilen mit Routeninformationen
-        const startY = routeYPos + 12;
-        const rowHeight = 6; // Reduzierte Zeilenhöhe für kompaktere Darstellung
+        const startY = routeYPos + 13;
+        const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
         
         // Funktion zum Zeichnen einer Zeile
         const addRow = (index: number, label: string, value: string) => {
@@ -135,11 +129,11 @@ const TiefbauPDFGenerator = ({
           // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
           if (index % 2 === 0) {
             pdf.setFillColor(245, 245, 245);
-            pdf.rect(14, y, 80, rowHeight, 'F');
+            pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
           }
           
-          pdf.text(label, 16, y + 4);
-          pdf.text(value, 55, y + 4);
+          pdf.text(label, 17, y + 5);
+          pdf.text(value, 60, y + 5);
         };
         
         // Daten einfügen
@@ -151,9 +145,9 @@ const TiefbauPDFGenerator = ({
         
         // Rahmen um die Tabelle zeichnen
         pdf.setDrawColor(0);
-        pdf.rect(14, routeYPos + 5, 80, 7 + (5 * rowHeight), 'D');
+        pdf.rect(14, routeYPos + 5, 170, 8 + (5 * rowHeight), 'D');
         
-        // --- Höhenprofil, falls vorhanden (rechts neben der Tabelle) ---
+        // --- Höhenprofil, falls vorhanden ---
         if (chartContainerId) {
           const chartElement = document.getElementById(chartContainerId);
           if (chartElement) {
@@ -168,44 +162,56 @@ const TiefbauPDFGenerator = ({
                 backgroundColor: null
               });
               
-              // Position für das Höhenprofil rechts neben der Tabelle
-              pdf.setFontSize(14);
-              pdf.text('Höhenprofil', 110, routeYPos);
+              // Feste Position für das Höhenprofil
+              const chartYPos = 140;
               
-              const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
-              const chartWidth = 80; // Schmaleres Bild
-              const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-              
-              // Höhenprofil rechts neben den Streckeninformationen platzieren
-              pdf.addImage(chartImgData, 'JPEG', 110, routeYPos + 5, chartWidth, chartHeight);
+              // Wenn nicht genug Platz auf der Seite, neue Seite hinzufügen
+              if (chartYPos + 40 > pageHeight) {
+                pdf.addPage();
+                pdf.setFontSize(14);
+                pdf.text('Höhenprofil', 14, 20);
+                
+                const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
+                const chartWidth = 120;
+                const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
+                
+                pdf.addImage(chartImgData, 'JPEG', 14, 25, chartWidth, chartHeight);
+              } else {
+                pdf.setFontSize(14);
+                pdf.text('Höhenprofil', 14, chartYPos);
+                
+                const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
+                const chartWidth = 120;
+                const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
+                
+                pdf.addImage(chartImgData, 'JPEG', 14, chartYPos + 5, chartWidth, chartHeight);
+              }
             } catch (chartError) {
               console.error('Fehler beim Rendern des Höhenprofils:', chartError);
             }
           }
         }
         
-        // --- Bodenanalyse und Maschinenempfehlungen auf einer Seite nebeneinander ---
-        // Statt einer neuen Seite erhöhen wir nur den Y-Wert
-        const nextSectionY = routeYPos + Math.max(7 + (5 * rowHeight), 5 + 50) + 20; // Genug Platz nach Tabelle/Höhenprofil
-        
+        // --- Bodenanalyse auf neuer Seite ---
+        pdf.addPage();
         pdf.setFontSize(14);
-        pdf.text('Bodenanalyse', 14, nextSectionY);
+        pdf.text('Bodenanalyse', 14, 20);
         
         if (bodenartData) {
-          // Manuelle Tabelle für Bodenanalyse (linke Seite)
-          const bodenYPos = nextSectionY + 5;
+          // Manuelle Tabelle für Bodenanalyse
+          const bodenYPos = 25;
           
           // Überschriftenzeile mit grauem Hintergrund
           pdf.setFillColor(200, 200, 200);
-          pdf.rect(14, bodenYPos, 80, 7, 'F'); // Schmalere und niedrigere Tabelle
+          pdf.rect(14, bodenYPos, 170, 10, 'F'); // Breitere und höhere Tabelle
           pdf.setTextColor(0);
-          pdf.setFontSize(9);
-          pdf.text("Eigenschaft", 16, bodenYPos + 5);
-          pdf.text("Wert", 55, bodenYPos + 5);
+          pdf.setFontSize(10);
+          pdf.text("Eigenschaft", 17, bodenYPos + 6);
+          pdf.text("Wert", 60, bodenYPos + 6);
           
           // Zeilen mit Bodenanalyse
-          const bodenStartY = bodenYPos + 7;
-          const rowHeight = 6; // Reduzierte Zeilenhöhe für kompaktere Darstellung
+          const bodenStartY = bodenYPos + 10;
+          const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
           
           // Funktion zum Zeichnen einer Zeile für Bodenanalyse
           const addBodenRow = (index: number, label: string, value: string) => {
@@ -214,77 +220,71 @@ const TiefbauPDFGenerator = ({
             // Abwechselnde Zeilenhintergründe
             if (index % 2 === 0) {
               pdf.setFillColor(245, 245, 245);
-              pdf.rect(14, y, 80, rowHeight, 'F');
+              pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
             }
             
-            pdf.text(label, 16, y + 4);
-            pdf.text(value, 55, y + 4);
+            pdf.text(label, 17, y + 5);
+            pdf.text(value, 60, y + 5);
           };
           
           // Daten einfügen
           addBodenRow(0, "Bodenart", bodenartData.name);
           addBodenRow(1, "Beschreibung", bodenartData.beschreibung);
           addBodenRow(2, "Kosten pro m²", `${bodenartData.kostenProM2.toFixed(2)} €`);
-          addBodenRow(3, "Geschätzte Kosten", `${bodenartData.gesamtkosten.toFixed(2)} €`);
+          addBodenRow(3, "Geschätzte Gesamtkosten", `${bodenartData.gesamtkosten.toFixed(2)} €`);
           
           // Rahmen um die Tabelle zeichnen
           pdf.setDrawColor(0);
-          pdf.rect(14, bodenYPos, 80, 7 + (4 * rowHeight), 'D');
+          pdf.rect(14, bodenYPos, 170, 10 + (4 * rowHeight), 'D');
         } else {
           pdf.setFontSize(10);
-          pdf.text('Keine Bodenanalyse verfügbar.', 14, nextSectionY + 10);
+          pdf.text('Keine Bodenanalyse verfügbar.', 14, 25);
         }
         
-        // --- Maschinenempfehlungen (rechte Seite) ---
+        // --- Maschinenempfehlungen ---
+        const maschinenYPos = 80; // Fester Y-Wert für Maschinenempfehlungen
         pdf.setFontSize(14);
-        pdf.text('Empfohlene Maschinen', 110, nextSectionY);
+        pdf.text('Empfohlene Maschinen', 14, maschinenYPos);
         
         if (maschinenData && maschinenData.length > 0) {
           // Überschriftenzeile mit grauem Hintergrund
-          const tableY = nextSectionY + 5;
+          const tableY = maschinenYPos + 5;
           pdf.setFillColor(200, 200, 200);
-          pdf.rect(110, tableY, 85, 7, 'F');
+          pdf.rect(14, tableY, 160, 8, 'F');
           pdf.setTextColor(0);
-          pdf.setFontSize(8); // Noch kleinere Schrift für Maschinen
+          pdf.setFontSize(10);
           
-          // Spaltenüberschriften - kompaktere Version
-          pdf.text("Name", 112, tableY + 5);
-          pdf.text("Typ", 137, tableY + 5);
-          pdf.text("Kosten/h", 180, tableY + 5);
+          // Spaltenüberschriften
+          pdf.text("Name", 17, tableY + 5);
+          pdf.text("Typ", 57, tableY + 5);
+          pdf.text("Leistung", 97, tableY + 5);
+          pdf.text("Kosten/Stunde", 137, tableY + 5);
           
           // Zeilen mit Maschinenempfehlungen
-          const maschinenRowHeight = 6; // Reduzierte Zeilenhöhe für kompaktere Darstellung
+          const maschinenRowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
           
-          // Maximal 4 Maschinen anzeigen, um auf eine Seite zu passen
-          const displayMachines = maschinenData.slice(0, Math.min(4, maschinenData.length));
-          
-          displayMachines.forEach((maschine, index) => {
-            const y = tableY + 7 + (index * maschinenRowHeight);
+          maschinenData.forEach((maschine, index) => {
+            const y = tableY + 8 + (index * maschinenRowHeight);
             
             // Abwechselnde Zeilenhintergründe
             if (index % 2 === 0) {
               pdf.setFillColor(245, 245, 245);
-              pdf.rect(110, y, 85, maschinenRowHeight, 'F');
+              pdf.rect(14, y, 160, maschinenRowHeight, 'F');
             }
             
             // Daten einfügen
-            pdf.text(maschine.name.substring(0, 14), 112, y + 4); // Gekürzte Namen
-            pdf.text(maschine.typ.substring(0, 10), 137, y + 4);
-            pdf.text(`${maschine.kostenProStunde.toFixed(2)} €`, 180, y + 4);
+            pdf.text(maschine.name, 17, y + 5);
+            pdf.text(maschine.typ, 57, y + 5);
+            pdf.text(maschine.leistung, 97, y + 5);
+            pdf.text(`${maschine.kostenProStunde.toFixed(2)} €`, 137, y + 5);
           });
           
           // Rahmen um die Tabelle zeichnen
           pdf.setDrawColor(0);
-          pdf.rect(110, tableY, 85, 7 + (displayMachines.length * maschinenRowHeight), 'D');
-          
-          // Hinweis, wenn nicht alle Maschinen angezeigt werden
-          if (maschinenData.length > 4) {
-            pdf.setFontSize(7);
-            pdf.text(`Weitere ${maschinenData.length - 4} Maschinen verfügbar`, 110, tableY + 7 + (4 * maschinenRowHeight) + 5);
-          }
+          pdf.rect(14, tableY, 160, 8 + (maschinenData.length * maschinenRowHeight), 'D');
         } else {
-          pdf.setFontSize(9);
-          pdf.text('Keine Maschinenempfehlungen verfügbar.', 110, nextSectionY + 10);
+          pdf.setFontSize(10);
+          pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 5);
         }
         
         // --- Fußzeile auf jeder Seite ---
