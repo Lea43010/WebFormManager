@@ -147,50 +147,7 @@ const TiefbauPDFGenerator = ({
         pdf.setDrawColor(0);
         pdf.rect(14, routeYPos + 5, 170, 8 + (5 * rowHeight), 'D');
         
-        // --- Höhenprofil, falls vorhanden ---
-        if (chartContainerId) {
-          const chartElement = document.getElementById(chartContainerId);
-          if (chartElement) {
-            try {
-              const chartCanvas = await html2canvas(chartElement, {
-                useCORS: true,
-                allowTaint: true,
-                scrollX: 0,
-                scrollY: 0,
-                scale: window.devicePixelRatio || 2,
-                logging: false,
-                backgroundColor: null
-              });
-              
-              // Feste Position für das Höhenprofil
-              const chartYPos = 140;
-              
-              // Wenn nicht genug Platz auf der Seite, neue Seite hinzufügen
-              if (chartYPos + 40 > pageHeight) {
-                pdf.addPage();
-                pdf.setFontSize(14);
-                pdf.text('Höhenprofil', 14, 20);
-                
-                const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
-                const chartWidth = 120;
-                const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-                
-                pdf.addImage(chartImgData, 'JPEG', 14, 25, chartWidth, chartHeight);
-              } else {
-                pdf.setFontSize(14);
-                pdf.text('Höhenprofil', 14, chartYPos);
-                
-                const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
-                const chartWidth = 120;
-                const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-                
-                pdf.addImage(chartImgData, 'JPEG', 14, chartYPos + 5, chartWidth, chartHeight);
-              }
-            } catch (chartError) {
-              console.error('Fehler beim Rendern des Höhenprofils:', chartError);
-            }
-          }
-        }
+        // Das Höhenprofil wird später auf der zweiten Seite unter den Maschinentabellen eingefügt
         
         // --- Bodenanalyse auf neuer Seite ---
         pdf.addPage();
@@ -246,6 +203,8 @@ const TiefbauPDFGenerator = ({
         pdf.setFontSize(14);
         pdf.text('Empfohlene Maschinen', 14, maschinenYPos);
         
+        let maschinenEndY = maschinenYPos + 5; // Standardwert, wenn keine Maschinen vorhanden
+        
         if (maschinenData && maschinenData.length > 0) {
           // Überschriftenzeile mit grauem Hintergrund
           const tableY = maschinenYPos + 5;
@@ -282,9 +241,42 @@ const TiefbauPDFGenerator = ({
           // Rahmen um die Tabelle zeichnen
           pdf.setDrawColor(0);
           pdf.rect(14, tableY, 160, 8 + (maschinenData.length * maschinenRowHeight), 'D');
+          
+          // Endpunkt der Maschinen-Tabelle für die Position des Höhenprofils
+          maschinenEndY = tableY + 8 + (maschinenData.length * maschinenRowHeight) + 20;
         } else {
           pdf.setFontSize(10);
           pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 5);
+          maschinenEndY = maschinenYPos + 15;
+        }
+        
+        // --- Höhenprofil unter den Maschinenempfehlungen ---
+        if (chartContainerId) {
+          const chartElement = document.getElementById(chartContainerId);
+          if (chartElement) {
+            try {
+              const chartCanvas = await html2canvas(chartElement, {
+                useCORS: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: 0,
+                scale: window.devicePixelRatio || 2,
+                logging: false,
+                backgroundColor: 'white' // Weißer Hintergrund statt transparent/schwarz
+              });
+              
+              pdf.setFontSize(14);
+              pdf.text('Höhenprofil', 14, maschinenEndY);
+              
+              const chartImgData = chartCanvas.toDataURL('image/jpeg', 0.9);
+              const chartWidth = 120;
+              const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
+              
+              pdf.addImage(chartImgData, 'JPEG', 14, maschinenEndY + 5, chartWidth, chartHeight);
+            } catch (chartError) {
+              console.error('Fehler beim Rendern des Höhenprofils:', chartError);
+            }
+          }
         }
         
         // --- Fußzeile auf jeder Seite ---
