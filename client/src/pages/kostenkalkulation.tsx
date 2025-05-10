@@ -500,11 +500,11 @@ export default function KostenKalkulationPage() {
                     if (!bodenart) return null;
                     return (
                       <>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="grid grid-cols-2 gap-1 text-[9px]">
                           <div className="text-muted-foreground">Belastungsklasse:</div>
                           <div className="font-medium">{bodenart.belastungsklasse}</div>
                           <div className="text-muted-foreground">Materialkosten:</div>
-                          <div className="font-medium">{bodenart.material_kosten_pro_m2.toFixed(2)} €/m²</div>
+                          <div className="font-medium">{parseFloat(String(bodenart.material_kosten_pro_m2)).toFixed(2)} €/m²</div>
                           <div className="text-muted-foreground">Dichte:</div>
                           <div className="font-medium">{bodenart.dichte} kg/m³</div>
                         </div>
@@ -527,11 +527,11 @@ export default function KostenKalkulationPage() {
 
           <Card className="bg-white shadow rounded-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
-                <Truck className="h-5 w-5 text-[#6a961f]" />
+              <CardTitle className="flex items-center gap-2 text-base text-[#111827]">
+                <Truck className="h-4 w-4 text-[#6a961f]" />
                 <span>3. Maschine auswählen</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Wählen Sie die geeignete Maschine aus
               </CardDescription>
             </CardHeader>
@@ -556,11 +556,11 @@ export default function KostenKalkulationPage() {
                     if (!maschine) return null;
                     return (
                       <>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="grid grid-cols-2 gap-1 text-[9px]">
                           <div className="text-muted-foreground">Typ:</div>
                           <div className="font-medium">{maschine.typ}</div>
                           <div className="text-muted-foreground">Tageskosten:</div>
-                          <div className="font-medium">{maschine.kosten_pro_tag.toFixed(2)} €</div>
+                          <div className="font-medium">{parseFloat(String(maschine.kosten_pro_tag)).toFixed(2)} €</div>
                           <div className="text-muted-foreground">Kraftstoffverbrauch:</div>
                           <div className="font-medium">{maschine.kraftstoffverbrauch} l/h</div>
                         </div>
