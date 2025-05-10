@@ -3469,6 +3469,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
   
+  // Upload-Verzeichnis statisch verfügbar machen (für Bildoptimierungs-Demo)
+  app.use('/uploads', express.static('uploads', {
+    // Cache-Kontrolle für bessere Leistung
+    setHeaders: (res, path) => {
+      // Bilder können gecached werden
+      if (path.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 Tag
+      }
+    }
+  }));
+  
   // Debug-Hilfsrouten direkt zu den HTML-Dateien
   app.get('/construction-diary-debug', (req, res) => {
     res.sendFile(path.resolve('public/construction-diary-debug.html'));

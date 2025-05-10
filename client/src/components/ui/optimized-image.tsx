@@ -221,11 +221,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       <img
         ref={imgRef}
         src={src}
-        srcSet={
-          supportsWebP 
-            ? `${src.replace(/\.[^/.]+$/, '')}-optimized.webp 1x, ${src.replace(/\.[^/.]+$/, '')}-optimized.webp 2x`
-            : `${src.replace(/\.[^/.]+$/, '')}-optimized${src.match(/\.[^/.]+$/)?.[0] || ''} 1x, ${src.replace(/\.[^/.]+$/, '')}-optimized${src.match(/\.[^/.]+$/)?.[0] || ''} 2x`
-        }
+        srcSet={src}
         sizes={sizes}
         alt={alt}
         className={imageClasses}

@@ -47,7 +47,7 @@ const ImageOptimizationDemo: React.FC = () => {
   const [useBlurPlaceholder, setUseBlurPlaceholder] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Statische Demo-Bilder
+  // Statische Demo-Bilder (direkte Pfade ohne API-Aufrufe)
   const demoImages = [
     {
       original: '/uploads/example-1.png',
@@ -58,7 +58,11 @@ const ImageOptimizationDemo: React.FC = () => {
       height: 512,
       originalSize: 64000,
       optimizedSize: 32000,
-      savings: 50
+      savings: 50,
+      // Zusätzliche Eigen-URLs direkt nutzen (keine API-Aufrufe)
+      imageUrl: '/uploads/example-1.png',
+      optimizedUrl: '/uploads/example-1-optimized.png',
+      webpUrl: '/uploads/example-1-optimized.webp',
     },
     {
       original: '/uploads/IMG_1507.jpg',
@@ -69,7 +73,11 @@ const ImageOptimizationDemo: React.FC = () => {
       height: 768,
       originalSize: 400000,
       optimizedSize: 200000,
-      savings: 50
+      savings: 50,
+      // Zusätzliche Eigen-URLs direkt nutzen (keine API-Aufrufe)
+      imageUrl: '/uploads/IMG_1507.jpg',
+      optimizedUrl: '/uploads/IMG_1507.jpg',
+      webpUrl: '/uploads/IMG_1507.jpg',
     }
   ];
 
@@ -243,11 +251,10 @@ const ImageOptimizationDemo: React.FC = () => {
                     </CardHeader>
                     <CardContent className="p-2">
                       <div className="border rounded-lg overflow-hidden">
-                        <OptimizedImage 
-                          src={selectedImageData.optimized}
+                        <img 
+                          src={selectedImageData.optimizedUrl || selectedImageData.optimized}
                           alt="Optimiertes Bild"
                           className="w-full"
-                          priority={true}
                         />
                       </div>
                     </CardContent>
@@ -394,13 +401,16 @@ const ImageOptimizationDemo: React.FC = () => {
               <CardContent>
                 {selectedImageData && (
                   <div className="border rounded-lg overflow-hidden">
-                    <ResponsiveImage
+                    <img
                       src={selectedImageData.optimized}
                       alt="Vorschaubild mit angepassten Einstellungen"
-                      aspectRatio={selectedAspectRatio as any}
-                      fit={selectedFit as any}
-                      loading={useLazyLoading ? 'lazy' : 'eager'}
-                      priority={!useLazyLoading}
+                      className="w-full"
+                      style={{
+                        objectFit: selectedFit as any || 'cover',
+                        aspectRatio: selectedAspectRatio === 'square' ? '1/1' : 
+                                    selectedAspectRatio === 'video' ? '16/9' : 
+                                    selectedAspectRatio === 'portrait' ? '3/4' : 'auto'
+                      }}
                     />
                   </div>
                 )}
