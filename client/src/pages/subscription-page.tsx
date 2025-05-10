@@ -91,9 +91,9 @@ const SubscriptionPage = () => {
         <TabsContent value="plans">
           <div className="space-y-6">
             <div className="grid gap-4">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold tracking-tight">Verfügbare Pläne</h2>
-                <p className="text-muted-foreground">
+              <div className="space-y-2 text-center mb-6">
+                <h2 className="text-2xl font-bold tracking-tight font-inter text-[#111827]">Verfügbare Pläne</h2>
+                <p className="font-inter text-[#4b5563] max-w-2xl mx-auto">
                   Wählen Sie den Abonnementplan, der am besten zu Ihren Anforderungen passt.
                 </p>
               </div>
@@ -108,9 +108,9 @@ const SubscriptionPage = () => {
           <TabsContent value="details">
             <div className="space-y-6">
               <div className="grid gap-4">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight">Abonnement-Details</h2>
-                  <p className="text-muted-foreground">
+                <div className="space-y-2 text-center mb-6">
+                  <h2 className="text-2xl font-bold tracking-tight font-inter text-[#111827]">Abonnement-Details</h2>
+                  <p className="font-inter text-[#4b5563] max-w-2xl mx-auto">
                     Hier finden Sie alle Informationen zu Ihrem aktuellen Abonnement.
                   </p>
                 </div>

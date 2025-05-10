@@ -109,7 +109,7 @@ export function SubscriptionPlans({ user }: SubscriptionPlansProps) {
         </div>
       ) : (
         <>
-          <div className="grid gap-6 md:grid-cols-3 md:gap-8 mb-8">
+          <div className="grid gap-6 md:grid-cols-3 md:gap-8 mb-8 max-w-6xl mx-auto">
             {plans.map((plan: SubscriptionPlan) => (
               <SubscriptionCard
                 key={plan.id}
@@ -125,17 +125,18 @@ export function SubscriptionPlans({ user }: SubscriptionPlansProps) {
           {selectedPlan && (
             <div className="flex justify-center mt-8">
               <Button 
-                className="px-8"
+                className="px-10 py-6 text-lg font-inter font-medium bg-[#6a961f] hover:bg-[#5a841a] text-white"
                 onClick={handleSubscribe}
                 disabled={isCreating}
+                size="lg"
               >
                 {isCreating ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Wird verarbeitet...
                   </>
                 ) : (
-                  'Abonnieren'
+                  'Abonnement abschließen'
                 )}
               </Button>
             </div>

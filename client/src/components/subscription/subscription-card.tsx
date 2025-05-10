@@ -60,8 +60,8 @@ export function SubscriptionCard({
 
   return (
     <Card 
-      className={`w-full md:max-w-md transition-all duration-300 bg-white rounded-xl ${
-        isSelected ? 'border-[#6a961f] border-2 shadow-lg' : 'shadow'
+      className={`w-full md:max-w-md transition-all duration-300 bg-white rounded-xl flex flex-col h-full ${
+        isSelected ? 'border-[#6a961f] border-2 shadow-lg transform scale-105' : 'shadow'
       } ${isActivePlan && !isPastDue && !isCancelled && !isExpired ? 'bg-green-50' : ''}`}
     >
       <CardHeader className="text-center">
@@ -78,8 +78,8 @@ export function SubscriptionCard({
           </div>
         )}
       </CardHeader>
-      <CardContent>
-        <ul className="space-y-2">
+      <CardContent className="flex-grow">
+        <ul className="space-y-3">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start">
               <CheckCircle2 className="h-5 w-5 text-[#6a961f] mr-2 shrink-0 mt-0.5" />
@@ -88,12 +88,17 @@ export function SubscriptionCard({
           ))}
         </ul>
       </CardContent>
-      <CardFooter className="flex justify-center pb-6">
+      <CardFooter className="flex justify-center p-6 pt-2">
         <Button 
           onClick={() => onSelect && onSelect(plan)} 
           disabled={isLoading || (isActivePlan && !isPastDue && !isExpired)}
-          className="w-full bg-[#6a961f] hover:bg-[#5a841a] text-white font-inter"
+          className={`w-full font-inter font-medium ${
+            isSelected 
+              ? "bg-[#6a961f] hover:bg-[#5a841a] text-white" 
+              : "bg-white border-[#6a961f] text-[#6a961f] hover:bg-[#f3f9ea] hover:text-[#6a961f]"
+          }`}
           variant={isSelected ? "default" : "outline"}
+          size="lg"
         >
           {isLoading ? 'Laden...' : isActivePlan ? 'Aktueller Plan' : 'Auswählen'}
         </Button>
