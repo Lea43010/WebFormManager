@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { 
   ArrowLeft, 
@@ -7,8 +7,10 @@ import {
   Trash2,
   Map,
   Shovel,
-  Truck
+  Truck,
+  FileDown
 } from 'lucide-react';
+import TiefbauPDFGenerator from '@/components/pdf/tiefbau-pdf-generator';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -98,6 +100,11 @@ const TiefbauMap: React.FC = () => {
   const [maschinen, setMaschinen] = useState<Maschine[]>([]);
   const [filteredMaschinen, setFilteredMaschinen] = useState<Maschine[]>([]);
   
+  // Berechne die ausgewählte Bodenart als Objekt für einfachen Zugriff
+  const selectedBodenartObj = selectedBodenart 
+    ? bodenarten.find(b => b.id.toString() === selectedBodenart.toString()) 
+    : null;
+  
   // State für Kosten
   const [streckenkostenProM2, setStreckenkostenProM2] = useState(0);
   const [gesamtstreckenkosten, setGesamtstreckenkosten] = useState(0);
@@ -109,6 +116,11 @@ const TiefbauMap: React.FC = () => {
   
   // Loading-State
   const [loading, setLoading] = useState(false);
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  
+  // Container IDs für Map und Chart
+  const mapContainerId = "tiefbau-map-container";
+  const chartContainerId = "tiefbau-elevation-chart";
   
   // Toast-Hook
   const { toast } = useToast();
@@ -691,6 +703,38 @@ const TiefbauMap: React.FC = () => {
                     <Save className="h-4 w-4 mr-1" />
                     Route speichern
                   </Button>
+                  
+                  {/* PDF Export Button - wird nur angezeigt, wenn eine Route vorhanden ist */}
+                  {routeCoordinates.length > 0 && 
+                    <TiefbauPDFGenerator
+                      projectName={selectedProject ? 
+                        projects.find(p => p.id === selectedProject)?.projectName 
+                        : null}
+                      routeData={elevationData ? {
+                        start: startAddress,
+                        end: endAddress,
+                        distance: distance,
+                        elevationGain: elevationData.stats.totalAscent,
+                        elevationLoss: elevationData.stats.totalDescent
+                      } : null}
+                      bodenartData={selectedBodenart && selectedBodenartObj ? {
+                        name: selectedBodenartObj.name,
+                        beschreibung: selectedBodenartObj.beschreibung,
+                        kostenProM2: streckenkostenProM2,
+                        gesamtkosten: gesamtstreckenkosten
+                      } : null}
+                      maschinenData={filteredMaschinen.length > 0 ? 
+                        filteredMaschinen.map(m => ({
+                          id: m.id,
+                          name: m.name,
+                          typ: m.typ,
+                          leistung: m.leistung,
+                          kostenProStunde: m.kosten_pro_stunde
+                        })) : null}
+                      mapContainerId={mapContainerId}
+                      chartContainerId={showElevationChart ? chartContainerId : null}
+                    />
+                  }
                 </div>
               </div>
               
@@ -712,7 +756,7 @@ const TiefbauMap: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="h-80 w-full">
+                  <div className="h-80 w-full" id={chartContainerId}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
                         data={formatElevationData()}
