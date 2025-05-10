@@ -411,7 +411,7 @@ export default function KostenKalkulationPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => deleteRoute(selectedRouteId)}
-                    className="text-destructive hover:text-destructive"
+                    className="bg-white border border-gray-200 hover:bg-gray-100 text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -503,11 +503,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full" 
+                className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-[#111827]" 
                 variant="outline"
                 onClick={() => setLocation("/bodenanalyse")}
               >
-                <Database className="h-4 w-4 mr-2" />
+                <Database className="h-4 w-4 mr-2 text-[#6a961f]" />
                 Bodenarten vergleichen
               </Button>
             </CardContent>
@@ -559,11 +559,11 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full" 
+                className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-[#111827]" 
                 variant="outline"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
-                <Truck className="h-4 w-4 mr-2" />
+                <Truck className="h-4 w-4 mr-2 text-[#6a961f]" />
                 Maschinen vergleichen
               </Button>
             </CardContent>
