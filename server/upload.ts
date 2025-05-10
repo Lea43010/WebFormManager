@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import { Request, Response, NextFunction } from "express";
 import { fileTypes } from "@shared/schema";
 import { optimizeImage, isSupportedImageFormat } from "./services/image-optimizer";
+import { applyOptimizationToAttachment } from "./services/attachment-optimizer";
 import logger from "./logger";
 
 // Verzeichnis für Dateiuploads erstellen falls es nicht existiert
@@ -182,8 +183,9 @@ export const optimizeUploadedImages = async (req: Request, res: Response, next: 
       thumbnailHeight: 240
     };
 
-    // Erweitere Request-Objekt um optimizedFiles-Array
+    // Erweitere Request-Objekt um optimizedFiles-Array und attachmentData Map
     (req as any).optimizedFiles = [];
+    (req as any).attachmentData = {};
 
     // Optimiere alle Bilddateien parallel
     await Promise.all(imageFiles.map(async (file) => {
@@ -196,6 +198,25 @@ export const optimizeUploadedImages = async (req: Request, res: Response, next: 
           originalFile: file,
           optimization: result
         });
+        
+        // Attachment-Daten für Datenbankinsert vorbereiten
+        if (req.body && req.body.projectId) {
+          // Basisstruktur für Anhang speichern
+          const baseAttachment = {
+            projectId: parseInt(req.body.projectId),
+            fileName: file.originalname,
+            originalName: file.originalname,
+            fileType: getFileType(file.mimetype),
+            fileCategory: req.body.fileCategory || "Andere",
+            filePath: file.path,
+            fileSize: file.size,
+            description: req.body.description || null,
+            tags: req.body.tags || null
+          };
+
+          // Mit Optimierungsinformationen anreichern
+          (req as any).attachmentData[file.fieldname] = applyOptimizationToAttachment(baseAttachment, result);
+        }
         
         // Pfad der Datei auf die optimierte Version aktualisieren
         file.path = result.optimizedPath;
