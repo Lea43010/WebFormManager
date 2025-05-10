@@ -457,10 +457,10 @@ export default function KostenKalkulationPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-primary" />
+          <Card className="bg-white shadow rounded-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+                <Database className="h-5 w-5 text-[#6a961f]" />
                 <span>2. Bodenart auswählen</span>
               </CardTitle>
               <CardDescription>
@@ -513,10 +513,10 @@ export default function KostenKalkulationPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
+          <Card className="bg-white shadow rounded-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+                <Truck className="h-5 w-5 text-[#6a961f]" />
                 <span>3. Maschine auswählen</span>
               </CardTitle>
               <CardDescription>
@@ -570,9 +570,12 @@ export default function KostenKalkulationPage() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>4. Parameter einstellen</CardTitle>
+        <Card className="bg-white shadow rounded-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
+              <Settings className="h-5 w-5 text-[#6a961f]" />
+              <span>4. Parameter einstellen</span>
+            </CardTitle>
             <CardDescription>
               Passen Sie die Projektparameter an Ihre Anforderungen an
             </CardDescription>
@@ -662,7 +665,7 @@ export default function KostenKalkulationPage() {
           </CardContent>
           <CardFooter className="flex justify-end">
             <Button 
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-[#6a961f] hover:bg-[#5b851a] text-white"
               onClick={berechneKosten}
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
             >
