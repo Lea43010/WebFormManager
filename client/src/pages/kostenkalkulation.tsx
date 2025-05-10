@@ -796,21 +796,21 @@ export default function KostenKalkulationPage() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-[10px]">Kraftstoffkosten</TableCell>
-                    <TableCell className="text-muted-foreground text-[10px]">
-                      {kalkulation.gesamtzeit_stunden.toFixed(1)} h × Verbrauch × 1,50 €/l
+                    <TableCell className="font-medium text-[8px] py-1">Kraftstoffkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-[8px] py-1">
+                      {parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} h × Verbr. × 1,50 €/l
                     </TableCell>
-                    <TableCell className="text-right text-[10px]">
-                      {kalkulation.kraftstoffkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-right text-[8px] py-1">
+                      {parseFloat(String(kalkulation.kraftstoffkosten)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium border-b-0 text-[10px]">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
-                    <TableCell className="text-muted-foreground border-b-0 text-[10px]">
+                    <TableCell className="font-medium border-b-0 text-[8px] py-1">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
+                    <TableCell className="text-muted-foreground border-b-0 text-[8px] py-1">
                       Zwischensumme × {kalkulationsParameter.zusatzkosten_prozent}%
                     </TableCell>
-                    <TableCell className="text-right border-b-0 text-[10px]">
-                      {kalkulation.zusatzkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-right border-b-0 text-[8px] py-1">
+                      {parseFloat(String(kalkulation.zusatzkosten)).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                 </TableBody>
