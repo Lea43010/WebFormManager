@@ -716,34 +716,34 @@ export default function KostenKalkulationPage() {
         {kalkulation && (
           <Card className="bg-white shadow rounded-lg mt-6">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg text-[#111827]">
-                <Calculator className="h-5 w-5 text-[#6a961f]" />
+              <CardTitle className="flex items-center gap-2 text-base text-[#111827]">
+                <Calculator className="h-4 w-4 text-[#76a730]" />
                 <span>Kostenberechnung Ergebnis</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 Detaillierte Aufstellung der berechneten Projektkosten
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="rounded-md border p-4 bg-primary/5">
-                  <div className="text-lg font-semibold pb-1">Gesamtkosten</div>
-                  <div className="text-3xl font-bold text-primary">
+                  <div className="text-sm font-semibold pb-1">Gesamtkosten</div>
+                  <div className="text-xl font-bold text-primary">
                     {kalkulation.gesamtkosten.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                   </div>
                 </div>
                 <div className="rounded-md border p-4">
-                  <div className="text-lg font-semibold pb-1">Kosten pro Meter</div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-sm font-semibold pb-1">Kosten pro Meter</div>
+                  <div className="text-base font-bold">
                     {kalkulation.kosten_pro_meter.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 })}/m
                   </div>
                 </div>
                 <div className="rounded-md border p-4">
-                  <div className="text-lg font-semibold pb-1">Benötigte Zeit</div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-sm font-semibold pb-1">Benötigte Zeit</div>
+                  <div className="text-base font-bold">
                     {kalkulation.benoetigte_tage} Arbeitstage
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     ({kalkulation.gesamtzeit_stunden.toFixed(1)} Arbeitsstunden)
                   </div>
                 </div>
@@ -752,54 +752,54 @@ export default function KostenKalkulationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[300px]">Position</TableHead>
-                    <TableHead>Berechnung</TableHead>
-                    <TableHead className="text-right">Kosten (€)</TableHead>
+                    <TableHead className="w-[300px] text-xs">Position</TableHead>
+                    <TableHead className="text-xs">Berechnung</TableHead>
+                    <TableHead className="text-right text-xs">Kosten (€)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium">Materialkosten</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium text-xs">Materialkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
                       {kalkulation.flaeche.toFixed(0)} m² × Materialkosten
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-xs">
                       {kalkulation.materialkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Maschinenkosten</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium text-xs">Maschinenkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
                       {kalkulation.benoetigte_tage} Tage × Tagesmiete
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-xs">
                       {kalkulation.maschinenkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Personalkosten</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium text-xs">Personalkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
                       {kalkulation.gesamtzeit_stunden.toFixed(1)} h × {kalkulationsParameter.anzahl_personal} Pers. × {kalkulationsParameter.personalkosten_pro_stunde} €/h
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-xs">
                       {kalkulation.personalkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium">Kraftstoffkosten</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-medium text-xs">Kraftstoffkosten</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
                       {kalkulation.gesamtzeit_stunden.toFixed(1)} h × Verbrauch × 1,50 €/l
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-xs">
                       {kalkulation.kraftstoffkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium border-b-0">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
-                    <TableCell className="text-muted-foreground border-b-0">
+                    <TableCell className="font-medium border-b-0 text-xs">Zusatzkosten ({kalkulationsParameter.zusatzkosten_prozent}%)</TableCell>
+                    <TableCell className="text-muted-foreground border-b-0 text-xs">
                       Zwischensumme × {kalkulationsParameter.zusatzkosten_prozent}%
                     </TableCell>
-                    <TableCell className="text-right border-b-0">
+                    <TableCell className="text-right border-b-0 text-xs">
                       {kalkulation.zusatzkosten.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
                   </TableRow>
@@ -807,8 +807,11 @@ export default function KostenKalkulationPage() {
               </Table>
 
               <div className="flex justify-end">
-                <Button onClick={exportAsPDF} className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
+                <Button 
+                  onClick={exportAsPDF} 
+                  className="flex items-center text-xs bg-[#76a730] hover:bg-[#6a961f] text-white"
+                >
+                  <FileText className="h-4 w-4 mr-1.5" />
                   Als PDF exportieren
                 </Button>
               </div>
