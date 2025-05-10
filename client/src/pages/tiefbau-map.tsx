@@ -118,6 +118,9 @@ const TiefbauMap: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   
+  // Persistenter Route-State für Tab-Wechsel
+  const [savedRoute, setSavedRoute] = useState<Array<{lat: number, lng: number}>>([]);
+  
   // Container IDs für Map und Chart
   const mapContainerId = "tiefbau-map-container";
   const chartContainerId = "tiefbau-elevation-chart";
@@ -355,6 +358,9 @@ const TiefbauMap: React.FC = () => {
   ) => {
     setRouteCoordinates(route);
     
+    // Route in den persistenten State speichern für Tab-Wechsel
+    setSavedRoute(route);
+    
     // Start- und Endadressen setzen, wenn vorhanden
     if (startAddr) {
       setStartAddress(startAddr);
@@ -382,11 +388,14 @@ const TiefbauMap: React.FC = () => {
     } else {
       setDistance(0);
     }
+    
+    console.log(`Route aktualisiert: ${route.length} Punkte gespeichert`);
   };
   
   // Handler zum Löschen aller Marker
   const clearMarkers = () => {
     setRouteCoordinates([]);
+    setSavedRoute([]); // Auch die persistente Route zurücksetzen
     setDistance(0);
     setStartAddress('');
     setEndAddress('');
@@ -661,6 +670,7 @@ const TiefbauMap: React.FC = () => {
                 initialCenter={{ lat: 48.137154, lng: 11.576124 }} // München
                 initialZoom={12}
                 searchOutsideMap={true} // Adresssuche außerhalb der Karte platzieren
+                initialRoute={savedRoute} // Gespeicherte Route übergeben
               />
             </CardContent>
           </Card>

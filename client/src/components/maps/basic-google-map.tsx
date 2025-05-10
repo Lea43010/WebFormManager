@@ -17,6 +17,7 @@ interface BasicGoogleMapProps {
   className?: string;
   showSearch?: boolean;
   searchOutsideMap?: boolean; // Option, um die Suche außerhalb der Karte anzuzeigen
+  initialRoute?: Array<{lat: number, lng: number}>; // Initiale Route, die angezeigt werden soll
 }
 
 const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
@@ -28,6 +29,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   className = "",
   showSearch = true, // Standardmäßig Suche anzeigen
   searchOutsideMap = false, // Standardmäßig Suche innerhalb der Karte
+  initialRoute = []
 }) => {
   // Unique ID für den Map Container mit statischer ID für konsistentes Markup
   const mapId = useRef('tiefbau-map-container');
@@ -141,6 +143,28 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
       mapRef.current = map;
       polylineRef.current = polyline;
       
+      // Initial-Route anzeigen, wenn vorhanden
+      if (initialRoute && initialRoute.length > 0) {
+        console.log('Initiale Route wird angezeigt:', initialRoute);
+        
+        // Bestehende Marker löschen, damit wir neu anfangen können
+        clearMarkers();
+        
+        // Marker für jeden Punkt der Route hinzufügen
+        for (const point of initialRoute) {
+          const latLng = new google.maps.LatLng(point.lat, point.lng);
+          addMarker(latLng, false); // false = kein Callback aufrufen, um Endlosschleife zu vermeiden
+        }
+        
+        // Polyline aktualisieren
+        updatePolyline();
+        
+        // Karte auf die Route zentrieren
+        if (initialRoute.length > 0) {
+          fitMapToMarkers();
+        }
+      }
+      
       // Wenn alle Initialisierungen abgeschlossen sind, Loading-Status aktualisieren
       setIsLoading(false);
       
@@ -250,7 +274,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   }
   
   // Marker hinzufügen
-  function addMarker(position: google.maps.LatLng) {
+  function addMarker(position: google.maps.LatLng, callRouteChangeCallback = true) {
     if (!mapRef.current) return;
     
     // Marker erstellen
@@ -269,7 +293,7 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     marker.addListener('dragend', updatePolyline);
     
     // Polyline aktualisieren
-    updatePolyline();
+    updatePolyline(callRouteChangeCallback);
   }
   
   // Adresse für eine Position abrufen
@@ -295,8 +319,31 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     return `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
   }
   
+  // Karte an die Marker anpassen
+  function fitMapToMarkers() {
+    if (!mapRef.current || markersRef.current.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    
+    // Alle Marker-Positionen zum Bounds hinzufügen
+    markersRef.current.forEach(marker => {
+      const position = marker.getPosition();
+      if (position) {
+        bounds.extend(position);
+      }
+    });
+    
+    // Karte auf die Bounds anpassen
+    mapRef.current.fitBounds(bounds);
+    
+    // Wenn nur ein Marker vorhanden ist, Zoom anpassen
+    if (markersRef.current.length === 1) {
+      mapRef.current.setZoom(13);
+    }
+  }
+
   // Polyline aktualisieren
-  async function updatePolyline() {
+  async function updatePolyline(callRouteChangeCallback = true) {
     if (!mapRef.current || !polylineRef.current) return;
     
     // Positionen extrahieren
@@ -309,8 +356,8 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     // Polyline aktualisieren
     polylineRef.current.setPath(path);
     
-    // Callback aufrufen
-    if (onRouteChange && path.length >= 2) {
+    // Callback aufrufen, falls gewünscht
+    if (callRouteChangeCallback && onRouteChange && path.length >= 2) {
       // Adressen für Start- und Endpunkt abrufen
       const startAddress = await getAddressForLocation(path[0]);
       const endAddress = await getAddressForLocation(path[path.length - 1]);
