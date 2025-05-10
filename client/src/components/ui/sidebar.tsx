@@ -90,18 +90,6 @@ const navItems: NavItem[] = [
     tooltip: "Datenqualität überwachen und verbessern",
   },
   {
-    title: "Bildoptimierung",
-    href: "/image-optimization",
-    icon: Image,
-    tooltip: "Komplexe Bildoptimierungs-Demo mit allen Funktionen",
-  },
-  {
-    title: "Bildoptimierung (Einfach)",
-    href: "/image-optimization-simple",
-    icon: Image,
-    tooltip: "Vereinfachte Bildoptimierungs-Demo mit grundlegenden Funktionen",
-  },
-  {
     title: "Hilfe & Info",
     href: "/information",
     icon: Info,
