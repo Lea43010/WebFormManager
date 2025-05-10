@@ -710,12 +710,12 @@ const TiefbauMap: React.FC = () => {
                       projectName={selectedProject ? 
                         projects.find(p => p.id === selectedProject)?.projectName 
                         : null}
-                      routeData={elevationData ? {
+                      routeData={routeCoordinates.length > 0 ? {
                         start: startAddress,
                         end: endAddress,
                         distance: distance,
-                        elevationGain: elevationData.stats.totalAscent,
-                        elevationLoss: elevationData.stats.totalDescent
+                        elevationGain: elevationData?.stats?.totalAscent || 0,
+                        elevationLoss: elevationData?.stats?.totalDescent || 0
                       } : null}
                       bodenartData={selectedBodenart && selectedBodenartObj ? {
                         name: selectedBodenartObj.name,
