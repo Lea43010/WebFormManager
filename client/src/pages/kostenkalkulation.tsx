@@ -208,14 +208,21 @@ export default function KostenKalkulationPage() {
     const doc = new jsPDF();
     const logoImg = new Image();
     
-    // Seitentitel und Metadaten
+    // Seitendimensionen
+    const pageWidth = doc.internal.pageSize.width;
+    const midX = pageWidth / 2;
+    
+    // Seitentitel und Metadaten - mittig ausrichten
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("Bau-Structura Kostenkalkulation", 15, 15);
+    const title = "Bau-Structura Kostenkalkulation";
+    const titleWidth = doc.getTextWidth(title);
+    doc.text(title, midX - (titleWidth / 2), 15);
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Erstellt am: ${format(new Date(), 'dd.MM.yyyy', { locale: de })}`, 15, 25);
+    const dateText = `Erstellt am: ${format(new Date(), 'dd.MM.yyyy', { locale: de })}`;
+    doc.text(dateText, midX - (doc.getTextWidth(dateText) / 2), 25);
     
     // Projekttitel
     doc.setFont("helvetica", "bold");
@@ -225,9 +232,10 @@ export default function KostenKalkulationPage() {
     const selectedBodenart = mockBodenarten.find(b => b.id === Number(selectedBodenartId));
     const selectedMaschine = mockMaschinen.find(m => m.id === Number(selectedMaschineId));
     
-    doc.text(`Streckenprojekt: ${selectedRoute?.name || ""}`, 15, 35);
+    const projectTitle = `Streckenprojekt: ${selectedRoute?.name || ""}`;
+    doc.text(projectTitle, midX - (doc.getTextWidth(projectTitle) / 2), 35);
     
-    // Projektdetails
+    // Projektdetails - ebenfalls mittig
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     
@@ -240,13 +248,16 @@ export default function KostenKalkulationPage() {
     
     let y = 45;
     details.forEach(line => {
-      doc.text(line.join("   "), 15, y);
+      const lineText = line.join("   ");
+      doc.text(lineText, midX - (doc.getTextWidth(lineText) / 2), y);
       y += 6;
     });
     
     // Manuelle Tabellenerstellung ohne autoTable
     let tableY = y + 5;
-    const tableStartX = 15;
+    // Tabellendimensionen für zentrierte Darstellung
+    const tableWidth = 195; // Gesamtbreite der Tabelle
+    const tableStartX = (doc.internal.pageSize.width - tableWidth) / 2; // Mittig ausrichten
     const colWidths = [60, 100, 35];
     const rowHeight = 10;
     
@@ -300,19 +311,26 @@ export default function KostenKalkulationPage() {
       tableY += rowHeight;
     });
     
-    // Fußzeile
+    // Fußzeile - mittig ausrichten
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
+      
+      // Mittige Fußzeile
+      const footerText = 'Bau-Structura App - Kostenkalkulation';
+      const footerWidth = doc.getTextWidth(footerText);
       doc.text(
-        'Bau-Structura App - Kostenkalkulation',
-        15,
+        footerText,
+        midX - (footerWidth / 2),
         doc.internal.pageSize.height - 10
       );
+      
+      // Seitenzahl rechts unten
+      const pageText = `Seite ${i} von ${pageCount}`;
       doc.text(
-        `Seite ${i} von ${pageCount}`,
+        pageText,
         doc.internal.pageSize.width - 30,
         doc.internal.pageSize.height - 10
       );
