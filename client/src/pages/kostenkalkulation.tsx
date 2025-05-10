@@ -503,7 +503,7 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-[#111827]" 
+                className="w-full bg-[#f9faf5] hover:bg-[#f0f4e8] border border-[#d1e0b8] text-[#111827]" 
                 variant="outline"
                 onClick={() => setLocation("/bodenanalyse")}
               >
@@ -559,7 +559,7 @@ export default function KostenKalkulationPage() {
               )}
 
               <Button 
-                className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-[#111827]" 
+                className="w-full bg-[#f9faf5] hover:bg-[#f0f4e8] border border-[#d1e0b8] text-[#111827]" 
                 variant="outline"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
