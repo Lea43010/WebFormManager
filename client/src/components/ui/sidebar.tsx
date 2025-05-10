@@ -97,6 +97,12 @@ const navItems: NavItem[] = [
   },
   // Nutzerverwaltung wurde in den Admin-Bereich verschoben
   {
+    title: "Abonnement",
+    href: "/subscription",
+    icon: BarChart2,
+    tooltip: "Abonnement-Verwaltung und Preispläne",
+  },
+  {
     title: "Admin-Bereich",
     href: "/admin",
     icon: ShieldAlert,
