@@ -29,8 +29,8 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
   showSearch = true, // Standardmäßig Suche anzeigen
   searchOutsideMap = false, // Standardmäßig Suche innerhalb der Karte
 }) => {
-  // Unique ID für den Map Container
-  const mapId = useRef(`map-${Math.random().toString(36).substring(2, 9)}`);
+  // Unique ID für den Map Container mit statischer ID für konsistentes Markup
+  const mapId = useRef('tiefbau-map-container');
   const markersRef = useRef<google.maps.Marker[]>([]);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -69,16 +69,41 @@ const BasicGoogleMap: React.FC<BasicGoogleMapProps> = ({
     // Hier kein Cleanup, da der zentrale Loader die API-Instanz verwaltet
   }, []);
   
-  // Map initialisieren
+  // Map initialisieren mit verbessertem Handling für DOM-Verfügbarkeit
   function initMap() {
-    // Element finden
-    const mapElement = document.getElementById(mapId.current);
-    if (!mapElement) {
-      console.error('Google Maps Container nicht gefunden: ', mapId.current);
-      setError('Map-Container konnte nicht gefunden werden.');
-      setIsLoading(false);
-      return;
-    }
+    // Sicherstellen, dass wir mit einem kleinen Verzögerung nach dem Container suchen, 
+    // um sicherzustellen, dass das DOM vollständig geladen ist
+    setTimeout(() => {
+      // Element finden
+      const mapElement = document.getElementById(mapId.current);
+      if (!mapElement) {
+        console.error('Google Maps Container nicht gefunden: ', mapId.current);
+        
+        // Elemente für den Google Maps Container erstellen, falls sie fehlen
+        const container = document.createElement('div');
+        container.id = mapId.current;
+        container.style.width = '100%';
+        container.style.height = height;
+        
+        // Finden eines geeigneten Elternelements für den Container
+        const placeholder = document.querySelector('.tiefbau-map-placeholder');
+        if (placeholder) {
+          placeholder.appendChild(container);
+          console.log('Map-Container dynamisch hinzugefügt');
+          initMapWithElement(container);
+        } else {
+          setError('Map-Container konnte nicht gefunden werden und kein geeigneter Platzhalter gefunden.');
+          setIsLoading(false);
+        }
+        return;
+      }
+      
+      initMapWithElement(mapElement);
+    }, 100); // 100ms Verzögerung
+  }
+  
+  // Map mit dem bereitgestellten Element initialisieren
+  function initMapWithElement(mapElement: HTMLElement) {
     
     try {
       // Map erstellen
