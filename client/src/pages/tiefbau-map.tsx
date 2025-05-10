@@ -139,6 +139,33 @@ const TiefbauMap: React.FC = () => {
     loadProjects();
   }, [toast]);
   
+  // Wenn ein Projekt ausgewählt wird, prüfen ob Koordinaten vorhanden sind und setzen diese
+  useEffect(() => {
+    if (selectedProject && projects.length > 0) {
+      const selectedProjectData = projects.find(project => project.id === selectedProject);
+      if (selectedProjectData) {
+        // Wenn das Projekt Koordinaten hat (Längen- und Breitengrad), zentriere die Karte
+        if (selectedProjectData.project_latitude && selectedProjectData.project_longitude) {
+          const projectLocation = {
+            lat: parseFloat(selectedProjectData.project_latitude),
+            lng: parseFloat(selectedProjectData.project_longitude)
+          };
+          
+          // Wir könnten diesen Wert an die BasicGoogleMap übergeben, 
+          // aber die Komponente hat keinen Mechanismus, um den Mittelpunkt zu aktualisieren
+          // Hier könnte man später eine Funktion hinzufügen, die es erlaubt,
+          // die Karte neu zu zentrieren
+          
+          toast({
+            title: "Projekt ausgewählt",
+            description: `${selectedProjectData.project_name || 'Projekt ' + selectedProjectData.id} wurde ausgewählt.`,
+            duration: 3000
+          });
+        }
+      }
+    }
+  }, [selectedProject, projects, toast]);
+  
   // Lade Bodenarten beim ersten Laden
   useEffect(() => {
     // Dummy-Daten für Bodenarten
@@ -431,6 +458,15 @@ const TiefbauMap: React.FC = () => {
       return;
     }
     
+    if (!selectedProject) {
+      toast({
+        title: "Hinweis",
+        description: "Bitte wählen Sie ein Projekt aus, dem diese Strecke zugeordnet werden soll.",
+        duration: 6000
+      });
+      return;
+    }
+    
     // Prüfen, ob Start- und Endadresse gesetzt sind
     const effectiveStartAddress = startAddress || `${routeCoordinates[0].lat.toFixed(6)}, ${routeCoordinates[0].lng.toFixed(6)}`;
     const effectiveEndAddress = endAddress || `${routeCoordinates[routeCoordinates.length-1].lat.toFixed(6)}, ${routeCoordinates[routeCoordinates.length-1].lng.toFixed(6)}`;
@@ -446,13 +482,23 @@ const TiefbauMap: React.FC = () => {
         lng: Number(point.lng)
       }));
       
+      // Finde die ausgewählte Bodenart und das Projekt
+      const selectedBodenartObj = bodenarten.find(b => b.id.toString() === selectedBodenart);
+      const projectData = projects.find(p => p.id === selectedProject);
+      
       // Stellen sicher, dass alle Werte den richtigen Typ haben
       const routeData = {
         name: String(routeName || `Route ${new Date().toLocaleString('de-DE')}`),
         start_address: String(effectiveStartAddress || 'Unbekannter Startpunkt'),
         end_address: String(effectiveEndAddress || 'Unbekannter Endpunkt'),
         distance: Math.round(Number(distance || 100)), // Fallback-Abstand, falls keine Berechnung möglich war
-        route_data: simplifiedCoordinates
+        route_data: simplifiedCoordinates,
+        project_id: selectedProject, // Verknüpfe die Route mit dem ausgewählten Projekt
+        project_name: projectData?.project_name || '',
+        bodenart_id: selectedBodenart ? parseInt(selectedBodenart) : null,
+        bodenart_name: selectedBodenartObj?.name || '',
+        kosten_pro_m2: streckenkostenProM2,
+        gesamtkosten: gesamtstreckenkosten
       };
       
       // Detailliertes Logging vor Absenden
