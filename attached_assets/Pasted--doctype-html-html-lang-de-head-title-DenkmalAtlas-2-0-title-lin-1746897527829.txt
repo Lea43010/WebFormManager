@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+    <head>
+        <title>DenkmalAtlas 2.0</title>
+        <link rel="shortcut icon" type="image/x-icon" href="img/favicons/favicon.ico"/>
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' geoservices.bayern.de" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link href="css/custom.css" rel="stylesheet">
+        <link rel="shortcut icon" href="img/favicons/favicon-32x32.png">
+
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.js"></script>
+        <script src="js/js.cookie.js"></script>
+        <script src="js/denkmal.js"></script>
+        <script src="js/jquery.autocomplete.js"></script>        
+        <script src="js/search.js"></script>
+
+    </head>
+    <body>
+        <div class="container-lg">            
+            <header class="bayern-header d-flex justify-content-between mt-4">
+                <a href="https://www.blfd.bayern.de/" title="Bayerisches Landesamt für Denkmalpflege">
+                    <img src="img/customerlogo.jpg" class="ml-3 logo" alt=""  >
+                </a>
+                <a href="https://www.blfd.bayern.de/">
+                    <img src="img/logo.jpg" class="mr-3 wappen" alt="Bayerische Vermessungsverwaltung">
+                </a>
+            </header>   
+            <div  class="mt-4">
+                <div class="jumbotron">                                      
+                    <div class="container col-12 col-lg-10 da-container">
+                        <div class="text-center da-main-text">
+                            <h1>
+                                Bayerischer Denkmal-Atlas
+                            </h1>
+                            <p class="lead">     
+                                Die Online-Version der Bayerischen Denkmalliste.
+                            <div class="notxt" id="notxt" >
+                                Über die Adresse, Denkmalnummer oder eine Koordinate können Sie detaillierte Informationen zu Denkmälern abrufen.
+                            </div>
+                            </p>
+                            <button id="buttonBaKoor" class="btn btn-primary btn-lg mt-3" >  
+                                <span class="material-icons md-3 icon-location">
+                                    pin_drop
+                                </span>                                                      
+                                Denkmäler in der Nähe                                
+                            </button>
+                        </div>
+                        <div class="input-group input-group-lg mt-3">
+                            <span class="material-icons md-5 icon-search">
+                                search
+                            </span> 
+                            <input id='search' type="text" class="form-control" />                            
+                            <span id="clearInput" class="material-icons md-5 clear-search">
+                                clear
+                            </span>                          
+                            <div class="input-group-append dropdown">
+                                <button class="btn btn-primary dropdown-toggle btn-lg" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    mehr
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a id="dropdownAdressButton" class="dropdown-item" href="#">Adresse Umkreis</a>
+                                    <a id="dropdownNummerButton" class="dropdown-item" href="#">Denkmalnummer</a>
+                                    <a id="dropdownKoordinatenButton" class="dropdown-item" href="#">Koordinate Umkreis</a>
+                                </div>
+                            </div>
+                            <div class="search-buffer">
+                                <label id="bufferLabel" for="buffer">
+                                    Umkreis der Suche: 1000m
+                                </label>
+                                <input  id="buffer" type="range" min="0" max="10" value='6' />                                                           
+                            </div>                                                        
+                        </div>
+                        <div  id="message-no-results" class="alert alert-light d-none">
+                            <h5>
+                                Es wurden keine Denkmäler mit Ihrer Suchanfrage gefunden.
+                            </h5>
+                        </div>
+                        <div>                                      
+                            <div id='show-data' class="list-group">
+                            </div>
+                        </div>
+                    </div>
+                </div>              
+                <nav class="d-flex navbar">
+                    <a class="navbar-brand active flex-fill"  href="index.html">
+                        <div>
+                            Suche nach                                     
+                        </div>
+                        <div>
+                            Denkmälern
+                        </div>
+                    </a>     
+                    <a class="navbar-brand flex-fill" target="_blank" rel="noopener"  href="https://atlas.bayern.de/?c=677751,5422939&z=8&l=vt_luftbild,da4e50de-e3de-4a62-9ebc-ae7e0dab935f,6f5a389c-4ef3-4b5a-9916-475fd5c5962b,044eccef-ab23-478c-8f17-e2182559d036,d0e7d4ea-62d8-46a0-a54a-09654530beed,9d0e3859-be17-4a40-b439-1ba19b45fbb8&l_v=true,false,true,true,true,true&l_o=1,1,0.55,0.85,0.8,0.45&t=ba&refsrc=denkmalatlas">
+                        <div>
+                            Bayern-Atlas                                     
+                        </div>
+                        <div>
+                            mit Denkmaldaten
+                        </div>
+                    </a>    
+                    <div class="d-sm-block d-lg-none w-100">                        
+                    </div>
+                    <a class="navbar-brand flex-fill"  href="liste.html">
+                        <div>
+                            Denkmallisten                                    
+                        </div>
+                        <div>
+                            zum Download
+                        </div>
+                    </a>     
+                    <a class="navbar-brand flex-fill" rel="noopener" target="_blank" href="https://www.blfd.bayern.de/denkmal-atlas/index.html">
+                        <div>
+                            Infos zum
+                        </div>
+                        <div>
+                            Denkmal Atlas
+                        </div>
+                    </a>                                                         
+                </nav>
+                <div class="row" id="box_container">                     
+                </div>
+            </div>                       
+            <footer class="bayern-footer bayern-blue-b text-center">
+                <div class="footer-social text-start mb-5">
+                    <p class=" d-inline-block  da-vertical-top">
+                        Besuchen Sie uns auch auf
+                    </p>
+                    <a class="ym-gl footer-instagram" target="_blank" title="BLfD auf Instagram" href="https://www.instagram.com/denkmaelerbayern/">
+                        <img class="icon-instagram" src="img/Font_Awesome_5_brands_instagram.svg" alt="Instagram" />
+                        <span class="hide">                            
+                            Instagram
+                        </span>
+                    </a>
+                    <a class="ym-gl footer-facebook" target="_blank" title="BLfD auf Facebook" href="https://www.facebook.com/denkmaelerbayern/">
+                        <img class="icon-facebook" src="img/Font_Awesome_5_brands_facebook-square.svg" alt="Facebook" />
+                        <span class="hide">                            
+                            Facebook
+                        </span>
+                    </a>
+                </div>
+                <hr/>
+                <div class="row">
+                    <div class="col-12 col-md-2 text-end">
+                        <img src="img/customerlogo_small.jpg" alt="BLFD" class=" mb-3 float-lg-right">
+                    </div>
+                    <div class="col-12 col-md-8 mb-3" >
+                        © 
+                        <b>Bayerisches Landesamt für Denkmalpflege</b>
+                        - Hofgraben 4 - 80539 München
+                        <div>
+                            Postanschrift: Postfach 10 02 03 - <span class="da-nowrap" >80076 München</span>
+                        </div>
+                        <div>
+                            Telefon (089) 21 14 - 0 - 
+                            <a href="mailto:poststelle@blfd.bayern.de">poststelle@blfd.bayern.de</a> 
+                            - 
+                            <a href="https://www.blfd.bayern.de/" >www.blfd.bayern.de</a>
+                        </div>
+                    </div>                    
+                    <div class="col-12 col-md-2 text-center text-md-start">
+                        <a title="Impressum" href="https://www.blfd.bayern.de/blfd/impressum/index.html">Impressum</a><br>
+                        <a title="Datenschutz" href="https://www.blfd.bayern.de/meta/datenschutz/index.html">Datenschutz</a><br>
+                        <a title="Presse" href="https://www.blfd.bayern.de/blfd/presse/index.html">Presse</a><br>
+                    </div>
+                </div>
+            </footer>
+            <!-- Modal -->
+            <div class="modal  fade" id="exampleModal" data-bs-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <div class="modal-title ml-2" id="exampleModalLabel">BENUTZERHINWEISE</div>
+                        </div>
+                        <div class="modal-body p-4">
+                            <p>
+                                Die <b>Bayerische Denkmalliste</b> ist ein nachrichtliches Verzeichnis aller bekannten Denkmäler. Sie bildet die Grundlage für die kartografische Darstellung der Bau- und Bodendenkmäler im Bayerischen Denkmal-Atlas. Neben den Denkmälern, für die das <b>Benehmen mit der Gemeinde nach Art. 2 BayDSchG</b> hergestellt ist (weiße Umgrenzungslinie) sind auch Objekte kartiert, für die das Benehmen mit der Gemeinde noch nicht hergestellt ist (blaue Umgrenzungslinie).
+                            </p>
+                            <p>
+                                Beachten Sie, dass die Denkmaleigenschaft nicht von der Eintragung in die Bayerische Denkmalliste und von der Kartierung im Bayerischen Denkmal-Atlas abhängt. Auch Objekte, die nicht verzeichnet sind, können Denkmäler sein. Die Verwendung des Bayerischen Denkmal-Atlas ersetzt nicht die Beteiligung der zuständigen Genehmigungs- und Denkmalfachbehörden.
+                            </p>
+                            <p>
+                                Jede Veränderung an oder im Nähebereich von Bau- und Bodendenkmälern bedarf einer denkmalrechtlichen Erlaubnis gemäß <b>Art. 6 und Art. 7 BayDSchG.</b> Wer Bodendenkmäler auffindet, ist verpflichtet, diese gemäß <b>Art. 8 BayDSchG</b> unverzüglich den Unteren Denkmalschutzbehörden oder dem Bayerischen Landesamt für Denkmalpflege anzuzeigen.
+                            </p>
+                            <p>
+                                <a href="./userhint.html" target="_blank" class="fw-bold">Datenschutzrechtliche Hinweise</a>
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="https://www.blfd.bayern.de/" type="button" class="btn btn-secondary">Nicht zur Kenntnis genommen.</a>
+                            <button id="permissionButton" data-bs-dismiss="modal" type="button" class="btn btn-primary" data-bs-dismiss="modal">Zur Kenntnis genommen.</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal  fade" id="failModal"  tabindex="-1" role="dialog" aria-labelledby="failModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title ml-2" id="failModalLabel">Fehler</h5>
+
+                        </div>
+                        <div class="modal-body p-4">
+                            <p>
+                                Leider ist ein Fehler aufgetreten. Suchern sind derzeit nicht möglich
+                            </p>
+
+                        </div>
+                        <div class="modal-footer">                         
+                            <button  data-dismiss="modal" type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button  class="scroll-top-button inline-block">
+                    <i class="material-icons">
+                        keyboard_arrow_up
+                    </i>
+                </button>
+            </div>
+        </div>                          
+    </body>                              
+</html>

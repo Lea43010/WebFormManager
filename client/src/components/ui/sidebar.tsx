@@ -77,6 +77,12 @@ const navItems: NavItem[] = [
     tooltip: "Kosten für Bauvorhaben kalkulieren",
   },
   {
+    title: "DenkmalAtlas",
+    href: "/denkmal-atlas",
+    icon: Map,
+    tooltip: "Denkmalatlas und Geoportale für die Bauplanung",
+  },
+  {
     title: "Dokumente",
     href: "/attachments",
     icon: Paperclip,
