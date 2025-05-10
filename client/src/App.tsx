@@ -41,6 +41,7 @@ import type { ComponentType } from "react";
 import BodenAnalyse from "@/pages/BodenAnalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import KostenKalkulationPage from "@/pages/kostenkalkulation";
+import ImageOptimizationDemo from "@/pages/image-optimization-demo";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
@@ -90,6 +91,7 @@ function Router() {
       <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
+      <ProtectedRoute path="/image-optimization" component={ImageOptimizationDemo} />
       <Route path="/help">
         {() => <Redirect to="/information" />}
       </Route>
