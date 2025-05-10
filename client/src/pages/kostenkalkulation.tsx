@@ -15,6 +15,13 @@ import { de } from "date-fns/locale";
 import jsPDF from "jspdf";
 import 'jspdf-autotable';
 
+// TypeScript-Erweiterung für jsPDF mit autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 // Mock-Daten für die erste Implementierung
 const mockBodenarten = [
   { id: 1, name: "Sand", belastungsklasse: "Gering", material_kosten_pro_m2: 12.50, dichte: 1800 },
@@ -237,23 +244,60 @@ export default function KostenKalkulationPage() {
       y += 6;
     });
     
-    // Kosten Tabelle
-    doc.autoTable({
-      startY: y + 5,
-      head: [['Position', 'Berechnung', 'Kosten (€)']],
-      body: [
-        ['Materialkosten', `${parseFloat(String(kalkulation.flaeche)).toFixed(0)} m² × Materialkosten`, parseFloat(String(kalkulation.materialkosten)).toFixed(2)],
-        ['Maschinenkosten', `${kalkulation.benoetigte_tage} Tage × Tageskosten`, parseFloat(String(kalkulation.maschinenkosten)).toFixed(2)],
-        ['Personalkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Stunden × Stundenkosten × Anzahl`, parseFloat(String(kalkulation.personalkosten)).toFixed(2)],
-        ['Kraftstoffkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} Stunden × Verbrauch × Preis/Liter`, parseFloat(String(kalkulation.kraftstoffkosten)).toFixed(2)],
-        ['Zwischensumme', '', parseFloat(String(kalkulation.zwischensumme)).toFixed(2)],
-        ['Zusatzkosten', `${kalkulationsParameter.zusatzkosten_prozent}% der Zwischensumme`, parseFloat(String(kalkulation.zusatzkosten)).toFixed(2)],
-        ['Gesamtkosten', '', parseFloat(String(kalkulation.gesamtkosten)).toFixed(2)],
-        ['Kosten pro Meter', '', `${parseFloat(String(kalkulation.kosten_pro_meter)).toFixed(2)} €/m`]
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [118, 167, 48] }, // Grün entsprechend dem Farbschema
-      styles: { font: 'helvetica', fontSize: 10 }
+    // Manuelle Tabellenerstellung ohne autoTable
+    let tableY = y + 5;
+    const tableStartX = 15;
+    const colWidths = [60, 100, 35];
+    const rowHeight = 10;
+    
+    // Überschriften
+    doc.setFont("helvetica", "bold");
+    doc.setFillColor(118, 167, 48); // Grün entsprechend dem Farbschema
+    doc.rect(tableStartX, tableY, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.text('Position', tableStartX + 2, tableY + 7);
+    doc.text('Berechnung', tableStartX + colWidths[0] + 2, tableY + 7);
+    doc.text('Kosten (€)', tableStartX + colWidths[0] + colWidths[1] + 2, tableY + 7);
+    tableY += rowHeight;
+    
+    // Tabellendaten
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    
+    const rows = [
+      ['Materialkosten', `${parseFloat(String(kalkulation.flaeche)).toFixed(0)} m² × Materialkosten`, parseFloat(String(kalkulation.materialkosten)).toFixed(2)],
+      ['Maschinenkosten', `${kalkulation.benoetigte_tage} Tage × Tageskosten`, parseFloat(String(kalkulation.maschinenkosten)).toFixed(2)],
+      ['Personalkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} h × Stundenkosten × Anzahl`, parseFloat(String(kalkulation.personalkosten)).toFixed(2)],
+      ['Kraftstoffkosten', `${parseFloat(String(kalkulation.gesamtzeit_stunden)).toFixed(1)} h × Verbrauch`, parseFloat(String(kalkulation.kraftstoffkosten)).toFixed(2)],
+      ['Zwischensumme', '', parseFloat(String(kalkulation.zwischensumme)).toFixed(2)],
+      ['Zusatzkosten', `${kalkulationsParameter.zusatzkosten_prozent}% Aufschlag`, parseFloat(String(kalkulation.zusatzkosten)).toFixed(2)],
+      ['Gesamtkosten', '', parseFloat(String(kalkulation.gesamtkosten)).toFixed(2)],
+      ['Kosten pro Meter', '', `${parseFloat(String(kalkulation.kosten_pro_meter)).toFixed(2)} €/m`]
+    ];
+    
+    // Zeilen zeichnen
+    rows.forEach((row, index) => {
+      // Hintergrund für bestimmte Zeilen
+      if (index === 4 || index === 6) {
+        doc.setFillColor(240, 240, 240);
+        doc.rect(tableStartX, tableY, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+      }
+      
+      // Zellrahmen
+      doc.rect(tableStartX, tableY, colWidths[0], rowHeight);
+      doc.rect(tableStartX + colWidths[0], tableY, colWidths[1], rowHeight);
+      doc.rect(tableStartX + colWidths[0] + colWidths[1], tableY, colWidths[2], rowHeight);
+      
+      // Text in Zellen
+      doc.text(row[0], tableStartX + 2, tableY + 7);
+      doc.text(row[1], tableStartX + colWidths[0] + 2, tableY + 7);
+      
+      // Rechtsbündige Kosten
+      const cost = row[2];
+      const costWidth = doc.getTextWidth(cost);
+      doc.text(cost, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] - costWidth - 2, tableY + 7);
+      
+      tableY += rowHeight;
     });
     
     // Fußzeile
