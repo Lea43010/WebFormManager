@@ -402,7 +402,7 @@ export default function KostenKalkulationPage() {
                   onClick={() => setLocation("/tiefbau-map")}
                   className="flex-1 bg-[#6a961f] hover:bg-[#5b851a] text-white"
                 >
-                  <Map className="h-4 w-4 mr-1" />
+                  <Map className="h-4 w-4 mr-1 inline-block" />
                   Neue Route planen
                 </Button>
                 
@@ -507,7 +507,7 @@ export default function KostenKalkulationPage() {
                 variant="default"
                 onClick={() => setLocation("/bodenanalyse")}
               >
-                <Database className="h-4 w-4 mr-2" />
+                <Database className="h-4 w-4 mr-2 inline-block" />
                 Bodenarten vergleichen
               </Button>
             </CardContent>
@@ -563,7 +563,7 @@ export default function KostenKalkulationPage() {
                 variant="default"
                 onClick={() => setLocation("/maschinen-auswahl")}
               >
-                <Truck className="h-4 w-4 mr-2" />
+                <Truck className="h-4 w-4 mr-2 inline-block" />
                 Maschinen vergleichen
               </Button>
             </CardContent>
@@ -665,6 +665,7 @@ export default function KostenKalkulationPage() {
           </CardContent>
           <CardFooter className="flex justify-end">
             <Button 
+              variant="default"
               className="w-full sm:w-auto bg-[#6a961f] hover:bg-[#5b851a] text-white"
               onClick={berechneKosten}
               disabled={!selectedRouteId || !selectedBodenartId || !selectedMaschineId || isCalculating}
@@ -676,7 +677,7 @@ export default function KostenKalkulationPage() {
                 </>
               ) : (
                 <>
-                  <Calculator className="mr-2 h-4 w-4" />
+                  <Calculator className="mr-2 h-4 w-4 inline-block" />
                   Kosten berechnen
                 </>
               )}
