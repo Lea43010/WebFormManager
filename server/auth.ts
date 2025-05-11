@@ -8,6 +8,7 @@ import { storage } from "./storage";
 import { User as SelectUser, type InsertLoginLog, type InsertVerificationCode } from "@shared/schema";
 import { generateVerificationCode, sendVerificationCode } from "./email";
 import { userCache } from "./user-cache";
+import { emailService } from "./email-service";
 
 declare global {
   namespace Express {
@@ -136,10 +137,110 @@ export function setupAuth(app: Express) {
         gdprConsent: req.body.gdprConsent, // DSGVO-Zustimmung speichern
       });
 
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) return next(err);
-        // Erfasse erfolgreiche Registrierung
-        logLoginEvent(req, 'register', user.id);
+        
+        try {
+          // Erfasse erfolgreiche Registrierung
+          logLoginEvent(req, 'register', user.id);
+          
+          // Sende Willkommens-E-Mail
+          if (user.email) {
+            // Aktuelles Datum für die E-Mail formatieren
+            const heute = new Date().toLocaleDateString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            });
+            
+            // HTML-Inhalt für die Willkommens-E-Mail
+            const htmlContent = `
+            <html>
+            <head>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+                .container { padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                h1 { color: #76a730; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+                .highlight { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #76a730; margin: 20px 0; }
+                .footer { margin-top: 30px; font-size: 0.8em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Willkommen bei der Bau-Structura App!</h1>
+                
+                <p>Sehr geehrte(r) ${user.username},</p>
+                
+                <p>wir freuen uns, Sie bei Bau-Structura begrüßen zu dürfen! Unsere Plattform bietet Ihnen umfassende Funktionen für das Management von Bauprojekten, Analyse von Oberflächen und vieles mehr.</p>
+                
+                <div class="highlight">
+                  <p><strong>Wichtige Informationen zu Ihrem Zugang:</strong></p>
+                  <p>Ihre Anmeldedaten wurden mit den Zugriffsrechten eingerichtet, die Sie für die Anwendung benötigen.</p>
+                </div>
+                
+                <p>Mit unserer App können Sie:</p>
+                <ul>
+                  <li>Bauprojekte effizient verwalten</li>
+                  <li>Dokumente strukturiert organisieren</li>
+                  <li>Straßenschäden dokumentieren und analysieren</li>
+                  <li>Bauplätze auf Karten visualisieren</li>
+                  <li>Baufortschritte nachverfolgen und dokumentieren</li>
+                </ul>
+                
+                <p>Bei Fragen stehen wir Ihnen jederzeit zur Verfügung. Unsere Supportzeiten sind Montag bis Freitag von 8:00 bis 17:00 Uhr.</p>
+                
+                <p>Mit besten Grüßen,<br>
+                Ihr Bau-Structura App Team</p>
+                
+                <div class="footer">
+                  <p>Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+            `;
+            
+            // Text-Version der E-Mail
+            const textContent = `
+Willkommen bei der Bau-Structura App!
+
+Sehr geehrte(r) ${user.username},
+
+wir freuen uns, Sie bei Bau-Structura begrüßen zu dürfen! Unsere Plattform bietet Ihnen umfassende Funktionen für das Management von Bauprojekten, Analyse von Oberflächen und vieles mehr.
+
+Wichtige Informationen zu Ihrem Zugang:
+Ihre Anmeldedaten wurden mit den Zugriffsrechten eingerichtet, die Sie für die Anwendung benötigen.
+
+Mit unserer App können Sie:
+- Bauprojekte effizient verwalten
+- Dokumente strukturiert organisieren
+- Straßenschäden dokumentieren und analysieren
+- Bauplätze auf Karten visualisieren
+- Baufortschritte nachverfolgen und dokumentieren
+
+Bei Fragen stehen wir Ihnen jederzeit zur Verfügung. Unsere Supportzeiten sind Montag bis Freitag von 8:00 bis 17:00 Uhr.
+
+Mit besten Grüßen,
+Ihr Bau-Structura App Team
+
+---
+Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.
+            `;
+            
+            // E-Mail senden
+            await emailService.sendEmail({
+              to: user.email,
+              subject: 'Willkommen bei der Bau-Structura App!',
+              html: htmlContent,
+              text: textContent,
+              highPriority: true
+            });
+          }
+        } catch (emailError) {
+          // Fehler beim E-Mail-Versand loggen, aber den Registrierungsprozess nicht abbrechen
+          console.error('Fehler beim Senden der Willkommens-E-Mail:', emailError);
+        }
+        
         res.status(201).json(user);
       });
     } catch (error) {
