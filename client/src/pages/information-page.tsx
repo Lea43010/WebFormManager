@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, RefreshCw, FileCheck, ShieldCheck, Search, Mail, Phone, FileQuestion } from "lucide-react";
+import { ExternalLink, FileText, ArrowLeft, Info, ChevronRight, Map, Download, RefreshCw, FileCheck, ShieldCheck, Search, Mail, Phone, FileQuestion, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import {
   formatUpdateDate, 
   setupUpdateChecker 
 } from "@/utils/update-tracker";
+import { SecurityInfoPage } from "@/components/info/security-info-page";
 
 // Belastungsklassen und Bauweisen-Daten für die Tabellen
 const belastungsklassen = [
@@ -112,6 +113,7 @@ const sections = [
   { id: "benutzerhandbuch", title: "Benutzerhandbuch" },
   { id: "datenqualitaet", title: "Datenqualität" },
   { id: "datenarchitektur", title: "Datenarchitektur" },
+  { id: "datensicherheit", title: "Datenschutz & Sicherheit" },
   { id: "externe-dienste", title: "Externe Geoportale und Dienste" },
   { id: "belastungsklassen", title: "RStO 12 Belastungsklassen" },
   { id: "bauweisen", title: "Bauweisen nach RStO 12" },
