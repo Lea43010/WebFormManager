@@ -128,7 +128,7 @@ export default function DenkmalAtlasPage() {
                     className="bg-[#76a730] hover:bg-[#638c28] text-white"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    DenkmalAtlas in neuem Tab öffnen
+                    Öffnen im neuen Tab
                   </Button>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default function DenkmalAtlasPage() {
                     className="bg-[#76a730] hover:bg-[#638c28] text-white"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    BayernAtlas in neuem Tab öffnen
+                    Öffnen im neuen Tab
                   </Button>
                 </div>
               </div>
