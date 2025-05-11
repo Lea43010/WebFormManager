@@ -41,7 +41,7 @@ import type { ComponentType } from "react";
 import BodenAnalyse from "@/pages/BodenAnalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import KostenKalkulationPage from "@/pages/kostenkalkulation";
-import DenkmalAtlasPage from "@/pages/denkmal-atlas";
+// DenkmalAtlasPage entfernt - Funktionalität in TiefbauMap integriert
 import ImageOptimizationDemo from "@/pages/image-optimization-demo";
 import SimpleImageOptimizationDemo from "@/pages/image-optimization-demo-simple";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
@@ -93,7 +93,10 @@ function Router() {
       <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
-      <ProtectedRoute path="/denkmal-atlas" component={DenkmalAtlasPage} />
+      {/* DenkmalAtlas-Route entfernt - Funktionalität in TiefbauMap integriert */}
+      <Route path="/denkmal-atlas">
+        {() => <Redirect to="/tiefbau-map" />}
+      </Route>
       <ProtectedRoute path="/image-optimization" component={ImageOptimizationDemo} />
       <ProtectedRoute path="/image-optimization-simple" component={SimpleImageOptimizationDemo} />
       <Route path="/help">

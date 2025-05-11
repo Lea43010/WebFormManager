@@ -76,12 +76,15 @@ const navItems: NavItem[] = [
     icon: CreditCard,
     tooltip: "Kosten für Bauvorhaben kalkulieren",
   },
+  // DenkmalAtlas in TiefbauMap integriert
+  /*
   {
     title: "DenkmalAtlas",
     href: "/denkmal-atlas",
     icon: Map,
     tooltip: "Denkmalatlas und Geoportale für die Bauplanung",
   },
+  */
   {
     title: "Dokumente",
     href: "/attachments",

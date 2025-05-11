@@ -97,6 +97,9 @@ const TiefbauMap: React.FC = () => {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
   
+  // Gemeinsamer Loading-State für alle Komponenten
+  const [loading, setLoading] = useState(false);
+  
   // State für Höhendaten
   const [elevationData, setElevationData] = useState<ElevationResponse | null>(null);
   const [showElevationChart, setShowElevationChart] = useState(false);
@@ -121,8 +124,8 @@ const TiefbauMap: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   
-  // Loading-State
-  const [loading, setLoading] = useState(false);
+  // Loading-State wurde bereits oben definiert
+  // const [loading, setLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   
   // Persistenter Route-State für Tab-Wechsel
