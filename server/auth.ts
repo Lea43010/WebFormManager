@@ -130,11 +130,16 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Sie müssen den Datenschutzbestimmungen zustimmen, um sich zu registrieren" });
       }
 
+      // Für die erste Registrierung den Benutzer als seinen eigenen Ersteller setzen
+      // Das ist notwendig, da die Spalte created_by nicht NULL sein darf
+      const createdBy = 1; // Standard-Admin-ID oder eine andere gültige ID
+      
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
         trialEndDate, // Ablaufdatum der Testphase hinzufügen
         gdprConsent: req.body.gdprConsent, // DSGVO-Zustimmung speichern
+        createdBy, // Ersteller hinzufügen
       });
 
       req.login(user, async (err) => {
