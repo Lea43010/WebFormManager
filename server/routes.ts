@@ -917,11 +917,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedData = formData;
         const project = await storage.updateProject(id, validatedData);
         res.json(project);
-      } catch (updateError) {
-        console.error("Fehler beim Aktualisieren des Projekts:", updateError);
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren des Projekts:", error);
         return res.status(400).json({ 
           message: "Fehler beim Aktualisieren des Projekts", 
-          details: updateError.message 
+          details: (error as any)?.message || "Unbekannter Fehler" 
         });
       }
     } catch (error) {
