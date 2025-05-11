@@ -43,7 +43,7 @@ async function convertWebmToWav(inputPath: string): Promise<string> {
     // Prüfen, ob ffmpeg installiert ist, ohne es auszuführen
     try {
       await execAsync(`which ffmpeg`);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.warn(`ffmpeg wurde nicht gefunden: ${error}`);
       // Wenn ffmpeg nicht gefunden wird, geben wir den ursprünglichen Pfad zurück
       return inputPath;
@@ -53,7 +53,7 @@ async function convertWebmToWav(inputPath: string): Promise<string> {
     await execAsync(`ffmpeg -i ${inputPath} -acodec pcm_s16le -ar 16000 -ac 1 ${outputPath}`);
     logger.info(`Audiokonvertierung erfolgreich: ${outputPath}`);
     return outputPath;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`Fehler bei der Audiokonvertierung: ${error}`);
     logger.info(`Verwende original Datei statt Konvertierung: ${inputPath}`);
     // Bei Fehlern geben wir den ursprünglichen Pfad zurück statt einen Fehler zu werfen
@@ -83,7 +83,7 @@ async function transcribeAudio(audioPath: string): Promise<string> {
     });
 
     return response.text;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error(`Fehler bei der Spracherkennung: ${error}`);
     throw new Error('Fehler bei der Spracherkennung');
   }
