@@ -791,3 +791,144 @@ export const insertConstructionDiaryEmployeeSchema = createInsertSchema(construc
 
 export type InsertConstructionDiaryEmployee = z.infer<typeof insertConstructionDiaryEmployeeSchema>;
 export type ConstructionDiaryEmployee = typeof constructionDiaryEmployees.$inferSelect;
+
+// Dokumenten-Synchronisations Tabelle
+// ==========================================
+
+// Enum für externe Systeme
+export const externalSystemEnum = pgEnum('external_system_type', ['bau_structura', 'google_drive', 'onedrive', 'dropbox', 'sharepoint', 'andere']);
+
+// Enum für Synchronisationsstatus
+export const syncStatusEnum = pgEnum('sync_status_type', ['synced', 'pending', 'conflict', 'error']);
+
+// Synchronisierte Dokumente
+export const syncedDocuments = pgTable("tblsynced_documents", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  path: text("path"),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  lastModified: timestamp("last_modified").notNull(),
+  lastSynced: timestamp("last_synced").notNull(),
+  externalId: text("external_id"),
+  externalSystem: externalSystemEnum("external_system").notNull(),
+  projectId: integer("project_id").references(() => projects.id),
+  ownerId: varchar("owner_id").references(() => users.id),
+  syncStatus: syncStatusEnum("sync_status").notNull().default('pending'),
+  checksum: text("checksum"), // Für Änderungserkennung
+  metadata: jsonb("metadata"), // Flexibles Feld für systemspezifische Metadaten
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => {
+  return {
+    projectIdIdx: index("synced_docs_project_id_idx").on(table.projectId),
+    externalSystemIdx: index("synced_docs_external_system_idx").on(table.externalSystem),
+    syncStatusIdx: index("synced_docs_sync_status_idx").on(table.syncStatus),
+  };
+});
+
+// Dokumentversionen
+export const documentVersions = pgTable("tbldocument_versions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  documentId: uuid("document_id").notNull().references(() => syncedDocuments.id, { onDelete: 'cascade' }),
+  versionNumber: integer("version_number").notNull(),
+  size: integer("size").notNull(),
+  checksum: text("checksum").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id),
+  comment: text("comment"),
+}, (table) => {
+  return {
+    documentIdIdx: index("document_versions_doc_id_idx").on(table.documentId),
+  };
+});
+
+// Synchronisations-Logs
+export const syncLogs = pgTable("tblsync_logs", {
+  id: serial("id").primaryKey(),
+  documentId: uuid("document_id").references(() => syncedDocuments.id, { onDelete: 'cascade' }),
+  operation: varchar("operation", { length: 50 }).notNull(), // pull, push, conflict
+  status: varchar("status", { length: 50 }).notNull(), // success, error
+  message: text("message"),
+  timestamp: timestamp("timestamp").defaultNow(),
+  userId: varchar("user_id").references(() => users.id),
+});
+
+// Universeller Suchindex
+// ==========================================
+
+// Tabelle für Suchindex (verwendet PostgreSQL TSVECTOR für Volltextsuche)
+export const searchIndex = pgTable("tblsearch_index", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  entityType: varchar("entity_type", { length: 50 }).notNull(), // project, document, user, etc.
+  entityId: varchar("entity_id", { length: 100 }).notNull(),
+  title: text("title").notNull(),
+  content: text("content"),
+  metadata: jsonb("metadata"),
+  tsVector: text("ts_vector"),
+  permissions: text("permissions").array(), // Wer darf dieses Element sehen?
+  source: varchar("source", { length: 50 }).notNull(), // bau-structura, google, slack, etc.
+  lastIndexed: timestamp("last_indexed").defaultNow(),
+}, (table) => {
+  return {
+    entityTypeIdIdx: index("search_idx_entity_type_id").on(table.entityType, table.entityId),
+    tsVectorIdx: index("search_idx_tsvector").on(table.tsVector),
+  };
+});
+
+// Relations für Dokumenten-Synchronisation
+export const documentRelations = relations(syncedDocuments, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [syncedDocuments.projectId],
+    references: [projects.id],
+  }),
+  owner: one(users, {
+    fields: [syncedDocuments.ownerId],
+    references: [users.id],
+  }),
+  versions: many(documentVersions),
+  syncLogs: many(syncLogs),
+}));
+
+export const documentVersionRelations = relations(documentVersions, ({ one }) => ({
+  document: one(syncedDocuments, {
+    fields: [documentVersions.documentId],
+    references: [syncedDocuments.id],
+  }),
+  creator: one(users, {
+    fields: [documentVersions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const syncLogRelations = relations(syncLogs, ({ one }) => ({
+  document: one(syncedDocuments, {
+    fields: [syncLogs.documentId],
+    references: [syncedDocuments.id],
+  }),
+  user: one(users, {
+    fields: [syncLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert-Schemas für die neuen Tabellen
+export const insertSyncedDocumentSchema = createInsertSchema(syncedDocuments)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertSyncedDocument = z.infer<typeof insertSyncedDocumentSchema>;
+export type SyncedDocument = typeof syncedDocuments.$inferSelect;
+
+export const insertDocumentVersionSchema = createInsertSchema(documentVersions)
+  .omit({ id: true, createdAt: true });
+export type InsertDocumentVersion = z.infer<typeof insertDocumentVersionSchema>;
+export type DocumentVersion = typeof documentVersions.$inferSelect;
+
+export const insertSyncLogSchema = createInsertSchema(syncLogs)
+  .omit({ id: true, timestamp: true });
+export type InsertSyncLog = z.infer<typeof insertSyncLogSchema>;
+export type SyncLog = typeof syncLogs.$inferSelect;
+
+export const insertSearchIndexSchema = createInsertSchema(searchIndex)
+  .omit({ id: true, tsVector: true, lastIndexed: true });
+export type InsertSearchIndex = z.infer<typeof insertSearchIndexSchema>;
+export type SearchIndex = typeof searchIndex.$inferSelect;

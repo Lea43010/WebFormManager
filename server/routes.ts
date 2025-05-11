@@ -24,6 +24,8 @@ import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
 import { registerBackupApiRoutes } from "./routes/backup-routes"; // Neue Backup-API
+import documentSyncRouter from "./routes/document-sync-routes"; // Dokumenten-Synchronisation
+import searchRouter from "./routes/search-routes"; // Universelle Suche
 import queryAnalyticsRouter from "./routes/query-analytics-routes"; // SQL-Query-Analytics
 import subscriptionRouter from "./routes/subscription-routes"; // Abonnement-Verwaltung
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
@@ -144,6 +146,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Cache-Verwaltungs-Routen (nur für Administratoren)
   app.use('/api/cache', cacheRoutes);
+  
+  // Dokumenten-Synchronisations-Routen
+  app.use(documentSyncRouter);
+  
+  // Universelle Such-Routen
+  app.use(searchRouter);
   
   // Serve uploaded files statically with no-cache headers
   app.use("/uploads", (req, res, next) => {
