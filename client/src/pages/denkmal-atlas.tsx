@@ -68,16 +68,8 @@ export default function DenkmalAtlasPage() {
         <TabsContent value="bayern" className="mt-0">
           <Card className="bg-white shadow-sm rounded-lg">
             <CardHeader>
-              <CardTitle className="text-[#111827] flex items-center justify-between">
+              <CardTitle className="text-[#111827]">
                 <span>Bayerischer Denkmal-Atlas</span>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
-                  className="bg-white hover:bg-gray-50 border-[#76a730] text-[#76a730]"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Öffnen im neuen Tab
-                </Button>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 Die Online-Version der Bayerischen Denkmalliste mit Informationen zu Bau- und Bodendenkmälern.
@@ -128,8 +120,16 @@ export default function DenkmalAtlasPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center space-y-3">
                   <p className="text-gray-700">Die direkte Einbindung des DenkmalAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
+                  <Button 
+                    variant="default" 
+                    onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
+                    className="bg-[#76a730] hover:bg-[#638c28] text-white"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    DenkmalAtlas in neuem Tab öffnen
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -139,16 +139,8 @@ export default function DenkmalAtlasPage() {
         <TabsContent value="geoportal" className="mt-0">
           <Card className="bg-white shadow-sm rounded-lg">
             <CardHeader>
-              <CardTitle className="text-[#111827] flex items-center justify-between">
+              <CardTitle className="text-[#111827]">
                 <span>BayernAtlas Geoportal</span>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleExternalLink("https://geoportal.bayern.de/bayernatlas/", "BayernAtlas")} 
-                  className="bg-white hover:bg-gray-50 border-[#76a730] text-[#76a730]"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Öffnen im neuen Tab
-                </Button>
               </CardTitle>
               <CardDescription className="text-gray-600">
                 Das offizielle Geoportal mit umfangreichen Karten und Geodaten des Freistaats Bayern.
@@ -202,8 +194,16 @@ export default function DenkmalAtlasPage() {
                     </svg>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center space-y-3">
                   <p className="text-gray-700">Die direkte Einbindung des BayernAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
+                  <Button 
+                    variant="default" 
+                    onClick={() => handleExternalLink("https://geoportal.bayern.de/bayernatlas/", "BayernAtlas")}
+                    className="bg-[#76a730] hover:bg-[#638c28] text-white"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    BayernAtlas in neuem Tab öffnen
+                  </Button>
                 </div>
               </div>
             </CardContent>
