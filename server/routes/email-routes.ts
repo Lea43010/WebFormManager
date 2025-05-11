@@ -28,6 +28,146 @@ const isAdmin = (req: express.Request, res: express.Response, next: express.Next
 
 export function registerEmailRoutes(app: express.Express) {
   /**
+   * Route zum Testen der Willkommens-E-Mail (nur für Entwicklungsumgebung)
+   */
+  app.post('/api/email/test', 
+    async (req: express.Request, res: express.Response) => {
+      try {
+        const { email, name = 'Tester', username = 'test-user' } = req.body;
+        
+        if (!email) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'E-Mail-Adresse ist erforderlich' 
+          });
+        }
+        
+        // Aktuelles Datum für die E-Mail formatieren
+        const heute = new Date().toLocaleDateString('de-DE', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+        
+        // HTML-Inhalt für die Test-Willkommens-E-Mail
+        const htmlContent = `
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+            .container { padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+            h1 { color: #76a730; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            .highlight { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #76a730; margin: 20px 0; }
+            .footer { margin-top: 30px; font-size: 0.8em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
+            .trial-info { font-weight: bold; color: #76a730; }
+            .feature { margin: 12px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Herzlich willkommen bei Bau-Structura!</h1>
+            
+            <p>Liebe(r) ${name},</p>
+            
+            <p>wir freuen uns sehr, dass Sie nun Teil von Bau-Structura sind – herzlich willkommen!</p>
+            
+            <div class="highlight">
+              <p class="trial-info">Damit Sie Bau-Structura ganz in Ruhe kennenlernen können, schenken wir Ihnen die ersten 14 Tage völlig kostenlos und unverbindlich.</p>
+            </div>
+            
+            <p>Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:</p>
+            
+            <p class="feature">Einfache und effiziente Verwaltung Ihrer Bauprojekte</p>
+            <p class="feature">Strukturierte Organisation aller relevanten Dokumente</p>
+            <p class="feature">Schnelle Dokumentation und detaillierte Analyse von Straßenschäden</p>
+            <p class="feature">Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten</p>
+            <p class="feature">Einfache Nachverfolgung und Dokumentation der Baufortschritte</p>
+            
+            <p>Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.</p>
+            
+            <p>Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.</p>
+            
+            <p>Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!</p>
+            
+            <p>Herzliche Grüße<br>
+            Ihr Bau-Structura App Team</p>
+            
+            <div class="footer">
+              <p>Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
+              <p><strong>TEST-E-MAIL</strong> - Diese E-Mail wurde zu Testzwecken gesendet.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+        `;
+        
+        // Text-Version der E-Mail
+        const textContent = `
+Herzlich willkommen bei Bau-Structura – Ihre 14-tägige Testphase startet jetzt!
+
+Liebe(r) ${name},
+
+wir freuen uns sehr, dass Sie nun Teil von Bau-Structura sind – herzlich willkommen!
+
+Damit Sie Bau-Structura ganz in Ruhe kennenlernen können, schenken wir Ihnen die ersten 14 Tage völlig kostenlos und unverbindlich.
+
+Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:
+
+Einfache und effiziente Verwaltung Ihrer Bauprojekte
+
+Strukturierte Organisation aller relevanten Dokumente
+
+Schnelle Dokumentation und detaillierte Analyse von Straßenschäden
+
+Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten
+
+Einfache Nachverfolgung und Dokumentation der Baufortschritte
+
+Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.
+
+Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.
+
+Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!
+
+Herzliche Grüße
+Ihr Bau-Structura App Team
+
+---
+Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.
+TEST-E-MAIL - Diese E-Mail wurde zu Testzwecken gesendet.
+        `;
+        
+        // E-Mail senden
+        const result = await emailService.sendEmail({
+          to: email,
+          subject: 'Herzlich willkommen bei Bau-Structura – Ihre 14-tägige Testphase startet jetzt!',
+          html: htmlContent,
+          text: textContent,
+          highPriority: true
+        });
+        
+        // Log
+        emailLogger.info(`Test-Willkommens-E-Mail an ${email} gesendet`);
+        
+        // Antwort
+        res.json({
+          success: true,
+          message: `Test-Willkommens-E-Mail an ${email} gesendet`
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        emailLogger.error('Fehler beim Senden der Test-E-Mail:', error);
+        
+        res.status(500).json({
+          success: false,
+          message: 'Fehler beim Senden der Test-E-Mail',
+          error: errorMessage
+        });
+      }
+    }
+  );
+  
+  /**
    * Route zum Senden einer Willkommens-E-Mail
    */
   app.post('/api/admin/send-welcome-email', 
