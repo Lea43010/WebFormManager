@@ -23,7 +23,10 @@ import {
   KeyRound,
   Search,
   Trash2,
-  Download 
+  Download,
+  Shield,
+  Smartphone,
+  UserCheck 
 } from 'lucide-react';
 
 /**
@@ -128,6 +131,91 @@ export function SecurityInfoPage() {
                     <li>Sichere Schlüsselverwaltung mit regelmäßiger Schlüsselrotation</li>
                     <li>Separate Speicherung von Verschlüsselungsparametern</li>
                     <li>Automatische Entschlüsselung nur bei berechtigtem Zugriff</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            {/* Brute-Force-Schutz */}
+            <AccordionItem value="rate-limiting">
+              <AccordionTrigger className="py-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="text-[#76a730] h-5 w-5 shrink-0" />
+                  <span>Brute-Force-Schutz</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 px-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Schutz vor Brute-Force-Angriffen</h4>
+                  <p>
+                    Wir implementieren fortschrittliche Rate-Limiting-Mechanismen, um Brute-Force-Angriffe 
+                    zu verhindern. Bei zu vielen fehlgeschlagenen Versuchen wird der Zugriff vorübergehend 
+                    gesperrt, um die Sicherheit Ihres Kontos zu gewährleisten.
+                  </p>
+                  
+                  <h4 className="font-medium mt-4">Implementierte Maßnahmen:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Zeitlich begrenzte Sperrung nach fehlgeschlagenen Login-Versuchen</li>
+                    <li>IP-basierte und kontobezogene Ratenbegrenzung</li>
+                    <li>Automatische Protokollierung verdächtiger Aktivitäten</li>
+                    <li>Progressive Erhöhung der Wartezeit bei wiederholten Fehlversuchen</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            {/* 2-Faktor-Authentifizierung */}
+            <AccordionItem value="2fa">
+              <AccordionTrigger className="py-4">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="text-[#76a730] h-5 w-5 shrink-0" />
+                  <span>2-Faktor-Authentifizierung (2FA)</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 px-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Zusätzliche Sicherheitsebene</h4>
+                  <p>
+                    Für besonders sensible Konten bieten wir die Möglichkeit, eine 2-Faktor-Authentifizierung 
+                    zu aktivieren. Diese erhöht die Sicherheit Ihres Kontos erheblich, indem sie neben dem Passwort 
+                    eine zweite Bestätigung erfordert.
+                  </p>
+                  
+                  <h4 className="font-medium mt-4">Implementierte Maßnahmen:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>TOTP-basierte Authentifizierung (Time-based One-Time Password)</li>
+                    <li>Kompatibel mit Standard-Authenticator-Apps (Google Authenticator, Microsoft Authenticator, etc.)</li>
+                    <li>Backup-Codes für Notfallzugriff, falls das Authentifizierungsgerät verloren geht</li>
+                    <li>Sichere QR-Code-Übermittlung bei der Einrichtung</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            {/* API-Sicherheit */}
+            <AccordionItem value="api-security">
+              <AccordionTrigger className="py-4">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="text-[#76a730] h-5 w-5 shrink-0" />
+                  <span>API-Sicherheit und Token-Management</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 px-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Sichere API-Zugriffe</h4>
+                  <p>
+                    Für die Kommunikation zwischen Client und Server verwenden wir JWT (JSON Web Tokens), 
+                    die eine sichere Authentifizierung ohne ständige Passworteingabe ermöglichen. Diese 
+                    Tokens sind kurzlebig und können bei Bedarf widerrufen werden.
+                  </p>
+                  
+                  <h4 className="font-medium mt-4">Implementierte Maßnahmen:</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>JWT mit kurzer Gültigkeitsdauer und automatischer Erneuerung</li>
+                    <li>Token-Blacklisting für sofortige Widerrufbarkeit</li>
+                    <li>Sichere Übertragung von Tokens über HTTPS</li>
+                    <li>Detaillierte Berechtigungsprüfung bei API-Zugriffen</li>
+                    <li>Keine Speicherung sensibler Daten in Tokens</li>
                   </ul>
                 </div>
               </AccordionContent>
@@ -316,6 +404,32 @@ export function SecurityInfoPage() {
                 <p className="text-sm text-gray-600">
                   Sämtliche Daten werden ausschließlich auf Servern innerhalb der Europäischen Union gespeichert 
                   und verarbeitet.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-orange-100 p-2 rounded-md">
+                <Shield className="text-orange-600 h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Brute-Force-Schutz</h4>
+                <p className="text-sm text-gray-600">
+                  Fortschrittliche Rate-Limiting-Mechanismen schützen Ihr Konto vor unbefugten Zugriffsversuchen
+                  und blockieren verdächtige Aktivitäten automatisch.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-teal-100 p-2 rounded-md">
+                <Smartphone className="text-teal-600 h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">2-Faktor-Authentifizierung</h4>
+                <p className="text-sm text-gray-600">
+                  Optionale Zwei-Faktor-Authentifizierung erhöht die Sicherheit Ihres Kontos durch eine 
+                  zweite Verifizierungsebene neben dem Passwort.
                 </p>
               </div>
             </div>

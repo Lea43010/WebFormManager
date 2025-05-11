@@ -14,6 +14,9 @@ import * as passwordManager from './password-manager';
 import * as cookieManager from './cookie-manager';
 import * as tlsManager from './tls-manager';
 import * as gdprRightsManager from './gdpr-rights-manager';
+import * as rateLimiter from './rate-limiter';
+import * as jwtManager from './jwt-manager';
+import * as twoFactorAuth from './two-factor-auth';
 
 // Re-Export aller Module
 export { 
@@ -21,7 +24,10 @@ export {
   passwordManager,
   cookieManager,
   tlsManager,
-  gdprRightsManager
+  gdprRightsManager,
+  rateLimiter,
+  jwtManager,
+  twoFactorAuth
 };
 
 /**
@@ -49,7 +55,23 @@ export async function initializeSecurity(app: Express): Promise<boolean> {
     await gdprRightsManager.initializeGdprRequestsTable();
     console.log('[Sicherheit] DSGVO-Rechte-Manager initialisiert');
     
-    // 5. Cookie-Banner-Middleware hinzufügen
+    // 5. Rate-Limiter-Tabelle initialisieren
+    await rateLimiter.initializeRateLimitTable();
+    console.log('[Sicherheit] Rate-Limiter initialisiert');
+    
+    // 6. JWT-Token-Blacklist-Tabelle initialisieren
+    await jwtManager.initializeTokenBlacklistTable();
+    console.log('[Sicherheit] JWT-Token-Manager initialisiert');
+    
+    // 7. 2FA-Tabelle initialisieren
+    await twoFactorAuth.initialize2FATable();
+    console.log('[Sicherheit] 2-Faktor-Authentifizierung initialisiert');
+    
+    // 8. Blockierte IPs prüfen (falls zu viele Anfragen)
+    app.use(rateLimiter.checkBlockedStatus());
+    console.log('[Sicherheit] Prüfung auf blockierte IP-Adressen aktiviert');
+    
+    // 9. Cookie-Banner-Middleware hinzufügen
     app.use((req, res, next) => {
       // Wenn kein Einwilligungs-Cookie vorhanden ist, fügen wir Informationen zum Cookie-Banner hinzu
       if (!req.cookies[cookieManager.CONSENT_COOKIE_NAME]) {
@@ -58,6 +80,21 @@ export async function initializeSecurity(app: Express): Promise<boolean> {
       next();
     });
     console.log('[Sicherheit] Cookie-Einwilligungssystem initialisiert');
+    
+    // 10. Automatische Bereinigung (für Token-Blacklist, Rate-Limit-Einträge, etc.)
+    // Führe alle 24 Stunden eine Bereinigung durch
+    setInterval(async () => {
+      try {
+        const cleanedTokens = await jwtManager.cleanupBlacklistedTokens();
+        console.log(`[Sicherheit] ${cleanedTokens} abgelaufene Tokens aus der Blacklist bereinigt`);
+        
+        await rateLimiter.cleanupRateLimitEntries();
+        console.log('[Sicherheit] Alte Rate-Limit-Einträge bereinigt');
+      } catch (error) {
+        console.error('[Sicherheit] Fehler bei der automatischen Bereinigung:', error);
+      }
+    }, 24 * 60 * 60 * 1000);
+    console.log('[Sicherheit] Automatische Bereinigungsaufgaben geplant');
     
     console.log('[Sicherheit] Alle Sicherheitsmodule erfolgreich initialisiert');
     return true;
