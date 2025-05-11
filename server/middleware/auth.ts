@@ -15,8 +15,8 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
 // Middleware zum Loggen von Zugriffsversuchen
 export function logAccessAttempt(req: Request, res: Response, next: NextFunction) {
   // Benutzer-ID erfassen (falls authentifiziert)
-  const userId = req.user ? (req.user as any).id : null;
-  const username = req.user ? (req.user as any).username : 'Nicht authentifiziert';
+  const userId = req.user ? (req.user as { id?: number }).id : null;
+  const username = req.user ? (req.user as { username?: string }).username : 'Nicht authentifiziert';
   
   console.log(`[${new Date().toISOString()}] Zugriffsversuch: ${req.method} ${req.originalUrl} - Benutzer: ${username} (ID: ${userId})`);
   
@@ -82,10 +82,11 @@ export function verifySubscriptionStatus(req: Request): {isValid: boolean, error
           errorMessage: 'Ihre Testphase ist abgelaufen. Bitte verlängern Sie Ihr Abonnement.' 
         };
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Wenn es ein Problem beim Parsen des Datums gibt, erlauben wir den Zugriff als Vorsichtsmaßnahme,
       // aber protokollieren das Problem
-      console.error(`Fehler beim Parsen des Testphasen-Enddatums für Benutzer ${user.id}:`, error);
+      console.error(`Fehler beim Parsen des Testphasen-Enddatums für Benutzer ${user.id}:`, 
+        error instanceof Error ? error.message : String(error));
       return { 
         isValid: true,
         errorMessage: 'Warnung: Probleme bei der Überprüfung Ihres Abonnementstatus. Bitte kontaktieren Sie den Support.' 
@@ -106,7 +107,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: 'Nicht authentifiziert. Bitte melden Sie sich an.' });
   }
   
-  const user = req.user as any;
+  const user = req.user as { role?: string };
   
   if (user.role !== 'administrator') {
     return res.status(403).json({ message: 'Keine ausreichenden Berechtigungen. Administratorzugriff erforderlich.' });

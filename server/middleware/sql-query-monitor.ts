@@ -196,7 +196,7 @@ export function createSQLQueryMonitor(pool: Pool) {
         req: null,
         res: null
       };
-    } catch (error) {
+    } catch (error: unknown) {
       return null;
     }
   }
@@ -214,8 +214,9 @@ export function createSQLQueryMonitor(pool: Pool) {
       req._sqlQueriesStarted = new Map();
       
       next();
-    } catch (error) {
-      monitorLogger.error('Fehler in der SQL-Monitor-Middleware:', error);
+    } catch (error: unknown) {
+      monitorLogger.error('Fehler in der SQL-Monitor-Middleware:', 
+        error instanceof Error ? error.message : String(error));
       next();
     }
   };

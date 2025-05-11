@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request } from "express";
 import { sql, drizzleSql } from "../db";
 import { requireAdmin } from "../middleware/role-check";
 import { logActivity, ActionType, ActivityLogData } from "../activity-logger";
@@ -6,7 +6,7 @@ import logger from "../logger";
 import { cronJobManager } from "../cron-jobs";
 
 // Hilfsfunktion zum Ermitteln der IP-Adresse
-const getIpAddress = (req: any): string => {
+const getIpAddress = (req: Request): string => {
   return req.headers['x-forwarded-for'] || 
          req.connection.remoteAddress || 
          req.socket.remoteAddress || 
