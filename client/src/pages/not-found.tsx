@@ -1,7 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
+
+const useNavigate = () => {
+  const [_, setLocation] = useLocation();
+  return setLocation;
+};
 
 export default function NotFound() {
   const navigate = useNavigate();
