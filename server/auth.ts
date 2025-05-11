@@ -169,40 +169,44 @@ export function setupAuth(app: Express) {
                 .highlight { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #76a730; margin: 20px 0; }
                 .footer { margin-top: 30px; font-size: 0.8em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
                 .trial-info { font-weight: bold; color: #76a730; }
-                .feature { margin: 12px 0; }
+                .feature-list { margin-top: 15px; }
+                .feature-list li { margin-bottom: 8px; }
+                strong { color: #76a730; }
               </style>
             </head>
             <body>
               <div class="container">
                 <h1>Herzlich willkommen bei Bau-Structura!</h1>
                 
-                <p>Liebe(r) ${user.username},</p>
+                <p><strong>Liebe(r) ${user.username},</strong></p>
                 
-                <p>wir freuen uns sehr, dass Sie nun Teil von Bau-Structura sind – herzlich willkommen!</p>
+                <p>wir freuen uns sehr, Sie als neues Mitglied bei <strong>Bau-Structura</strong> begrüßen zu dürfen – herzlich willkommen!</p>
                 
                 <div class="highlight">
-                  <p class="trial-info">Damit Sie Bau-Structura ganz in Ruhe kennenlernen können, schenken wir Ihnen die ersten 14 Tage völlig kostenlos und unverbindlich.</p>
+                  <p class="trial-info">Damit Sie unsere Plattform in aller Ruhe entdecken können, schenken wir Ihnen die ersten <strong>14 Tage kostenfrei und unverbindlich</strong>.</p>
                 </div>
                 
-                <p>Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:</p>
+                <p><strong>Bau-Structura</strong> unterstützt Sie dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Freuen Sie sich auf folgende Vorteile:</p>
                 
-                <p class="feature">Einfache und effiziente Verwaltung Ihrer Bauprojekte</p>
-                <p class="feature">Strukturierte Organisation aller relevanten Dokumente</p>
-                <p class="feature">Schnelle Dokumentation und detaillierte Analyse von Straßenschäden</p>
-                <p class="feature">Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten</p>
-                <p class="feature">Einfache Nachverfolgung und Dokumentation der Baufortschritte</p>
+                <ul class="feature-list">
+                  <li>Intuitive und zeitsparende Verwaltung Ihrer Bauprojekte</li>
+                  <li>Zentrale Organisation aller relevanten Dokumente</li>
+                  <li>Schnelle Erfassung und präzise Analyse von Straßenschäden</li>
+                  <li>Übersichtlich visualisierte Bauflächen auf interaktiven Karten</li>
+                  <li>Lückenlose Nachverfolgung und Dokumentation Ihres Baufortschritts</li>
+                </ul>
                 
-                <p>Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.</p>
+                <p>Ihre persönlichen Zugangsdaten sind bereits eingerichtet – passend zu Ihren individuellen Anforderungen.</p>
                 
-                <p>Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.</p>
+                <p>Bei Fragen oder Anliegen steht Ihnen unser Support-Team gerne zur Seite: <strong>Montag bis Freitag, 8:00 bis 17:00 Uhr</strong>.</p>
                 
-                <p>Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!</p>
+                <p>Wir wünschen Ihnen einen erfolgreichen Start und viel Freude bei der Arbeit mit Bau-Structura!</p>
                 
-                <p>Herzliche Grüße<br>
-                Ihr Bau-Structura App Team</p>
+                <p><strong>Mit besten Grüßen</strong><br>
+                Ihr <strong>Bau-Structura App Team</strong></p>
                 
                 <div class="footer">
-                  <p>Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
+                  <p><em>Hinweis: Diese Nachricht wurde automatisch am ${heute} erstellt. Bitte antworten Sie nicht direkt auf diese E-Mail.</em></p>
                 </div>
               </div>
             </body>
@@ -211,43 +215,39 @@ export function setupAuth(app: Express) {
             
             // Text-Version der E-Mail
             const textContent = `
-Herzlich willkommen bei Bau-Structura – Ihre 14-tägige Testphase startet jetzt!
+Herzlich willkommen bei Bau-Structura, ${user.username}!
 
 Liebe(r) ${user.username},
 
-wir freuen uns sehr, dass Sie nun Teil von Bau-Structura sind – herzlich willkommen!
+wir freuen uns sehr, Sie als neues Mitglied bei Bau-Structura begrüßen zu dürfen – herzlich willkommen!
 
-Damit Sie Bau-Structura ganz in Ruhe kennenlernen können, schenken wir Ihnen die ersten 14 Tage völlig kostenlos und unverbindlich.
+Damit Sie unsere Plattform in aller Ruhe entdecken können, schenken wir Ihnen die ersten 14 Tage kostenfrei und unverbindlich.
 
-Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:
+Bau-Structura unterstützt Sie dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Freuen Sie sich auf folgende Vorteile:
 
-Einfache und effiziente Verwaltung Ihrer Bauprojekte
+* Intuitive und zeitsparende Verwaltung Ihrer Bauprojekte
+* Zentrale Organisation aller relevanten Dokumente
+* Schnelle Erfassung und präzise Analyse von Straßenschäden
+* Übersichtlich visualisierte Bauflächen auf interaktiven Karten
+* Lückenlose Nachverfolgung und Dokumentation Ihres Baufortschritts
 
-Strukturierte Organisation aller relevanten Dokumente
+Ihre persönlichen Zugangsdaten sind bereits eingerichtet – passend zu Ihren individuellen Anforderungen.
 
-Schnelle Dokumentation und detaillierte Analyse von Straßenschäden
+Bei Fragen oder Anliegen steht Ihnen unser Support-Team gerne zur Seite: Montag bis Freitag, 8:00 bis 17:00 Uhr.
 
-Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten
+Wir wünschen Ihnen einen erfolgreichen Start und viel Freude bei der Arbeit mit Bau-Structura!
 
-Einfache Nachverfolgung und Dokumentation der Baufortschritte
-
-Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.
-
-Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.
-
-Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!
-
-Herzliche Grüße
+Mit besten Grüßen
 Ihr Bau-Structura App Team
 
 ---
-Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.
+Hinweis: Diese Nachricht wurde automatisch am ${heute} erstellt. Bitte antworten Sie nicht direkt auf diese E-Mail.
             `;
             
             // E-Mail senden
             await emailService.sendEmail({
               to: user.email,
-              subject: 'Herzlich willkommen bei Bau-Structura – Ihre 14-tägige Testphase startet jetzt!',
+              subject: `Herzlich willkommen bei Bau-Structura, ${user.username}!`,
               html: htmlContent,
               text: textContent,
               highPriority: true
