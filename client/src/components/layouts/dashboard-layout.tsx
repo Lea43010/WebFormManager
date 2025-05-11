@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipButton } from "@/components/ui/tooltip-button";
 import { useAuth } from "@/hooks/use-auth";
+import { Search } from "lucide-react";
 import logoImage from "@/assets/Logo.png";
 
 interface DashboardLayoutProps {
@@ -42,9 +43,7 @@ export default function DashboardLayout({
               <div className="w-full max-w-lg flex ml-2 md:ml-0">
                 <div className="relative w-full text-gray-400">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
                   </div>
                   <input
                     className="block w-full h-8 sm:h-10 pl-8 sm:pl-10 pr-2 sm:pr-3 py-1 sm:py-2 text-sm sm:text-base rounded-md border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-touch-target"

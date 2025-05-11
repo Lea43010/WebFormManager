@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import UniversalSearch from "@/components/universal-search";
+import UniversalSearchSimple from "@/components/universal-search-simple";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Database, Layers, Info } from "lucide-react";
 import { useLocation } from "wouter";
@@ -38,7 +38,7 @@ const SearchPage: React.FC = () => {
         
         {/* Suchkomponente */}
         <div className="mb-8">
-          <UniversalSearch initialQuery={initialSearchQuery} />
+          <UniversalSearchSimple initialQuery={initialSearchQuery} />
         </div>
         
         {/* Hilfe-Karten */}
