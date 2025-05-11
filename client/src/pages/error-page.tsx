@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft, Home, RefreshCw, ShieldAlert, ShieldX, WifiOff, AlertTriangle } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Home, RefreshCw, ShieldAlert, ShieldX, WifiOff, AlertTriangle, RotateCcw } from 'lucide-react';
 import { errorHandler, ErrorCategory } from '@/lib/error-handler';
+import { useToast } from '@/hooks/use-toast';
 
 interface ErrorPageProps {
   statusCode?: number;
@@ -11,6 +12,9 @@ interface ErrorPageProps {
   error?: Error;
   errorId?: string;
   category?: ErrorCategory;
+  onRetry?: () => void;
+  showDevInfo?: boolean;
+  devMessage?: string;
 }
 
 export default function ErrorPage({
@@ -19,9 +23,13 @@ export default function ErrorPage({
   message,
   error,
   errorId: providedErrorId,
-  category
+  category,
+  onRetry,
+  showDevInfo = process.env.NODE_ENV === 'development',
+  devMessage
 }: ErrorPageProps) {
   const [_, navigate] = useLocation();
+  const { toast } = useToast();
   const [errorDetails, setErrorDetails] = React.useState<{
     errorId: string;
     fullErrorText?: string;
@@ -61,6 +69,50 @@ export default function ErrorPage({
     window.history.back();
   };
 
+  const handleRetry = () => {
+    if (onRetry) {
+      toast({
+        title: "Erneuter Versuch",
+        description: "Die Komponente wird neu geladen...",
+      });
+      onRetry();
+    } else {
+      handleRefresh();
+    }
+  };
+
+  const handleCopyErrorDetails = () => {
+    // Fehlerdaten zum Kopieren vorbereiten
+    const errorText = [
+      `Fehler-ID: ${errorDetails.errorId}`,
+      `Statuscode: ${statusCode}`,
+      `Titel: ${title || getErrorInfo().title}`,
+      `Nachricht: ${message || getErrorInfo().message}`,
+      error ? `Error: ${error.name} - ${error.message}` : '',
+      `URL: ${window.location.href}`,
+      `Zeitpunkt: ${new Date().toISOString()}`,
+      devMessage ? `\nEntwickler-Info:\n${devMessage}` : ''
+    ].filter(Boolean).join('\n');
+
+    // In die Zwischenablage kopieren
+    navigator.clipboard.writeText(errorText).then(
+      () => {
+        toast({
+          title: "In Zwischenablage kopiert",
+          description: "Die Fehlerdetails wurden in die Zwischenablage kopiert.",
+        });
+      },
+      (err) => {
+        console.error('Fehler beim Kopieren in die Zwischenablage:', err);
+        toast({
+          title: "Kopieren fehlgeschlagen",
+          description: "Die Fehlerdetails konnten nicht in die Zwischenablage kopiert werden.",
+          variant: "destructive"
+        });
+      }
+    );
+  };
+
   // Anpassen der Fehlermeldung basierend auf dem Statuscode oder der Kategorie
   const getErrorInfo = () => {
     // Wenn explizite Titel/Nachricht angegeben wurden, diese verwenden
@@ -94,6 +146,12 @@ export default function ErrorPage({
             title: "Validierungsfehler",
             message: "Die eingegebenen Daten sind ungültig. Bitte überprüfen Sie Ihre Eingaben.",
             icon: <AlertTriangle className="h-12 w-12 text-yellow-600" />
+          };
+        case ErrorCategory.CLIENT:
+          return {
+            title: "Anwendungsfehler",
+            message: "In der Anwendung ist ein Fehler aufgetreten. Wir arbeiten daran, dieses Problem zu beheben.",
+            icon: <AlertTriangle className="h-12 w-12 text-red-600" />
           };
         default:
           break;
@@ -135,6 +193,7 @@ export default function ErrorPage({
   const getBgColor = () => {
     if (category === ErrorCategory.NETWORK) return "bg-amber-100";
     if (category === ErrorCategory.VALIDATION) return "bg-yellow-100";
+    if (category === ErrorCategory.CLIENT) return "bg-red-50";
     
     return statusCode === 500 ? "bg-red-100" : 
            statusCode === 404 ? "bg-blue-100" : 
@@ -157,6 +216,17 @@ export default function ErrorPage({
         </p>
         
         <div className="flex flex-col space-y-3">
+          {onRetry && (
+            <Button 
+              onClick={handleRetry}
+              variant="default"
+              className="flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Komponente neu laden
+            </Button>
+          )}
+          
           <Button 
             onClick={handlePrevious} 
             variant="outline"
@@ -185,14 +255,24 @@ export default function ErrorPage({
         </div>
 
         <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-500">
-          <p>Wenn das Problem weiterhin besteht, kontaktieren Sie bitte unseren Support.</p>
+          <div className="flex justify-between items-center">
+            <p>Wenn das Problem weiterhin besteht, kontaktieren Sie bitte unseren Support.</p>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleCopyErrorDetails}
+              className="text-xs h-6 px-2"
+            >
+              Kopieren
+            </Button>
+          </div>
           <p className="mt-1">Fehler-ID: {errorDetails.errorId}</p>
           {statusCode && <p className="mt-1">Statuscode: {statusCode}</p>}
           
           {/* Im Entwicklungsmodus den vollständigen Fehlertext anzeigen */}
-          {errorDetails.fullErrorText && (
+          {showDevInfo && (
             <div className="mt-4 p-3 bg-gray-100 rounded text-left overflow-auto max-h-40 text-xs">
-              <pre>{errorDetails.fullErrorText}</pre>
+              <pre>{errorDetails.fullErrorText || devMessage}</pre>
             </div>
           )}
         </div>
