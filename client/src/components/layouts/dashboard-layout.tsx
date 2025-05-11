@@ -25,7 +25,7 @@ export default function DashboardLayout({
   onTabChange,
 }: DashboardLayoutProps) {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -48,9 +48,15 @@ export default function DashboardLayout({
                   </div>
                   <input
                     className="block w-full h-8 sm:h-10 pl-8 sm:pl-10 pr-2 sm:pr-3 py-1 sm:py-2 text-sm sm:text-base rounded-md border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary min-touch-target"
-                    placeholder="Suchen..."
+                    placeholder="Universelle Suche..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        // Zur Suchseite navigieren mit Query-Parameter
+                        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                      }
+                    }}
                   />
                 </div>
               </div>

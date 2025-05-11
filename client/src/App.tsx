@@ -28,6 +28,7 @@ import SystemLogsPage from "./pages/admin/system-logs";
 import SQLAnalyticsPage from "@/pages/admin/sql-analytics";
 import SubscriptionPage from "@/pages/subscription-page";
 import DataQualityPage from "@/pages/data-quality-page";
+import SearchPage from "@/pages/search-page";
 import DataQualityDashboard from "@/pages/data-quality-dashboard";
 import DbStructureQualityPage from "@/pages/db-structure-quality-page";
 import DbStructureFixPage from "@/pages/db-structure-fix-page";
@@ -87,6 +88,7 @@ function Router() {
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
       <ProtectedRoute path="/data-quality" component={DataQualityPage} />
+      <ProtectedRoute path="/search" component={SearchPage} />
       <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
       <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
