@@ -151,7 +151,7 @@ export function SubscriptionInfo() {
       
       // Deutsche Datumsformatierung
       return format(date, "dd. MMMM yyyy", { locale: de });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Fehler beim Formatieren des Datums:", error);
       return "Kein gültiges Datum verfügbar";
     }
