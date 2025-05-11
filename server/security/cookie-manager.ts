@@ -34,9 +34,6 @@ interface ConsentStatus {
   lastUpdated: Date;
 }
 
-// Name des Einwilligungs-Cookies
-const CONSENT_COOKIE_NAME = 'bau_structura_cookie_consent';
-
 // Standard-Cookie-Einstellungen
 const defaultSettings: Record<CookieCategory, Partial<CookieSettings>> = {
   [CookieCategory.ESSENTIAL]: {
@@ -69,6 +66,9 @@ const defaultSettings: Record<CookieCategory, Partial<CookieSettings>> = {
  * Middleware zur Überprüfung des Cookie-Einwilligungsstatus
  * Diese Middleware sollte für alle Routen verwendet werden, die nicht-essenzielle Cookies setzen
  */
+// Name des Einwilligungs-Cookies
+export const CONSENT_COOKIE_NAME = 'bau_structura_cookie_consent';
+
 export function checkCookieConsent(category: CookieCategory) {
   return (req: Request, res: Response, next: NextFunction) => {
     // Essenzielle Cookies sind immer erlaubt
@@ -80,12 +80,10 @@ export function checkCookieConsent(category: CookieCategory) {
     const consentCookie = req.cookies[CONSENT_COOKIE_NAME];
     if (!consentCookie) {
       // Keine Einwilligung vorhanden, nur essenzielle Cookies erlauben
-      if (category !== CookieCategory.ESSENTIAL) {
-        return res.status(403).json({ 
-          message: 'Für diese Funktion ist eine Cookie-Einwilligung erforderlich',
-          requiredCategory: category
-        });
-      }
+      return res.status(403).json({ 
+        message: 'Für diese Funktion ist eine Cookie-Einwilligung erforderlich',
+        requiredCategory: category
+      });
     }
     
     try {
@@ -93,7 +91,17 @@ export function checkCookieConsent(category: CookieCategory) {
       const consent: ConsentStatus = JSON.parse(consentCookie);
       
       // Prüfen, ob die Kategorie erlaubt ist
-      if (!consent[category]) {
+      if (category === CookieCategory.FUNCTIONAL && !consent.functional) {
+        return res.status(403).json({ 
+          message: 'Für diese Funktion ist eine Cookie-Einwilligung erforderlich',
+          requiredCategory: category
+        });
+      } else if (category === CookieCategory.ANALYTICS && !consent.analytics) {
+        return res.status(403).json({ 
+          message: 'Für diese Funktion ist eine Cookie-Einwilligung erforderlich',
+          requiredCategory: category
+        });
+      } else if (category === CookieCategory.MARKETING && !consent.marketing) {
         return res.status(403).json({ 
           message: 'Für diese Funktion ist eine Cookie-Einwilligung erforderlich',
           requiredCategory: category
@@ -105,13 +113,10 @@ export function checkCookieConsent(category: CookieCategory) {
     } catch (error) {
       console.error('[Cookie-Manager] Fehler beim Parsen des Einwilligungsstatus:', error);
       // Im Fehlerfall nur essenzielle Cookies erlauben
-      if (category !== CookieCategory.ESSENTIAL) {
-        return res.status(403).json({ 
-          message: 'Fehler bei der Cookie-Einwilligung. Bitte aktualisieren Sie Ihre Einstellungen.',
-          requiredCategory: category
-        });
-      }
-      next();
+      return res.status(403).json({ 
+        message: 'Fehler bei der Cookie-Einwilligung. Bitte aktualisieren Sie Ihre Einstellungen.',
+        requiredCategory: category
+      });
     }
   };
 }

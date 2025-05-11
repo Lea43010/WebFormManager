@@ -18,7 +18,7 @@ import {
   formatUpdateDate, 
   setupUpdateChecker 
 } from "@/utils/update-tracker";
-import { SecurityInfoPage } from "@/components/info/security-info-page";
+import { SecuritySection } from "@/components/info/security-section";
 
 // Belastungsklassen und Bauweisen-Daten für die Tabellen
 const belastungsklassen = [
@@ -817,6 +817,8 @@ export default function InformationPage() {
               </Button>
             </div>
           </div>
+          
+          <SecuritySection />
           
           {/* Externe Dienste Sektion */}
           <div id="externe-dienste" className="scroll-mt-4 bg-white p-8 rounded-lg shadow-sm">
