@@ -74,18 +74,38 @@ async function transcribeAudio(audioPath: string): Promise<string> {
       apiKey: process.env.OPENAI_API_KEY
     });
 
+    logger.info(`Transkribiere Audiodatei: ${audioPath}`);
+    
+    // Prüfen, ob die Datei existiert und lesbar ist
+    if (!fs.existsSync(audioPath)) {
+      throw new Error(`Audiodatei existiert nicht: ${audioPath}`);
+    }
+    
+    // Datei-Statistiken anzeigen
+    const stats = fs.statSync(audioPath);
+    logger.info(`Audiodatei Größe: ${stats.size} Bytes`);
+    
+    // Audiodatei als ReadStream öffnen
     const audioFile = fs.createReadStream(audioPath);
+    
+    // OpenAI Whisper API aufrufen
     const response = await openai.audio.transcriptions.create({
       file: audioFile,
-      model: "whisper-1",
+      model: "whisper-1", 
       language: "de", // Deutsch als Sprache festlegen
       response_format: "json"
     });
 
+    logger.info(`Transkription erfolgreich, Ergebnis: ${response.text}`);
     return response.text;
   } catch (error: unknown) {
     logger.error(`Fehler bei der Spracherkennung: ${error}`);
-    throw new Error('Fehler bei der Spracherkennung');
+    // Detailliertere Fehlermeldung
+    if (error instanceof Error) {
+      throw new Error(`Fehler bei der Spracherkennung: ${error.message}`);
+    } else {
+      throw new Error('Fehler bei der Spracherkennung');
+    }
   }
 }
 
