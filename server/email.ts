@@ -79,7 +79,7 @@ export async function sendVerificationCode(
           } else {
             fehlergrund = errorJson.message || errorText;
           }
-        } catch (e) {
+        } catch (e: unknown) {
           fehlergrund = errorText;
         }
         

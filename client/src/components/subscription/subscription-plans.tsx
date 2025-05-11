@@ -58,11 +58,11 @@ export function SubscriptionPlans({ user }: SubscriptionPlansProps) {
       // Cache für Benutzerabonnement aktualisieren
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/user'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Fehler beim Erstellen des Abonnements:', error);
       toast({
         title: "Fehler beim Abonnieren",
-        description: error.message || "Ein unbekannter Fehler ist aufgetreten.",
+        description: error instanceof Error ? error.message : "Ein unbekannter Fehler ist aufgetreten.",
         variant: "destructive",
       });
     }

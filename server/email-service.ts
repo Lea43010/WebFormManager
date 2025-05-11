@@ -163,7 +163,7 @@ class BrevoEmailProvider implements EmailProvider {
           } else {
             fehlergrund = errorJson.message || errorText;
           }
-        } catch (e) {
+        } catch (e: unknown) {
           fehlergrund = errorText;
         }
         
