@@ -161,7 +161,7 @@ function Router() {
         }}
       </Route> {/* Sehr einfache Test-Seite direkt in App.tsx */}
 
-      {/* Beispielroute für Fehlerseite */}
+      {/* Öffentliche Beispielrouten für Fehlerseiten ohne Login-Erfordernis */}
       <Route path="/error-demo" component={() => <ErrorPage />} />
       <Route path="/error-demo/500" component={() => <ErrorPage statusCode={500} />} />
       <Route path="/error-demo/403" component={() => (
@@ -169,6 +169,20 @@ function Router() {
           statusCode={403} 
           title="Zugriff verweigert" 
           message="Sie haben keine Berechtigung, auf diese Ressource zuzugreifen." 
+        />
+      )} />
+      <Route path="/error-demo/404" component={() => (
+        <ErrorPage 
+          statusCode={404} 
+          title="Seite nicht gefunden" 
+          message="Die angeforderte Seite konnte nicht gefunden werden." 
+        />
+      )} />
+      <Route path="/error-demo/401" component={() => (
+        <ErrorPage 
+          statusCode={401} 
+          title="Nicht autorisiert" 
+          message="Sie müssen sich anmelden, um auf diese Ressource zuzugreifen." 
         />
       )} />
       <Route component={NotFound} />
