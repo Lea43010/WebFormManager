@@ -92,7 +92,7 @@ export function setupImageAnalysisRoutes(app: express.Express) {
         visualizationUrl
       });
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler bei der Asphaltanalyse:', error);
       next(error);
     }

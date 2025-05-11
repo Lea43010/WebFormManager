@@ -8,6 +8,8 @@
 import { Request, Response, NextFunction } from 'express';
 import config from '../config';
 import { logger } from './logger';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 
 // Verwende spezifischen Logger für Fehler
 const errorLogger = logger.createLogger('error');
@@ -30,14 +32,24 @@ export class ApiError extends Error {
 /**
  * Fehlerbehandlungs-Middleware für Express
  */
-export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction) {
+export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   // Standardwerte
   let statusCode = 500;
   let errorMessage = 'Ein interner Serverfehler ist aufgetreten';
   let errorDetails: Record<string, any> | undefined = undefined;
   
+  // Zod-Validierungsfehler speziell behandeln
+  if (err instanceof ZodError) {
+    statusCode = 400;
+    errorMessage = 'Validierungsfehler';
+    const formattedError = fromZodError(err);
+    errorDetails = {
+      validationErrors: formattedError.details,
+      message: formattedError.message
+    };
+  }
   // Bei bekannten API-Fehlern die bereitgestellten Informationen verwenden
-  if (err instanceof ApiError) {
+  else if (err instanceof ApiError) {
     statusCode = err.statusCode;
     errorMessage = err.message;
     errorDetails = err.details;

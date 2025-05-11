@@ -40,7 +40,8 @@ import { checkDatabaseStructureHandler, checkDatabaseStructure } from "./db-stru
 import { dataQualityChecker } from "./data-quality-checker";
 import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
 import { checkSubscriptionStatus, verifySubscriptionStatus } from "./middleware/auth"; // Abonnementstatus-Prüfung
-import { ZodError, z } from "zod";
+import { z } from "zod";
+import { errorHandler } from "./error-handler"; // Zentrale Fehlerbehandlung
 import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import elevationRouter from "./routes/elevation"; // Google Elevation API
 import bodenArtenRouter from "./routes/bodenarten"; // Bodenarten API
@@ -153,16 +154,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     express.static(path.join(process.cwd(), "uploads"))(req, res, next);
   });
   
-  // Error handling middleware
-  app.use((err: any, req: any, res: any, next: any) => {
-    if (err instanceof ZodError) {
-      return res.status(400).json({
-        message: "Validierungsfehler",
-        errors: fromZodError(err).toString(),
-      });
-    }
-    next(err);
-  });
+  // Verwende die zentrale Fehlerbehandlung aus error-handler.ts
+  // Alle speziellen Fehlertypen wie ZodError werden dort behandelt
+  app.use(errorHandler);
 
   // Endpoint zum Abrufen der nächsten Firmennummer
   app.get("/api/companies/next-id", async (req, res, next) => {
