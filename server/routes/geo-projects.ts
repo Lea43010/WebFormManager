@@ -50,7 +50,7 @@ router.get("/api/geo-projects", requireAnyRole(), async (req, res) => {
     }
 
     res.json(allProjects);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Abrufen der Geo-Projekte:", error);
     res.status(500).json({ 
       message: "Fehler beim Abrufen der Geo-Projekte",
@@ -89,7 +89,7 @@ router.get("/api/geo-projects/:id", requireAnyRole(), async (req, res) => {
     }
     
     res.json(project);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Abrufen des Projekts:", error);
     res.status(500).json({ 
       message: "Fehler beim Abrufen des Projekts",
@@ -149,7 +149,7 @@ router.put("/api/geo-projects/:id", requireAnyRole(), async (req, res) => {
     }
     
     res.json(updatedProject);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Aktualisieren der Geo-Koordinaten:", error);
     res.status(500).json({ 
       message: "Fehler beim Aktualisieren der Geo-Koordinaten",
