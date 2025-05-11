@@ -6,7 +6,7 @@
  * übersichtlichen, gefilterten Liste dar.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,14 +56,25 @@ interface SearchResponse {
   };
 }
 
-const UniversalSearch: React.FC = () => {
-  const [query, setQuery] = useState('');
+interface UniversalSearchProps {
+  initialQuery?: string;
+}
+
+const UniversalSearch: React.FC<UniversalSearchProps> = ({ initialQuery = '' }) => {
+  const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState('all');
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  // Bei Änderung des initialQuery-Parameters den internen Zustand aktualisieren
+  useEffect(() => {
+    if (initialQuery && initialQuery !== query) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
+
   // Suchanfrage mit TanStack Query
   const { data, isLoading, error } = useQuery<SearchResponse>({
     queryKey: [`/api/search`, query, activeTab, page, pageSize],
