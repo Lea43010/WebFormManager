@@ -89,12 +89,56 @@ export default function DenkmalAtlasPage() {
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#76a730]"></div>
                 </div>
               )}
-              <iframe 
-                src="https://geoportal.bayern.de/denkmalatlas/" 
-                title="Bayerischer Denkmal-Atlas" 
-                className="w-full h-[70vh] border-0"
-                loading="lazy"
-              />
+              <div className="w-full h-[70vh] bg-gray-50 flex flex-col items-center justify-center p-4">
+                <div className="w-full max-w-3xl h-[50vh] bg-white border-2 border-gray-200 shadow-md rounded-lg flex flex-col items-center justify-center overflow-hidden p-4">
+                  <div className="text-xl font-bold text-gray-800 mb-4">Freistaat Bayern</div>
+                  
+                  {/* SVG Karte von Bayern basierend auf dem hochgeladenen Bild */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <svg 
+                      viewBox="0 0 350 300" 
+                      className="h-full w-auto max-w-full"
+                    >
+                      {/* Bayern als einfache, abgerundete Form */}
+                      <path
+                        d="M220,50 C260,80 290,150 270,210 C250,260 180,280 130,260 C80,240 40,170 70,110 C100,60 170,10 220,50 z"
+                        fill="#76a730"
+                      />
+                      
+                      {/* Wichtige Städte */}
+                      {/* Würzburg */}
+                      <circle cx="120" cy="100" r="5" fill="#d04848" />
+                      <text x="120" y="90" textAnchor="middle" fontSize="10" fill="#000">Würzburg</text>
+                      
+                      {/* Nürnberg */}
+                      <circle cx="170" cy="120" r="5" fill="#d04848" />
+                      <text x="170" y="110" textAnchor="middle" fontSize="10" fill="#000">Nürnberg</text>
+                      
+                      {/* Regensburg */}
+                      <circle cx="210" cy="140" r="5" fill="#d04848" />
+                      <text x="210" y="130" textAnchor="middle" fontSize="10" fill="#000">Regensburg</text>
+                      
+                      {/* Augsburg */}
+                      <circle cx="150" cy="190" r="5" fill="#d04848" />
+                      <text x="150" y="180" textAnchor="middle" fontSize="10" fill="#000">Augsburg</text>
+                      
+                      {/* München */}
+                      <circle cx="190" cy="210" r="5" fill="#d04848" />
+                      <text x="190" y="200" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#000">München</text>
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-gray-700 mb-4">Die direkte Einbindung des DenkmalAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
+                  <Button 
+                    onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
+                    className="bg-[#76a730] hover:bg-[#658f28] text-white"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    DenkmalAtlas in neuem Tab öffnen
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -123,12 +167,59 @@ export default function DenkmalAtlasPage() {
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#76a730]"></div>
                 </div>
               )}
-              <iframe 
-                src="https://geoportal.bayern.de/bayernatlas/?topic=ba&lang=de&bgLayer=atkis&catalogNodes=11,122" 
-                title="BayernAtlas" 
-                className="w-full h-[70vh] border-0"
-                loading="lazy"
-              />
+              <div className="w-full h-[70vh] bg-gray-50 flex flex-col items-center justify-center p-4">
+                <div className="w-full max-w-3xl h-[50vh] bg-white border-2 border-gray-200 shadow-md rounded-lg flex flex-col items-center justify-center overflow-hidden p-4">
+                  <div className="text-lg font-bold text-gray-800 mb-4">Freistaat Bayern</div>
+                  
+                  {/* SVG Karte von Bayern - Vereinfacht nach hochgeladenem Bild */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <svg 
+                      viewBox="0 0 300 300" 
+                      className="h-full w-auto max-w-full"
+                      style={{ filter: "drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))" }}
+                    >
+                      {/* Bayerns Grundform - Vereinfacht */}
+                      <path
+                        d="M150,30 C120,35 110,70 100,90 C90,110 80,130 70,150 C60,170 60,200 70,220 C80,240 90,250 100,260 C110,270 130,280 150,280 C170,280 190,270 210,250 C220,240 230,220 240,200 C250,180 240,160 230,140 C220,120 210,100 200,80 C190,60 180,25 150,30 z"
+                        fill="#76a730"
+                        stroke="#fff"
+                        strokeWidth="1"
+                      />
+                      
+                      {/* Wichtige Städte */}
+                      {/* Würzburg */}
+                      <circle cx="130" cy="80" r="4" fill="#d04848" />
+                      <text x="130" y="70" textAnchor="middle" fontSize="8" fontWeight="normal">Würzburg</text>
+                      
+                      {/* Nürnberg */}
+                      <circle cx="160" cy="120" r="4" fill="#d04848" />
+                      <text x="160" y="110" textAnchor="middle" fontSize="8" fontWeight="normal">Nürnberg</text>
+                      
+                      {/* Regensburg */}
+                      <circle cx="190" cy="140" r="4" fill="#d04848" />
+                      <text x="190" y="130" textAnchor="middle" fontSize="8" fontWeight="normal">Regensburg</text>
+                      
+                      {/* Augsburg */}
+                      <circle cx="145" cy="180" r="4" fill="#d04848" />
+                      <text x="145" y="170" textAnchor="middle" fontSize="8" fontWeight="normal">Augsburg</text>
+                      
+                      {/* München */}
+                      <circle cx="175" cy="200" r="4" fill="#d04848" />
+                      <text x="175" y="190" textAnchor="middle" fontSize="8" fontWeight="bold">München</text>
+                    </svg>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="text-gray-700 mb-4">Die direkte Einbindung des BayernAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
+                  <Button 
+                    onClick={() => handleExternalLink("https://geoportal.bayern.de/bayernatlas/", "BayernAtlas")}
+                    className="bg-[#76a730] hover:bg-[#658f28] text-white"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    BayernAtlas in neuem Tab öffnen
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
