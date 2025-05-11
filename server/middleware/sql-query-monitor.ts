@@ -92,13 +92,16 @@ export function createSQLQueryMonitor(pool: Pool) {
             }
           }
         }
-      } catch (error) {
-        // Ignoriere Fehler bei der Stack-Analyse
+      } catch (error: unknown) {
+        // Ignoriere Fehler bei der Stack-Analyse, aber protokolliere Details im Debug-Modus
+        if (process.env.NODE_ENV === 'development') {
+          monitorLogger.debug('Fehler bei Stack-Analyse:', error instanceof Error ? error.message : String(error));
+        }
       }
       
       // Callback-basierte API
       if (callback) {
-        return originalQuery(text, params || [], (err: any, result: any) => {
+        return originalQuery(text, params || [], (err: unknown, result: unknown) => {
           const duration = Date.now() - startTime;
           
           if (duration > QUERY_THRESHOLDS.SLOW) {

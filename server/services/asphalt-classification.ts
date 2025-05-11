@@ -22,8 +22,8 @@ export async function getImageAsBase64(imagePath: string): Promise<string | null
     console.log(`Bild gelesen: ${fullPath}, Größe: ${imageData.length} Bytes`);
     
     return base64Image;
-  } catch (error) {
-    console.error('Fehler beim Lesen des Bildes:', error);
+  } catch (error: unknown) {
+    console.error('Fehler beim Lesen des Bildes:', error instanceof Error ? error.message : String(error));
     return null;
   }
 }
@@ -191,8 +191,8 @@ export async function analyzeAsphaltImage(imagePath: string): Promise<{
       confidence,
       analyseDetails
     };
-  } catch (error) {
-    console.error("Fehler bei der Asphaltanalyse:", error);
+  } catch (error: unknown) {
+    console.error("Fehler bei der Asphaltanalyse:", error instanceof Error ? error.message : String(error));
     // Fallback-Ergebnisse, wenn die Analyse fehlschlägt
     return {
       belastungsklasse: "Bk3.2",
