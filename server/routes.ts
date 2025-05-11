@@ -1,5 +1,6 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import { createServer as createHttpServer, type Server } from "http";
+import { createServer as createHttpsServer } from "https";
 import express from "express";
 import path from "path";
 import fs from "fs-extra";
@@ -4137,6 +4138,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup subscription routes
   app.use('/api/subscription', subscriptionRouter);
 
-  const httpServer = createServer(app);
+  const httpServer = createHttpServer(app);
   return httpServer;
 }

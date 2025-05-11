@@ -15,7 +15,8 @@ import { logger } from "./logger";
 import { userCache } from "./user-cache";
 import { storage } from "./storage";
 
-// Sofortige Server-Start-Funktion
+// Hauptfunktion zum Starten des Servers
+// Hauptfunktion zum Starten des Servers
 (async function startServer() {
   const app = express();
   app.use(express.json());
@@ -60,12 +61,26 @@ import { storage } from "./storage";
     serveStatic(app);
   }
 
-  // Vereinfachte Port-Konfiguration - nur ein Port für die Einfachheit
   // Port 5000 für Replit (wird vom Replit Workflow System erwartet)
   const PORT = 5000;
   let serverStarted = false;
 
+  // Funktionen für den Serverstart
+  function initializeDelayedTasks() {
+    try {
+      cronJobManager.initialize().then(() => {
+        logger.info('Cron-Jobs erfolgreich initialisiert');
+      });
+    } catch (error) {
+      logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
+    }
+    
+    // Benutzer-Cache beim Start vorwärmen für bessere Performance - vorübergehend deaktiviert
+    logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
+  }
+
   // Server starten
+  // Standard-HTTP-Server für die Entwicklungsumgebung
   server.listen(PORT, "0.0.0.0")
     .on('listening', () => {
       serverStarted = true;
@@ -74,23 +89,11 @@ import { storage } from "./storage";
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${PORT}${environment}`);
       log(`serving on port ${PORT}`);
-      
+    
       // Verzögerte Initialisierungen - auf ein Minimum reduziert
-      
-      // Cron-Jobs für Testphasen-Ablauf-Benachrichtigungen initialisieren
-      // Als verzögerte Operation, um den anfänglichen Serverstart zu beschleunigen
       setTimeout(() => {
-        try {
-          cronJobManager.initialize().then(() => {
-            logger.info('Cron-Jobs erfolgreich initialisiert');
-          });
-        } catch (error) {
-          logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
-        }
+        initializeDelayedTasks();
       }, 5000); // 5 Sekunden Verzögerung
-      
-      // Benutzer-Cache beim Start vorwärmen für bessere Performance - vorübergehend deaktiviert
-      logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
     })
     .on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
@@ -109,16 +112,8 @@ import { storage } from "./storage";
             
             // Verzögerte Initialisierungen auf Fallback-Port
             setTimeout(() => {
-              try {
-                cronJobManager.initialize().then(() => {
-                  logger.info('Cron-Jobs erfolgreich initialisiert');
-                });
-              } catch (error) {
-                logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
-              }
+              initializeDelayedTasks();
             }, 5000);
-            
-            logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
           })
           .on('error', (fallbackErr: any) => {
             // Auch der Fallback-Port ist nicht verfügbar
