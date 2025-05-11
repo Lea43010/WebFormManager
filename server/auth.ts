@@ -164,8 +164,7 @@ export function setupAuth(app: Express) {
                 .highlight { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #76a730; margin: 20px 0; }
                 .footer { margin-top: 30px; font-size: 0.8em; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
                 .trial-info { font-weight: bold; color: #76a730; }
-                ul { padding-left: 20px; }
-                li { margin-bottom: 8px; }
+                .feature { margin: 12px 0; }
               </style>
             </head>
             <body>
@@ -182,21 +181,19 @@ export function setupAuth(app: Express) {
                 
                 <p>Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:</p>
                 
-                <ul>
-                  <li>Einfache und effiziente Verwaltung Ihrer Bauprojekte</li>
-                  <li>Strukturierte Organisation aller relevanten Dokumente</li>
-                  <li>Schnelle Dokumentation und detaillierte Analyse von Straßenschäden</li>
-                  <li>Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten</li>
-                  <li>Einfache Nachverfolgung und Dokumentation der Baufortschritte</li>
-                </ul>
+                <p class="feature">Einfache und effiziente Verwaltung Ihrer Bauprojekte</p>
+                <p class="feature">Strukturierte Organisation aller relevanten Dokumente</p>
+                <p class="feature">Schnelle Dokumentation und detaillierte Analyse von Straßenschäden</p>
+                <p class="feature">Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten</p>
+                <p class="feature">Einfache Nachverfolgung und Dokumentation der Baufortschritte</p>
                 
                 <p>Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.</p>
                 
-                <p>Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser freundlicher Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.</p>
+                <p>Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.</p>
                 
                 <p>Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!</p>
                 
-                <p>Herzliche Grüße,<br>
+                <p>Herzliche Grüße<br>
                 Ihr Bau-Structura App Team</p>
                 
                 <div class="footer">
@@ -219,19 +216,23 @@ Damit Sie Bau-Structura ganz in Ruhe kennenlernen können, schenken wir Ihnen di
 
 Unsere Plattform unterstützt Sie optimal dabei, Ihre Bauprojekte effizient zu planen, zu organisieren und erfolgreich umzusetzen. Profitieren Sie dabei von folgenden Vorteilen:
 
-- Einfache und effiziente Verwaltung Ihrer Bauprojekte
-- Strukturierte Organisation aller relevanten Dokumente
-- Schnelle Dokumentation und detaillierte Analyse von Straßenschäden
-- Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten
-- Einfache Nachverfolgung und Dokumentation der Baufortschritte
+Einfache und effiziente Verwaltung Ihrer Bauprojekte
+
+Strukturierte Organisation aller relevanten Dokumente
+
+Schnelle Dokumentation und detaillierte Analyse von Straßenschäden
+
+Übersichtliche Visualisierung von Bauplätzen auf interaktiven Karten
+
+Einfache Nachverfolgung und Dokumentation der Baufortschritte
 
 Ihre persönlichen Anmeldedaten wurden bereits eingerichtet und auf Ihre individuellen Anforderungen zugeschnitten.
 
-Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser freundlicher Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.
+Sollten Sie Fragen haben oder Unterstützung benötigen, steht Ihnen unser Support von Montag bis Freitag zwischen 8:00 und 17:00 Uhr zur Verfügung.
 
 Wir wünschen Ihnen viel Freude und Erfolg bei Ihren Projekten mit Bau-Structura!
 
-Herzliche Grüße,
+Herzliche Grüße
 Ihr Bau-Structura App Team
 
 ---
