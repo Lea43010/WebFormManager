@@ -585,6 +585,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/customers", requireManagerOrAbove(), async (req, res, next) => {
     try {
       // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
       console.log(`Benutzer mit Rolle ${req.user.role} erstellt einen neuen Kunden`);
       
       // Wenn keine Kundennummer übergeben wurde oder diese leer ist, 
@@ -599,7 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerId: req.body.customerId ? (typeof req.body.customerId === 'string' ? parseInt(req.body.customerId, 10) : req.body.customerId) : undefined,
         postalCode: typeof req.body.postalCode === 'string' ? parseInt(req.body.postalCode, 10) : req.body.postalCode,
         customerPhone: req.body.customerPhone?.toString() || null,
-        created_by: req.user.id // Speichert den erstellenden Benutzer
+        created_by: req.user?.id || null // Speichert den erstellenden Benutzer
       };
       
       const validatedData = insertCustomerSchema.parse(formData);
@@ -831,6 +834,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", requireManagerOrAbove(), async (req, res, next) => {
     try {
       // Authentifizierungsprüfung ist bereits durch die requireManagerOrAbove-Middleware erfolgt
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
       console.log(`Benutzer mit Rolle ${req.user.role} erstellt ein neues Projekt`);
       
       // Stelle sicher, dass die Felder im richtigen Format sind (als Strings)
@@ -842,7 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectLength: req.body.projectLength ? req.body.projectLength.toString() : null,
         projectHeight: req.body.projectHeight ? req.body.projectHeight.toString() : null,
         projectText: req.body.projectText ? req.body.projectText.toString() : null,
-        createdBy: req.user.id, // Speichern des Erstellers (aktuelle Benutzer-ID)
+        createdBy: req.user?.id || null // Speichern des Erstellers (aktuelle Benutzer-ID)
       };
       
       console.log("Projekt-Daten vor der Validierung:", formData);
@@ -852,11 +858,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedData = insertProjectSchema.parse(formData);
         const project = await storage.createProject(validatedData);
         res.status(201).json(project);
-      } catch (validationError) {
-        console.error("Validierungsfehler:", validationError);
+      } catch (error) {
+        console.error("Validierungsfehler:", error);
         return res.status(400).json({ 
           message: "Fehler bei der Projektvalidierung", 
-          details: validationError.errors 
+          details: (error as any)?.errors || "Unbekannter Validierungsfehler" 
         });
       }
     } catch (error) {
