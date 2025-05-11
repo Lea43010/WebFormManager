@@ -12,7 +12,8 @@ function isAdmin(req: express.Request, res: express.Response, next: express.Next
     return res.status(401).json({ message: "Nicht authentifiziert" });
   }
   
-  if (req.user.role !== 'administrator') {
+  const user = req.user as { role?: string };
+  if (user.role !== 'administrator') {
     return res.status(403).json({ message: "Keine Berechtigung. Diese Funktion steht nur Administratoren zur Verfügung." });
   }
   
@@ -38,7 +39,7 @@ async function getLoginLogs(
     
     const result = await db.execute(query);
     return result.rows || [];
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Fehler beim Abrufen der Login-Logs:', error);
     throw error;
   }
@@ -55,7 +56,7 @@ async function countLoginLogs(filters: Record<string, any> = {}): Promise<number
     const result = await db.execute(countQuery);
     const count = result.rows?.[0]?.count;
     return parseInt(count ? count.toString() : '0', 10);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Fehler beim Zählen der Login-Logs:', error);
     throw error;
   }
@@ -87,11 +88,11 @@ export function setupLoginLogsRoutes(app: express.Express) {
           pages: Math.ceil(total / limit)
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler beim Abrufen der Login-Logs:', error);
       res.status(500).json({ 
         message: 'Fehler beim Abrufen der Login-Logs', 
-        error: (error as Error).message 
+        error: error instanceof Error ? error.message : String(error) 
       });
     }
   });
@@ -102,11 +103,11 @@ export function setupLoginLogsRoutes(app: express.Express) {
       const filters: Record<string, any> = {};
       const count = await countLoginLogs(filters);
       res.json({ count });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler beim Zählen der Login-Logs:', error);
       res.status(500).json({ 
         message: 'Fehler beim Zählen der Login-Logs', 
-        error: (error as Error).message 
+        error: error instanceof Error ? error.message : String(error) 
       });
     }
   });

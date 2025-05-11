@@ -11,7 +11,7 @@ const isAdmin = (req: express.Request, res: express.Response, next: express.Next
     return res.status(401).json({ message: 'Nicht autorisiert' });
   }
   
-  const user = req.user as any;
+  const user = req.user as { role?: string };
   if (user.role !== 'administrator') {
     console.log(`Zugriff verweigert für Benutzer mit Rolle: ${user.role}`);
     return res.status(403).json({ 
@@ -32,7 +32,14 @@ export function setupActivityLogRoutes(app: express.Express) {
       const offset = parseInt(req.query.offset as string || '0', 10);
       
       // Filter aus Query-Parametern extrahieren
-      const filters: any = {};
+      const filters: {
+        userId?: number;
+        component?: string;
+        actionType?: string;
+        entityType?: string;
+        dateFrom?: string;
+        dateTo?: string;
+      } = {};
       
       if (req.query.userId) {
         filters.userId = parseInt(req.query.userId as string, 10);
@@ -73,11 +80,11 @@ export function setupActivityLogRoutes(app: express.Express) {
           pages: Math.ceil(total / limit)
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler beim Abrufen der Aktivitätsprotokolle:', error);
       res.status(500).json({ 
         message: 'Fehler beim Abrufen der Aktivitätsprotokolle', 
-        error: (error as Error).message 
+        error: error instanceof Error ? error.message : String(error) 
       });
     }
   });
@@ -99,11 +106,11 @@ export function setupActivityLogRoutes(app: express.Express) {
         actionTypes,
         entityTypes
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler beim Abrufen der Filter-Optionen:', error);
       res.status(500).json({ 
         message: 'Fehler beim Abrufen der Filter-Optionen', 
-        error: (error as Error).message 
+        error: error instanceof Error ? error.message : String(error) 
       });
     }
   });
@@ -113,11 +120,11 @@ export function setupActivityLogRoutes(app: express.Express) {
     try {
       const count = await countActivityLogs({});
       res.json({ count });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler beim Zählen der Aktivitätsprotokolle:', error);
       res.status(500).json({ 
         message: 'Fehler beim Zählen der Aktivitätsprotokolle', 
-        error: (error as Error).message 
+        error: error instanceof Error ? error.message : String(error) 
       });
     }
   });
