@@ -4,6 +4,7 @@ import HomePage from "@/pages/home-page";
 import HomeSimple from "@/pages/home-simple";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
+import ErrorPage from "@/pages/error-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AdminProtectedRoute } from "./lib/admin-protected-route";
 import CompanyPage from "@/pages/company-page";
@@ -47,6 +48,7 @@ import SimpleImageOptimizationDemo from "@/pages/image-optimization-demo-simple"
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
 import AutoTour from "@/components/onboarding/auto-tour";
+import ErrorBoundary from "@/components/error-boundary";
 
 function Router() {
   return (
@@ -158,6 +160,17 @@ function Router() {
           );
         }}
       </Route> {/* Sehr einfache Test-Seite direkt in App.tsx */}
+
+      {/* Beispielroute für Fehlerseite */}
+      <Route path="/error-demo" component={() => <ErrorPage />} />
+      <Route path="/error-demo/500" component={() => <ErrorPage statusCode={500} />} />
+      <Route path="/error-demo/403" component={() => (
+        <ErrorPage 
+          statusCode={403} 
+          title="Zugriff verweigert" 
+          message="Sie haben keine Berechtigung, auf diese Ressource zuzugreifen." 
+        />
+      )} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -165,13 +178,15 @@ function Router() {
 
 function App() {
   return (
-    <NetworkStatusProvider>
-      <PageTransition transitionType="fade" duration={0.2}>
-        <Router />
-      </PageTransition>
-      <Toaster />
-      <AutoTour />
-    </NetworkStatusProvider>
+    <ErrorBoundary>
+      <NetworkStatusProvider>
+        <PageTransition transitionType="fade" duration={0.2}>
+          <Router />
+        </PageTransition>
+        <Toaster />
+        <AutoTour />
+      </NetworkStatusProvider>
+    </ErrorBoundary>
   );
 }
 
