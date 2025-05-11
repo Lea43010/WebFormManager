@@ -1,9 +1,9 @@
 import React from 'react';
-import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowLeft, Home, RefreshCw, ShieldAlert, ShieldX, WifiOff, AlertTriangle, RotateCcw } from 'lucide-react';
 import { errorHandler, ErrorCategory } from '@/lib/error-handler';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigation } from '@/hooks/use-navigate';
 
 interface ErrorPageProps {
   statusCode?: number;
@@ -28,7 +28,7 @@ export default function ErrorPage({
   showDevInfo = process.env.NODE_ENV === 'development',
   devMessage
 }: ErrorPageProps) {
-  const [_, navigate] = useLocation();
+  const { navigate, goBack, goHome, refresh } = useNavigation();
   const { toast } = useToast();
   const [errorDetails, setErrorDetails] = React.useState<{
     errorId: string;
@@ -57,16 +57,17 @@ export default function ErrorPage({
     }
   }, [error, statusCode]);
 
+  // Verwende vereinfachte Navigation dank des useNavigation-Hooks
   const handleGoBack = () => {
-    navigate('/'); // Navigate to home page
+    goHome(); // Zur Startseite navigieren
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    refresh(); // Seite neu laden
   };
 
   const handlePrevious = () => {
-    window.history.back();
+    goBack(); // Zurück im Browser-Verlauf
   };
 
   const handleRetry = () => {

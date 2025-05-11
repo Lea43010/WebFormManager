@@ -129,14 +129,7 @@ export default function DenkmalAtlasPage() {
                   </div>
                 </div>
                 <div className="mt-4 text-center">
-                  <p className="text-gray-700 mb-4">Die direkte Einbindung des DenkmalAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
-                  <Button 
-                    onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
-                    className="bg-[#76a730] hover:bg-[#658f28] text-white"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    DenkmalAtlas in neuem Tab öffnen
-                  </Button>
+                  <p className="text-gray-700">Die direkte Einbindung des DenkmalAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
                 </div>
               </div>
             </CardContent>
@@ -210,14 +203,7 @@ export default function DenkmalAtlasPage() {
                   </div>
                 </div>
                 <div className="mt-4 text-center">
-                  <p className="text-gray-700 mb-4">Die direkte Einbindung des BayernAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
-                  <Button 
-                    onClick={() => handleExternalLink("https://geoportal.bayern.de/bayernatlas/", "BayernAtlas")}
-                    className="bg-[#76a730] hover:bg-[#658f28] text-white"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    BayernAtlas in neuem Tab öffnen
-                  </Button>
+                  <p className="text-gray-700">Die direkte Einbindung des BayernAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
                 </div>
               </div>
             </CardContent>
