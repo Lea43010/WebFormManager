@@ -374,11 +374,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await logActivity({
           userId: req.user.id,
           ipAddress: getIpAddress(req),
-          action: ActionType.DELETE,
+          component: 'Unternehmen',
+          actionType: ActionType.DELETE,
           entityType: 'company',
           entityId: id,
-          description: `Unternehmen "${existingCompany.companyName}" (ID: ${id}) gelöscht`,
-          metadata: {
+          details: { 
+            description: `Unternehmen "${existingCompany.companyName}" (ID: ${id}) gelöscht`,
             companyId: id,
             companyName: existingCompany.companyName,
             deletedBy: req.user.id,

@@ -33,10 +33,11 @@ export function initializeCronJobs(): void {
 export function stopAllCronJobs(): void {
   logger.info('Stoppe alle Cron-Jobs');
   
-  for (const [name, job] of activeCronJobs.entries()) {
+  // Array.from verwendet, um Iterator-Kompatibilität zu verbessern
+  Array.from(activeCronJobs.entries()).forEach(([name, job]) => {
     job.stop();
     logger.info(`Cron-Job "${name}" gestoppt`);
-  }
+  });
   
   activeCronJobs.clear();
 }
