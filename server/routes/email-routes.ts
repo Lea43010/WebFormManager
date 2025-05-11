@@ -18,7 +18,7 @@ const isAdmin = (req: express.Request, res: express.Response, next: express.Next
     return res.status(401).json({ message: 'Nicht autorisiert' });
   }
   
-  const user = req.user as any;
+  const user = req.user as { role?: string };
   if (user.role !== 'administrator') {
     return res.status(403).json({ message: 'Keine ausreichenden Berechtigungen' });
   }
@@ -171,7 +171,7 @@ Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten S
         // Wenn gewünscht, Kopie an Administrator senden
         let adminResult = null;
         if (sendToAdmin) {
-          const adminUser = req.user as any;
+          const adminUser = req.user as { user_email?: string };
           const adminEmail = adminUser.user_email;
           
           if (adminEmail) {
@@ -202,7 +202,7 @@ Hinweis: Diese E-Mail wurde automatisch am ${heute} generiert. Bitte antworten S
           message: 'Willkommens-E-Mail erfolgreich gesendet',
           adminCopySent: !!adminResult
         });
-      } catch (error) {
+      } catch (error: unknown) {
         // Fehlerbehandlung
         const errorMessage = error instanceof Error ? error.message : String(error);
         emailLogger.error('Fehler beim Senden der Willkommens-E-Mail:', error);

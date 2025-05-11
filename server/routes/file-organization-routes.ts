@@ -46,9 +46,12 @@ router.post("/api/file-organization/suggestions/generate", async (req: Request, 
     const suggestions = await fileOrganizationService.createSuggestionsForProject(projectId);
     
     return res.status(200).json(suggestions);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Generieren von Dateiorganisationsvorschlägen:", error);
-    return res.status(500).json({ error: "Interner Serverfehler" });
+    return res.status(500).json({ 
+      error: "Interner Serverfehler", 
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -85,9 +88,12 @@ router.get("/api/file-organization/suggestions/:projectId", async (req: Request,
     );
     
     return res.status(200).json(suggestionsWithFiles);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Abrufen von Dateiorganisationsvorschlägen:", error);
-    return res.status(500).json({ error: "Interner Serverfehler" });
+    return res.status(500).json({ 
+      error: "Interner Serverfehler", 
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -112,9 +118,12 @@ router.post("/api/file-organization/suggestions/apply", async (req: Request, res
     } else {
       return res.status(404).json({ error: "Vorschlag konnte nicht angewendet werden" });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler beim Anwenden eines Dateiorganisationsvorschlags:", error);
-    return res.status(500).json({ error: "Interner Serverfehler" });
+    return res.status(500).json({ 
+      error: "Interner Serverfehler", 
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -139,9 +148,12 @@ router.post("/api/file-organization/analyze-group", async (req: Request, res: Re
     } else {
       return res.status(404).json({ error: "Keine Analyse möglich" });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fehler bei der Gruppenanalyse:", error);
-    return res.status(500).json({ error: "Interner Serverfehler" });
+    return res.status(500).json({ 
+      error: "Interner Serverfehler", 
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 

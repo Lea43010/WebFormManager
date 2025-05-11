@@ -51,9 +51,12 @@ router.get("/users", requireAdmin(), async (req, res) => {
       // Wir werfen den Fehler nicht weiter, um die Hauptfunktionalität nicht zu beeinträchtigen
     }
     res.json(users);
-  } catch (error) {
-    logger.error(`Fehler beim Abrufen der Benutzerliste: ${error.message}`);
-    res.status(500).json({ error: "Fehler beim Abrufen der Benutzerliste" });
+  } catch (error: unknown) {
+    logger.error(`Fehler beim Abrufen der Benutzerliste: ${error instanceof Error ? error.message : String(error)}`);
+    res.status(500).json({ 
+      error: "Fehler beim Abrufen der Benutzerliste",
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -132,9 +135,13 @@ router.post("/users", requireAdmin(), async (req, res) => {
     }
 
     res.status(201).json(newUser[0]);
-  } catch (error) {
-    logger.error(`Fehler beim Erstellen eines Benutzers: ${error.message}`);
-    res.status(500).json({ error: `Fehler beim Erstellen eines Benutzers: ${error.message}` });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler beim Erstellen eines Benutzers: ${errorMessage}`);
+    res.status(500).json({ 
+      error: "Fehler beim Erstellen eines Benutzers", 
+      details: errorMessage 
+    });
   }
 });
 
