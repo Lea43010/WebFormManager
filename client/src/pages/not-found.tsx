@@ -23,7 +23,7 @@ export default function NotFound() {
           <p className="mt-4 text-sm text-gray-600">
             Die von Ihnen gesuchte Seite existiert nicht oder ist nicht verfügbar.
           </p>
-          
+
           <div className="flex justify-center mt-6">
             <Button 
               onClick={() => navigate("/")} 
