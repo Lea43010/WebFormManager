@@ -358,8 +358,8 @@ ${enhancedAnalysis ? 'Zusätzliche Analyse: ' + enhancedAnalysis.substring(0, 20
       confidence,
       analyseDetails
     };
-  } catch (error) {
-    console.error("Fehler bei der Bodenanalyse:", error);
+  } catch (error: unknown) {
+    console.error("Fehler bei der Bodenanalyse:", error instanceof Error ? error.message : String(error));
     // Fallback-Ergebnisse, wenn die Analyse fehlschlägt
     return {
       belastungsklasse: "Bk3.2",
