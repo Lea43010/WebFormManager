@@ -2,12 +2,14 @@
  * Cron-Jobs für regelmäßige Aufgaben
  * 
  * Dieses Modul initialisiert und verwaltet alle Cron-Jobs der Anwendung,
- * wie z.B. die tägliche Überprüfung auf ablaufende Testphasen.
+ * wie z.B. die tägliche Überprüfung auf ablaufende Testphasen und
+ * den täglichen Sicherheits-Code-Review.
  */
 
 import { CronJob } from 'cron';
 import { logger } from './logger';
 import { trialExpirationService } from './services/trial-expiration-service';
+import { runSecurityReview } from './scripts/security-review';
 
 // Spezifischer Logger für Cron-Jobs
 const cronLogger = logger.createLogger('cron');
@@ -32,6 +34,17 @@ export class CronJobManager {
         cronLogger.info('Starte geplante Überprüfung auf ablaufende Testphasen');
         await trialExpirationService.checkAndNotifyExpiringTrials();
       }, 'trial-expiration-check');
+      
+      // Cron-Job für den täglichen Sicherheits-Code-Review (08:00 Uhr)
+      this.addJob('0 0 8 * * *', async () => {
+        cronLogger.info('Starte geplanten Sicherheits-Code-Review');
+        try {
+          await runSecurityReview();
+          cronLogger.info('Sicherheits-Code-Review erfolgreich abgeschlossen');
+        } catch (error) {
+          cronLogger.error('Fehler beim Ausführen des Sicherheits-Code-Reviews:', error);
+        }
+      }, 'security-code-review');
 
       cronLogger.info('Cron-Jobs initialisiert');
     } catch (error) {
@@ -77,6 +90,19 @@ export class CronJobManager {
       cronLogger.info('Manueller Trial-Expiration-Check abgeschlossen');
     } catch (error) {
       cronLogger.error('Fehler beim manuellen Trial-Expiration-Check:', error);
+    }
+  }
+  
+  /**
+   * Führt den Sicherheits-Code-Review manuell aus
+   */
+  async runSecurityCodeReview(): Promise<void> {
+    try {
+      cronLogger.info('Manueller Sicherheits-Code-Review gestartet');
+      await runSecurityReview();
+      cronLogger.info('Manueller Sicherheits-Code-Review abgeschlossen');
+    } catch (error) {
+      cronLogger.error('Fehler beim manuellen Sicherheits-Code-Review:', error);
     }
   }
 

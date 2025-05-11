@@ -8,10 +8,20 @@
 import fs from 'fs';
 import path from 'path';
 import { promises as fsPromises } from 'fs';
-import { emailService } from '../services/email-service';
-import { logger } from '../utils/logger';
+import { emailService } from '../email-service';
+import { logger } from '../logger';
 import { db } from '../db';
 import { sql } from 'drizzle-orm';
+import crypto from 'crypto';
+
+// Spezifischer Logger für Security-Reviews
+const securityLogger = logger.createLogger('security-review');
+
+// ES Module Pfadberechnung
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Konfiguration
 const SECURITY_MODULES_DIR = path.join(__dirname, '..', 'security');
@@ -32,15 +42,9 @@ interface SecurityModule {
 async function calculateChecksum(filePath: string): Promise<string> {
   try {
     const content = await fsPromises.readFile(filePath, 'utf8');
-    let hash = 0;
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Konvertierung zu 32bit Integer
-    }
-    return hash.toString(16);
+    return crypto.createHash('sha256').update(content).digest('hex');
   } catch (error) {
-    logger.error(`Fehler beim Berechnen der Prüfsumme für ${filePath}:`, error);
+    securityLogger.error(`Fehler beim Berechnen der Prüfsumme für ${filePath}:`, error);
     return 'error';
   }
 }
@@ -51,6 +55,12 @@ async function calculateChecksum(filePath: string): Promise<string> {
 async function collectSecurityModules(): Promise<SecurityModule[]> {
   try {
     const modules: SecurityModule[] = [];
+    
+    if (!fs.existsSync(SECURITY_MODULES_DIR)) {
+      securityLogger.warn(`Sicherheitsverzeichnis nicht gefunden: ${SECURITY_MODULES_DIR}`);
+      return modules;
+    }
+    
     const files = await fsPromises.readdir(SECURITY_MODULES_DIR);
     
     for (const file of files) {
@@ -70,7 +80,7 @@ async function collectSecurityModules(): Promise<SecurityModule[]> {
     
     return modules;
   } catch (error) {
-    logger.error('Fehler beim Sammeln der Sicherheitsmodule:', error);
+    securityLogger.error('Fehler beim Sammeln der Sicherheitsmodule:', error);
     return [];
   }
 }
@@ -83,14 +93,23 @@ async function checkForChanges(modules: SecurityModule[]): Promise<{changed: boo
     const changedModules: string[] = [];
     let changed = false;
     
+    // Stelle sicher, dass die Tabelle existiert
+    await ensureChecksumTable();
+    
     // Lade vorherige Prüfsummen aus der Datenbank
-    const previousChecksums = await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT module_name, checksum FROM security_module_checksums
     `);
     
     const checksumMap = new Map();
-    for (const row of previousChecksums) {
-      checksumMap.set(row.module_name, row.checksum);
+    
+    // Sichere Verarbeitung der Abfrageergebnisse
+    if (result && result.rows) {
+      for (const row of result.rows) {
+        if (row && row.module_name) {
+          checksumMap.set(row.module_name, row.checksum);
+        }
+      }
     }
     
     // Vergleiche aktuelle mit vorherigen Prüfsummen
@@ -115,7 +134,7 @@ async function checkForChanges(modules: SecurityModule[]): Promise<{changed: boo
     
     return { changed, changedModules };
   } catch (error) {
-    logger.error('Fehler beim Überprüfen auf Änderungen:', error);
+    securityLogger.error('Fehler beim Überprüfen auf Änderungen:', error);
     return { changed: false, changedModules: [] };
   }
 }
@@ -133,7 +152,7 @@ async function ensureChecksumTable(): Promise<void> {
       )
     `);
   } catch (error) {
-    logger.error('Fehler beim Erstellen der Prüfsummantabelle:', error);
+    securityLogger.error('Fehler beim Erstellen der Prüfsummantabelle:', error);
   }
 }
 
@@ -257,14 +276,13 @@ async function sendReportEmail(modules: SecurityModule[], changedModules: string
     await emailService.sendEmail({
       to: EMAIL_RECIPIENT,
       subject: EMAIL_SUBJECT,
-      html: htmlContent,
-      from: 'security-review@bau-structura.de'
+      html: htmlContent
     });
     
-    logger.info(`Sicherheitsbericht erfolgreich an ${EMAIL_RECIPIENT} gesendet`);
+    securityLogger.info(`Sicherheitsbericht erfolgreich an ${EMAIL_RECIPIENT} gesendet`);
     return true;
   } catch (error) {
-    logger.error('Fehler beim Senden des Sicherheitsberichts:', error);
+    securityLogger.error('Fehler beim Senden des Sicherheitsberichts:', error);
     return false;
   }
 }
@@ -273,17 +291,14 @@ async function sendReportEmail(modules: SecurityModule[], changedModules: string
  * Führt den vollständigen Sicherheits-Code-Review-Prozess durch
  */
 export async function runSecurityReview(): Promise<void> {
-  logger.info('Starte automatisierten Sicherheits-Code-Review');
+  securityLogger.info('Starte automatisierten Sicherheits-Code-Review');
   
   try {
-    // Stelle sicher, dass die Tabelle für Prüfsummen existiert
-    await ensureChecksumTable();
-    
     // Sammle Informationen über Sicherheitsmodule
     const modules = await collectSecurityModules();
     
     if (modules.length === 0) {
-      logger.warn('Keine Sicherheitsmodule gefunden!');
+      securityLogger.warn('Keine Sicherheitsmodule gefunden!');
       return;
     }
     
@@ -293,18 +308,20 @@ export async function runSecurityReview(): Promise<void> {
     // Sende Bericht per E-Mail
     await sendReportEmail(modules, changedModules);
     
-    logger.info(`Sicherheits-Code-Review abgeschlossen, ${modules.length} Module überprüft`);
+    securityLogger.info(`Sicherheits-Code-Review abgeschlossen, ${modules.length} Module überprüft`);
   } catch (error) {
-    logger.error('Fehler beim Ausführen des Sicherheits-Code-Reviews:', error);
+    securityLogger.error('Fehler beim Ausführen des Sicherheits-Code-Reviews:', error);
   }
 }
 
-// Wenn direkt ausgeführt, starte den Review-Prozess
-if (require.main === module) {
-  runSecurityReview()
-    .then(() => process.exit(0))
-    .catch(err => {
-      console.error('Fataler Fehler beim Ausführen des Sicherheits-Reviews:', err);
-      process.exit(1);
-    });
+// In ES Modulen können wir nicht direkt prüfen, ob die Datei direkt ausgeführt wird
+// Diese Funktion kann stattdessen bei Bedarf manuell aufgerufen werden
+export async function runManualSecurityReview(): Promise<void> {
+  try {
+    await runSecurityReview();
+    console.log('Sicherheits-Review erfolgreich abgeschlossen');
+  } catch (err) {
+    console.error('Fataler Fehler beim Ausführen des Sicherheits-Reviews:', err);
+    throw err;
+  }
 }

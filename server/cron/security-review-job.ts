@@ -6,7 +6,7 @@
  */
 
 import { CronJob } from 'cron';
-import { logger } from '../utils/logger';
+import { logger } from '../logger';
 import { runSecurityReview } from '../scripts/security-review';
 
 // Zeitplan für den täglichen Bericht (08:00 Uhr)
@@ -37,8 +37,9 @@ export function initializeSecurityReviewJob(): CronJob {
   return job;
 }
 
-// Wenn diese Datei direkt ausgeführt wird, starte den Job sofort
-if (require.main === module) {
+// Direkte Ausführung in ES Modulen funktioniert anders
+// Bei Bedarf kann diese Funktion manuell aufgerufen werden
+export function startSecurityReviewJob(): void {
   initializeSecurityReviewJob();
   logger.info('Sicherheits-Code-Review Cron-Job gestartet');
 }
