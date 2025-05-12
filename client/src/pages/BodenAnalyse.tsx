@@ -153,38 +153,53 @@ const BodenAnalyse: React.FC = () => {
           
           <Card className="md:col-span-3">
             <CardHeader>
-              <CardTitle>Belastungsklassen im Überblick</CardTitle>
+              <CardTitle>Bodenklassen im Überblick</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="p-3 text-left border">Klasse</th>
+                      <th className="p-3 text-left border">Bodenklasse</th>
                       <th className="p-3 text-left border">Beschreibung</th>
-                      <th className="p-3 text-left border">Typische Anwendung</th>
+                      <th className="p-3 text-left border">Typische Bodenarten</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="p-3 border">SLW 30</td>
-                      <td className="p-3 border">Leichte Belastung, max. 30 kN Achslast</td>
-                      <td className="p-3 border">Gehwege, Fahrradwege, leichte Zufahrten</td>
+                      <td className="p-3 border">Klasse 1</td>
+                      <td className="p-3 border">Lockergestein - leicht lösbar</td>
+                      <td className="p-3 border">Humus, Mutterboden, Sand, Kies</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">SLW 40</td>
-                      <td className="p-3 border">Mittlere Belastung, max. 40 kN Achslast</td>
-                      <td className="p-3 border">Wohnstraßen, Parkplätze</td>
+                      <td className="p-3 border">Klasse 2</td>
+                      <td className="p-3 border">Lockergestein - mittelschwer lösbar</td>
+                      <td className="p-3 border">Sand, Kies, Lehm (leicht bindige Böden)</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">SLW 50</td>
-                      <td className="p-3 border">Erhöhte Belastung, max. 50 kN Achslast</td>
-                      <td className="p-3 border">Sammelstraßen, Gewerbegebiete</td>
+                      <td className="p-3 border">Klasse 3</td>
+                      <td className="p-3 border">Lockergestein - schwer lösbar</td>
+                      <td className="p-3 border">Verdichteter Lehm, Geröll, Mergelböden</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">SLW 60</td>
-                      <td className="p-3 border">Schwere Belastung, max. 60 kN Achslast</td>
-                      <td className="p-3 border">Hauptverkehrsstraßen, Industriegebiete</td>
+                      <td className="p-3 border">Klasse 4</td>
+                      <td className="p-3 border">Leichter Fels - leicht lösbar</td>
+                      <td className="p-3 border">Verwitterter Fels, weicher Mergel, Kreide</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 border">Klasse 5</td>
+                      <td className="p-3 border">Leichter Fels - mittelschwer lösbar</td>
+                      <td className="p-3 border">Kalkstein, Sandstein, Schiefer</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 border">Klasse 6</td>
+                      <td className="p-3 border">Leichter bis mittelschwerer Fels</td>
+                      <td className="p-3 border">Massiver Kalkstein, Dolomit, Basalt</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3 border">Klasse 7</td>
+                      <td className="p-3 border">Schwerer Fels - nur mit Sprengung lösbar</td>
+                      <td className="p-3 border">Massiver Granit, Quarzit, sehr harter Fels</td>
                     </tr>
                   </tbody>
                 </table>
