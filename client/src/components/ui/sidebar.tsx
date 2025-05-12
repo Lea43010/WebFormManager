@@ -115,12 +115,7 @@ const navItems: NavItem[] = [
     icon: BarChart2,
     tooltip: "Abonnement-Verwaltung und Preispläne",
   },
-  {
-    title: "Berechtigungen Demo",
-    href: "/permissions-demo",
-    icon: ShieldAlert, // Verwenden eines anderen Icons, das bereits importiert ist
-    tooltip: "Demonstration der rollenbasierten Berechtigungen",
-  },
+
   {
     title: "Admin-Bereich",
     href: "/admin",

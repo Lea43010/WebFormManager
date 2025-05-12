@@ -49,7 +49,7 @@ import ImageOptimizationDemo from "@/pages/image-optimization-demo";
 import SimpleImageOptimizationDemo from "@/pages/image-optimization-demo-simple";
 import { NetworkStatusProvider } from "@/hooks/use-network-status";
 import PageTransition from "@/components/ui/page-transition";
-import PermissionsDemoPage from "@/pages/permissions-demo-page";
+
 import AutoTour from "@/components/onboarding/auto-tour";
 import ErrorBoundary from "@/components/error-boundary";
 
@@ -128,11 +128,6 @@ function Router() {
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
-      <RoleProtectedRoute 
-        path="/permissions-demo" 
-        component={PermissionsDemoPage}
-        requiredRole={['administrator', 'manager', 'user']} 
-      /> {/* Demo für Berechtigungssystem */}
       {/* Maps-Test-Seite temporär entfernt */}
       <Route path="/startup-test">
         {() => {
