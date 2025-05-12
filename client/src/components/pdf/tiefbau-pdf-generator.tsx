@@ -11,8 +11,6 @@ interface TiefbauPDFGeneratorProps {
     start: string;
     end: string;
     distance: number;
-    elevationGain: number;
-    elevationLoss: number;
   } | null;
   bodenartData: {
     name: string;
@@ -28,7 +26,6 @@ interface TiefbauPDFGeneratorProps {
     kostenProStunde: number;
   }> | null;
   mapContainerId: string;
-  chartContainerId: string | null;
 }
 
 const TiefbauPDFGenerator = ({
@@ -36,8 +33,7 @@ const TiefbauPDFGenerator = ({
   routeData,
   bodenartData,
   maschinenData,
-  mapContainerId,
-  chartContainerId,
+  mapContainerId
 }: TiefbauPDFGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();

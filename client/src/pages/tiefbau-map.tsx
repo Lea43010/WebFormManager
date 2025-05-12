@@ -655,9 +655,7 @@ const TiefbauMap: React.FC = () => {
                       routeData={routeCoordinates.length > 0 ? {
                         start: startAddress,
                         end: endAddress,
-                        distance: distance,
-                        elevationGain: elevationData?.stats?.totalAscent || 0,
-                        elevationLoss: elevationData?.stats?.totalDescent || 0
+                        distance: distance
                       } : null}
                       bodenartData={selectedBodenart && selectedBodenartObj ? {
                         name: selectedBodenartObj.name,
@@ -674,7 +672,6 @@ const TiefbauMap: React.FC = () => {
                           kostenProStunde: m.kosten_pro_stunde
                         })) : null}
                       mapContainerId={mapContainerId}
-                      chartContainerId={showElevationChart ? chartContainerId : null}
                     />
                   }
                 </div>
