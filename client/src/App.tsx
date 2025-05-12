@@ -97,9 +97,12 @@ function Router() {
       <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
-      {/* DenkmalAtlas-Route entfernt - Funktionalität in TiefbauMap integriert */}
+      {/* DenkmalAtlas direkt auf externe URL weiterleiten */}
       <Route path="/denkmal-atlas">
-        {() => <Redirect to="/tiefbau-map" />}
+        {() => {
+          window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank");
+          return <Redirect to="/tiefbau-map" />;
+        }}
       </Route>
       <ProtectedRoute path="/image-optimization" component={ImageOptimizationDemo} />
       <ProtectedRoute path="/image-optimization-simple" component={SimpleImageOptimizationDemo} />
