@@ -96,9 +96,8 @@ const TiefbauMap: React.FC = () => {
   // Persistenter Route-State für Tab-Wechsel
   const [savedRoute, setSavedRoute] = useState<Array<{lat: number, lng: number}>>([]);
   
-  // Container IDs für Map und Chart
+  // Container ID für Map
   const mapContainerId = "tiefbau-map-container";
-  const chartContainerId = "tiefbau-elevation-chart";
   
   // Toast-Hook
   const { toast } = useToast();
@@ -374,7 +373,6 @@ const TiefbauMap: React.FC = () => {
     setDistance(0);
     setStartAddress('');
     setEndAddress('');
-    setShowElevationChart(false);
     
     // Benachrichtigung, dass die Route gelöscht wurde
     toast({
@@ -520,19 +518,7 @@ const TiefbauMap: React.FC = () => {
     }
   };
   
-  // Formatiere die Höhendaten für Recharts
-  const formatElevationData = () => {
-    if (!elevationData?.elevation) return [];
-    
-    return elevationData.elevation.map((point, index) => {
-      return {
-        distance: (index / (elevationData.elevation.length - 1)) * distance,
-        elevation: point.elevation,
-        lat: point.location.lat,
-        lng: point.location.lng
-      };
-    });
-  };
+  // formatElevationData-Funktion wurde entfernt
   
   return (
     <div className="container mx-auto p-4">
