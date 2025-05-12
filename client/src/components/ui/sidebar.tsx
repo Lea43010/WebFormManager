@@ -118,7 +118,7 @@ const navItems: NavItem[] = [
   {
     title: "Berechtigungen Demo",
     href: "/permissions-demo",
-    icon: ShieldCheck,
+    icon: ShieldAlert, // Verwenden eines anderen Icons, das bereits importiert ist
     tooltip: "Demonstration der rollenbasierten Berechtigungen",
   },
   {

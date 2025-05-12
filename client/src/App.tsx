@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import ErrorPage from "@/pages/error-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AdminProtectedRoute } from "./lib/admin-protected-route";
+import { RoleProtectedRoute } from "./lib/role-protected-route";
 import CompanyPage from "@/pages/company-page";
 import CustomerPage from "@/pages/customer-page";
 import ProjectPage from "@/pages/project-page";
@@ -88,10 +89,22 @@ function Router() {
       <ProtectedRoute path="/information" component={InformationPage} />
       <ProtectedRoute path="/street-modules" component={StreetModulesPage} />
       <ProtectedRoute path="/subscription" component={SubscriptionPage} />
-      <ProtectedRoute path="/data-quality" component={DataQualityPage} />
+      <RoleProtectedRoute 
+        path="/data-quality" 
+        component={DataQualityPage} 
+        requiredRole={['administrator', 'manager']} 
+      />
       <ProtectedRoute path="/search" component={SearchPage} />
-      <AdminProtectedRoute path="/admin/data-quality" component={DataQualityPage} />
-      <AdminProtectedRoute path="/admin/data-quality-dashboard" component={DataQualityDashboard} />
+      <RoleProtectedRoute 
+        path="/admin/data-quality" 
+        component={DataQualityPage}
+        requiredRole="administrator"
+      />
+      <RoleProtectedRoute 
+        path="/admin/data-quality-dashboard" 
+        component={DataQualityDashboard}
+        requiredRole="administrator"
+      />
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <ProtectedRoute path="/tiefbau-map" component={() => <TiefbauMap />} />
       <ProtectedRoute path="/tiefbau-map-searchable" component={TiefbauMapSearchable} />
@@ -115,7 +128,11 @@ function Router() {
       </Route>
       <Route path="/auth" component={AuthPage} />
       <Route path="/home" component={HomePage} /> {/* Direkte Route zur Homepage, wenn eingeloggt */}
-      <ProtectedRoute path="/permissions-demo" component={PermissionsDemoPage} /> {/* Demo für Berechtigungssystem */}
+      <RoleProtectedRoute 
+        path="/permissions-demo" 
+        component={PermissionsDemoPage}
+        requiredRole={['administrator', 'manager', 'user']} 
+      /> {/* Demo für Berechtigungssystem */}
       {/* Maps-Test-Seite temporär entfernt */}
       <Route path="/startup-test">
         {() => {
