@@ -854,7 +854,33 @@ const TiefbauMap: React.FC = () => {
               <CardTitle>Maschinenplanung</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-6">
+              <div className="mb-8">
+                <h3 className="text-lg font-medium mb-4">Bodenart auswählen</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <Label htmlFor="bodenartMaschinenSelect">Bodenart:</Label>
+                    <Select 
+                      value={selectedBodenart}
+                      onValueChange={(value) => {
+                        setSelectedBodenart(value);
+                        filterMaschinenByBodenart(value);
+                      }}
+                    >
+                      <SelectTrigger id="bodenartMaschinenSelect">
+                        <SelectValue placeholder="Bodenart auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">-- Keine Auswahl --</SelectItem>
+                        {bodenarten.map((bodenart) => (
+                          <SelectItem key={bodenart.id} value={bodenart.id.toString()}>
+                            {bodenart.name} - {bodenart.belastungsklasse}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                  
                 <h3 className="text-lg font-medium mb-4">Verfügbare Maschinen</h3>
                 {selectedBodenart ? (
                   <p className="mb-4">
@@ -862,7 +888,7 @@ const TiefbauMap: React.FC = () => {
                   </p>
                 ) : (
                   <p className="mb-4 text-orange-500">
-                    Bitte wählen Sie im Tab "Bodenanalyse" eine Bodenart aus, um passende Maschinen zu sehen.
+                    Bitte wählen Sie eine Bodenart aus dem Dropdown-Menü oben, um passende Maschinen zu sehen.
                   </p>
                 )}
                 
