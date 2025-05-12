@@ -669,10 +669,9 @@ const TiefbauMap: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="bayern" 
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault(); // Verhindere, dass der Tab aktiviert wird
               window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank");
-              // Wir aktivieren die Kartenansicht anstatt des DenkmalAtlas-Tabs
-              setActiveTab("map");
             }}
           >
             <Map className="h-4 w-4 mr-2" />
