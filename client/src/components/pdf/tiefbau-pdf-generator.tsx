@@ -136,14 +136,12 @@ const TiefbauPDFGenerator = ({
         addRow(0, "Start", routeData.start);
         addRow(1, "Ziel", routeData.end);
         addRow(2, "Distanz", `${routeData.distance.toFixed(2)} km`);
-        addRow(3, "Höhenmeter (Aufstieg)", `${routeData.elevationGain.toFixed(2)} m`);
-        addRow(4, "Höhenmeter (Abstieg)", `${routeData.elevationLoss.toFixed(2)} m`);
         
         // Rahmen um die Tabelle zeichnen
         pdf.setDrawColor(0);
-        pdf.rect(14, routeYPos + 5, 170, 8 + (5 * rowHeight), 'D');
+        pdf.rect(14, routeYPos + 5, 170, 8 + (3 * rowHeight), 'D');
         
-        // Das Höhenprofil wird später auf der zweiten Seite unter den Maschinentabellen eingefügt
+        // Streckendaten wurden eingefügt
         
         // --- Bodenanalyse auf neuer Seite ---
         pdf.addPage();
@@ -246,47 +244,7 @@ const TiefbauPDFGenerator = ({
           maschinenEndY = maschinenYPos + 15;
         }
         
-        // --- Höhenprofil auf einer neuen Seite ---
-        if (chartContainerId) {
-          const chartElement = document.getElementById(chartContainerId);
-          if (chartElement) {
-            try {
-              // Neue Seite für das Höhenprofil
-              pdf.addPage();
-              
-              const chartCanvas = await html2canvas(chartElement, {
-                useCORS: true,
-                allowTaint: true,
-                scrollX: 0,
-                scrollY: 0,
-                scale: window.devicePixelRatio || 2,
-                logging: false,
-                backgroundColor: 'white' // Weißer Hintergrund statt transparent/schwarz
-              });
-              
-              pdf.setFontSize(20);
-              pdf.setTextColor(0, 0, 0);
-              pdf.text('Höhenprofil', 14, 20);
-              
-              // Größeres Format für die bessere Sichtbarkeit
-              const chartImgData = chartCanvas.toDataURL('image/jpeg', 1.0);
-              const chartWidth = 160; // Breiteres Bild
-              const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-              
-              // Mehr Platz nach oben für den Titel
-              pdf.addImage(chartImgData, 'JPEG', 14, 30, chartWidth, chartHeight);
-              
-              // Informationstext unter dem Höhenprofil
-              const chartInfoY = 30 + chartHeight + 5;
-              pdf.setFontSize(10);
-              pdf.text('Das Höhenprofil zeigt die Höhenunterschiede entlang der geplanten Strecke.', 14, chartInfoY);
-              pdf.text('Die blaue Linie zeigt die Höhe in Metern über Normalnull (m ü. NN).', 14, chartInfoY + 5);
-              
-            } catch (chartError) {
-              console.error('Fehler beim Rendern des Höhenprofils:', chartError);
-            }
-          }
-        }
+        // Höhenprofil-Funktion wurde entfernt
         
         // --- Fußzeile auf jeder Seite ---
         // Sichere Methode, um die Anzahl der Seiten zu erhalten
