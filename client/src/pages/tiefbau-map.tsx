@@ -674,10 +674,13 @@ const TiefbauMap: React.FC = () => {
             <Map className="h-4 w-4" />
             DenkmalAtlas
           </Button>
-          <TabsTrigger value="geoportal">
-            <Map className="h-4 w-4 mr-2" />
+          <Button 
+            className="text-sm rounded-none bg-transparent hover:bg-gray-100 p-2 border-none text-gray-700 hover:text-black flex items-center gap-2 h-9"
+            onClick={() => window.open("https://geoportal.bayern.de/bayernatlas/", "_blank")}
+          >
+            <Map className="h-4 w-4" />
             BayernAtlas
-          </TabsTrigger>
+          </Button>
           <TabsTrigger value="bund">
             <Map className="h-4 w-4 mr-2" />
             Denkmal-Dienste
