@@ -62,7 +62,7 @@ const BodenAnalyse: React.FC = () => {
             Zurück
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Bodenarten & Belastungsklassen</h1>
+        <h1 className="text-2xl font-bold">Bodenarten & RStO 12 Belastungsklassen</h1>
       </div>
 
       <TiefbauNavigation />
@@ -94,7 +94,7 @@ const BodenAnalyse: React.FC = () => {
                     onClick={() => handleSelectBodenart(bodenart)}
                   >
                     <div className="font-medium">{bodenart.name}</div>
-                    <div className="text-sm">Klasse: {bodenart.belastungsklasse}</div>
+                    <div className="text-sm">RStO 12: {bodenart.belastungsklasse}</div>
                   </li>
                 ))}
               </ul>
@@ -118,7 +118,7 @@ const BodenAnalyse: React.FC = () => {
                       <p className="text-lg font-medium">{selectedBodenart.dichte} kg/m³</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground">Belastungsklasse:</h3>
+                      <h3 className="text-sm font-medium text-muted-foreground">Belastungsklasse (RStO 12):</h3>
                       <p className="text-lg font-medium">{selectedBodenart.belastungsklasse}</p>
                     </div>
                     <div>
@@ -153,53 +153,51 @@ const BodenAnalyse: React.FC = () => {
           
           <Card className="md:col-span-3">
             <CardHeader>
-              <CardTitle>Bodenklassen im Überblick</CardTitle>
+              <CardTitle>RStO 12 Belastungsklassen</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <p>Die Richtlinien für die Standardisierung des Oberbaus von Verkehrsflächen (RStO 12) definieren verschiedene Belastungsklassen, die für die Dimensionierung des Straßenoberbaus maßgebend sind.</p>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="p-3 text-left border">Bodenklasse</th>
-                      <th className="p-3 text-left border">Beschreibung</th>
-                      <th className="p-3 text-left border">Typische Bodenarten</th>
+                      <th className="p-3 text-left border">Klasse</th>
+                      <th className="p-3 text-left border">Beanspruchung</th>
+                      <th className="p-3 text-left border">Typische Anwendung</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="p-3 border">Klasse 1</td>
-                      <td className="p-3 border">Lockergestein - leicht lösbar</td>
-                      <td className="p-3 border">Humus, Mutterboden, Sand, Kies</td>
+                      <td className="p-3 border">Bk100</td>
+                      <td className="p-3 border">&gt; 32 Mio.</td>
+                      <td className="p-3 border">Autobahnen, stark belastete Bundesstraßen</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">Klasse 2</td>
-                      <td className="p-3 border">Lockergestein - mittelschwer lösbar</td>
-                      <td className="p-3 border">Sand, Kies, Lehm (leicht bindige Böden)</td>
+                      <td className="p-3 border">Bk32</td>
+                      <td className="p-3 border">10 - 32 Mio.</td>
+                      <td className="p-3 border">Bundesstraßen, Hauptverkehrsstraßen</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">Klasse 3</td>
-                      <td className="p-3 border">Lockergestein - schwer lösbar</td>
-                      <td className="p-3 border">Verdichteter Lehm, Geröll, Mergelböden</td>
+                      <td className="p-3 border">Bk10</td>
+                      <td className="p-3 border">3,2 - 10 Mio.</td>
+                      <td className="p-3 border">Landstraßen, Haupterschließungsstraßen</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">Klasse 4</td>
-                      <td className="p-3 border">Leichter Fels - leicht lösbar</td>
-                      <td className="p-3 border">Verwitterter Fels, weicher Mergel, Kreide</td>
+                      <td className="p-3 border">Bk3.2</td>
+                      <td className="p-3 border">1,0 - 3,2 Mio.</td>
+                      <td className="p-3 border">Erschließungsstraßen, Wohnsammelstraßen</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">Klasse 5</td>
-                      <td className="p-3 border">Leichter Fels - mittelschwer lösbar</td>
-                      <td className="p-3 border">Kalkstein, Sandstein, Schiefer</td>
+                      <td className="p-3 border">Bk1.8</td>
+                      <td className="p-3 border">0,3 - 1,0 Mio.</td>
+                      <td className="p-3 border">Wohnstraßen, Anliegerstraßen</td>
                     </tr>
                     <tr>
-                      <td className="p-3 border">Klasse 6</td>
-                      <td className="p-3 border">Leichter bis mittelschwerer Fels</td>
-                      <td className="p-3 border">Massiver Kalkstein, Dolomit, Basalt</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 border">Klasse 7</td>
-                      <td className="p-3 border">Schwerer Fels - nur mit Sprengung lösbar</td>
-                      <td className="p-3 border">Massiver Granit, Quarzit, sehr harter Fels</td>
+                      <td className="p-3 border">Bk0.3</td>
+                      <td className="p-3 border">&lt; 0,3 Mio.</td>
+                      <td className="p-3 border">Leicht belastete Nebenstraßen, Parkplätze</td>
                     </tr>
                   </tbody>
                 </table>
