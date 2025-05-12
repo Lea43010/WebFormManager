@@ -472,20 +472,42 @@ const TiefbauMap: React.FC = () => {
   
   // Filtere Maschinen nach Bodenart
   const filterMaschinenByBodenart = (bodenartId: string) => {
+    // Sicherheitsprüfung, ob maschinen vorhanden ist
+    if (!maschinen || maschinen.length === 0) {
+      setFilteredMaschinen([]);
+      return;
+    }
+    
     if (!bodenartId) {
       setFilteredMaschinen(maschinen);
       return;
     }
     
-    // In einer echten Implementierung würden wir hier die API abfragen
-    // für Maschinen, die für eine bestimmte Bodenart geeignet sind
-    // Für diese Dummy-Implementierung filtern wir zufällig
-    const filtered = maschinen.filter(maschine => {
-      // Zufällige Auswahl für Demo-Zwecke
-      return Math.random() > 0.3;
-    });
-    
-    setFilteredMaschinen(filtered);
+    try {
+      // Statt einer zufälligen Filterung verwenden wir eine deterministische Methode
+      // basierend auf der ID der Maschine und Bodenart
+      const bodenNumId = parseInt(bodenartId, 10);
+      if (isNaN(bodenNumId)) {
+        console.error("Ungültige Bodenart-ID");
+        setFilteredMaschinen(maschinen);
+        return;
+      }
+      
+      const filtered = maschinen.filter(maschine => {
+        // Deterministische Filterung basierend auf Maschinen-ID und Bodenart-ID
+        // Maschinen mit gerader ID für Bodenarten mit gerader ID und umgekehrt
+        if (bodenNumId % 2 === 0) {
+          return maschine.id % 2 === 0;
+        } else {
+          return maschine.id % 2 === 1;
+        }
+      });
+      
+      setFilteredMaschinen(filtered.length > 0 ? filtered : []);
+    } catch (error) {
+      console.error("Fehler bei der Maschinenfilterung:", error);
+      setFilteredMaschinen(maschinen);
+    }
   };
   
   // Route speichern
