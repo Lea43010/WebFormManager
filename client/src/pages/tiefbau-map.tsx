@@ -418,56 +418,7 @@ const TiefbauMap: React.FC = () => {
     });
   };
   
-  // Höhendaten von der Google Elevation API abrufen
-  const fetchElevationData = async () => {
-    // Prüfen, ob wir Routenpunkte haben
-    if (routeCoordinates.length < 2) {
-      toast({
-        title: "Fehler",
-        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
-        variant: "destructive",
-        duration: 6000
-      });
-      return;
-    }
-    
-    setLoading(true);
-    
-    try {
-      // API-Anfrage senden
-      const response = await apiRequest(
-        "POST", 
-        "/api/elevation", 
-        {
-          path: routeCoordinates,
-          samples: 100 // Anzahl der Samples entlang der Route
-        }
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Abrufen der Höhendaten');
-      }
-      
-      const data: ElevationResponse = await response.json();
-      setElevationData(data);
-      setShowElevationChart(true);
-      
-      toast({
-        title: "Erfolg",
-        description: "Höhenprofilsdaten erfolgreich abgerufen!",
-      });
-    } catch (error: any) {
-      console.error('Fehler beim Abrufen der Höhendaten:', error);
-      toast({
-        title: "Fehler",
-        description: error.message || "Fehler beim Abrufen der Höhendaten",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Höhenprofil-Funktion wurde entfernt
   
   // Filtere Maschinen nach Bodenart
   const filterMaschinenByBodenart = (bodenartId: string) => {
@@ -737,26 +688,7 @@ const TiefbauMap: React.FC = () => {
                     <Trash2 className="h-4 w-4 mr-1" />
                     Strecke löschen
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={fetchElevationData} 
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Lädt...
-                      </span>
-                    ) : (
-                      <>
-                        <BarChart className="h-4 w-4 mr-1" />
-                        Höhenprofil
-                      </>
-                    )}
-                  </Button>
+
                   <Button onClick={saveRoute} disabled={loading}>
                     <Save className="h-4 w-4 mr-1" />
                     Route speichern
@@ -796,70 +728,7 @@ const TiefbauMap: React.FC = () => {
                 </div>
               </div>
               
-              {/* Höhenprofil-Diagramm */}
-              {showElevationChart && elevationData && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-2">Höhenprofil</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="bg-slate-50 p-3 rounded-md border">
-                      <p className="text-sm font-medium">Minimum Höhe: {elevationData.stats.minElevation.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Maximum Höhe: {elevationData.stats.maxElevation.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Höhenunterschied: {elevationData.stats.elevationDifference.toFixed(1)} m</p>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-md border">
-                      <p className="text-sm font-medium">Gesamtanstieg: {elevationData.stats.totalAscent.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Gesamtabstieg: {elevationData.stats.totalDescent.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Durchschnittl. Steigung: {((elevationData.stats.totalAscent / distance) * 100).toFixed(1)}%</p>
-                    </div>
-                  </div>
-                  
-                  <div className="h-80 w-full" id={chartContainerId}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={formatElevationData()}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="distance" 
-                          label={{ value: 'Entfernung (km)', position: 'insideBottomRight', offset: -10 }} 
-                        />
-                        <YAxis 
-                          label={{ value: 'Höhe (m)', angle: -90, position: 'insideLeft' }} 
-                          domain={['dataMin - 10', 'dataMax + 10']}
-                        />
-                        <Tooltip 
-                          formatter={(value) => [`${value} m`, 'Höhe']}
-                          labelFormatter={(value) => `Entfernung: ${value.toFixed(1)} km`}
-                        />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="elevation" 
-                          name="Höhe" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2}
-                          dot={false}
-                          activeDot={{ r: 6 }}
-                        />
-                        <ReferenceLine
-                          y={elevationData.stats.minElevation}
-                          label="Min"
-                          stroke="red"
-                          strokeDasharray="3 3"
-                        />
-                        <ReferenceLine
-                          y={elevationData.stats.maxElevation}
-                          label="Max"
-                          stroke="green"
-                          strokeDasharray="3 3"
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
+
             </CardContent>
           </Card>
         </TabsContent>
