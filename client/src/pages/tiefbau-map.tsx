@@ -23,41 +23,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Vereinfachter DOM-basierter Google Maps-Komponente
 import BasicGoogleMap from '@/components/maps/basic-google-map';
 
-// Elevation Chart
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  ReferenceLine
-} from 'recharts';
+// Recharts-Imports für das Höhenprofil wurden entfernt
 
-// Typdefinitionen
-interface ElevationPoint {
-  elevation: number;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  resolution: number;
-}
-
-interface ElevationStats {
-  minElevation: number;
-  maxElevation: number;
-  totalAscent: number;
-  totalDescent: number;
-  elevationDifference: number;
-}
-
-interface ElevationResponse {
-  elevation: ElevationPoint[];
-  stats: ElevationStats;
-}
+// Typdefinitionen für das Höhenprofil wurden entfernt
 
 interface Bodenart {
   id: number;
@@ -99,9 +67,7 @@ const TiefbauMap: React.FC = () => {
   // Gemeinsamer Loading-State für alle Komponenten
   const [loading, setLoading] = useState(false);
   
-  // State für Höhendaten
-  const [elevationData, setElevationData] = useState<ElevationResponse | null>(null);
-  const [showElevationChart, setShowElevationChart] = useState(false);
+  // State für Höhendaten wurde entfernt
   
   // State für Bodenarten und Maschinen
   const [bodenarten, setBodenarten] = useState<Bodenart[]>([]);
