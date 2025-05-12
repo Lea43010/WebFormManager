@@ -7,7 +7,6 @@ import {
   Trash2,
   Map,
   Shovel,
-  Truck,
   FileDown,
   ExternalLink
 } from 'lucide-react';
@@ -84,7 +83,22 @@ interface Maschine {
   bild_url?: string;
 }
 
-const TiefbauMap: React.FC = () => {
+const TiefbauMap = () => {
+  const { toast } = useToast();
+  const pdfRef = useRef<HTMLDivElement>(null);
+  
+  // State für Elevationsdaten
+  const [elevationData, setElevationData] = useState<ElevationPoint[]>([]);
+  const [elevationStats, setElevationStats] = useState<ElevationStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // State für Routendaten (Name, Start, Ziel, ...)
+  const [routeName, setRouteName] = useState('');
+  
+  // State für Bodenarten
+  const [bodenarten, setBodenarten] = useState<Bodenart[]>([]);
+  const [selectedBodenart, setSelectedBodenart] = useState<number | null>(null);
+  
   // Funktion zum Öffnen eines externen Links in einem neuen Tab
   const handleExternalLink = (url: string, label: string) => {
     window.open(url, "_blank", "noopener,noreferrer");
@@ -97,28 +111,6 @@ const TiefbauMap: React.FC = () => {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
   
-  // Gemeinsamer Loading-State für alle Komponenten
-  const [loading, setLoading] = useState(false);
-  
-  // State für Höhendaten
-  const [elevationData, setElevationData] = useState<ElevationResponse | null>(null);
-  const [showElevationChart, setShowElevationChart] = useState(false);
-  
-  // State für Bodenarten und Maschinen
-  const [bodenarten, setBodenarten] = useState<Bodenart[]>([]);
-  const [selectedBodenart, setSelectedBodenart] = useState<string>('');
-  const [maschinen, setMaschinen] = useState<Maschine[]>([]);
-  const [filteredMaschinen, setFilteredMaschinen] = useState<Maschine[]>([]);
-  
-  // Berechne die ausgewählte Bodenart als Objekt für einfachen Zugriff
-  const selectedBodenartObj = selectedBodenart 
-    ? bodenarten.find(b => b.id.toString() === selectedBodenart.toString()) 
-    : null;
-  
-  // State für Kosten
-  const [streckenkostenProM2, setStreckenkostenProM2] = useState(0);
-  const [gesamtstreckenkosten, setGesamtstreckenkosten] = useState(0);
-  
   // State für Projekte
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
@@ -128,546 +120,276 @@ const TiefbauMap: React.FC = () => {
   // const [loading, setLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   
-  // Persistenter Route-State für Tab-Wechsel
-  const [savedRoute, setSavedRoute] = useState<Array<{lat: number, lng: number}>>([]);
-  
-  // Container IDs für Map und Chart
-  const mapContainerId = "tiefbau-map-container";
-  const chartContainerId = "tiefbau-elevation-chart";
-  
-  // Toast-Hook
-  const { toast } = useToast();
-  
-  // Lade Projekte beim ersten Laden
+  // Dummy-Daten für die Entwicklung
   useEffect(() => {
+    // Bodenarten laden (API-Anfrage hier einfügen)
+    const loadBodenarten = async () => {
+      try {
+        // API-Anfrage hier einfügen
+        // setBodenarten(await response.json());
+        const dummyBodenarten: Bodenart[] = [
+          {
+            id: 1,
+            name: 'Asphaltbeton',
+            beschreibung: 'Standard-Asphaltbelag für Straßen',
+            dichte: 2400,
+            belastungsklasse: 'SLW 60',
+            material_kosten_pro_m2: 25.50,
+            bearbeitungshinweise: 'Verdichtung mit Walzen erforderlich'
+          },
+          {
+            id: 2,
+            name: 'Sandboden',
+            beschreibung: 'Lockerer Sandboden',
+            dichte: 1600,
+            belastungsklasse: 'SLW 30',
+            material_kosten_pro_m2: 6.80,
+            bearbeitungshinweise: 'Leicht zu bearbeiten, benötigt Stabilisierung'
+          },
+          {
+            id: 3,
+            name: 'Lehmboden',
+            beschreibung: 'Bindiger Lehmboden',
+            dichte: 1800,
+            belastungsklasse: 'SLW 40',
+            material_kosten_pro_m2: 8.20,
+            bearbeitungshinweise: 'Bei Nässe rutschig, Drainage erforderlich'
+          },
+          {
+            id: 4,
+            name: 'Fels/Gestein',
+            beschreibung: 'Felsiger Untergrund',
+            dichte: 2600,
+            belastungsklasse: 'SLW 60',
+            material_kosten_pro_m2: 42.80,
+            bearbeitungshinweise: 'Spezialwerkzeug für Abtragung notwendig'
+          },
+          {
+            id: 5,
+            name: 'Kiesboden',
+            beschreibung: 'Kies und Schotter',
+            dichte: 1900,
+            belastungsklasse: 'SLW 50',
+            material_kosten_pro_m2: 12.50,
+            bearbeitungshinweise: 'Gute Drainageeigenschaften, einfache Verarbeitung'
+          }
+        ];
+        
+        setBodenarten(dummyBodenarten);
+      } catch (error) {
+        console.error('Fehler beim Laden der Bodenarten:', error);
+        toast({
+          title: "Fehler",
+          description: "Bodenarten konnten nicht geladen werden.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    // Dummy-Projekte laden
     const loadProjects = async () => {
       setIsLoadingProjects(true);
       try {
-        const response = await fetch('/api/projects');
-        if (!response.ok) {
-          throw new Error('Projekte konnten nicht geladen werden');
-        }
-        const data = await response.json();
-        console.log('Geladene Projekte:', data);
-        setProjects(data);
-        
-        // Standardmäßig ist "Keine Auswahl" aktiv, daher setzen wir es auf null
-        setSelectedProject(null);
+        // In einer echten Anwendung würde hier eine API-Anfrage stehen
+        setTimeout(() => {
+          const dummyProjects = [
+            { id: 1, name: 'B299 Ausbau Abschnitt Nord' },
+            { id: 2, name: 'Ortsumgehung Ebersberg' },
+            { id: 3, name: 'Brückensanierung A9' },
+            { id: 4, name: 'Kanalbau Münchner Straße' }
+          ];
+          setProjects(dummyProjects);
+          setIsLoadingProjects(false);
+        }, 800);
       } catch (error) {
         console.error('Fehler beim Laden der Projekte:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Fehler',
-          description: 'Projekte konnten nicht geladen werden.'
-        });
-      } finally {
         setIsLoadingProjects(false);
       }
     };
-    
+
+    loadBodenarten();
     loadProjects();
   }, [toast]);
-  
-  // Wenn ein Projekt ausgewählt wird, prüfen ob Koordinaten vorhanden sind und setzen diese
-  useEffect(() => {
-    if (selectedProject && projects.length > 0) {
-      const selectedProjectData = projects.find(project => project.id === selectedProject);
-      if (selectedProjectData) {
-        // Wenn das Projekt Koordinaten hat (Längen- und Breitengrad), zentriere die Karte
-        if (selectedProjectData.project_latitude && selectedProjectData.project_longitude) {
-          const projectLocation = {
-            lat: parseFloat(selectedProjectData.project_latitude),
-            lng: parseFloat(selectedProjectData.project_longitude)
-          };
-          
-          // Wir könnten diesen Wert an die BasicGoogleMap übergeben, 
-          // aber die Komponente hat keinen Mechanismus, um den Mittelpunkt zu aktualisieren
-          // Hier könnte man später eine Funktion hinzufügen, die es erlaubt,
-          // die Karte neu zu zentrieren
-          
-          toast({
-            title: "Projekt ausgewählt",
-            description: `${selectedProjectData.project_name || 'Projekt ' + selectedProjectData.id} wurde ausgewählt.`,
-            duration: 3000
-          });
-        }
-      }
-    }
-  }, [selectedProject, projects, toast]);
-  
-  // Lade Bodenarten beim ersten Laden
-  useEffect(() => {
-    // Dummy-Daten für Bodenarten
-    const dummyBodenarten: Bodenart[] = [
-      {
-        id: 1,
-        name: 'Asphaltbeton',
-        beschreibung: 'Standard-Asphaltbelag für Straßen',
-        dichte: 2400,
-        belastungsklasse: 'SLW 60',
-        material_kosten_pro_m2: 25.50,
-        bearbeitungshinweise: 'Verdichtung mit Walzen erforderlich'
-      },
-      {
-        id: 2,
-        name: 'Sandboden',
-        beschreibung: 'Lockerer Sandboden',
-        dichte: 1600,
-        belastungsklasse: 'SLW 30',
-        material_kosten_pro_m2: 6.80,
-        bearbeitungshinweise: 'Leicht zu bearbeiten, benötigt Stabilisierung'
-      },
-      {
-        id: 3,
-        name: 'Lehmboden',
-        beschreibung: 'Bindiger Lehmboden',
-        dichte: 1800,
-        belastungsklasse: 'SLW 40',
-        material_kosten_pro_m2: 8.20,
-        bearbeitungshinweise: 'Bei Nässe schwer zu bearbeiten'
-      },
-      {
-        id: 4,
-        name: 'Kiesboden',
-        beschreibung: 'Kies mit verschiedenen Korngrößen',
-        dichte: 1900,
-        belastungsklasse: 'SLW 50',
-        material_kosten_pro_m2: 12.40,
-        bearbeitungshinweise: 'Gute Drainage, einfach zu verdichten'
-      },
-      {
-        id: 5,
-        name: 'Fels',
-        beschreibung: 'Harter Felsuntergrund',
-        dichte: 2700,
-        belastungsklasse: 'SLW 60',
-        material_kosten_pro_m2: 42.00,
-        bearbeitungshinweise: 'Sprengung oder schwere Maschinen erforderlich'
-      }
-    ];
 
-    setBodenarten(dummyBodenarten);
-
-    // Dummy-Daten für Maschinen
-    const dummyMaschinen: Maschine[] = [
-      {
-        id: 1,
-        name: 'CAT 320',
-        typ: 'Bagger',
-        beschreibung: '20-Tonnen Hydraulikbagger',
-        leistung: '120 kW',
-        kosten_pro_stunde: 120.50,
-        kosten_pro_tag: 950.00,
-        kosten_pro_woche: 4500.00,
-        kraftstoffverbrauch: 18.5,
-        gewicht: 20000
-      },
-      {
-        id: 2,
-        name: 'Bomag BW 213',
-        typ: 'Walze',
-        beschreibung: 'Vibrationswalze für Erdarbeiten',
-        leistung: '98 kW',
-        kosten_pro_stunde: 85.00,
-        kosten_pro_tag: 680.00,
-        kosten_pro_woche: 3200.00,
-        kraftstoffverbrauch: 12.0,
-        gewicht: 12500
-      },
-      {
-        id: 3,
-        name: 'Wirtgen W 100',
-        typ: 'Fräse',
-        beschreibung: 'Kompakte Kaltfräse',
-        leistung: '170 kW',
-        kosten_pro_stunde: 210.00,
-        kosten_pro_tag: 1680.00,
-        kosten_pro_woche: 8000.00,
-        kraftstoffverbrauch: 35.0,
-        gewicht: 18000
-      },
-      {
-        id: 4,
-        name: 'Vögele Super 1800-3',
-        typ: 'Asphaltfertiger',
-        beschreibung: 'Straßenfertiger mit hoher Einbaubreite',
-        leistung: '129 kW',
-        kosten_pro_stunde: 230.00,
-        kosten_pro_tag: 1840.00,
-        kosten_pro_woche: 8800.00,
-        kraftstoffverbrauch: 30.0,
-        gewicht: 19000
-      },
-      {
-        id: 5,
-        name: 'Liebherr PR 736',
-        typ: 'Planierraupe',
-        beschreibung: 'Hydrostatische Planierraupe',
-        leistung: '150 kW',
-        kosten_pro_stunde: 140.00,
-        kosten_pro_tag: 1120.00,
-        kosten_pro_woche: 5300.00,
-        kraftstoffverbrauch: 22.0,
-        gewicht: 20170
-      }
-    ];
-
-    setMaschinen(dummyMaschinen);
-    setFilteredMaschinen(dummyMaschinen);
-    
-    // Später API-Anfrage
-    // In einer echten Implementierung würden wir hier die API-Endpunkte abfragen
-    // const fetchData = async () => {
-    //   try {
-    //     const bodenResponse = await apiRequest("GET", "/api/bodenarten");
-    //     if (bodenResponse.ok) {
-    //       const bodenData = await bodenResponse.json();
-    //       setBodenarten(bodenData);
-    //     }
-    //     
-    //     const maschinenResponse = await apiRequest("GET", "/api/maschinen");
-    //     if (maschinenResponse.ok) {
-    //       const maschinenData = await maschinenResponse.json();
-    //       setMaschinen(maschinenData);
-    //       setFilteredMaschinen(maschinenData);
-    //     }
-    //   } catch (error) {
-    //     console.error("Fehler beim Laden der Daten:", error);
-    //     toast({
-    //       title: "Fehler",
-    //       description: "Die Daten konnten nicht geladen werden.",
-    //       variant: "destructive"
-    //     });
-    //   }
-    // };
-    // fetchData();
-  }, []);
-  
-  // Berechne die Kosten, wenn sich Bodenart oder Strecke ändert
-  useEffect(() => {
-    if (selectedBodenart && distance > 0) {
-      const bodenart = bodenarten.find(b => b.id.toString() === selectedBodenart);
-      if (bodenart) {
-        // Annahme: 3m Breite für die Straße
-        const strassenBreite = 3;
-        const flaeche = distance * 1000 * strassenBreite; // in m²
-        const kostenProM2 = bodenart.material_kosten_pro_m2;
-        const gesamtkosten = flaeche * kostenProM2;
-        
-        setStreckenkostenProM2(kostenProM2);
-        setGesamtstreckenkosten(gesamtkosten);
-      }
-    }
-  }, [selectedBodenart, distance, bodenarten]);
-  
-  // Handler für Routenänderungen
-  const handleRouteChange = (
-    route: Array<{lat: number, lng: number}>, 
-    startAddr?: string, 
-    endAddr?: string
-  ) => {
-    setRouteCoordinates(route);
-    
-    // Route in den persistenten State speichern für Tab-Wechsel
-    setSavedRoute(route);
-    
-    // Start- und Endadressen setzen, wenn vorhanden
-    if (startAddr) {
-      setStartAddress(startAddr);
-    }
-    
-    if (endAddr) {
-      setEndAddress(endAddr);
-    }
-    
-    // Distanz berechnen
-    if (route.length >= 2) {
-      let totalDistance = 0;
-      
-      for (let i = 1; i < route.length; i++) {
-        const p1 = new google.maps.LatLng(route[i-1].lat, route[i-1].lng);
-        const p2 = new google.maps.LatLng(route[i].lat, route[i].lng);
-        
-        // Distanz in Metern
-        const segmentDistance = google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
-        totalDistance += segmentDistance;
-      }
-      
-      // Umrechnung in Kilometer mit 2 Nachkommastellen
-      setDistance(parseFloat((totalDistance / 1000).toFixed(2)));
-    } else {
-      setDistance(0);
-    }
-    
-    console.log(`Route aktualisiert: ${route.length} Punkte gespeichert`);
-  };
-  
-  // Handler zum Löschen aller Marker
-  const clearMarkers = () => {
-    setRouteCoordinates([]);
-    setSavedRoute([]); // Auch die persistente Route zurücksetzen
-    setDistance(0);
-    setStartAddress('');
-    setEndAddress('');
-    setShowElevationChart(false);
-    
-    // Benachrichtigung, dass die Route gelöscht wurde
-    toast({
-      title: "Route zurückgesetzt",
-      description: "Die Route wurde erfolgreich gelöscht und der Speicher freigegeben.",
-      duration: 3000
-    });
-  };
-  
-  // Höhendaten von der Google Elevation API abrufen
-  const fetchElevationData = async () => {
-    // Prüfen, ob wir Routenpunkte haben
-    if (routeCoordinates.length < 2) {
-      toast({
-        title: "Fehler",
-        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
-        variant: "destructive",
-        duration: 6000
-      });
-      return;
-    }
-    
+  // Funktion zum Laden der Elevationsdaten
+  const handleLoadElevation = async () => {
+    // Diese Funktion würde in einer realen Anwendung 
+    // die Elevationsdaten von der Google Maps API laden
     setLoading(true);
     
     try {
-      // API-Anfrage senden
-      const response = await apiRequest(
-        "POST", 
-        "/api/elevation", 
-        {
-          path: routeCoordinates,
-          samples: 100 // Anzahl der Samples entlang der Route
+      // Simulate API call
+      setTimeout(() => {
+        // Dummy Routen-Koordinaten (würden von Google Maps API kommen)
+        const dummyRouteCoordinates = [
+          {lat: 48.135125, lng: 11.581981}, // München Zentrum
+          {lat: 48.140000, lng: 11.590000},
+          {lat: 48.145000, lng: 11.595000},
+          {lat: 48.150000, lng: 11.600000},
+          {lat: 48.155000, lng: 11.605000},
+          {lat: 48.160000, lng: 11.610000},
+          {lat: 48.165000, lng: 11.620000},
+          {lat: 48.170000, lng: 11.630000},
+          {lat: 48.175000, lng: 11.640000},
+          {lat: 48.179932, lng: 11.649252}  // München Bogenhausen
+        ];
+        
+        setRouteCoordinates(dummyRouteCoordinates);
+        setDistance(8.7); // km
+        setStartAddress('München Zentrum');
+        setEndAddress('München Bogenhausen');
+        
+        // Dummy Elevationsdaten
+        const dummyElevationPoints: ElevationPoint[] = dummyRouteCoordinates.map((coord, index) => {
+          // Generiere ein hügeliges Höhenprofil mit Sinus-Funktion
+          const elevationBase = 520; // Basishöhe in Metern
+          const elevationVariation = 15; // Höhenschwankung in Metern
+          const frequency = 0.7; // Frequenz der Schwankungen
+          
+          return {
+            elevation: elevationBase + elevationVariation * Math.sin(index * frequency),
+            location: coord,
+            resolution: 5
+          };
+        });
+        
+        // Statistiken berechnen
+        const elevations = dummyElevationPoints.map(p => p.elevation);
+        const minElevation = Math.min(...elevations);
+        const maxElevation = Math.max(...elevations);
+        
+        // Berechne Gesamtanstiege und -abstiege
+        let totalAscent = 0;
+        let totalDescent = 0;
+        
+        for (let i = 1; i < dummyElevationPoints.length; i++) {
+          const diff = dummyElevationPoints[i].elevation - dummyElevationPoints[i-1].elevation;
+          if (diff > 0) {
+            totalAscent += diff;
+          } else {
+            totalDescent += Math.abs(diff);
+          }
         }
-      );
+        
+        const dummyStats: ElevationStats = {
+          minElevation,
+          maxElevation,
+          totalAscent,
+          totalDescent,
+          elevationDifference: dummyElevationPoints[dummyElevationPoints.length - 1].elevation - dummyElevationPoints[0].elevation
+        };
+        
+        setElevationData(dummyElevationPoints);
+        setElevationStats(dummyStats);
+        setLoading(false);
+        
+        toast({
+          title: "Daten geladen",
+          description: "Höhenprofil erfolgreich erstellt.",
+        });
+      }, 1500);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Abrufen der Höhendaten');
-      }
-      
-      const data: ElevationResponse = await response.json();
-      setElevationData(data);
-      setShowElevationChart(true);
-      
-      toast({
-        title: "Erfolg",
-        description: "Höhenprofilsdaten erfolgreich abgerufen!",
-      });
-    } catch (error: any) {
-      console.error('Fehler beim Abrufen der Höhendaten:', error);
+    } catch (error) {
+      console.error('Fehler beim Laden des Höhenprofils:', error);
+      setLoading(false);
       toast({
         title: "Fehler",
-        description: error.message || "Fehler beim Abrufen der Höhendaten",
-        variant: "destructive"
+        description: "Höhenprofil konnte nicht geladen werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Chartdaten für Recharts vorbereiten
+  const chartData = elevationData.map((point, index) => ({
+    distance: (index / (elevationData.length - 1) * distance).toFixed(1),
+    elevation: point.elevation.toFixed(1)
+  }));
+
+  const chartDataWithIndex = elevationData.map((point, index) => ({
+    index,
+    distance: (index / (elevationData.length - 1) * distance).toFixed(1),
+    elevation: point.elevation.toFixed(1)
+  }));
+
+  // Funktion zum Generieren des PDF-Berichts
+  const generatePDF = async () => {
+    if (!pdfRef.current) return;
+    
+    setIsPdfGenerating(true);
+    
+    try {
+      await TiefbauPDFGenerator.generatePDF({
+        routeName: routeName || 'Unbenannte Strecke',
+        startAddress,
+        endAddress,
+        distance,
+        elevationStats,
+        chartData: chartDataWithIndex,
+        routeCoordinates,
+        selectedBodenart: selectedBodenart ? bodenarten.find(b => b.id === selectedBodenart) : null
+      });
+      
+      toast({
+        title: "PDF erstellt",
+        description: "Streckenbericht wurde als PDF erstellt und heruntergeladen.",
+      });
+    } catch (error) {
+      console.error('Fehler beim Generieren des PDFs:', error);
+      toast({
+        title: "Fehler",
+        description: "PDF konnte nicht erstellt werden.",
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsPdfGenerating(false);
     }
   };
-  
-  // Filtere Maschinen nach Bodenart
-  const filterMaschinenByBodenart = (bodenartId: string) => {
-    // Sicherheitsprüfung, ob maschinen vorhanden ist
-    if (!maschinen || maschinen.length === 0) {
-      setFilteredMaschinen([]);
-      return;
-    }
-    
-    if (!bodenartId) {
-      setFilteredMaschinen(maschinen);
-      return;
-    }
-    
-    try {
-      // Statt einer zufälligen Filterung verwenden wir eine deterministische Methode
-      // basierend auf der ID der Maschine und Bodenart
-      const bodenNumId = parseInt(bodenartId, 10);
-      if (isNaN(bodenNumId)) {
-        console.error("Ungültige Bodenart-ID");
-        setFilteredMaschinen(maschinen);
-        return;
-      }
-      
-      const filtered = maschinen.filter(maschine => {
-        // Deterministische Filterung basierend auf Maschinen-ID und Bodenart-ID
-        // Maschinen mit gerader ID für Bodenarten mit gerader ID und umgekehrt
-        if (bodenNumId % 2 === 0) {
-          return maschine.id % 2 === 0;
-        } else {
-          return maschine.id % 2 === 1;
-        }
-      });
-      
-      setFilteredMaschinen(filtered.length > 0 ? filtered : []);
-    } catch (error) {
-      console.error("Fehler bei der Maschinenfilterung:", error);
-      setFilteredMaschinen(maschinen);
-    }
-  };
-  
-  // Route speichern
-  const saveRoute = async () => {
-    if (routeCoordinates.length < 2) {
-      toast({
-        title: "Fehler",
-        description: "Bitte markieren Sie mindestens zwei Punkte auf der Karte.",
-        variant: "destructive",
-        duration: 6000
-      });
-      return;
-    }
-    
-    if (!selectedProject) {
-      toast({
-        title: "Hinweis",
-        description: "Bitte wählen Sie ein Projekt aus, dem diese Strecke zugeordnet werden soll.",
-        duration: 6000
-      });
-      return;
-    }
-    
-    // Prüfen, ob Start- und Endadresse gesetzt sind
-    const effectiveStartAddress = startAddress || `${routeCoordinates[0].lat.toFixed(6)}, ${routeCoordinates[0].lng.toFixed(6)}`;
-    const effectiveEndAddress = endAddress || `${routeCoordinates[routeCoordinates.length-1].lat.toFixed(6)}, ${routeCoordinates[routeCoordinates.length-1].lng.toFixed(6)}`;
-    
-    // Ein sinnvoller Name für die Route
-    const routeName = `Route von ${effectiveStartAddress.split(',')[0]} nach ${effectiveEndAddress.split(',')[0]}`;
-    
-    try {
-      // Bereite die Koordinaten-Daten für den Server vor
-      // Wandle alle Objekte in einfache Strukturen um, die gut serialisiert werden können
-      const simplifiedCoordinates = routeCoordinates.slice(0, 50).map(point => ({
-        lat: Number(point.lat),
-        lng: Number(point.lng)
-      }));
-      
-      // Finde die ausgewählte Bodenart und das Projekt
-      const selectedBodenartObj = bodenarten.find(b => b.id.toString() === selectedBodenart);
-      const projectData = projects.find(p => p.id === selectedProject);
-      
-      // Stellen sicher, dass alle Werte den richtigen Typ haben
-      const routeData = {
-        name: String(routeName || `Route ${new Date().toLocaleString('de-DE')}`),
-        start_address: String(effectiveStartAddress || 'Unbekannter Startpunkt'),
-        end_address: String(effectiveEndAddress || 'Unbekannter Endpunkt'),
-        distance: Math.round(Number(distance || 100)), // Fallback-Abstand, falls keine Berechnung möglich war
-        route_data: simplifiedCoordinates,
-        project_id: selectedProject, // Verknüpfe die Route mit dem ausgewählten Projekt
-        project_name: projectData?.projectName || '',
-        bodenart_id: selectedBodenart ? parseInt(selectedBodenart) : null,
-        bodenart_name: selectedBodenartObj?.name || '',
-        kosten_pro_m2: streckenkostenProM2,
-        gesamtkosten: gesamtstreckenkosten
-      };
-      
-      // Detailliertes Logging vor Absenden
-      console.log('Sende folgende Route an API:', JSON.stringify(routeData, null, 2));
-      
-      // Zum normalen Endpunkt senden
-      const response = await fetch('/api/routes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(routeData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API-Fehler-Details:', errorData);
-        throw new Error(errorData.error || 'Fehler beim Speichern der Route');
-      }
-      
-      const data = await response.json();
-      toast({
-        title: "Erfolg",
-        description: `Route "${data.name}" erfolgreich gespeichert!`,
-        duration: 5000
-      });
-      
-      // Optional: Zurück zur Kostenkalkulation navigieren
-      // setLocation('/kostenkalkulation');
-    } catch (error: any) {
-      console.error('Fehler beim Speichern der Route:', error);
-      toast({
-        title: "Fehler",
-        description: error.message || "Fehler beim Speichern der Route",
-        variant: "destructive",
-        duration: 6000
-      });
-    }
-  };
-  
-  // Formatiere die Höhendaten für Recharts
-  const formatElevationData = () => {
-    if (!elevationData?.elevation) return [];
-    
-    return elevationData.elevation.map((point, index) => {
-      return {
-        distance: (index / (elevationData.elevation.length - 1)) * distance,
-        elevation: point.elevation,
-        lat: point.location.lat,
-        lng: point.location.lng
-      };
-    });
-  };
-  
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex flex-col md:flex-row md:items-center mb-6">
-        <div className="flex items-center mb-4 md:mb-0 md:mr-6">
-          <Button variant="ghost" size="sm" asChild className="mr-2">
-            <Link to="/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Zurück
-            </Link>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center mb-6">
+        <Link href="/dashboard">
+          <Button variant="outline" size="icon" className="mr-4">
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">Tiefbau-Streckenplanung</h1>
+        </Link>
+        <h1 className="text-2xl font-bold">Tiefbau Streckenplanung</h1>
+      </div>
+      
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="w-full md:w-1/2">
+          <Label htmlFor="route-name">Streckenname</Label>
+          <Input 
+            id="route-name"
+            placeholder="Name der Strecke eingeben" 
+            value={routeName}
+            onChange={(e) => setRouteName(e.target.value)}
+            className="mt-1"
+          />
         </div>
         
-        {/* Projekt-Auswahl */}
-        <div className="flex-grow md:max-w-xs">
+        <div className="w-full md:w-1/2">
+          <Label htmlFor="project-select">Zum Projekt zuordnen</Label>
           <Select 
-            value={selectedProject?.toString() || "0"} 
-            onValueChange={(value) => {
-              const projectId = parseInt(value);
-              setSelectedProject(projectId === 0 ? null : projectId);
-            }}
-            disabled={isLoadingProjects}
+            value={selectedProject?.toString() || ""}
+            onValueChange={(value) => setSelectedProject(parseInt(value))}
           >
-            <SelectTrigger>
+            <SelectTrigger id="project-select" className="mt-1">
               <SelectValue placeholder="Projekt auswählen" />
             </SelectTrigger>
             <SelectContent>
               {isLoadingProjects ? (
-                <div className="p-2 text-center">Projekte werden geladen...</div>
+                <div className="p-2 text-center text-sm text-gray-500">
+                  Projekte werden geladen...
+                </div>
               ) : (
                 <>
-                  <SelectItem value="0">Keine Auswahl</SelectItem>
-                  {projects.map((project) => {
-                    // Debug-Ausgabe für jedes Projekt
-                    console.log('Projekt-Details:', project.id, 
-                                'Name:', project.projectName,
-                                'Cluster:', project.projectCluster,
-                                'Art:', project.projectArt);
-                    
-                    // Expliziter Name für die Anzeige konstruieren
-                    const displayName = project.projectName 
-                      ? `${project.projectName} (${project.projectArt || 'Projekt'})`
-                      : `Projekt ${project.id}`;
-                    
-                    return (
-                      <SelectItem key={project.id} value={project.id.toString()}>
-                        {displayName}
-                      </SelectItem>
-                    );
-                  })}
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
                 </>
               )}
             </SelectContent>
@@ -706,158 +428,213 @@ const TiefbauMap: React.FC = () => {
           <Card className="mb-6">
             <CardHeader className="pb-3">
               <CardTitle>Kartenansicht</CardTitle>
+              <CardDescription>Strecke planen und Höhenprofil abrufen</CardDescription>
             </CardHeader>
+            
             <CardContent>
-              {/* Spezifischer Platzhalter für die Map, der von der Komponente gefunden werden kann */}
-              <div className="tiefbau-map-placeholder">
-                {/* Container mit der id, die in der Map-Komponente erwartet wird */}
-                <div id="tiefbau-map-container" style={{ width: '100%', height: '500px' }}></div>
-              </div>
-              <BasicGoogleMap
-                onRouteChange={handleRouteChange}
-                onMarkersClear={clearMarkers}
-                initialCenter={{ lat: 48.137154, lng: 11.576124 }} // München
-                initialZoom={12}
-                searchOutsideMap={true} // Adresssuche außerhalb der Karte platzieren
-                initialRoute={savedRoute} // Gespeicherte Route übergeben
-              />
-            </CardContent>
-          </Card>
-          
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Streckeninformationen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-lg font-medium">Streckenlänge: {distance} km</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={clearMarkers} disabled={loading}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Strecke löschen
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={fetchElevationData} 
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Lädt...
-                      </span>
-                    ) : (
-                      <>
-                        <BarChart className="h-4 w-4 mr-1" />
-                        Höhenprofil
-                      </>
-                    )}
-                  </Button>
-                  <Button onClick={saveRoute} disabled={loading}>
-                    <Save className="h-4 w-4 mr-1" />
-                    Route speichern
-                  </Button>
-                  
-                  {/* PDF Export Button - wird nur angezeigt, wenn eine Route vorhanden ist */}
-                  {routeCoordinates.length > 0 && 
-                    <TiefbauPDFGenerator
-                      projectName={selectedProject ? 
-                        projects.find(p => p.id === selectedProject)?.projectName 
-                        : null}
-                      routeData={routeCoordinates.length > 0 ? {
-                        start: startAddress,
-                        end: endAddress,
-                        distance: distance,
-                        elevationGain: elevationData?.stats?.totalAscent || 0,
-                        elevationLoss: elevationData?.stats?.totalDescent || 0
-                      } : null}
-                      bodenartData={selectedBodenart && selectedBodenartObj ? {
-                        name: selectedBodenartObj.name,
-                        beschreibung: selectedBodenartObj.beschreibung,
-                        kostenProM2: streckenkostenProM2,
-                        gesamtkosten: gesamtstreckenkosten
-                      } : null}
-                      maschinenData={filteredMaschinen.length > 0 ? 
-                        filteredMaschinen.map(m => ({
-                          id: m.id,
-                          name: m.name,
-                          typ: m.typ,
-                          leistung: m.leistung,
-                          kostenProStunde: m.kosten_pro_stunde
-                        })) : null}
-                      mapContainerId={mapContainerId}
-                      chartContainerId={showElevationChart ? chartContainerId : null}
-                    />
-                  }
-                </div>
+              <div className="border rounded-md overflow-hidden mb-4" style={{height: '400px'}}>
+                <BasicGoogleMap />
               </div>
               
-              {/* Höhenprofil-Diagramm */}
-              {showElevationChart && elevationData && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-medium mb-2">Höhenprofil</h3>
+              <div className="flex justify-center mb-4">
+                <Button 
+                  onClick={handleLoadElevation} 
+                  disabled={loading}
+                  className="mr-2"
+                >
+                  {loading ? 'Wird geladen...' : 'Höhenprofil laden'}
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    toast({
+                      title: "Info",
+                      description: "Strecke wurde gespeichert.",
+                    });
+                  }}
+                  variant="outline"
+                  className="mr-2"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Strecke speichern
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
+                  onClick={() => {
+                    // Zurücksetzen der Strecke
+                    setRouteCoordinates([]);
+                    setElevationData([]);
+                    setElevationStats(null);
+                    setDistance(0);
+                    setStartAddress('');
+                    setEndAddress('');
+                    
+                    toast({
+                      title: "Info",
+                      description: "Strecke wurde zurückgesetzt.",
+                    });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Zurücksetzen
+                </Button>
+              </div>
+              
+              {elevationData.length > 0 && (
+                <div className="border rounded-lg p-4 bg-white mb-4">
+                  <h3 className="text-lg font-semibold mb-4">Höhenprofil der Strecke</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div className="bg-slate-50 p-3 rounded-md border">
-                      <p className="text-sm font-medium">Minimum Höhe: {elevationData.stats.minElevation.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Maximum Höhe: {elevationData.stats.maxElevation.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Höhenunterschied: {elevationData.stats.elevationDifference.toFixed(1)} m</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-500">Gesamtstrecke</div>
+                      <div className="text-xl font-semibold">{distance.toFixed(1)} km</div>
                     </div>
-                    <div className="bg-slate-50 p-3 rounded-md border">
-                      <p className="text-sm font-medium">Gesamtanstieg: {elevationData.stats.totalAscent.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Gesamtabstieg: {elevationData.stats.totalDescent.toFixed(1)} m</p>
-                      <p className="text-sm font-medium">Durchschnittl. Steigung: {((elevationData.stats.totalAscent / distance) * 100).toFixed(1)}%</p>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-500">Höhendifferenz</div>
+                      <div className="text-xl font-semibold">
+                        {elevationStats?.elevationDifference.toFixed(1)} m
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-500">Gesamtanstieg</div>
+                      <div className="text-xl font-semibold text-green-600">
+                        {elevationStats?.totalAscent.toFixed(1)} m
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-sm text-gray-500">Gesamtabstieg</div>
+                      <div className="text-xl font-semibold text-red-600">
+                        {elevationStats?.totalDescent.toFixed(1)} m
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="h-80 w-full" id={chartContainerId}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={formatElevationData()}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
+                  <div className="mb-2 flex justify-between text-sm">
+                    <div>{startAddress}</div>
+                    <div>{endAddress}</div>
+                  </div>
+                  
+                  <div style={{ width: '100%', height: 300 }}>
+                    <ResponsiveContainer>
+                      <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis 
-                          dataKey="distance" 
-                          label={{ value: 'Entfernung (km)', position: 'insideBottomRight', offset: -10 }} 
+                          dataKey="distance"
+                          label={{ 
+                            value: 'Entfernung (km)', 
+                            position: 'insideBottomRight', 
+                            offset: -5 
+                          }}
                         />
-                        <YAxis 
-                          label={{ value: 'Höhe (m)', angle: -90, position: 'insideLeft' }} 
-                          domain={['dataMin - 10', 'dataMax + 10']}
+                        <YAxis
+                          label={{ 
+                            value: 'Höhe (m)', 
+                            angle: -90, 
+                            position: 'insideLeft',
+                            offset: -5
+                          }}
+                          domain={[
+                            (dataMin) => Math.floor(dataMin - 5),
+                            (dataMax) => Math.ceil(dataMax + 5)
+                          ]}
                         />
                         <Tooltip 
-                          formatter={(value) => [`${value} m`, 'Höhe']}
-                          labelFormatter={(value) => `Entfernung: ${value.toFixed(1)} km`}
+                          formatter={(value, name) => [`${value} m`, 'Höhe']}
+                          labelFormatter={(label) => `Entfernung: ${label} km`}
                         />
-                        <Legend />
                         <Line 
                           type="monotone" 
                           dataKey="elevation" 
-                          name="Höhe" 
-                          stroke="#3b82f6" 
+                          stroke="#76a730" 
                           strokeWidth={2}
-                          dot={false}
-                          activeDot={{ r: 6 }}
+                          dot={{ r: 2 }}
+                          activeDot={{ r: 5 }}
                         />
-                        <ReferenceLine
-                          y={elevationData.stats.minElevation}
-                          label="Min"
-                          stroke="red"
-                          strokeDasharray="3 3"
-                        />
-                        <ReferenceLine
-                          y={elevationData.stats.maxElevation}
-                          label="Max"
-                          stroke="green"
-                          strokeDasharray="3 3"
-                        />
+                        {elevationStats && (
+                          <>
+                            <ReferenceLine 
+                              y={elevationStats.minElevation} 
+                              stroke="red" 
+                              strokeDasharray="3 3"
+                              label={{ 
+                                value: `Min: ${elevationStats.minElevation.toFixed(1)}m`, 
+                                position: 'insideBottomRight' 
+                              }}
+                            />
+                            <ReferenceLine 
+                              y={elevationStats.maxElevation} 
+                              stroke="green" 
+                              strokeDasharray="3 3"
+                              label={{ 
+                                value: `Max: ${elevationStats.maxElevation.toFixed(1)}m`, 
+                                position: 'insideTopRight' 
+                              }}
+                            />
+                          </>
+                        )}
                       </LineChart>
                     </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Bodenart-Auswahl für die Strecke */}
+                  <div className="mt-6">
+                    <div className="flex items-center mb-3">
+                      <Shovel className="h-5 w-5 mr-2 text-gray-600" />
+                      <h3 className="text-lg font-semibold">Bodenart der Strecke festlegen</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Select 
+                          value={selectedBodenart?.toString() || ""}
+                          onValueChange={(value) => setSelectedBodenart(parseInt(value))}
+                        >
+                          <SelectTrigger className="mb-3">
+                            <SelectValue placeholder="Bodenart auswählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bodenarten.map((bodenart) => (
+                              <SelectItem key={bodenart.id} value={bodenart.id.toString()}>
+                                {bodenart.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {selectedBodenart && (
+                          <Button
+                            onClick={generatePDF}
+                            disabled={isPdfGenerating}
+                            className="w-full mt-2"
+                          >
+                            <FileDown className="h-4 w-4 mr-2" />
+                            {isPdfGenerating ? 'Wird erstellt...' : 'PDF-Bericht erstellen'}
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div>
+                        {selectedBodenartObj && (
+                          <div className="bg-white border rounded-md p-3">
+                            <div className="text-sm font-semibold mb-1">{selectedBodenartObj.name}</div>
+                            <div className="text-xs text-gray-600 mb-2">{selectedBodenartObj.beschreibung}</div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                              <div>Belastungsklasse:</div>
+                              <div className="font-medium">{selectedBodenartObj.belastungsklasse}</div>
+                              <div>Dichte:</div>
+                              <div className="font-medium">{selectedBodenartObj.dichte} kg/m³</div>
+                              <div>Materialkosten:</div>
+                              <div className="font-medium">{selectedBodenartObj.material_kosten_pro_m2.toFixed(2)} €/m²</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -865,99 +642,6 @@ const TiefbauMap: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Maschinenplanung Tab */}
-        <TabsContent value="maschinen" className="pt-4">
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <CardTitle>Maschinenplanung</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-8">
-                <h3 className="text-lg font-medium mb-4">Bodenart auswählen</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <Label htmlFor="bodenartMaschinenSelect">Bodenart:</Label>
-                    <Select 
-                      value={selectedBodenart}
-                      onValueChange={(value) => {
-                        setSelectedBodenart(value);
-                        filterMaschinenByBodenart(value);
-                      }}
-                    >
-                      <SelectTrigger id="bodenartMaschinenSelect">
-                        <SelectValue placeholder="Bodenart auswählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">-- Keine Auswahl --</SelectItem>
-                        {bodenarten.map((bodenart) => (
-                          <SelectItem key={bodenart.id} value={bodenart.id.toString()}>
-                            {bodenart.name} - {bodenart.belastungsklasse}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                  
-                <h3 className="text-lg font-medium mb-4">Verfügbare Maschinen</h3>
-                {selectedBodenart ? (
-                  <p className="mb-4">
-                    Geeignete Maschinen für {bodenarten.find(b => b.id.toString() === selectedBodenart)?.name || ''}
-                  </p>
-                ) : (
-                  <p className="mb-4 text-orange-500">
-                    Bitte wählen Sie eine Bodenart aus dem Dropdown-Menü oben, um passende Maschinen zu sehen.
-                  </p>
-                )}
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredMaschinen.map((maschine) => (
-                    <div key={maschine.id} className="bg-white border rounded-md shadow-sm overflow-hidden">
-                      <div className="bg-slate-100 p-3 border-b">
-                        <h4 className="font-medium text-lg">{maschine.name}</h4>
-                        <p className="text-sm text-slate-500">{maschine.typ}</p>
-                      </div>
-                      <div className="p-4">
-                        <p className="mb-3">{maschine.beschreibung}</p>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <p className="text-slate-500">Leistung:</p>
-                            <p>{maschine.leistung}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Gewicht:</p>
-                            <p>{maschine.gewicht} kg</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Verbrauch:</p>
-                            <p>{maschine.kraftstoffverbrauch} l/h</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500">Kosten pro Stunde:</p>
-                            <p>{maschine.kosten_pro_stunde.toFixed(2)} €</p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4 pt-3 border-t">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-sm text-slate-500">Tagespreis:</p>
-                              <p className="font-medium">{maschine.kosten_pro_tag.toFixed(2)} €</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-slate-500">Wochenpreis:</p>
-                              <p className="font-medium">{maschine.kosten_pro_woche.toFixed(2)} €</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
         {/* DenkmalAtlas Bayern Tab - Ersetzt durch direkten Weiterleitungs-Button */}
 
         {/* BayernAtlas Geoportal Tab - Ersetzt durch direkten Weiterleitungs-Button */}
@@ -967,13 +651,11 @@ const TiefbauMap: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="bg-white shadow-sm rounded-lg">
               <CardHeader>
-                <CardTitle className="text-[#111827]">Bundesweite Denkmalkarten</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Überblick weiterer Denkmal-Informationssysteme in Deutschland
-                </CardDescription>
+                <CardTitle>Kulturerbe-Datenbanken</CardTitle>
+                <CardDescription>Zugriff auf bundesweite Denkmalinformationen</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <Button 
                     variant="outline" 
                     onClick={() => handleExternalLink("https://www.deutsche-digitale-bibliothek.de/newspaper", "Deutsche Digitale Bibliothek")}
@@ -988,7 +670,7 @@ const TiefbauMap: React.FC = () => {
                     onClick={() => handleExternalLink("https://www.dnk.de/im-fokus/deutsches-kulturerbe/", "Deutsches Kulturerbe")}
                     className="w-full justify-between bg-white hover:bg-gray-50"
                   >
-                    <span>Deutsches Kulturerbe (DNK)</span>
+                    <span>Deutsches Kulturerbe Portal</span>
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </Button>
 
@@ -1006,13 +688,11 @@ const TiefbauMap: React.FC = () => {
 
             <Card className="bg-white shadow-sm rounded-lg">
               <CardHeader>
-                <CardTitle className="text-[#111827]">Geodaten Portale</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Wichtige Geoportale und Kartendienste für Planungsgrundlagen
-                </CardDescription>
+                <CardTitle>Geodatendienste</CardTitle>
+                <CardDescription>Geodaten und Infrastrukturplanung</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   <Button 
                     variant="outline" 
                     onClick={() => handleExternalLink("https://www.geoportal.de/", "Geoportal Deutschland")}

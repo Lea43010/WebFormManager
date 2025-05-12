@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'wouter';
 import { useLocation } from 'wouter';
-import { Shovel, Database, Truck, MapPin, Calculator } from 'lucide-react';
+import { Shovel, Database, MapPin, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -41,13 +41,6 @@ const TiefbauNavigation = () => {
       href: '#',
       icon: Database,
       description: 'Analyse von Bodenarten und Eigenschaften',
-      comingSoon: true
-    },
-    {
-      title: 'Maschinenauswahl',
-      href: '#',
-      icon: Truck,
-      description: 'Passende Baumaschinen finden',
       comingSoon: true
     }
   ];
