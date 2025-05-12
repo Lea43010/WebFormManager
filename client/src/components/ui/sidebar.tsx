@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { PermissionGate } from "@/components/ui/permission-gate";
 import { 
   LayoutDashboard, 
   Building2, 
@@ -158,12 +159,8 @@ export function Sidebar() {
           <div className="space-y-1">
             {navItems.map((item) => {
               const isActive = location === item.href;
-              // Berechtigungsprüfung: Menüpunkt nur anzeigen, wenn der Benutzer die erforderliche Rolle hat
-              // oder wenn keine Rolle erforderlich ist
-              const hasPermission = !item.showFor || (user && user.role && item.showFor.includes(user.role));
               
-              if (!hasPermission) return null;
-              
+              // Generiere das Menüelement
               const menuItem = (
                 <div
                   className={cn(
@@ -183,8 +180,8 @@ export function Sidebar() {
               const tourId = item.href.replace(/\//g, '') || 'dashboard';
               const dataTourAttr = { 'data-tour': `${tourId}-link` };
               
-              // Wenn ein Tooltip-Text existiert, umschließe das Element mit der Tooltip-Komponente
-              return item.tooltip ? (
+              // Erstelle den Menüpunkt mit oder ohne Tooltip
+              const navigationItem = item.tooltip ? (
                 <TooltipButton 
                   key={item.href}
                   tooltipText={item.tooltip}
@@ -208,6 +205,18 @@ export function Sidebar() {
                   {menuItem}
                 </Link>
               );
+              
+              // Überprüfe Berechtigungen durch PermissionGate, wenn eine Rolle erforderlich ist
+              if (item.showFor) {
+                return (
+                  <PermissionGate key={item.href} requiredRole={item.showFor}>
+                    {navigationItem}
+                  </PermissionGate>
+                );
+              }
+              
+              // Wenn keine spezielle Berechtigungsprüfung erforderlich ist, wird der Menüpunkt für alle angezeigt
+              return navigationItem;
             })}
           </div>
         </nav>
