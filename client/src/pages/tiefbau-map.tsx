@@ -647,16 +647,16 @@ const TiefbauMap: React.FC = () => {
                   </Button>
                   
                   {/* PDF Export Button - wird nur angezeigt, wenn eine Route vorhanden ist */}
-                  {routeCoordinates.length > 0 && 
+                  {routeCoordinates.length > 0 && (
                     <TiefbauPDFGenerator
                       projectName={selectedProject ? 
                         projects.find(p => p.id === selectedProject)?.projectName 
                         : null}
-                      routeData={routeCoordinates.length > 0 ? {
+                      routeData={{
                         start: startAddress,
                         end: endAddress,
                         distance: distance
-                      } : null}
+                      }}
                       bodenartData={selectedBodenart && selectedBodenartObj ? {
                         name: selectedBodenartObj.name,
                         beschreibung: selectedBodenartObj.beschreibung,
@@ -673,7 +673,7 @@ const TiefbauMap: React.FC = () => {
                         })) : null}
                       mapContainerId={mapContainerId}
                     />
-                  }
+                  )}
                 </div>
               </div>
               
