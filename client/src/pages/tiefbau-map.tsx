@@ -667,16 +667,13 @@ const TiefbauMap: React.FC = () => {
             <Truck className="h-4 w-4 mr-2" />
             Maschinenplanung
           </TabsTrigger>
-          <TabsTrigger 
-            value="bayern" 
-            onClick={(e) => {
-              e.preventDefault(); // Verhindere, dass der Tab aktiviert wird
-              window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank");
-            }}
+          <Button 
+            className="text-sm rounded-none bg-transparent hover:bg-gray-100 p-2 border-none text-gray-700 hover:text-black flex items-center gap-2 h-9"
+            onClick={() => window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank")}
           >
-            <Map className="h-4 w-4 mr-2" />
+            <Map className="h-4 w-4" />
             DenkmalAtlas
-          </TabsTrigger>
+          </Button>
           <TabsTrigger value="geoportal">
             <Map className="h-4 w-4 mr-2" />
             BayernAtlas
@@ -1055,84 +1052,7 @@ const TiefbauMap: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        {/* DenkmalAtlas Bayern Tab */}
-        <TabsContent value="bayern" className="mt-0">
-          <Card className="bg-white shadow-sm rounded-lg">
-            <CardHeader>
-              <CardTitle className="text-[#111827] flex items-center justify-between">
-                <span>Bayerischer Denkmal-Atlas</span>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
-                  className="bg-white hover:bg-gray-50 border-[#76a730] text-[#76a730]"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Öffnen im neuen Tab
-                </Button>
-              </CardTitle>
-              <CardDescription className="text-gray-600">
-                Die Online-Version der Bayerischen Denkmalliste mit Informationen zu Bau- und Bodendenkmälern.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 relative">
-              {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#76a730]"></div>
-                </div>
-              )}
-              <div className="w-full h-[70vh] bg-gray-50 flex flex-col items-center justify-center p-4">
-                <div className="w-full max-w-3xl h-[50vh] bg-white border-2 border-gray-200 shadow-md rounded-lg flex flex-col items-center justify-center overflow-hidden p-4">
-                  <div className="text-xl font-bold text-gray-800 mb-4">Freistaat Bayern</div>
-                  
-                  {/* SVG Karte von Bayern basierend auf dem hochgeladenen Bild */}
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <svg 
-                      viewBox="0 0 350 300" 
-                      className="h-full w-auto max-w-full"
-                    >
-                      {/* Bayern als einfache, abgerundete Form */}
-                      <path
-                        d="M220,50 C260,80 290,150 270,210 C250,260 180,280 130,260 C80,240 40,170 70,110 C100,60 170,10 220,50 z"
-                        fill="#76a730"
-                      />
-                      
-                      {/* Wichtige Städte */}
-                      {/* Würzburg */}
-                      <circle cx="120" cy="100" r="5" fill="#d04848" />
-                      <text x="120" y="90" textAnchor="middle" fontSize="10" fill="#000">Würzburg</text>
-                      
-                      {/* Nürnberg */}
-                      <circle cx="170" cy="120" r="5" fill="#d04848" />
-                      <text x="170" y="110" textAnchor="middle" fontSize="10" fill="#000">Nürnberg</text>
-                      
-                      {/* Regensburg */}
-                      <circle cx="210" cy="140" r="5" fill="#d04848" />
-                      <text x="210" y="130" textAnchor="middle" fontSize="10" fill="#000">Regensburg</text>
-                      
-                      {/* Augsburg */}
-                      <circle cx="150" cy="190" r="5" fill="#d04848" />
-                      <text x="150" y="180" textAnchor="middle" fontSize="10" fill="#000">Augsburg</text>
-                      
-                      {/* München */}
-                      <circle cx="190" cy="210" r="5" fill="#d04848" />
-                      <text x="190" y="200" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#000">München</text>
-                    </svg>
-                  </div>
-                </div>
-                <div className="mt-4 text-center">
-                  <p className="text-gray-700 mb-4">Die direkte Einbindung des DenkmalAtlas ist aufgrund von Verbindungsbeschränkungen nicht möglich.</p>
-                  <Button 
-                    onClick={() => handleExternalLink("https://geoportal.bayern.de/denkmalatlas/", "Denkmal-Atlas")}
-                    className="bg-[#76a730] hover:bg-[#658f28] text-white"
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    DenkmalAtlas in neuem Tab öffnen
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* DenkmalAtlas Bayern Tab - Ersetzt durch direkten Weiterleitungs-Button */}
 
         {/* BayernAtlas Geoportal Tab */}
         <TabsContent value="geoportal" className="mt-0">
