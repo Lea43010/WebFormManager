@@ -676,14 +676,10 @@ const TiefbauMap: React.FC = () => {
       </div>
       
       <Tabs defaultValue="karte" className="mb-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="karte">
             <Map className="h-4 w-4 mr-2" />
             Kartenansicht
-          </TabsTrigger>
-          <TabsTrigger value="maschinen">
-            <Truck className="h-4 w-4 mr-2" />
-            Maschinenplanung
           </TabsTrigger>
           <Button 
             className="text-sm rounded-none bg-transparent hover:bg-gray-100 p-2 border-none text-gray-700 hover:text-black flex items-center gap-2 h-9"
