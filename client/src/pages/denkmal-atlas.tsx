@@ -42,45 +42,6 @@ const DenkmalAtlasMap = ({ onOpenExternal }: { onOpenExternal: () => void }) => 
   </div>
 );
 
-// Karten-Komponente für BayernAtlas
-const BayernAtlasMap = ({ onOpenExternal }: { onOpenExternal: () => void }) => (
-  <div className="w-full max-w-3xl h-[50vh] bg-white border-2 border-gray-200 shadow-md rounded-lg flex flex-col items-center justify-center overflow-hidden p-4">
-    <div className="text-lg font-bold text-gray-800 mb-4">Freistaat Bayern</div>
-    
-    <div className="relative w-full h-full flex items-center justify-center">
-      <svg 
-        viewBox="0 0 300 300" 
-        className="h-full w-auto max-w-full"
-        style={{ filter: "drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))" }}
-      >
-        {/* Bayerns Grundform - Vereinfacht */}
-        <path
-          d="M150,30 C120,35 110,70 100,90 C90,110 80,130 70,150 C60,170 60,200 70,220 C80,240 90,250 100,260 C110,270 130,280 150,280 C170,280 190,270 210,250 C220,240 230,220 240,200 C250,180 240,160 230,140 C220,120 210,100 200,80 C190,60 180,25 150,30 z"
-          fill="#76a730"
-          stroke="#fff"
-          strokeWidth="1"
-        />
-        
-        {/* Wichtige Städte */}
-        <circle cx="130" cy="80" r="4" fill="#d04848" />
-        <text x="130" y="70" textAnchor="middle" fontSize="8" fontWeight="normal">Würzburg</text>
-        
-        <circle cx="160" cy="120" r="4" fill="#d04848" />
-        <text x="160" y="110" textAnchor="middle" fontSize="8" fontWeight="normal">Nürnberg</text>
-        
-        <circle cx="190" cy="140" r="4" fill="#d04848" />
-        <text x="190" y="130" textAnchor="middle" fontSize="8" fontWeight="normal">Regensburg</text>
-        
-        <circle cx="145" cy="180" r="4" fill="#d04848" />
-        <text x="145" y="170" textAnchor="middle" fontSize="8" fontWeight="normal">Augsburg</text>
-        
-        <circle cx="175" cy="200" r="4" fill="#d04848" />
-        <text x="175" y="190" textAnchor="middle" fontSize="8" fontWeight="bold">München</text>
-      </svg>
-    </div>
-  </div>
-);
-
 // Wrapper-Komponente für Kartenansicht mit einheitlichem Button
 const MapContainer = ({ 
   title, 
@@ -150,6 +111,20 @@ const MapContainer = ({
 
 export default function DenkmalAtlasPage() {
   const [activeTab, setActiveTab] = useState("bayern");
+  const { toast } = useToast();
+
+  // Handle tab change with direct redirection for BayernAtlas
+  const handleTabChange = (value: string) => {
+    if (value === "bayernatlas") {
+      window.open("https://atlas.bayern.de/?c=677751,5422939&z=7&r=0&l=vt_standard&mid=1", "_blank");
+      toast({
+        title: "BayernAtlas wird geöffnet",
+        description: "Die BayernAtlas Webseite wird in einem neuen Browserfenster geladen.",
+      });
+      return;
+    }
+    setActiveTab(value);
+  };
 
   return (
     <div className="container mx-auto p-4 bg-[#F3F4F6]">
@@ -175,13 +150,13 @@ export default function DenkmalAtlasPage() {
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="bayern" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="bayern" value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-3 w-full bg-white mb-6">
           <TabsTrigger value="bayern" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
-            DenkmalAtlas Bayern
+            Denkmal-Atlas
           </TabsTrigger>
-          <TabsTrigger value="geoportal" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
-            BayernAtlas Geoportal 
+          <TabsTrigger value="bayernatlas" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
+            BayernAtlas
           </TabsTrigger>
           <TabsTrigger value="bund" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
             Bundesweite Dienste
@@ -201,18 +176,7 @@ export default function DenkmalAtlasPage() {
           </MapContainer>
         </TabsContent>
 
-        <TabsContent value="geoportal" className="mt-0">
-          <MapContainer 
-            title="BayernAtlas Geoportal" 
-            description="Das offizielle Geoportal mit umfangreichen Karten und Geodaten des Freistaats Bayern."
-            externalUrl="https://geoportal.bayern.de/bayernatlas/"
-            externalName="BayernAtlas"
-          >
-            <BayernAtlasMap 
-              onOpenExternal={() => window.open("https://geoportal.bayern.de/bayernatlas/", "_blank")}
-            />
-          </MapContainer>
-        </TabsContent>
+        {/* Kein TabsContent für "bayernatlas" nötig, da direkter Redirect */}
 
         <TabsContent value="bund" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
