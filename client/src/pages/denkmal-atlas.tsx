@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon, Map, ExternalLink, Home } from "lucide-react";
@@ -109,21 +108,101 @@ const MapContainer = ({
   );
 };
 
+// Komponente für Bundesweite Denkmalkarten
+const BundesweiteKarten = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card className="bg-white shadow-sm rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-[#111827]">Bundesweite Denkmalkarten</CardTitle>
+          <CardDescription className="text-gray-600">
+            Überblick weiterer Denkmal-Informationssysteme in Deutschland
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://www.deutsche-digitale-bibliothek.de/newspaper", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Deutsche Digitale Bibliothek</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://www.dnk.de/im-fokus/deutsches-kulturerbe/", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Deutsches Kulturerbe (DNK)</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://www.archaeologie-online.de/", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Archäologie Online</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-sm rounded-lg">
+        <CardHeader>
+          <CardTitle className="text-[#111827]">Geodaten Portale</CardTitle>
+          <CardDescription className="text-gray-600">
+            Wichtige Geoportale und Kartendienste für Planungsgrundlagen
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://www.geoportal.de/", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Geoportal Deutschland</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://gdz.bkg.bund.de/", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Geodatenzentrum (BKG)</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://www.umweltkarten.mv-regierung.de/atlas/", "_blank")}
+              className="w-full justify-between bg-white hover:bg-gray-50"
+            >
+              <span>Umweltkarten Deutschland</span>
+              <ExternalLink className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default function DenkmalAtlasPage() {
-  const [activeTab, setActiveTab] = useState("bayern");
+  const [activeView, setActiveView] = useState<"denkmal" | "bundesweit">("denkmal");
   const { toast } = useToast();
 
-  // Handle tab change with direct redirection for BayernAtlas
-  const handleTabChange = (value: string) => {
-    if (value === "bayernatlas") {
-      window.open("https://atlas.bayern.de/?c=677751,5422939&z=7&r=0&l=vt_standard&mid=1", "_blank");
-      toast({
-        title: "BayernAtlas wird geöffnet",
-        description: "Die BayernAtlas Webseite wird in einem neuen Browserfenster geladen.",
-      });
-      return;
-    }
-    setActiveTab(value);
+  const openBayernAtlas = () => {
+    window.open("https://atlas.bayern.de/?c=677751,5422939&z=7&r=0&l=vt_standard&mid=1", "_blank");
+    toast({
+      title: "BayernAtlas wird geöffnet",
+      description: "Die BayernAtlas Webseite wird in einem neuen Browserfenster geladen.",
+    });
   };
 
   return (
@@ -145,121 +224,52 @@ export default function DenkmalAtlasPage() {
         <AlertTitle className="text-[#111827]">Wichtige Information</AlertTitle>
         <AlertDescription className="text-gray-600">
           Die folgenden Geoportale werden als externe Dienste eingebunden. 
-          Sie unterstützen die Arbeit mit Denkmalschutz- und Geodaten in Deutschland. 
-          Klicken Sie auf die Tabs, um zwischen den verschiedenen Portalen zu wechseln.
+          Sie unterstützen die Arbeit mit Denkmalschutz- und Geodaten in Deutschland.
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="bayern" value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full bg-white mb-6">
-          <TabsTrigger value="bayern" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
-            Denkmal-Atlas
-          </TabsTrigger>
-          <TabsTrigger value="bayernatlas" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
-            BayernAtlas
-          </TabsTrigger>
-          <TabsTrigger value="bund" className="data-[state=active]:bg-[#76a730] data-[state=active]:text-white">
-            Bundesweite Dienste
-          </TabsTrigger>
-        </TabsList>
+      {/* Navigation Buttons */}
+      <div className="bg-white p-2 rounded-lg shadow-sm mb-6 grid grid-cols-3 gap-2">
+        <Button 
+          variant={activeView === "denkmal" ? "default" : "outline"}
+          className={activeView === "denkmal" ? "bg-[#76a730] hover:bg-[#638c28] text-white" : "bg-white"}
+          onClick={() => setActiveView("denkmal")}
+        >
+          Denkmal-Atlas
+        </Button>
+        
+        <Button 
+          variant="outline"
+          className="bg-white hover:bg-gray-50"
+          onClick={openBayernAtlas}
+        >
+          BayernAtlas
+        </Button>
+        
+        <Button 
+          variant={activeView === "bundesweit" ? "default" : "outline"}
+          className={activeView === "bundesweit" ? "bg-[#76a730] hover:bg-[#638c28] text-white" : "bg-white"}
+          onClick={() => setActiveView("bundesweit")}
+        >
+          Bundesweite Dienste
+        </Button>
+      </div>
 
-        <TabsContent value="bayern" className="mt-0">
-          <MapContainer 
-            title="Bayerischer Denkmal-Atlas" 
-            description="Die Online-Version der Bayerischen Denkmalliste mit Informationen zu Bau- und Bodendenkmälern."
-            externalUrl="https://geoportal.bayern.de/denkmalatlas/"
-            externalName="Denkmal-Atlas"
-          >
-            <DenkmalAtlasMap 
-              onOpenExternal={() => window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank")}
-            />
-          </MapContainer>
-        </TabsContent>
+      {/* Content based on active view */}
+      {activeView === "denkmal" && (
+        <MapContainer 
+          title="Bayerischer Denkmal-Atlas" 
+          description="Die Online-Version der Bayerischen Denkmalliste mit Informationen zu Bau- und Bodendenkmälern."
+          externalUrl="https://geoportal.bayern.de/denkmalatlas/"
+          externalName="Denkmal-Atlas"
+        >
+          <DenkmalAtlasMap 
+            onOpenExternal={() => window.open("https://geoportal.bayern.de/denkmalatlas/", "_blank")}
+          />
+        </MapContainer>
+      )}
 
-        {/* Kein TabsContent für "bayernatlas" nötig, da direkter Redirect */}
-
-        <TabsContent value="bund" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-white shadow-sm rounded-lg">
-              <CardHeader>
-                <CardTitle className="text-[#111827]">Bundesweite Denkmalkarten</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Überblick weiterer Denkmal-Informationssysteme in Deutschland
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://www.deutsche-digitale-bibliothek.de/newspaper", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Deutsche Digitale Bibliothek</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://www.dnk.de/im-fokus/deutsches-kulturerbe/", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Deutsches Kulturerbe (DNK)</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://www.archaeologie-online.de/", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Archäologie Online</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white shadow-sm rounded-lg">
-              <CardHeader>
-                <CardTitle className="text-[#111827]">Geodaten Portale</CardTitle>
-                <CardDescription className="text-gray-600">
-                  Wichtige Geoportale und Kartendienste für Planungsgrundlagen
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://www.geoportal.de/", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Geoportal Deutschland</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://gdz.bkg.bund.de/", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Geodatenzentrum (BKG)</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open("https://www.umweltkarten.mv-regierung.de/atlas/", "_blank")}
-                    className="w-full justify-between bg-white hover:bg-gray-50"
-                  >
-                    <span>Umweltkarten Deutschland</span>
-                    <ExternalLink className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {activeView === "bundesweit" && <BundesweiteKarten />}
     </div>
   );
 }
