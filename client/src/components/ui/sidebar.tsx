@@ -17,6 +17,7 @@ import {
   Info,
   UserCircle,
   ShieldAlert,
+  ShieldCheck,
   CreditCard,
   BarChart2, 
   FileCheck,
@@ -32,11 +33,13 @@ import { Separator } from "@/components/ui/separator";
 import { TooltipButton } from "@/components/ui/tooltip-button";
 import logoImage from "@/assets/Logo.png";
 
+type Role = 'administrator' | 'manager' | 'user';
+
 interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType;
-  showFor?: string[]; // Benutzerrollen, für die dieser Menüpunkt angezeigt werden soll
+  showFor?: Role[]; // Benutzerrollen, für die dieser Menüpunkt angezeigt werden soll
   tooltip?: string; // Tooltip-Text, der angezeigt wird, wenn über den Menüpunkt gefahren wird
 }
 
@@ -96,7 +99,7 @@ const navItems: NavItem[] = [
     title: "Datenqualität",
     href: "/data-quality",
     icon: FileCheck,
-    showFor: ['administrator', 'manager'],
+    showFor: ['administrator', 'manager'] as Role[],
     tooltip: "Datenqualität überwachen und verbessern",
   },
   {
@@ -113,10 +116,16 @@ const navItems: NavItem[] = [
     tooltip: "Abonnement-Verwaltung und Preispläne",
   },
   {
+    title: "Berechtigungen Demo",
+    href: "/permissions-demo",
+    icon: ShieldCheck,
+    tooltip: "Demonstration der rollenbasierten Berechtigungen",
+  },
+  {
     title: "Admin-Bereich",
     href: "/admin",
     icon: ShieldAlert,
-    showFor: ['administrator', 'manager'],
+    showFor: ['administrator', 'manager'] as Role[],
     tooltip: "Benutzer- und Systemadministration",
   },
 ];
