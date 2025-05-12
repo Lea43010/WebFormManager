@@ -863,6 +863,93 @@ const TiefbauMap: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        
+
+                <h3 className="text-lg font-medium mb-4">Bodenart auswählen</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <Label htmlFor="bodenartMaschinenSelect">Bodenart:</Label>
+                    <Select 
+                      value={selectedBodenart}
+                      onValueChange={(value) => {
+                        setSelectedBodenart(value);
+                        filterMaschinenByBodenart(value);
+                      }}
+                    >
+                      <SelectTrigger id="bodenartMaschinenSelect">
+                        <SelectValue placeholder="Bodenart auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">-- Keine Auswahl --</SelectItem>
+                        {bodenarten.map((bodenart) => (
+                          <SelectItem key={bodenart.id} value={bodenart.id.toString()}>
+                            {bodenart.name} - {bodenart.belastungsklasse}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                  
+                <h3 className="text-lg font-medium mb-4">Verfügbare Maschinen</h3>
+                {selectedBodenart ? (
+                  <p className="mb-4">
+                    Geeignete Maschinen für {bodenarten.find(b => b.id.toString() === selectedBodenart)?.name || ''}
+                  </p>
+                ) : (
+                  <p className="mb-4 text-orange-500">
+                    Bitte wählen Sie eine Bodenart aus dem Dropdown-Menü oben, um passende Maschinen zu sehen.
+                  </p>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredMaschinen.map((maschine) => (
+                    <div key={maschine.id} className="bg-white border rounded-md shadow-sm overflow-hidden">
+                      <div className="bg-slate-100 p-3 border-b">
+                        <h4 className="font-medium text-lg">{maschine.name}</h4>
+                        <p className="text-sm text-slate-500">{maschine.typ}</p>
+                      </div>
+                      <div className="p-4">
+                        <p className="mb-3">{maschine.beschreibung}</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <p className="text-slate-500">Leistung:</p>
+                            <p>{maschine.leistung}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Gewicht:</p>
+                            <p>{maschine.gewicht} kg</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Verbrauch:</p>
+                            <p>{maschine.kraftstoffverbrauch} l/h</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Kosten pro Stunde:</p>
+                            <p>{maschine.kosten_pro_stunde.toFixed(2)} €</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 pt-3 border-t">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <p className="text-sm text-slate-500">Tagespreis:</p>
+                              <p className="font-medium">{maschine.kosten_pro_tag.toFixed(2)} €</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-slate-500">Wochenpreis:</p>
+                              <p className="font-medium">{maschine.kosten_pro_woche.toFixed(2)} €</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
         {/* DenkmalAtlas Bayern Tab - Ersetzt durch direkten Weiterleitungs-Button */}
 
         {/* BayernAtlas Geoportal Tab - Ersetzt durch direkten Weiterleitungs-Button */}
