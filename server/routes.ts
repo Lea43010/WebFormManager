@@ -1866,9 +1866,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Nach erfolgreicher Validierung das Token invalidieren
       invalidateToken(token);
       
+      // Absoluten Pfad sicherstellen und überprüfen
+      const absoluteFilePath = path.resolve(filePath);
+      console.log(`Sende Datei mit absolutem Pfad: ${absoluteFilePath}`);
+      
+      // Zusätzliche Überprüfung, ob die Datei existiert
+      if (!await fs.pathExists(absoluteFilePath)) {
+        console.error(`Datei existiert nicht am absoluten Pfad: ${absoluteFilePath}`);
+        return res.status(404).json({ message: "Datei konnte nicht am finalen Pfad gefunden werden" });
+      }
+      
+      // Korrekte Header für den Download setzen
       const fileName = encodeURIComponent(attachment.fileName);
+      res.setHeader("Content-Type", attachment.fileType === "pdf" ? "application/pdf" : 
+                                   attachment.fileType === "excel" ? "application/vnd.ms-excel" : 
+                                   attachment.fileType === "image" ? "image/jpeg" : "application/octet-stream");
       res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-      res.sendFile(path.resolve(filePath));
+      
+      // Versuchen, die Datei mit explizitem Error-Handling zu senden
+      try {
+        // Zuerst den normalen sendFile-Mechanismus versuchen mit umfassenderem Error-Handling
+        const handleSendFileResult = (err) => {
+          if (err) {
+            console.error(`Fehler beim Senden der Datei mit sendFile: ${err.message}`);
+            
+            // Wenn ein Fehler auftritt, versuchen wir es mit dem Stream-Ansatz
+            try {
+              if (!res.headersSent) {
+                // Fallback auf Stream-basierten Download
+                console.log(`Versuche Stream-basierten Download für: ${absoluteFilePath}`);
+                
+                // Dateistatistik abrufen
+                const stat = fs.statSync(absoluteFilePath);
+                
+                // Content-Length setzen
+                res.setHeader("Content-Length", stat.size);
+                
+                // Datei-Stream erstellen und an die Response pipen
+                const fileStream = fs.createReadStream(absoluteFilePath);
+                
+                // Error-Handler für den Stream
+                fileStream.on('error', (streamError) => {
+                  console.error(`Stream-Fehler: ${streamError.message}`);
+                  if (!res.headersSent) {
+                    res.status(500).json({ message: "Fehler beim Streamen der Datei" });
+                  } else {
+                    res.end();
+                  }
+                });
+                
+                // Stream an die Response anhängen
+                fileStream.pipe(res);
+                
+                console.log(`Stream-basierter Download gestartet: ${absoluteFilePath}`);
+                return;
+              }
+            } catch (streamError) {
+              console.error(`Fehler beim Stream-basierten Download: ${streamError.message}`);
+              if (!res.headersSent) {
+                return res.status(500).json({ message: "Datei konnte nicht bereitgestellt werden" });
+              }
+            }
+          } else {
+            console.log(`Datei erfolgreich gesendet mit sendFile: ${absoluteFilePath}`);
+          }
+        };
+        
+        // sendFile mit Callback verwenden
+        res.sendFile(absoluteFilePath, handleSendFileResult);
+      } catch (sendFileError) {
+        console.error(`Kritischer Fehler bei sendFile: ${sendFileError.message}`);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: "Datei konnte nicht bereitgestellt werden" });
+        }
+      }
     } catch (error) {
       console.error("Error downloading attachment:", error);
       next(error);

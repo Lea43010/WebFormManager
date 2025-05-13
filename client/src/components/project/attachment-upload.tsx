@@ -244,7 +244,7 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                       size="icon"
                       onClick={async () => {
                         try {
-                          // Token anfordern
+                          // Token anfordern (für den Download-Endpunkt)
                           const response = await fetch(`/api/attachments/${attachment.id}/token`);
                           
                           if (!response.ok) {
@@ -253,8 +253,19 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                           
                           const data = await response.json();
                           
-                          // Mit Token die Datei herunterladen
-                          window.open(`/api/attachments/${attachment.id}/download?token=${data.token}`, "_blank");
+                          // Zuverlässigere Download-Methode verwenden (temporärer Link-Element)
+                          const link = document.createElement('a');
+                          link.href = `/api/attachments/${attachment.id}/download?token=${data.token}`;
+                          link.setAttribute('download', attachment.fileName || 'download');
+                          link.setAttribute('target', '_blank'); // Öffnet in neuem Tab
+                          document.body.appendChild(link);
+                          link.click();
+                          
+                          // Kurze Verzögerung vor dem Entfernen, um sicherzustellen, dass der Browser Zeit hat, 
+                          // den Download zu starten
+                          setTimeout(() => {
+                            document.body.removeChild(link);
+                          }, 100);
                         } catch (error) {
                           toast({
                             title: "Download-Fehler",
