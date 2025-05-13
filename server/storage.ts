@@ -204,12 +204,29 @@ export class DatabaseStorage implements IStorage {
     for (const [key, value] of Object.entries(data)) {
       if (value instanceof Date) {
         preparedData[key] = value.toISOString();
-      } else if (typeof value === 'number' && ['workHours'].includes(key)) {
-        // Spezielle Behandlung für numerische Felder, die Strings sein sollten
-        preparedData[key] = value.toString();
+      } else if (typeof value === 'number') {
+        if (['workHours'].includes(key)) {
+          // Numerische Felder, die Strings sein sollten
+          preparedData[key] = value.toString();
+        } else if (['latitude', 'longitude', 'confidence'].includes(key)) {
+          // Numerische Felder, die numerisch bleiben sollen
+          preparedData[key] = value;
+        } else {
+          // Standardverhalten für andere numerische Felder
+          preparedData[key] = value;
+        }
       } else {
         preparedData[key] = value;
       }
+    }
+    
+    // Zusätzliche Prüfungen für erforderliche Felder je nach Objekttyp
+    if ('latitude' in data && 'longitude' in data && !('imageFilePath' in preparedData)) {
+      // Wenn erforderliche Felder für SurfaceAnalysis fehlen, füge Standardwerte hinzu
+      preparedData.imageFilePath = preparedData.imageFilePath || '';
+    } else if ('date' in data && 'employee' in data && !('activity' in preparedData)) {
+      // Wenn erforderliche Felder für ConstructionDiary fehlen, füge Standardwerte hinzu
+      preparedData.activity = preparedData.activity || '';
     }
     
     // Zurückgeben als Array mit einem Element
@@ -1231,23 +1248,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createConstructionDiary(diary: InsertConstructionDiary): Promise<ConstructionDiary> {
-    // Datentypen sicherstellen (z.B. für numerische Felder)
-    const diaryData: Record<string, any> = {};
-    
-    // Manuelles Mapping für sichere Typkonvertierung
-    for (const [key, value] of Object.entries(diary)) {
-      // Behandle numerische Felder spezifisch
-      if (['workHours'].includes(key) && typeof value === 'number') {
-        diaryData[key] = value.toString(); // Konvertiere Zahlen in Strings
-      } else if (value instanceof Date) {
-        diaryData[key] = value.toISOString();
-      } else {
-        diaryData[key] = value;
-      }
-    }
-    
-    // Array mit einem Element für das Insert-Statement erstellen
-    const diaryDataArray = [diaryData];
+    // Verwende die generische Methode zur Typkonvertierung
+    const diaryDataArray = this.prepareDataForInsert(diary);
     
     const result = await db
       .insert(constructionDiaries)
@@ -1259,20 +1261,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateConstructionDiary(id: number, diary: Partial<InsertConstructionDiary>): Promise<ConstructionDiary | undefined> {
-    // Datentypen sicherstellen (z.B. für numerische Felder)
-    const diaryData: Record<string, any> = {};
-    
-    // Manuelles Mapping für sichere Typkonvertierung
-    for (const [key, value] of Object.entries(diary)) {
-      // Behandle numerische Felder spezifisch
-      if (['workHours'].includes(key) && typeof value === 'number') {
-        diaryData[key] = value.toString(); // Konvertiere Zahlen in Strings
-      } else if (value instanceof Date) {
-        diaryData[key] = value.toISOString();
-      } else {
-        diaryData[key] = value;
-      }
-    }
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [diaryData] = this.prepareDataForInsert(diary);
     
     const result = await db
       .update(constructionDiaries)
