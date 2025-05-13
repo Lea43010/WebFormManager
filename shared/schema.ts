@@ -174,6 +174,8 @@ export const attachments = pgTable("tblattachment", {
   originalFormat: varchar("original_format", { length: 20 }),
   webpPath: varchar("webp_path", { length: 1000 }),
   isOptimized: boolean("is_optimized").default(false),
+  // Status der Datei
+  fileMissing: boolean("file_missing").default(false),
 });
 
 // Bedarfs- und Kapazitätsplanung table

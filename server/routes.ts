@@ -1873,7 +1873,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Zusätzliche Überprüfung, ob die Datei existiert
       if (!await fs.pathExists(absoluteFilePath)) {
         console.error(`Datei existiert nicht am absoluten Pfad: ${absoluteFilePath}`);
-        return res.status(404).json({ message: "Datei konnte nicht am finalen Pfad gefunden werden" });
+        
+        // Markiere den Anhang als "Datei fehlt" in der Datenbank
+        try {
+          await storage.markAttachmentFileMissing(id);
+          console.log(`Anhang mit ID ${id} wurde als fehlend markiert`);
+        } catch (markingError) {
+          console.error(`Fehler beim Markieren des Anhangs als fehlend: ${markingError}`);
+        }
+        
+        return res.status(404).json({ 
+          message: "Datei konnte nicht gefunden werden",
+          details: "Die Datei existiert nicht mehr auf dem Server. Der Anhang wurde als fehlend markiert."
+        });
       }
       
       // Korrekte Header für den Download setzen

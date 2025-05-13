@@ -767,6 +767,29 @@ export class DatabaseStorage implements IStorage {
   async deleteAttachment(id: number): Promise<void> {
     await db.delete(attachments).where(eq(attachments.id, id));
   }
+  
+  async markAttachmentFileMissing(id: number): Promise<Attachment | undefined> {
+    try {
+      // Markiere den Anhang als fehlend, setze zusätzlich einen Status in der Beschreibung
+      const [updatedAttachment] = await db
+        .update(attachments)
+        .set({ 
+          fileMissing: true,
+          description: sql`CASE 
+                          WHEN "description" IS NULL OR "description" = '' 
+                          THEN '⚠️ Datei nicht mehr verfügbar' 
+                          ELSE CONCAT("description", ' | ⚠️ Datei nicht mehr verfügbar') 
+                        END`
+        })
+        .where(eq(attachments.id, id))
+        .returning();
+        
+      return updatedAttachment;
+    } catch (error) {
+      console.error(`Fehler beim Markieren des Anhangs als fehlend: ${error}`);
+      return undefined;
+    }
+  }
 
   // Surface Analysis operations
   async getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
