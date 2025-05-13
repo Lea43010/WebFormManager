@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer as createHttpServer, type Server } from "http";
 import { createServer as createHttpsServer } from "https";
 import express from "express";
+import attachmentDebugRoutes from "./routes/attachment-debug-routes";
 import path from "path";
 import fs from "fs-extra";
 import { findFile, ensureUploadDirectories } from "./file-utils";
