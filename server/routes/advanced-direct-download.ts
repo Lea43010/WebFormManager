@@ -20,7 +20,7 @@ const UPLOAD_DIRECTORIES = [
 ];
 
 // Funktion zum Finden einer Datei in verschiedenen Verzeichnissen
-async function findFile(originalPath: string, fileName: string): Promise<string | null> {
+export async function findFile(originalPath: string, fileName: string): Promise<string | null> {
   // Zuerst prüfen, ob der Original-Pfad existiert
   if (originalPath && fs.existsSync(originalPath)) {
     console.log(`[Download] Datei gefunden am Originalpfad: ${originalPath}`);
@@ -58,7 +58,7 @@ async function findFile(originalPath: string, fileName: string): Promise<string 
 }
 
 // Lese MIME-Typ anhand der Dateiendung
-function getMimeType(filePath: string): string {
+export function getMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   
   // MIME-Typen-Mapping

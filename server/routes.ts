@@ -109,6 +109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Verbesserten Download-Debugger aktivieren
   setupDownloadDebugger(app);
   
+  // Verbesserte Download-Funktionalität aktivieren
+  setupAdvancedDirectDownload(app);
+  
   // Backup-Routen einrichten
   setupBackupRoutes(app);
   
