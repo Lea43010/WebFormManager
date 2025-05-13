@@ -49,7 +49,9 @@ import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfu
 import { checkSubscriptionStatus, verifySubscriptionStatus } from "./middleware/auth"; // Abonnementstatus-Prüfung
 import { z } from "zod";
 
-// Entfernt temporär den File-Scanner wegen Modul-Kompatibilitätsproblemen
+// Import für den verbesserten Download-Debugger
+import { setupDownloadDebugger } from "./direct-download-debugger"; // Neuer Download-Debugger
+import { setupAdvancedDirectDownload } from "./routes/advanced-direct-download"; // Verbesserte Download-Funktionalität
 import { errorHandler } from "./error-handler"; // Zentrale Fehlerbehandlung
 import geoProjectsRouter from "./routes/geo-projects"; // Geo-Projekte-API
 import elevationRouter from "./routes/elevation"; // Google Elevation API
@@ -104,7 +106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Debug-Routen einrichten (ohne Authentifizierung)
   setupDebugRoutes(app);
   
-  // Datei-Scanner für Debugging temporär deaktiviert wegen Modul-Kompatibilitätsproblemen
+  // Verbesserten Download-Debugger aktivieren
+  setupDownloadDebugger(app);
   
   // Backup-Routen einrichten
   setupBackupRoutes(app);
