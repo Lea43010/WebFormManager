@@ -1,342 +1,252 @@
 /**
- * Debug-Endpunkte für Anhänge im System
+ * Debug-Endpunkte für Bau-Structura Dateianlagen
+ * Bietet Diagnosefunktionen zur Fehlerbehebung bei Dateianhängen
  */
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs-extra';
-import { storage } from '../storage';
 
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
 
-// Middleware zur Prüfung der Administrator-Rolle
-const requireAdmin = (req, res, next) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ 
-      status: 'error',
-      message: "Sie müssen angemeldet sein, um auf diese Funktion zuzugreifen."
-    });
-  }
-  
-  if (req.user?.role !== 'administrator') {
-    return res.status(403).json({ 
-      status: 'error',
-      message: "Diese Funktion steht nur Administratoren zur Verfügung."
-    });
-  }
-  
-  next();
-};
+// Verzeichnisse zum Suchen von Anhängen
+const UPLOAD_DIRECTORIES = [
+  './uploads',
+  './public/uploads',
+  '/home/runner/workspace/uploads',
+  '.'
+];
 
-// Configure multer for file uploads
-const upload = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+/**
+ * GET /api/debug/attachments - Startseite der Debug-Funktionen
+ */
+router.get('/', (req, res) => {
+  res.json({
+    message: "Debug-Funktionen für Anhänge",
+    endpoints: [
+      { path: "/api/debug/attachments/scan", description: "Durchsucht Verzeichnisse nach Anhängen" },
+      { path: "/api/debug/attachments/file/:id", description: "Zeigt Details zu einem Anhang" },
+      { path: "/api/debug/attachments/check-paths", description: "Überprüft Pfade für Anlagen" }
+    ]
+  });
 });
 
-const fileUpload = multer({ 
-  storage: upload,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit to 5MB
-  fileFilter: (req, file, cb) => {
-    // Accept images and PDFs
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Unsupported file type'), false);
-    }
-  }
-});
-
-// Endpoint for scanning attachments
-router.get('/scan', requireAdmin, async (req, res) => {
+/**
+ * GET /api/debug/attachments/scan - Scanning-Funktion
+ */
+router.get('/scan', (req, res) => {
   try {
-    // Bekannte Upload-Verzeichnisse
-    const uploadDirs = [
-      path.join(process.cwd(), 'uploads'),
-      path.join(process.cwd(), 'public', 'uploads'),
-      '/home/runner/workspace/uploads'
-    ];
-    
-    // Ergebnisse sammeln
-    const results = {
-      status: 'success',
-      message: 'Scan abgeschlossen',
-      timestamp: new Date().toISOString(),
-      scan: {
-        scannedDirectories: 0,
-        totalFilesFound: 0,
-        filesInDatabase: 0,
-        orphanedFiles: 0,
-        missingFiles: 0,
-        directorySummary: [],
-      },
-      orphanedFiles: [],
-      missingFiles: []
-    };
-    
-    // Alle Anhänge aus der Datenbank holen
-    const dbAttachments = await storage.getAllAttachments();
-    results.scan.filesInDatabase = dbAttachments.length;
-    
-    // Dateinamen aus der Datenbank extrahieren
-    const dbFilenames = new Set(
-      dbAttachments.map(a => path.basename(a.filePath || ''))
-        .filter(name => name.length > 0)
-    );
-    
-    // Sammlung fehlender Dateien
-    const missingFiles = dbAttachments.filter(a => {
-      try {
-        return a.filePath && !fs.existsSync(a.filePath);
-      } catch (error) {
-        console.error(`Fehler beim Prüfen von ${a.filePath}:`, error);
-        return true; // Wenn ein Fehler auftritt, behandeln wir die Datei als fehlend
-      }
-    });
-    
-    results.scan.missingFiles = missingFiles.length;
-    results.missingFiles = missingFiles.map(a => ({
-      id: a.id,
-      fileName: a.fileName,
-      path: a.filePath,
-      projectId: a.projectId
-    }));
-    
-    // Verzeichnisse scannen
-    for (const dir of uploadDirs) {
+    const results = [];
+
+    // Durchsuche alle definierten Verzeichnisse
+    for (const dir of UPLOAD_DIRECTORIES) {
       try {
         if (fs.existsSync(dir)) {
-          results.scan.scannedDirectories++;
-          
-          // Alle Dateien im Verzeichnis auflisten
           const files = fs.readdirSync(dir);
-          const dirFiles = files.filter(file => !file.startsWith('.') && !file.endsWith('.tmp'));
+          const filesInDir = files.length;
+          console.log(`Gefunden: ${filesInDir} Dateien in ${dir}`);
           
-          results.scan.totalFilesFound += dirFiles.length;
+          // Füge die ersten 10 Dateien als Beispiel hinzu
+          const sampleFiles = files.slice(0, 10).map(file => ({
+            fileName: file,
+            path: path.join(dir, file),
+            size: fs.statSync(path.join(dir, file)).size
+          }));
           
-          // Verwaiste Dateien finden (im Dateisystem, aber nicht in der Datenbank)
-          const orphanedFiles = dirFiles.filter(file => !dbFilenames.has(file));
-          results.scan.orphanedFiles += orphanedFiles.length;
-          
-          // Details zu diesem Verzeichnis speichern
-          results.scan.directorySummary.push({
+          results.push({
             directory: dir,
-            filesCount: dirFiles.length,
-            orphanedFilesCount: orphanedFiles.length,
-            accessible: true
-          });
-          
-          // Verwaiste Dateien-Liste erweitern
-          orphanedFiles.forEach(file => {
-            results.orphanedFiles.push({
-              fileName: file,
-              path: path.join(dir, file),
-              size: fs.statSync(path.join(dir, file)).size
-            });
+            exists: true,
+            totalFiles: filesInDir,
+            sampleFiles: sampleFiles
           });
         } else {
-          results.scan.directorySummary.push({
+          results.push({
             directory: dir,
-            error: "Verzeichnis existiert nicht",
-            filesCount: 0,
-            orphanedFilesCount: 0,
-            accessible: false
+            exists: false,
+            message: "Verzeichnis existiert nicht"
           });
         }
       } catch (error) {
-        console.error(`Fehler beim Scannen von ${dir}:`, error);
-        results.scan.directorySummary.push({
+        results.push({
           directory: dir,
-          error: `Konnte nicht gescannt werden: ${error.message || 'Unbekannter Fehler'}`,
-          filesCount: 0,
-          orphanedFilesCount: 0,
-          accessible: false
+          error: true,
+          message: `Fehler beim Durchsuchen: ${error.message}`
         });
       }
     }
-    
-    res.json(results);
-  } catch (error) {
-    console.error("Fehler beim Scannen des Dateisystems:", error);
-    res.status(500).json({ 
-      status: 'error',
-      message: "Beim Scannen des Dateisystems ist ein Fehler aufgetreten.",
-      error: String(error)
-    });
-  }
-});
 
-// Endpoint for uploading and scanning attachments
-router.post('/scan', requireAdmin, fileUpload.single('attachment'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Keine Datei hochgeladen'
-      });
-    }
-
-    // Dateiinformationen zurückgeben
     res.json({
-      status: 'success',
-      message: 'Datei erfolgreich hochgeladen und geprüft',
-      file: {
-        filename: req.file.filename,
-        originalName: req.file.originalname,
-        size: req.file.size,
-        mimetype: req.file.mimetype,
-        path: req.file.path
-      },
-      scanResult: {
-        dateisystem: fs.existsSync(req.file.path),
-        zugriffsrechte: {
-          lesbar: true,
-          schreibbar: true
-        },
-        scannedAt: new Date().toISOString()
-      }
+      message: "Verzeichnisse gescannt",
+      results: results
     });
   } catch (error) {
     res.status(500).json({
-      status: 'error',
-      message: error.message
+      message: "Fehler beim Scannen der Verzeichnisse",
+      error: error.message
     });
   }
 });
 
-// Endpoint für HTML Testseite
-router.get('/test', requireAdmin, (req, res) => {
-  const html = `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>Anhang-Diagnose</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        margin: 0;
-        padding: 20px;
-        color: #333;
-        background-color: #f8f9fa;
-      }
-      .container {
-        max-width: 800px;
-        margin: 0 auto;
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-      h1, h2 {
-        color: #4a5568;
-      }
-      form {
-        margin-bottom: 30px;
-      }
-      input[type="file"] {
-        display: block;
-        margin-bottom: 15px;
-      }
-      button {
-        background-color: #76a730;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #5a8418;
-      }
-      pre {
-        background-color: #f0f4f8;
-        padding: 15px;
-        border-radius: 4px;
-        overflow-x: auto;
-      }
-      .result {
-        margin-top: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Bau-Structura Anhang-Diagnose</h1>
+/**
+ * GET /api/debug/attachments/check-paths - Pfade prüfen
+ */
+router.get('/check-paths', (req, res) => {
+  // Liste wichtiger Pfade, die überprüft werden sollen
+  const pathsToCheck = [
+    { name: 'Current Working Directory', path: process.cwd() },
+    { name: 'Uploads Directory', path: path.resolve('./uploads') },
+    { name: 'Public Uploads Directory', path: path.resolve('./public/uploads') },
+    { name: 'Absolute Workspace Uploads', path: '/home/runner/workspace/uploads' },
+    { name: 'Node Modules Directory', path: path.resolve('./node_modules') },
+    { name: 'Parent Directory', path: path.resolve('..') }
+  ];
+
+  const results = pathsToCheck.map(item => {
+    try {
+      const exists = fs.existsSync(item.path);
+      const isDirectory = exists ? fs.statSync(item.path).isDirectory() : false;
+      const stats = exists ? fs.statSync(item.path) : null;
       
-      <h2>Dateisystem scannen</h2>
-      <button id="scanButton">Dateisystem scannen</button>
-      <div class="result">
-        <pre id="scanResult">Ergebnisse werden hier angezeigt...</pre>
-      </div>
-      
-      <h2>Datei-Upload testen</h2>
-      <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="attachment" id="attachment">
-        <button type="submit">Hochladen und scannen</button>
-      </form>
-      <div class="result">
-        <pre id="uploadResult">Ergebnisse werden hier angezeigt...</pre>
-      </div>
-    </div>
-    
-    <script>
-      // Scan-Funktionalität
-      document.getElementById('scanButton').addEventListener('click', async () => {
-        const scanResult = document.getElementById('scanResult');
-        scanResult.textContent = 'Scanvorgang läuft...';
-        
-        try {
-          const response = await fetch('/api/debug/attachments/scan');
-          const data = await response.json();
-          
-          scanResult.textContent = JSON.stringify(data, null, 2);
-        } catch (error) {
-          scanResult.textContent = 'Fehler beim Scannen: ' + error.message;
-        }
-      });
-      
-      // Upload-Funktionalität
-      document.getElementById('uploadForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const uploadResult = document.getElementById('uploadResult');
-        uploadResult.textContent = 'Upload läuft...';
-        
-        const formData = new FormData(event.target);
-        
-        try {
-          const response = await fetch('/api/debug/attachments/scan', {
-            method: 'POST',
-            body: formData
-          });
-          
-          const data = await response.json();
-          uploadResult.textContent = JSON.stringify(data, null, 2);
-        } catch (error) {
-          uploadResult.textContent = 'Fehler beim Upload: ' + error.message;
-        }
-      });
-    </script>
-  </body>
-  </html>
-  `;
-  
-  res.set('Content-Type', 'text/html');
-  res.send(html);
+      return {
+        ...item,
+        exists,
+        isDirectory,
+        stats: stats ? {
+          size: stats.size,
+          created: stats.birthtime,
+          modified: stats.mtime,
+          permissions: stats.mode.toString(8).slice(-3)
+        } : null
+      };
+    } catch (error) {
+      return {
+        ...item,
+        error: error.message
+      };
+    }
+  });
+
+  res.json({
+    message: "Pfadprüfung abgeschlossen",
+    results: results
+  });
 });
 
-export default router;
+/**
+ * GET /api/debug/attachments/file/:filename - Details zu einer Datei
+ */
+router.get('/file/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const results = [];
+  let fileFound = false;
+
+  // Suche die Datei in allen Verzeichnissen
+  for (const dir of UPLOAD_DIRECTORIES) {
+    try {
+      if (fs.existsSync(dir)) {
+        const filePath = path.join(dir, filename);
+        
+        if (fs.existsSync(filePath)) {
+          const stats = fs.statSync(filePath);
+          fileFound = true;
+          
+          results.push({
+            directory: dir,
+            filePath: filePath,
+            exists: true,
+            isDirectory: stats.isDirectory(),
+            stats: {
+              size: stats.size,
+              created: stats.birthtime,
+              modified: stats.mtime,
+              permissions: stats.mode.toString(8).slice(-3)
+            }
+          });
+          
+          // Wenn es eine Textdatei ist, versuche den Inhalt anzuzeigen
+          const fileExtension = path.extname(filePath).toLowerCase();
+          if (['.txt', '.log', '.json', '.js', '.ts', '.html', '.css'].includes(fileExtension)) {
+            try {
+              const content = fs.readFileSync(filePath, 'utf8');
+              results[results.length - 1].content = content.substring(0, 1000) + 
+                (content.length > 1000 ? '... (truncated)' : '');
+            } catch (readError) {
+              results[results.length - 1].readError = readError.message;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      results.push({
+        directory: dir,
+        filePath: path.join(dir, filename),
+        error: error.message
+      });
+    }
+  }
+
+  if (fileFound) {
+    res.json({
+      message: `Datei '${filename}' gefunden`,
+      results: results
+    });
+  } else {
+    res.status(404).json({
+      message: `Datei '${filename}' wurde nicht gefunden`,
+      searchedIn: UPLOAD_DIRECTORIES
+    });
+  }
+});
+
+// Funktion zum Testen einer direkten Dateiauslieferung
+router.get('/test-download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  
+  // Versuche die Datei in allen bekannten Verzeichnissen zu finden
+  for (const dir of UPLOAD_DIRECTORIES) {
+    const filePath = path.join(dir, filename);
+    
+    try {
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        console.log(`Datei gefunden: ${filePath}`);
+        
+        // Bestimme den MIME-Typ basierend auf der Dateiendung
+        const ext = path.extname(filePath).toLowerCase();
+        let contentType = 'application/octet-stream'; // Standard
+        
+        if (ext === '.pdf') contentType = 'application/pdf';
+        else if (['.jpg', '.jpeg'].includes(ext)) contentType = 'image/jpeg';
+        else if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.gif') contentType = 'image/gif';
+        else if (ext === '.webp') contentType = 'image/webp';
+        
+        // Sende die Datei
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        // Stream die Datei zum Client
+        const fileStream = fs.createReadStream(filePath);
+        fileStream.pipe(res);
+        
+        // Logge Fehler
+        fileStream.on('error', (err) => {
+          console.error(`Fehler beim Streamen der Datei: ${err}`);
+          if (!res.headersSent) {
+            res.status(500).send('Fehler beim Lesen der Datei');
+          }
+        });
+        
+        return; // Beende die Funktion, wenn die Datei gefunden wurde
+      }
+    } catch (error) {
+      console.error(`Fehler beim Überprüfen von ${filePath}: ${error.message}`);
+    }
+  }
+  
+  // Wenn keine Datei gefunden wurde
+  res.status(404).send({
+    message: `Datei '${filename}' wurde nicht gefunden`,
+    searchedIn: UPLOAD_DIRECTORIES
+  });
+});
+
+module.exports = router;
