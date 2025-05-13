@@ -29,39 +29,66 @@ router.get('/:id', async (req: Request, res: Response) => {
     console.log(`📋 Anhangsdaten: ${JSON.stringify(attachment, null, 2)}`);
     
     // Extrahiere den Dateinamen vom Original-Pfad und dem Original-Namen
-    const filenameFromPath = path.basename(attachment.filePath);
+    const filenameFromPath = path.basename(attachment.filePath || '');
     const originalName = attachment.originalName;
+    const fileName = attachment.fileName;
     
-    console.log(`📁 Suche nach Datei: ${filenameFromPath} oder ${originalName}`);
+    console.log(`📁 Suche nach Datei: ${filenameFromPath} oder ${fileName} oder ${originalName}`);
     
     // Prüfe verschiedene Verzeichnisse
     const directoriesToCheck = [
       './uploads',
       './public/uploads',
-      '/home/runner/workspace/uploads'
+      '/home/runner/workspace/uploads',
+      path.dirname(attachment.filePath || ''),
+      '.'
     ];
     
     let fileFound = false;
     let foundFilePath = '';
     
-    // Überprüfe jedes Verzeichnis
-    for (const dir of directoriesToCheck) {
-      try {
-        // Überprüfe, ob das Verzeichnis existiert
-        if (fs.existsSync(dir)) {
-          console.log(`📁 Überprüfe Verzeichnis: ${dir}`);
+    // Falls die Datei direkt im angegebenen Pfad existiert, verwende sie als erstes
+    if (attachment.filePath && fs.existsSync(attachment.filePath)) {
+      console.log(`✅ Datei existiert direkt am angegebenen Pfad: ${attachment.filePath}`);
+      foundFilePath = attachment.filePath;
+      fileFound = true;
+    } else {
+      // Überprüfe jedes Verzeichnis
+      for (const dir of directoriesToCheck) {
+        try {
+          // Überprüfe, ob das Verzeichnis existiert
+          if (fs.existsSync(dir)) {
+            console.log(`📁 Überprüfe Verzeichnis: ${dir}`);
+            
+            // Liste alle Dateien im Verzeichnis auf
+            const files = fs.readdirSync(dir);
+            console.log(`📂 ${files.length} Dateien gefunden in ${dir}`);
           
-          // Liste alle Dateien im Verzeichnis auf
-          const files = fs.readdirSync(dir);
-          console.log(`📂 ${files.length} Dateien gefunden in ${dir}`);
-          
-          // Versuche, eine passende Datei zu finden
-          const matchingFiles = files.filter((file: string) => 
-            file.includes(filenameFromPath) || 
-            filenameFromPath.includes(file) ||
-            (originalName && file.includes(originalName)) ||
-            (originalName && originalName.includes(file))
-          );
+          // Versuche, eine passende Datei zu finden mit erweiterten Kriterien
+          const matchingFiles = files.filter((file: string) => {
+            // Exakter Pfad-Match
+            if (file === filenameFromPath) {
+              console.log(`✅ Exakter Pfad-Match gefunden: ${file}`);
+              return true;
+            }
+            
+            // Dateiname-Match
+            if (fileName && (file === fileName || file.includes(fileName) || fileName.includes(file))) {
+              console.log(`✅ Dateiname-Match gefunden: ${file}`);
+              return true;
+            }
+            
+            // Fallback auf Teil-Matchings
+            if (file.includes(filenameFromPath) || 
+                filenameFromPath.includes(file) ||
+                (originalName && file.includes(originalName)) ||
+                (originalName && originalName.includes(file))) {
+              console.log(`✅ Teil-Match gefunden: ${file}`);
+              return true;
+            }
+            
+            return false;
+          });
           
           if (matchingFiles.length > 0) {
             console.log(`✅ Passende Dateien gefunden: ${matchingFiles.join(', ')}`);
@@ -78,20 +105,51 @@ router.get('/:id', async (req: Request, res: Response) => {
     if (fileFound) {
       console.log(`📤 Sende Datei: ${foundFilePath}`);
       
-      // Sende die gefundene Datei zum Client
-      return res.sendFile(path.resolve(foundFilePath), {
-        headers: {
-          'Content-Disposition': `attachment; filename="${encodeURIComponent(originalName || filenameFromPath)}"`,
-          'Content-Type': getContentType(foundFilePath)
-        }
-      });
+      try {
+        // Prüfe ob die Datei existiert und lesbar ist
+        await fs.access(foundFilePath, fs.constants.R_OK);
+        
+        // Sende die gefundene Datei zum Client
+        return res.sendFile(path.resolve(foundFilePath), {
+          headers: {
+            'Content-Disposition': `attachment; filename="${encodeURIComponent(originalName || fileName || filenameFromPath)}"`,
+            'Content-Type': getContentType(foundFilePath)
+          },
+          // Zusätzlicher Error-Handler für sendFile
+          dotfiles: 'allow'
+        }, (err) => {
+          if (err) {
+            console.error('❌ Fehler beim Senden der Datei:', err);
+            res.status(500).json({ 
+              message: "Die Datei konnte nicht gesendet werden",
+              userFriendly: true,
+              technicalDetails: String(err)
+            });
+          }
+        });
+      } catch (accessError) {
+        // Datei existiert, ist aber nicht lesbar
+        console.error('❌ Datei existiert, ist aber nicht lesbar:', accessError);
+        await storage.markAttachmentFileMissing(id);
+        return res.status(403).json({ 
+          message: "Die Datei existiert, kann aber nicht gelesen werden. Der Administrator wurde benachrichtigt.",
+          userFriendly: true
+        });
+      }
     } else {
       console.log('❌ Keine passende Datei gefunden!');
+      // Markiere die Datei als fehlend in der Datenbank
+      await storage.markAttachmentFileMissing(id);
+      
       return res.status(404).json({ 
-        message: "Datei nicht gefunden", 
-        filename: filenameFromPath,
-        originalName,
-        path: attachment.filePath
+        message: "Die angeforderte Datei konnte nicht gefunden werden. Der Administrator wurde benachrichtigt.",
+        userFriendly: true,
+        technicalDetails: {
+          filename: filenameFromPath,
+          fileName,
+          originalName,
+          path: attachment.filePath
+        }
       });
     }
   } catch (error) {

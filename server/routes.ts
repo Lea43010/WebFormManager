@@ -4443,18 +4443,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup subscription routes
   app.use('/api/subscription', subscriptionRouter);
   
-  // Verbesserte Debug-Routen für Dateianhänge mit benutzerfreundlicher Fehlerbehandlung
-  import * as attachmentDebugRoutes from './routes/attachment-debug-routes';
-  app.use('/api/debug/attachments', (req, res, next) => {
-    try {
-      attachmentDebugRoutes.router(req, res, next);
-    } catch (error) {
-      console.error("Fehler in den Debug-Routen:", error);
-      res.status(500).json({
-        message: "Ein Fehler ist aufgetreten. Diese Funktion ist nur für Administratoren verfügbar.",
-        userFriendly: true
-      });
-    }
+  // DEBUG-Routen werden später implementiert
+  app.use('/api/debug/attachments', (req, res) => {
+    res.status(200).json({
+      message: "Die Debug-Funktionen werden bald verfügbar sein",
+      userFriendly: true
+    });
   });
 
   // Direkte Download-Route ohne Token-Anforderung mit benutzerfreundlicher Fehlerbehandlung
