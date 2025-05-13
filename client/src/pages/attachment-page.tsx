@@ -18,6 +18,7 @@ import { FileOrganizationSuggestions } from "@/components/attachment/file-organi
 import { Badge } from "@/components/ui/badge";
 import ResponsiveImage from "@/components/ui/responsive-image";
 import Base64Image from "@/components/ui/base64-image";
+import AttachmentImage from "@/components/ui/attachment-image";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import MobileFriendlyButton from "@/components/ui/mobile-friendly-button";
 import { 
@@ -48,11 +49,7 @@ export default function AttachmentPage() {
     queryKey: ["/api/attachments"],
     staleTime: 10 * 1000, // 10 Sekunden
     retry: 3, // Bei Fehlern bis zu 3 Mal versuchen
-    refetchOnWindowFocus: false, // Nicht automatisch bei Fokuswechsel neu laden
-    onError: (error) => {
-      console.error("Fehler beim Laden der Anhänge:", error);
-      // Wir zeigen den Fehler nicht in der UI an, sondern nur in der Konsole
-    }
+    refetchOnWindowFocus: false // Nicht automatisch bei Fokuswechsel neu laden
   });
 
   // Löschen eines Anhangs
@@ -253,7 +250,7 @@ export default function AttachmentPage() {
                       <div className="text-center">
                         {attachment.fileType === 'image' ? (
                           <div className="relative w-full h-40 overflow-hidden rounded-md">
-                            <Base64Image
+                            <AttachmentImage
                               attachmentId={attachment.id}
                               alt={attachment.fileName}
                               className="object-cover w-full h-full"
@@ -374,7 +371,7 @@ export default function AttachmentPage() {
                             <div className="text-center">
                               {attachment.fileType === 'image' ? (
                                 <div className="relative w-full h-32 overflow-hidden rounded-md">
-                                  <Base64Image
+                                  <AttachmentImage
                                     attachmentId={attachment.id}
                                     alt={attachment.fileName}
                                     className="object-cover w-full h-full"
