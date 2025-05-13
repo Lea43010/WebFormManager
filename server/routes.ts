@@ -2338,7 +2338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Einrichten der Download-Routen für Datenbankmigrationen
+  // Standard-Download-Routen
   setupDownloadRoutes(app);
+  
+  // Verbesserte Download-Routen mit zuverlässigerem Datei-Handling
+  setupEnhancedDownloadRoutes(app);
   
   // Smart File Organization Routen einrichten
   setupFileOrganizationRoutes(app);

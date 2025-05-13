@@ -3,8 +3,27 @@
  * Insbesondere für die Suche nach Dateien in verschiedenen Pfaden
  */
 
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as fs from "fs-extra";
+import * as path from "path";
+
+// Bekannte alternative Pfad-Patterns, die in der Bau-Structura-App auftreten können
+// Dies ist eine Liste von Pfad-Transformationen, die versucht werden, wenn der Originalpfad nicht gefunden wird
+const ALTERNATIVE_PATH_PATTERNS = [
+  // Standard-Pattern: direkt im Uploads-Ordner
+  (filename: string) => path.join("uploads", filename),
+  
+  // Alternative 1: absoluter Pfad im aktuellen Arbeitsverzeichnis
+  (filename: string) => path.join(process.cwd(), "uploads", filename),
+  
+  // Alternative 2: "public" Verzeichnis (für Produktions-Deployments)
+  (filename: string) => path.join("public", "uploads", filename),
+  
+  // Alternative 3: Aufsteigen im Verzeichnisbaum
+  (filename: string) => path.join("..", "uploads", filename),
+  
+  // Alternative 4: Vollständiger Pfad ohne Verzeichnisstruktur
+  (filename: string) => filename,
+];
 
 /**
  * Sucht eine Datei in verschiedenen möglichen Pfaden
@@ -13,72 +32,64 @@ import * as path from 'path';
  * @returns Der gefundene Dateipfad oder null wenn keine Datei gefunden wurde
  */
 export async function findFile(originalPath: string, webpPath?: string | null): Promise<string | null> {
-  // Versuche zuerst den ursprünglichen Pfad
+  // 1. Zuerst den Original-Pfad prüfen
   try {
     const exists = await fs.pathExists(originalPath);
     if (exists) {
-      console.log(`Datei am Original-Pfad gefunden: ${originalPath}`);
+      console.log(`Datei am Originalpfad gefunden: ${originalPath}`);
       return originalPath;
     }
   } catch (error) {
-    console.error(`Fehler beim Prüfen des originalen Pfads (${originalPath}):`, error);
-  }
-
-  // Extrahiere den Dateinamen aus dem Pfad
-  const fileName = path.basename(originalPath);
-  
-  // Array aller möglichen Pfadvarianten
-  const alternativePaths = [
-    path.join(process.cwd(), "uploads", fileName),       // Absoluter Pfad im aktuellen Arbeitsverzeichnis
-    path.join("uploads", fileName),                      // Relativer Pfad zum Arbeitsverzeichnis
-    path.join("./uploads", fileName),                    // Expliziter relativer Pfad
-    path.join(__dirname, "../uploads", fileName),        // Relativer Pfad zum routes.ts-Verzeichnis
-    path.join("public/uploads", fileName),               // Für den Fall, dass es im öffentlichen Verzeichnis liegt
-    fileName                                             // Nur der Dateiname selbst
-  ];
-  
-  // Systematisch alle Pfade durchprobieren
-  for (const altPath of alternativePaths) {
-    try {
-      const exists = await fs.pathExists(altPath);
-      if (exists) {
-        console.log(`Datei an alternativem Pfad gefunden: ${altPath}`);
-        return altPath;
-      }
-    } catch (error) {
-      console.error(`Fehler beim Prüfen des alternativen Pfads (${altPath}):`, error);
-    }
+    console.error(`Fehler beim Prüfen des Originalpfads: ${error}`);
   }
   
-  // Wenn die Originalversion nicht gefunden wurde und ein WebP-Pfad existiert, auch diesen prüfen
+  // 2. Wenn WebP-Pfad angegeben ist, diesen als nächstes prüfen
   if (webpPath) {
     try {
       const exists = await fs.pathExists(webpPath);
       if (exists) {
-        console.log(`Original nicht gefunden, aber WebP-Version existiert: ${webpPath}`);
+        console.log(`Datei am WebP-Pfad gefunden: ${webpPath}`);
         return webpPath;
       }
     } catch (error) {
-      console.error(`Fehler beim Prüfen des WebP-Pfads (${webpPath}):`, error);
+      console.error(`Fehler beim Prüfen des WebP-Pfads: ${error}`);
     }
-    
-    // Auch für WebP alle alternativen Pfade prüfen
-    const webpFileName = path.basename(webpPath);
-    for (const altPath of alternativePaths.map(p => p.replace(fileName, webpFileName))) {
+  }
+  
+  // 3. Alternative Pfade für Originaldatei prüfen
+  const filename = path.basename(originalPath);
+  for (const patternFn of ALTERNATIVE_PATH_PATTERNS) {
+    const alternativePath = patternFn(filename);
+    try {
+      const exists = await fs.pathExists(alternativePath);
+      if (exists) {
+        console.log(`Datei an alternativer Stelle gefunden: ${alternativePath}`);
+        return alternativePath;
+      }
+    } catch (error) {
+      console.error(`Fehler beim Prüfen des alternativen Pfads ${alternativePath}: ${error}`);
+    }
+  }
+  
+  // 4. Wenn WebP-Pfad vorhanden, auch alternative Pfade für WebP-Datei prüfen
+  if (webpPath) {
+    const webpFilename = path.basename(webpPath);
+    for (const patternFn of ALTERNATIVE_PATH_PATTERNS) {
+      const alternativeWebPPath = patternFn(webpFilename);
       try {
-        const exists = await fs.pathExists(altPath);
+        const exists = await fs.pathExists(alternativeWebPPath);
         if (exists) {
-          console.log(`WebP-Version an alternativem Pfad gefunden: ${altPath}`);
-          return altPath;
+          console.log(`WebP-Datei an alternativer Stelle gefunden: ${alternativeWebPPath}`);
+          return alternativeWebPPath;
         }
       } catch (error) {
-        console.error(`Fehler beim Prüfen des WebP-Alternativen Pfads (${altPath}):`, error);
+        console.error(`Fehler beim Prüfen des alternativen WebP-Pfads ${alternativeWebPPath}: ${error}`);
       }
     }
   }
   
   // Keine Datei gefunden
-  console.error(`Datei konnte unter keinem Pfad gefunden werden.`);
+  console.error(`Keine Datei gefunden für Original: ${originalPath}, WebP: ${webpPath || 'nicht definiert'}`);
   return null;
 }
 
@@ -87,12 +98,13 @@ export async function findFile(originalPath: string, webpPath?: string | null): 
  * @param filePath Der Pfad, in dem die Datei gespeichert werden soll
  */
 export async function ensureUploadDirectories(filePath: string): Promise<void> {
-  const dirPath = path.dirname(filePath);
-  await fs.ensureDir(dirPath);
+  const directory = path.dirname(filePath);
   
-  // Stelle sicher, dass auch Unterverzeichnisse wie 'thumbnails' und 'optimized' existieren
-  if (dirPath.includes('uploads')) {
-    await fs.ensureDir(path.join(dirPath, 'thumbnails'));
-    await fs.ensureDir(path.join(dirPath, 'optimized'));
+  try {
+    await fs.ensureDir(directory);
+    console.log(`Verzeichnis sichergestellt: ${directory}`);
+  } catch (error) {
+    console.error(`Fehler beim Erstellen des Verzeichnisses ${directory}:`, error);
+    throw new Error(`Verzeichnis konnte nicht erstellt werden: ${directory}`);
   }
 }
