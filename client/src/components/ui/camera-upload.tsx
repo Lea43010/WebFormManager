@@ -162,10 +162,8 @@ export function CameraUpload({ projectId, onUploadSuccess, onUploadError }: Came
       // FormData für den Upload vorbereiten
       const formData = new FormData();
       formData.append('file', file);
-      // Nur gültige Projekt-IDs anhängen (projektId kann null oder eine Zahl sein)
-      if (projectId !== null && projectId !== undefined) {
-        formData.append('projectId', projectId.toString());
-      }
+      // Projekt-ID anhängen (entweder die ausgewählte ID oder 1 als Standard-Projekt)
+      formData.append('projectId', projectId !== null && projectId !== undefined ? projectId.toString() : "1");
 
       // Datei hochladen
       const response = await fetch('/api/attachments', {
