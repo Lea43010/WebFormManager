@@ -769,14 +769,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createComponent(component: InsertComponent): Promise<Component> {
-    const [createdComponent] = await db.insert(components).values(component).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const componentDataArray = this.prepareDataForInsert(component);
+    
+    const [createdComponent] = await db.insert(components).values(componentDataArray).returning();
     return createdComponent;
   }
 
   async updateComponent(id: number, component: Partial<InsertComponent>): Promise<Component | undefined> {
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [componentData] = this.prepareDataForInsert(component);
+    
     const [updatedComponent] = await db
       .update(components)
-      .set(component)
+      .set(componentData)
       .where(eq(components.id, id))
       .returning();
     return updatedComponent;
@@ -797,14 +803,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPerson(person: InsertPerson): Promise<Person> {
-    const [createdPerson] = await db.insert(persons).values(person).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const personDataArray = this.prepareDataForInsert(person);
+    
+    const [createdPerson] = await db.insert(persons).values(personDataArray).returning();
     return createdPerson;
   }
 
   async updatePerson(id: number, person: Partial<InsertPerson>): Promise<Person | undefined> {
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [personData] = this.prepareDataForInsert(person);
+    
     const [updatedPerson] = await db
       .update(persons)
-      .set(person)
+      .set(personData)
       .where(eq(persons.id, id))
       .returning();
     return updatedPerson;
@@ -837,7 +849,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAttachment(attachment: InsertAttachment): Promise<Attachment> {
-    const [createdAttachment] = await db.insert(attachments).values(attachment).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const attachmentDataArray = this.prepareDataForInsert(attachment);
+    
+    const [createdAttachment] = await db.insert(attachments).values(attachmentDataArray).returning();
     return createdAttachment;
   }
 
@@ -1042,14 +1057,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSoilReferenceData(data: InsertSoilReferenceData): Promise<SoilReferenceData> {
-    const [createdData] = await db.insert(soilReferenceData).values(data).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const dataArray = this.prepareDataForInsert(data);
+    
+    const [createdData] = await db.insert(soilReferenceData).values(dataArray).returning();
     return createdData;
   }
 
   async updateSoilReferenceData(id: number, data: Partial<InsertSoilReferenceData>): Promise<SoilReferenceData | undefined> {
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [preparedData] = this.prepareDataForInsert(data);
+    
     const [updatedData] = await db
       .update(soilReferenceData)
-      .set(data)
+      .set(preparedData)
       .where(eq(soilReferenceData.id, id))
       .returning();
     return updatedData;
