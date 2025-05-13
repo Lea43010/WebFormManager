@@ -63,14 +63,31 @@ export default function AttachmentUploadForm({
   // Datei-Upload Mutation
   const uploadMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await fetch("/api/attachments/upload", {
-        method: "POST",
-        body: data,
-        credentials: "include"
-      });
-      return response.json();
+      // Debug-Ausgaben
+      console.log('Sende Datei zum Upload:', selectedFile);
+      console.log('Formular-Daten:', Object.fromEntries(data.entries()));
+      
+      try {
+        const response = await fetch("/api/attachments/upload", {
+          method: "POST",
+          body: data,
+          credentials: "include"
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server-Antwort bei Fehler:', errorText);
+          throw new Error(`Upload fehlgeschlagen: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error('Fehler beim Datei-Upload:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Upload erfolgreich:', result);
       toast({
         title: "Anhang hochgeladen",
         description: "Der Anhang wurde erfolgreich hochgeladen",
@@ -83,9 +100,10 @@ export default function AttachmentUploadForm({
       }
     },
     onError: (error: Error) => {
+      console.error('Upload-Fehler:', error);
       toast({
         title: "Fehler beim Hochladen",
-        description: error.message,
+        description: error.message || "Unbekannter Fehler beim Datei-Upload",
         variant: "destructive",
       });
     },

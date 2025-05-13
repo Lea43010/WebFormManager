@@ -1932,20 +1932,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
   app.post(
     "/api/attachments/upload",
+    (req, res, next) => {
+      // Debug vor dem Multer-Upload
+      console.log('Upload-Anfrage erhalten:', {
+        contentType: req.headers['content-type'],
+        contentLength: req.headers['content-length'],
+        body: req.body // Wird minimal sein, da der Body noch nicht geparst wurde
+      });
+      next();
+    },
     ...optimizedUpload.single("file"),
     handleUploadErrors,
     cleanupOnError,
     async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
+        console.log('Upload-Handler nach Multer:', {
+          isAuthenticated: req.isAuthenticated(),
+          fileReceived: !!req.file,
+          body: req.body,
+          user: req.user ? { id: req.user.id, role: req.user.role } : null,
+          file: req.file ? {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            path: req.file.path
+          } : null
+        });
+        
         if (!req.isAuthenticated()) {
           return res.status(401).json({ message: "Nicht authentifiziert" });
         }
         
         if (!req.file) {
+          console.error('Keine Datei im Request gefunden');
           return res.status(400).json({ message: "Keine Datei hochgeladen." });
         }
         
         if (!req.body.projectId) {
+          console.error('Keine Projekt-ID im Request gefunden');
           // Lösche die Datei, da kein Projekt angegeben wurde
           await fs.remove(req.file.path);
           return res.status(400).json({ message: "Projekt-ID ist erforderlich" });

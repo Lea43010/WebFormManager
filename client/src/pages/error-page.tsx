@@ -59,8 +59,12 @@ export default function ErrorPage({
 
   // Verwende vereinfachte Navigation dank des useNavigation-Hooks
   const handleGoBack = () => {
-    // Da wir im Fehlerkontext sind, direkt window.location verwenden statt SPA-Navigation
-    window.location.href = '/dashboard';
+    // Statt href, location.replace verwenden, um sicherzustellen, dass die Navigation stattfindet
+    window.location.replace('/dashboard');
+    // Als Fallback auch einen direkten href setzen
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 100);
   };
 
   const handleRefresh = () => {
