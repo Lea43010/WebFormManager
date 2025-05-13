@@ -61,9 +61,7 @@ import { storage } from "./storage";
     serveStatic(app);
   }
 
-  // Port 5000 für Replit (wird vom Replit Workflow System erwartet)
-  const PORT = 5000;
-  let serverStarted = false;
+  const PORT = process.env.PORT || 5000;
 
   // Funktionen für den Serverstart
   function initializeDelayedTasks() {
@@ -74,37 +72,21 @@ import { storage } from "./storage";
     } catch (error) {
       logger.error('Fehler beim Initialisieren der Cron-Jobs:', error);
     }
-    
-    // Benutzer-Cache beim Start vorwärmen für bessere Performance - vorübergehend deaktiviert
-    logger.info('Benutzer-Cache-Vorwärmung übersprungen (deaktiviert für Fehlerbehebung)');
   }
 
   // Server starten
-  // Standard-HTTP-Server für die Entwicklungsumgebung
-  server.listen(PORT, "0.0.0.0")
+  server.listen(PORT)
     .on('listening', () => {
-      serverStarted = true;
-      
-      // Umgebungsspezifische Startmeldung
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${PORT}${environment}`);
-      log(`serving on port ${PORT}`);
-    
-      // Verzögerte Initialisierungen - auf ein Minimum reduziert
-      setTimeout(() => {
-        initializeDelayedTasks();
-      }, 5000); // 5 Sekunden Verzögerung
+      
+      // Verzögerte Initialisierungen
+      setTimeout(initializeDelayedTasks, 5000);
     })
     .on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        logger.error(`Port ${PORT} ist bereits in Verwendung. Server kann nicht gestartet werden.`);
-        console.error(`[express] KRITISCHER FEHLER: Port ${PORT} ist bereits in Verwendung! Server kann nicht gestartet werden.`);
-        
-        // Bei Portkonflikt versuchen wir Port 3000
-        const FALLBACK_PORT = 3000;
-        console.log(`[express] Versuche alternativen Port ${FALLBACK_PORT}...`);
-        
-        server.listen(FALLBACK_PORT, "0.0.0.0")
+      logger.error('Fehler beim Starten des Servers:', err);
+      process.exit(1);
+    });
           .on('listening', () => {
             serverStarted = true;
             logger.info(`Server gestartet auf Fallback-Port ${FALLBACK_PORT}${config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)'}`);
