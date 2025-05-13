@@ -72,6 +72,10 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
       }
       
       // Projekt des Anhangs abrufen, um die Berechtigung zu prüfen
+      if (attachment.projectId === null) {
+        return res.status(400).json({ message: "Anhang ist keinem Projekt zugeordnet" });
+      }
+      
       const project = await storage.getProject(attachment.projectId);
       if (!project) {
         return res.status(404).json({ message: "Zugehöriges Projekt nicht gefunden" });
@@ -138,7 +142,7 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
         
         // Markiere den Anhang als "Datei fehlt" in der Datenbank
         try {
-          await storage.markAttachmentFileMissing(id);
+          const updatedAttachment = await storage.markAttachmentFileMissing(id);
           console.log(`Anhang mit ID ${id} wurde als fehlend markiert`);
         } catch (markingError) {
           console.error(`Fehler beim Markieren des Anhangs als fehlend:`, markingError);
