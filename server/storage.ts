@@ -113,6 +113,9 @@ export interface IStorage {
   deleteAttachment(id: number): Promise<void>;
   markAttachmentFileMissing(id: number): Promise<Attachment | undefined>;
   resetAttachmentFileMissing(id: number): Promise<Attachment | undefined>;
+  getAllAttachments(): Promise<Attachment[]>;
+  markAttachmentAsMissing(id: number): Promise<void>;
+  updateAttachmentPath(id: number, newPath: string): Promise<void>;
 
   // Surface Analysis operations
   getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]>;

@@ -1,0 +1,50 @@
+      .set(subscription)
+      .where(eq(userSubscriptions.id, id))
+      .returning() as UserSubscription[];
+    
+    // Auch den Benutzerstatus aktualisieren, wenn notwendig
+    if (updatedSubscription && subscription.status) {
+      await db
+        .update(users)
+        .set({ 
+          subscriptionStatus: subscription.status,
+          stripeCustomerId: subscription.stripeCustomerId,
+          stripeSubscriptionId: subscription.stripeSubscriptionId
+        })
+        .where(eq(users.id, updatedSubscription.userId));
+        
+      // Benutzer-Cache invalidieren
+      this.invalidateUserCache(updatedSubscription.userId);
+    }
+    
+    return updatedSubscription;
+  }
+
+  async deleteUserSubscription(id: number): Promise<void> {
+    // Bevor wir das Abonnement löschen, finden wir den zugehörigen Benutzer
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.id, id)) as UserSubscription[];
+    
+    if (subscription) {
+      // Benutzer auf Trial zurücksetzen
+      await db
+        .update(users)
+        .set({ 
+          subscriptionStatus: 'trial',
+          stripeCustomerId: null,
+          stripeSubscriptionId: null
+        })
+        .where(eq(users.id, subscription.userId));
+        
+      // Benutzer-Cache invalidieren
+      this.invalidateUserCache(subscription.userId);
+    }
+    
+    // Abonnement löschen
+    await db.delete(userSubscriptions).where(eq(userSubscriptions.id, id));
+  }
+}
+
+export const storage = new DatabaseStorage();
