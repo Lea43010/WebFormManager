@@ -12,13 +12,24 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Attachment } from "@shared/schema";
 import AttachmentUploadForm from "@/components/attachment/attachment-upload-form";
 
+interface VerifyResults {
+  total: number;
+  missing: number;
+  available: number;
+  details: {
+    id: number;
+    fileName: string;
+    status: string;
+  }[];
+}
+
 export default function AttachmentPage() {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [verifyInProgress, setVerifyInProgress] = useState(false);
-  const [verifyResults, setVerifyResults] = useState<any>(null);
+  const [verifyResults, setVerifyResults] = useState<VerifyResults | null>(null);
 
   // Anhänge laden mit verbesserter Fehlerbehandlung
   const { data: attachments, isLoading, error, refetch } = useQuery<Attachment[]>({
@@ -156,11 +167,12 @@ export default function AttachmentPage() {
           <div className="flex flex-wrap gap-2 w-full sm:w-auto mb-2 sm:mb-0">
             {/* Benutzer mit Administrator-Rolle identifizieren */}
             {(() => {
-              const { data: currentUser } = useQuery({
+              const { data: currentUser } = useQuery<{ role?: string }>({
                 queryKey: ["/api/user"],
               });
               
-              const isAdmin = currentUser?.role === 'administrator';
+              // Typensicher prüfen, ob Benutzer Administrator ist
+              const isAdmin = currentUser && currentUser.role === 'administrator';
               
               return (
                 <>

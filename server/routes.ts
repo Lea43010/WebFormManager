@@ -1579,52 +1579,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Administrator-Rechte erforderlich" });
       }
       
-      const attachments = await storage.getAllAttachments();
-      const results = {
-        total: attachments.length,
-        missing: 0,
-        available: 0,
-        details: []
-      };
-      
-      // Jeden Anhang prüfen
-      for (const attachment of attachments) {
-        const filePath = attachment.filePath;
-        
-        if (!filePath) {
-          continue; // Überspringe Anhänge ohne Dateipfad
-        }
-        
-        // Verschiedene mögliche Pfade überprüfen
-        const fileExists = await fs.pathExists(filePath) || 
-                          await fs.pathExists(path.join(process.cwd(), filePath)) || 
-                          await fs.pathExists(path.join('.', filePath.replace(/^\//, '')));
-        
-        if (!fileExists && !attachment.fileMissing) {
-          // Nur wenn die Datei nicht existiert und nicht bereits als fehlend markiert ist
-          await storage.markAttachmentFileMissing(attachment.id);
-          results.missing++;
-          results.details.push({
-            id: attachment.id,
-            fileName: attachment.fileName,
-            status: 'missing'
-          });
-        } else if (fileExists) {
-          results.available++;
-          // Wenn als fehlend markiert, aber jetzt gefunden, status zurücksetzen
-          if (attachment.fileMissing) {
-            await storage.resetAttachmentFileMissing(attachment.id);
-            results.details.push({
-              id: attachment.id,
-              fileName: attachment.fileName,
-              status: 'restored'
-            });
-          }
-        } else {
-          // Bereits als fehlend markiert und immer noch fehlend
-          results.missing++;
-        }
-      }
+      // Optimierte Methode in Storage verwenden
+      const results = await storage.verifyAllAttachments();
       
       res.json(results);
     } catch (error) {

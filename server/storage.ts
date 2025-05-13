@@ -809,6 +809,84 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+  
+  async verifyAllAttachments(): Promise<{ total: number, missing: number, available: number, details: any[] }> {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Alle Anhänge laden
+      const allAttachments = await db.select().from(attachments);
+      let missing = 0;
+      let available = 0;
+      const details: any[] = [];
+      
+      // Alle Anhänge überprüfen
+      for (const attachment of allAttachments) {
+        let found = false;
+        
+        // Überspringe Anhänge ohne Dateipfad
+        if (!attachment.filePath) {
+          continue;
+        }
+        
+        // Mögliche Dateipfade (abhängig von der Umgebung)
+        const possiblePaths = [
+          attachment.filePath, // Standard-Pfad
+          path.join('uploads', path.basename(attachment.filePath || '')), // Uploads-Verzeichnis
+          path.join('public', 'uploads', path.basename(attachment.filePath || '')), // Public-Uploads
+          path.join('.', 'uploads', path.basename(attachment.filePath || '')), // Relative Uploads
+          path.join('..', attachment.filePath || ''), // Ein Verzeichnis höher
+          path.join('..', 'uploads', path.basename(attachment.filePath || '')), // Höher + Uploads
+          path.join(process.cwd(), attachment.filePath || ''), // Vollständiger Pfad
+          path.join(process.cwd(), 'uploads', path.basename(attachment.filePath || '')) // Vollständiger Uploads-Pfad
+        ];
+        
+        // Alle möglichen Pfade prüfen
+        for (const filePath of possiblePaths) {
+          if (filePath && fs.existsSync(filePath)) {
+            found = true;
+            break;
+          }
+        }
+        
+        // Status aktualisieren, wenn der aktuelle Status nicht stimmt
+        if (found && attachment.fileMissing) {
+          // Datei als verfügbar markieren
+          await this.resetAttachmentFileMissing(attachment.id);
+          available++;
+          details.push({
+            id: attachment.id,
+            fileName: attachment.fileName,
+            status: "wiederhergestellt"
+          });
+        } else if (!found && !attachment.fileMissing) {
+          // Datei als fehlend markieren
+          await this.markAttachmentFileMissing(attachment.id);
+          missing++;
+          details.push({
+            id: attachment.id,
+            fileName: attachment.fileName,
+            status: "fehlend markiert"
+          });
+        } else if (found) {
+          available++;
+        } else {
+          missing++;
+        }
+      }
+      
+      return {
+        total: allAttachments.length,
+        missing,
+        available,
+        details
+      };
+    } catch (error) {
+      console.error(`Fehler bei der Überprüfung aller Anhänge: ${error}`);
+      throw error;
+    }
+  }
 
   // Surface Analysis operations
   async getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
