@@ -1617,8 +1617,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           // Für andere Dateitypen: Standardanhangsdaten erstellen
           attachmentData = {
-            // Verwende Projekt ID 1 als "Standard"-Projekt, wenn kein Projekt ausgewählt wurde
-            projectId: req.body.projectId && req.body.projectId !== "none" ? parseInt(req.body.projectId) : 1,
+            // Verwende Projekt ID 5 als "Standard"-Projekt, wenn kein Projekt ausgewählt wurde
+            projectId: req.body.projectId && req.body.projectId !== "none" ? parseInt(req.body.projectId) : 5,
             fileName: req.file.originalname,
             originalName: req.file.originalname,
             fileType: getFileType(req.file.mimetype),
