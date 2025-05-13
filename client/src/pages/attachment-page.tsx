@@ -286,10 +286,10 @@ export default function AttachmentPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`px-2 py-1 h-8 text-xs ${attachment.fileMissing === true ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={attachment.fileMissing === true}
+                      className={`px-2 py-1 h-8 text-xs ${Boolean(attachment.fileMissing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={Boolean(attachment.fileMissing)}
                       onClick={() => {
-                        if (attachment.fileMissing === true) {
+                        if (Boolean(attachment.fileMissing)) {
                           toast({
                             title: "Datei nicht verfügbar",
                             description: "Diese Datei ist nicht mehr auf dem Server verfügbar.",
@@ -361,7 +361,12 @@ export default function AttachmentPage() {
 
       {/* Verification Results Dialog */}
       {verifyResults && (
-        <Dialog open={!!verifyResults} onOpenChange={(open) => !open && setVerifyResults(null)}>
+        <Dialog 
+          open={verifyResults !== null} 
+          onOpenChange={(open: boolean) => {
+            if (!open) setVerifyResults(null);
+          }}
+        >
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Überprüfungsergebnisse</DialogTitle>

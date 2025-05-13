@@ -278,23 +278,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning() as User[];
-    return user;
+    const result = await db.insert(users).values(insertUser).returning();
+    const [user] = result;
+    return user as User;
   }
 
   async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
-    const [updatedUser] = await db
+    // Wir müssen sicherstellen, dass Datumsfelder als Strings behandelt werden
+    const userToUpdate: Record<string, any> = {};
+    
+    // Manuelles Mapping, um Typprobleme zu vermeiden
+    for (const [key, value] of Object.entries(user)) {
+      if (value instanceof Date) {
+        userToUpdate[key] = value.toISOString();
+      } else {
+        userToUpdate[key] = value;
+      }
+    }
+    
+    const result = await db
       .update(users)
-      .set(user)
+      .set(userToUpdate)
       .where(eq(users.id, id))
-      .returning() as User[];
+      .returning();
+    
+    const [updatedUser] = result;
     
     // Benutzer aus dem Cache invalidieren, wenn ein Update durchgeführt wurde
     if (updatedUser) {
       this.invalidateUserCache(id);
     }
     
-    return updatedUser;
+    return updatedUser as User | undefined;
   }
 
   async deleteUser(id: number): Promise<void> {
