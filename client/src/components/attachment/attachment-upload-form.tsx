@@ -50,7 +50,7 @@ export default function AttachmentUploadForm({
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
-      projectId: initialProjectId || "",
+      projectId: initialProjectId || "none",
     },
   });
 
@@ -258,7 +258,7 @@ export default function AttachmentUploadForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Projekt auswählen (optional)" />
+                            <SelectValue defaultValue="none" placeholder="Projekt auswählen (optional)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -387,7 +387,7 @@ export default function AttachmentUploadForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Projekt auswählen" />
+                            <SelectValue defaultValue="none" placeholder="Projekt auswählen (optional)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -406,9 +406,13 @@ export default function AttachmentUploadForm({
                 
                 {/* Kamera-Upload mit optionaler Projekt-ID */}
                 <CameraUpload 
-                  projectId={form.getValues("projectId") && form.getValues("projectId").length > 0 && form.getValues("projectId") !== "none" 
-                    ? parseInt(form.getValues("projectId")) 
-                    : null} 
+                  projectId={(() => {
+                    const projectIdValue = form.getValues("projectId");
+                    if (projectIdValue && projectIdValue !== "none" && /^\d+$/.test(projectIdValue)) {
+                      return parseInt(projectIdValue, 10);
+                    }
+                    return null;
+                  })()} 
                   onUploadSuccess={handleCameraUploadSuccess}
                 />
               </div>
