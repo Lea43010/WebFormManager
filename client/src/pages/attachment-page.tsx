@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, Upload } from "lucide-react";
+import { Loader2, Trash2, Download, FileIcon, FileText, FileImage, FileSpreadsheet, Upload, CheckCircle, AlertTriangle } from "lucide-react";
 import DashboardLayout from "@/components/layouts/dashboard-layout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -17,6 +17,8 @@ export default function AttachmentPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAttachment, setSelectedAttachment] = useState<Attachment | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [verifyInProgress, setVerifyInProgress] = useState(false);
+  const [verifyResults, setVerifyResults] = useState<any>(null);
 
   // Anhänge laden mit verbesserter Fehlerbehandlung
   const { data: attachments, isLoading, error, refetch } = useQuery<Attachment[]>({
@@ -96,6 +98,36 @@ export default function AttachmentPage() {
       description: "Anhang erfolgreich hochgeladen.",
     });
   };
+  
+  // Alle Anhänge überprüfen (nur für Administratoren)
+  const verifyAttachmentsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/attachments/verify-all");
+      return await response.json();
+    },
+    onMutate: () => {
+      setVerifyInProgress(true);
+      setVerifyResults(null);
+    },
+    onSuccess: (data) => {
+      setVerifyResults(data);
+      toast({
+        title: "Überprüfung abgeschlossen",
+        description: `${data.total} Anhänge überprüft. ${data.missing} fehlend, ${data.available} verfügbar.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler bei der Überprüfung",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setVerifyInProgress(false);
+    }
+  });
 
   // Dateityp-Icons
   const getFileIcon = (fileType: string) => {
