@@ -1,388 +1,180 @@
 /**
  * Debug-Routen für Anhänge
- * Diese Routen bieten Tools zur Diagnose und Reparatur von Problemen mit Anhangs-Dateien
+ * 
+ * Diese Routen bieten Admin-Tools zur Diagnose und Reparatur von Anhängen.
+ * Nur für Administratoren zugänglich.
  */
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { storage } from '../storage';
 
 const router = express.Router();
 
+// Middleware zur Prüfung der Administrator-Rolle
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ 
+      message: "Sie müssen angemeldet sein, um auf diese Funktion zuzugreifen.",
+      userFriendly: true
+    });
+  }
+  
+  if (req.user?.role !== 'administrator') {
+    return res.status(403).json({ 
+      message: "Diese Funktion steht nur Administratoren zur Verfügung.",
+      userFriendly: true
+    });
+  }
+  
+  next();
+};
+
 /**
- * GET /api/debug/attachments/scan
- * Scannt alle Anhänge und prüft, ob die Dateien tatsächlich existieren
+ * GET /api/debug/attachments - Zeigt eine Übersicht der Anhänge mit Status
  */
-router.get('/scan', async (req, res) => {
+router.get('/', requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('Starte Scan aller Anhänge...');
-    
     const attachments = await storage.getAllAttachments();
-    const totalAttachments = attachments.length;
-    console.log(`Gefunden: ${totalAttachments} Anhänge in der Datenbank`);
     
-    const results: any[] = [];
-    let missingFiles = 0;
-    let foundFiles = 0;
-    
-    // Mögliche Upload-Verzeichnisse
-    const possibleDirectories = [
-      './uploads',
-      './public/uploads',
-      '/home/runner/workspace/uploads'
-    ];
-    
-    // Prüfe alle Verzeichnisse auf Existenz
-    const validDirectories = [];
-    for (const dir of possibleDirectories) {
-      try {
-        if (await fs.pathExists(dir)) {
-          validDirectories.push(dir);
-          console.log(`Verzeichnis gefunden: ${dir}`);
-        }
-      } catch (err) {
-        console.error(`Fehler beim Prüfen des Verzeichnisses ${dir}:`, err);
-      }
-    }
-    
-    if (validDirectories.length === 0) {
-      return res.status(500).json({
-        message: 'Keine gültigen Upload-Verzeichnisse gefunden',
-        checkedDirectories: possibleDirectories
-      });
-    }
-    
-    // Alle Dateien in allen Upload-Verzeichnissen auflisten
-    const allFiles: string[] = [];
-    for (const dir of validDirectories) {
-      try {
-        const files = await fs.readdir(dir);
-        console.log(`${files.length} Dateien in ${dir} gefunden`);
+    // Ergänze die Daten um den Dateistatus
+    const attachmentsWithStatus = await Promise.all(
+      attachments.map(async (attachment) => {
+        let fileExists = false;
         
-        // Füge vollständige Pfade zur Dateiliste hinzu
-        const fullPaths = files.map(file => path.join(dir, file));
-        allFiles.push(...fullPaths);
-      } catch (err) {
-        console.error(`Fehler beim Lesen des Verzeichnisses ${dir}:`, err);
-      }
-    }
-    
-    console.log(`Insgesamt ${allFiles.length} Dateien in allen Upload-Verzeichnissen gefunden`);
-    
-    // Prüfe jeden Anhang
-    for (const attachment of attachments) {
-      const result: any = {
-        id: attachment.id,
-        fileName: attachment.fileName,
-        originalName: attachment.originalName,
-        registeredPath: attachment.filePath,
-        status: 'nicht gefunden'
-      };
-      
-      // Versuche die Datei direkt unter dem registrierten Pfad zu finden
-      let fileFound = false;
-      if (attachment.filePath) {
-        const absolutePath = path.resolve(attachment.filePath);
         try {
-          if (await fs.pathExists(absolutePath)) {
-            result.status = 'gefunden';
-            result.actualPath = absolutePath;
-            fileFound = true;
-            foundFiles++;
+          if (attachment.filePath) {
+            fileExists = await fs.pathExists(attachment.filePath);
           }
-        } catch (err) {
-          console.error(`Fehler beim Prüfen von ${absolutePath}:`, err);
-        }
-      }
-      
-      // Wenn die Datei nicht unter dem registrierten Pfad gefunden wurde,
-      // suche in allen Upload-Verzeichnissen nach einer Datei mit dem gleichen Namen
-      if (!fileFound) {
-        const fileName = attachment.fileName || path.basename(attachment.filePath || '');
-        const originalName = attachment.originalName;
-        
-        // Suche in allen gefundenen Dateien
-        for (const filePath of allFiles) {
-          const basename = path.basename(filePath);
-          
-          // Vergleiche mit verschiedenen Namensvarianten
-          if (
-            basename === fileName || 
-            basename.includes(fileName) || 
-            (originalName && basename === originalName) ||
-            (originalName && basename.includes(originalName))
-          ) {
-            result.status = 'gefunden unter alternativem Pfad';
-            result.actualPath = filePath;
-            fileFound = true;
-            foundFiles++;
-            break;
-          }
+        } catch (error) {
+          console.error(`Fehler beim Prüfen von ${attachment.filePath}:`, error);
         }
         
-        if (!fileFound) {
-          missingFiles++;
-        }
-      }
-      
-      results.push(result);
-    }
+        return {
+          ...attachment,
+          realFileExists: fileExists
+        };
+      })
+    );
     
-    // Sende die Ergebnisse
     res.json({
-      total: totalAttachments,
-      found: foundFiles,
-      missing: missingFiles,
-      foundPercentage: Math.round((foundFiles / totalAttachments) * 100),
-      checkedDirectories: validDirectories,
-      results
+      totalCount: attachments.length,
+      missingCount: attachmentsWithStatus.filter(a => !a.realFileExists).length,
+      attachments: attachmentsWithStatus
     });
-    
   } catch (error) {
-    console.error('Fehler beim Scan der Anhänge:', error);
-    res.status(500).json({
-      message: 'Fehler beim Scannen der Anhänge',
-      error: String(error)
+    console.error("Fehler beim Abrufen der Debug-Informationen:", error);
+    res.status(500).json({ 
+      message: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+      technicalDetails: String(error),
+      userFriendly: true
     });
   }
 });
 
 /**
- * GET /api/debug/attachments/fix-all
- * Versucht, die Pfade aller Anhänge zu reparieren
+ * GET /api/debug/attachments/scan - Scannt das Dateisystem nach Anhängen und vergleicht mit der Datenbank
  */
-router.get('/fix-all', async (req, res) => {
+router.get('/scan', requireAdmin, async (req: Request, res: Response) => {
   try {
-    console.log('Starte Reparatur aller Anhänge...');
-    
-    const attachments = await storage.getAllAttachments();
-    console.log(`Gefunden: ${attachments.length} Anhänge in der Datenbank`);
-    
-    const results: any[] = [];
-    let fixedCount = 0;
-    let errorCount = 0;
-    
-    // Mögliche Upload-Verzeichnisse
-    const possibleDirectories = [
+    // Bekannte Upload-Verzeichnisse
+    const uploadDirs = [
       './uploads',
       './public/uploads',
       '/home/runner/workspace/uploads'
     ];
     
-    // Prüfe alle Verzeichnisse auf Existenz
-    const validDirectories = [];
-    for (const dir of possibleDirectories) {
-      try {
-        if (await fs.pathExists(dir)) {
-          validDirectories.push(dir);
-        }
-      } catch (err) {
-        console.error(`Fehler beim Prüfen des Verzeichnisses ${dir}:`, err);
-      }
-    }
+    // Ergebnisse sammeln
+    const results = {
+      scannedDirectories: 0,
+      totalFilesFound: 0,
+      filesInDatabase: 0,
+      orphanedFiles: 0,
+      missingFiles: 0,
+      directoryDetails: [],
+      orphanedFilesList: [],
+      missingFilesList: []
+    };
     
-    // Alle Dateien in allen Upload-Verzeichnissen auflisten
-    const allFiles: string[] = [];
-    for (const dir of validDirectories) {
-      try {
-        const files = await fs.readdir(dir);
-        
-        // Füge vollständige Pfade zur Dateiliste hinzu
-        const fullPaths = files.map(file => path.join(dir, file));
-        allFiles.push(...fullPaths);
-      } catch (err) {
-        console.error(`Fehler beim Lesen des Verzeichnisses ${dir}:`, err);
-      }
-    }
+    // Alle Anhänge aus der Datenbank holen
+    const dbAttachments = await storage.getAllAttachments();
+    results.filesInDatabase = dbAttachments.length;
     
-    // Prüfe jeden Anhang
-    for (const attachment of attachments) {
-      const result: any = {
-        id: attachment.id,
-        fileName: attachment.fileName,
-        originalName: attachment.originalName,
-        oldPath: attachment.filePath,
-        status: 'keine Änderung'
-      };
-      
-      // Prüfe, ob die Datei unter dem registrierten Pfad existiert
-      let fileFound = false;
-      if (attachment.filePath) {
-        try {
-          if (await fs.pathExists(attachment.filePath)) {
-            result.status = 'bereits korrekt';
-            fileFound = true;
-          }
-        } catch (err) {
-          console.error(`Fehler beim Prüfen von ${attachment.filePath}:`, err);
-        }
+    // Dateinamen aus der Datenbank extrahieren
+    const dbFilenames = new Set(
+      dbAttachments.map(a => path.basename(a.filePath || ''))
+        .filter(name => name.length > 0)
+    );
+    
+    // Sammlung fehlender Dateien
+    const missingFiles = dbAttachments.filter(a => {
+      try {
+        return a.filePath && !fs.existsSync(a.filePath);
+      } catch (error) {
+        console.error(`Fehler beim Prüfen von ${a.filePath}:`, error);
+        return true; // Wenn ein Fehler auftritt, behandeln wir die Datei als fehlend
       }
-      
-      // Wenn die Datei nicht unter dem registrierten Pfad gefunden wurde,
-      // suche in allen Upload-Verzeichnissen nach einer Datei mit dem gleichen Namen
-      if (!fileFound) {
-        const fileName = attachment.fileName || path.basename(attachment.filePath || '');
-        const originalName = attachment.originalName;
-        
-        // Suche in allen gefundenen Dateien
-        for (const filePath of allFiles) {
-          const basename = path.basename(filePath);
+    });
+    
+    results.missingFiles = missingFiles.length;
+    results.missingFilesList = missingFiles.map(a => ({
+      id: a.id,
+      fileName: a.fileName,
+      path: a.filePath
+    }));
+    
+    // Verzeichnisse scannen
+    for (const dir of uploadDirs) {
+      try {
+        if (fs.existsSync(dir)) {
+          results.scannedDirectories++;
           
-          // Vergleiche mit verschiedenen Namensvarianten
-          if (
-            basename === fileName || 
-            basename.includes(fileName) || 
-            (originalName && basename === originalName) ||
-            (originalName && basename.includes(originalName))
-          ) {
-            try {
-              // Datei gefunden, aktualisiere den Pfad in der Datenbank
-              // Zuerst markiere als nicht-fehlend
-              const updatedAttachment = await storage.resetAttachmentFileMissing(attachment.id);
-              
-              result.status = 'repariert';
-              result.newPath = filePath;
-              fixedCount++;
-              break;
-            } catch (err) {
-              console.error(`Fehler beim Aktualisieren des Pfads für Anhang ${attachment.id}:`, err);
-              result.status = 'Fehler bei der Reparatur';
-              result.error = String(err);
-              errorCount++;
-            }
-          }
+          // Alle Dateien im Verzeichnis auflisten
+          const files = fs.readdirSync(dir);
+          const dirFiles = files.filter(file => !file.startsWith('.') && !file.endsWith('.tmp'));
+          
+          results.totalFilesFound += dirFiles.length;
+          
+          // Verwaiste Dateien finden (im Dateisystem, aber nicht in der Datenbank)
+          const orphanedFiles = dirFiles.filter(file => !dbFilenames.has(file));
+          results.orphanedFiles += orphanedFiles.length;
+          
+          // Details zu diesem Verzeichnis speichern
+          results.directoryDetails.push({
+            directory: dir,
+            filesCount: dirFiles.length,
+            orphanedFilesCount: orphanedFiles.length
+          });
+          
+          // Verwaiste Dateien-Liste erweitern
+          orphanedFiles.forEach(file => {
+            results.orphanedFilesList.push({
+              fileName: file,
+              path: path.join(dir, file)
+            });
+          });
         }
+      } catch (error) {
+        console.error(`Fehler beim Scannen von ${dir}:`, error);
+        results.directoryDetails.push({
+          directory: dir,
+          error: `Konnte nicht gescannt werden: ${error.message || 'Unbekannter Fehler'}`,
+          filesCount: 0,
+          orphanedFilesCount: 0
+        });
       }
-      
-      results.push(result);
     }
-    
-    // Sende die Ergebnisse
-    res.json({
-      total: attachments.length,
-      fixed: fixedCount,
-      errors: errorCount,
-      noChange: attachments.length - fixedCount - errorCount,
-      results
-    });
-    
-  } catch (error) {
-    console.error('Fehler bei der Reparatur der Anhänge:', error);
-    res.status(500).json({
-      message: 'Fehler bei der Reparatur der Anhänge',
-      error: String(error)
-    });
-  }
-});
-
-/**
- * GET /api/debug/attachments/list-missing
- * Listet alle Anhänge auf, die als fehlend markiert sind
- */
-router.get('/list-missing', async (req, res) => {
-  try {
-    const attachments = await storage.getAllAttachments();
-    const missingAttachments = attachments.filter(a => a.fileMissing);
     
     res.json({
-      total: attachments.length,
-      missing: missingAttachments.length,
-      attachments: missingAttachments
+      scanResults: results,
+      userFriendly: true
     });
   } catch (error) {
-    console.error('Fehler beim Auflisten fehlender Anhänge:', error);
-    res.status(500).json({
-      message: 'Fehler beim Auflisten fehlender Anhänge',
-      error: String(error)
-    });
-  }
-});
-
-/**
- * POST /api/debug/attachments/:id/fix
- * Versucht, den Pfad eines bestimmten Anhangs zu reparieren
- */
-router.post('/:id/fix', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Ungültige Anhangs-ID' });
-    }
-    
-    const attachment = await storage.getAttachment(id);
-    if (!attachment) {
-      return res.status(404).json({ message: 'Anhang nicht gefunden' });
-    }
-    
-    // Mögliche Upload-Verzeichnisse
-    const possibleDirectories = [
-      './uploads',
-      './public/uploads',
-      '/home/runner/workspace/uploads'
-    ];
-    
-    // Alle Dateien in allen Upload-Verzeichnissen auflisten
-    const allFiles: string[] = [];
-    for (const dir of possibleDirectories) {
-      try {
-        if (await fs.pathExists(dir)) {
-          const files = await fs.readdir(dir);
-          const fullPaths = files.map(file => path.join(dir, file));
-          allFiles.push(...fullPaths);
-        }
-      } catch (err) {
-        console.error(`Fehler beim Lesen des Verzeichnisses ${dir}:`, err);
-      }
-    }
-    
-    // Suche nach der Datei
-    const fileName = attachment.fileName || path.basename(attachment.filePath || '');
-    const originalName = attachment.originalName;
-    
-    let fileFound = false;
-    let foundPath = '';
-    
-    // Suche in allen gefundenen Dateien
-    for (const filePath of allFiles) {
-      const basename = path.basename(filePath);
-      
-      // Vergleiche mit verschiedenen Namensvarianten
-      if (
-        basename === fileName || 
-        basename.includes(fileName) || 
-        (originalName && basename === originalName) ||
-        (originalName && basename.includes(originalName))
-      ) {
-        fileFound = true;
-        foundPath = filePath;
-        break;
-      }
-    }
-    
-    if (fileFound) {
-      // Datei gefunden, setze den "file_missing" Status zurück
-      const updatedAttachment = await storage.resetAttachmentFileMissing(attachment.id);
-      
-      res.json({
-        message: 'Anhang erfolgreich repariert',
-        oldPath: attachment.filePath,
-        newPath: foundPath,
-        attachment: updatedAttachment
-      });
-    } else {
-      // Datei nicht gefunden, markiere als fehlend
-      await storage.markAttachmentFileMissing(attachment.id);
-      
-      res.status(404).json({
-        message: 'Datei konnte nicht gefunden werden',
-        attachment
-      });
-    }
-  } catch (error) {
-    console.error('Fehler bei der Reparatur des Anhangs:', error);
-    res.status(500).json({
-      message: 'Fehler bei der Reparatur des Anhangs',
-      error: String(error)
+    console.error("Fehler beim Scannen des Dateisystems:", error);
+    res.status(500).json({ 
+      message: "Beim Scannen des Dateisystems ist ein Fehler aufgetreten.",
+      technicalDetails: String(error),
+      userFriendly: true
     });
   }
 });

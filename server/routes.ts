@@ -4443,8 +4443,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup subscription routes
   app.use('/api/subscription', subscriptionRouter);
   
-  // Direkte Download-Route ohne Token-Anforderung
-  app.use('/api/direct-download', directDownloadRouter);
+  // Direkte Debug-Routen für Admin-Tools mit benutzerfreundlicher Fehlerbehandlung
+  app.use('/api/debug/attachments', (req, res, next) => {
+    try {
+      attachmentDebugRoutes(req, res, next);
+    } catch (error) {
+      console.error("Fehler in den Debug-Routen:", error);
+      res.status(500).json({
+        message: "Ein Fehler ist aufgetreten. Diese Funktion ist nur für Administratoren verfügbar.",
+        userFriendly: true
+      });
+    }
+  });
+
+  // Direkte Download-Route ohne Token-Anforderung mit benutzerfreundlicher Fehlerbehandlung
+  app.use('/api/direct-download', (req, res, next) => {
+    try {
+      directDownloadRouter(req, res, next);
+    } catch (error) {
+      console.error("Fehler beim direkten Download:", error);
+      res.status(500).json({
+        message: "Die Datei konnte nicht gefunden oder heruntergeladen werden. Bitte versuchen Sie es später erneut oder wenden Sie sich an den Administrator.",
+        userFriendly: true
+      });
+    }
+  });
 
   const httpServer = createHttpServer(app);
   return httpServer;
