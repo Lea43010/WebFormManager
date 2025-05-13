@@ -194,6 +194,27 @@ export class DatabaseStorage implements IStorage {
       createTableIfMissing: true,
     });
   }
+  
+  // Hilfsmethode zur sicheren Umwandlung von Objekten für Drizzle-Inserts
+  private prepareDataForInsert<T extends Record<string, any>>(data: T): any[] {
+    // Erstelle ein neues Objekt für die Typkonvertierung
+    const preparedData: Record<string, any> = {};
+    
+    // Wandle Daten sicher für Drizzle um
+    for (const [key, value] of Object.entries(data)) {
+      if (value instanceof Date) {
+        preparedData[key] = value.toISOString();
+      } else if (typeof value === 'number' && ['workHours'].includes(key)) {
+        // Spezielle Behandlung für numerische Felder, die Strings sein sollten
+        preparedData[key] = value.toString();
+      } else {
+        preparedData[key] = value;
+      }
+    }
+    
+    // Zurückgeben als Array mit einem Element
+    return [preparedData];
+  }
 
   // Neue Cache-Invalidierungs-Methode
   invalidateUserCache(userId: number): void {
@@ -278,38 +299,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Datentypen sicherstellen (z.B. für Datumswerte)
-    const userData: Record<string, any> = {};
+    // Verwende die generische Methode zur Typkonvertierung und Formatierung
+    const userDataArray = this.prepareDataForInsert(insertUser);
     
-    // Manuelles Mapping für sichere Typkonvertierung
-    for (const [key, value] of Object.entries(insertUser)) {
-      if (value instanceof Date) {
-        userData[key] = value.toISOString();
-      } else {
-        userData[key] = value;
-      }
-    }
-    
-    // Array mit einem Element für das Insert-Statement erstellen
-    const userDataArray = [userData];
-    
+    // Führe die Datenbankoperation aus
     const result = await db.insert(users).values(userDataArray).returning();
     const [user] = result;
     return user as User;
   }
 
   async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
-    // Wir müssen sicherstellen, dass Datumsfelder als Strings behandelt werden
-    const userToUpdate: Record<string, any> = {};
-    
-    // Manuelles Mapping, um Typprobleme zu vermeiden
-    for (const [key, value] of Object.entries(user)) {
-      if (value instanceof Date) {
-        userToUpdate[key] = value.toISOString();
-      } else {
-        userToUpdate[key] = value;
-      }
-    }
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [userToUpdate] = this.prepareDataForInsert(user);
     
     const result = await db
       .update(users)
@@ -996,23 +997,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSurfaceAnalysis(analysis: InsertSurfaceAnalysis): Promise<SurfaceAnalysis> {
-    // Datentypen sicherstellen (z.B. für numerische Felder)
-    const analysisData: Record<string, any> = {};
-    
-    // Manuelles Mapping für sichere Typkonvertierung
-    for (const [key, value] of Object.entries(analysis)) {
-      // Behandle numerische Felder spezifisch
-      if (['latitude', 'longitude', 'confidence'].includes(key) && typeof value === 'number') {
-        analysisData[key] = value;
-      } else if (value instanceof Date) {
-        analysisData[key] = value.toISOString();
-      } else {
-        analysisData[key] = value;
-      }
-    }
-    
-    // Array mit einem Element für das Insert-Statement erstellen
-    const analysisDataArray = [analysisData];
+    // Verwende die generische Methode zur Typkonvertierung
+    const analysisDataArray = this.prepareDataForInsert(analysis);
     
     const result = await db.insert(surfaceAnalyses).values(analysisDataArray).returning();
     const [createdAnalysis] = result;
