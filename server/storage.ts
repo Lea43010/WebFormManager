@@ -810,7 +810,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async verifyAllAttachments(): Promise<{ total: number, missing: number, available: number, details: any[] }> {
+  async verifyAllAttachments(): Promise<{ total: number, missing: number, available: number, details: Array<{id: number, fileName: string, status: string}> }> {
     try {
       const fs = require('fs');
       const path = require('path');
@@ -819,7 +819,9 @@ export class DatabaseStorage implements IStorage {
       const allAttachments = await db.select().from(attachments);
       let missing = 0;
       let available = 0;
-      const details: any[] = [];
+      const details: Array<{id: number, fileName: string, status: string}> = [];
+      
+      console.log(`Überprüfe ${allAttachments.length} Anhänge...`);
       
       // Alle Anhänge überprüfen
       for (const attachment of allAttachments) {
@@ -827,6 +829,7 @@ export class DatabaseStorage implements IStorage {
         
         // Überspringe Anhänge ohne Dateipfad
         if (!attachment.filePath) {
+          console.log(`Anhang ${attachment.id} hat keinen Dateipfad, überspringe...`);
           continue;
         }
         
@@ -839,42 +842,65 @@ export class DatabaseStorage implements IStorage {
           path.join('..', attachment.filePath || ''), // Ein Verzeichnis höher
           path.join('..', 'uploads', path.basename(attachment.filePath || '')), // Höher + Uploads
           path.join(process.cwd(), attachment.filePath || ''), // Vollständiger Pfad
-          path.join(process.cwd(), 'uploads', path.basename(attachment.filePath || '')) // Vollständiger Uploads-Pfad
+          path.join(process.cwd(), 'uploads', path.basename(attachment.filePath || '')), // Vollständiger Uploads-Pfad
+          // Weitere Backup-Pfade
+          path.join('temp', path.basename(attachment.filePath || '')),
+          path.join('attachments', path.basename(attachment.filePath || '')),
+          path.join('uploads', 'attachments', path.basename(attachment.filePath || '')),
         ];
         
         // Alle möglichen Pfade prüfen
         for (const filePath of possiblePaths) {
-          if (filePath && fs.existsSync(filePath)) {
-            found = true;
-            break;
+          try {
+            if (filePath && fs.existsSync(filePath)) {
+              found = true;
+              console.log(`Datei für Anhang ${attachment.id} gefunden unter: ${filePath}`);
+              break;
+            }
+          } catch (error) {
+            console.warn(`Fehler beim Prüfen des Pfads ${filePath}: ${error}`);
+            // Weiter zum nächsten Pfad, wenn ein Fehler auftritt
+            continue;
           }
         }
         
         // Status aktualisieren, wenn der aktuelle Status nicht stimmt
         if (found && attachment.fileMissing) {
-          // Datei als verfügbar markieren
-          await this.resetAttachmentFileMissing(attachment.id);
-          available++;
-          details.push({
-            id: attachment.id,
-            fileName: attachment.fileName,
-            status: "wiederhergestellt"
-          });
+          try {
+            // Datei als verfügbar markieren
+            await this.resetAttachmentFileMissing(attachment.id);
+            available++;
+            details.push({
+              id: attachment.id,
+              fileName: attachment.fileName || `unbenannt_${attachment.id}`,
+              status: "wiederhergestellt"
+            });
+            console.log(`Anhang ${attachment.id} als verfügbar markiert`);
+          } catch (error) {
+            console.error(`Fehler beim Zurücksetzen des Status für Anhang ${attachment.id}: ${error}`);
+          }
         } else if (!found && !attachment.fileMissing) {
-          // Datei als fehlend markieren
-          await this.markAttachmentFileMissing(attachment.id);
-          missing++;
-          details.push({
-            id: attachment.id,
-            fileName: attachment.fileName,
-            status: "fehlend markiert"
-          });
+          try {
+            // Datei als fehlend markieren
+            await this.markAttachmentFileMissing(attachment.id);
+            missing++;
+            details.push({
+              id: attachment.id,
+              fileName: attachment.fileName || `unbenannt_${attachment.id}`,
+              status: "fehlend markiert"
+            });
+            console.log(`Anhang ${attachment.id} als fehlend markiert`);
+          } catch (error) {
+            console.error(`Fehler beim Markieren des Anhangs ${attachment.id} als fehlend: ${error}`);
+          }
         } else if (found) {
           available++;
         } else {
           missing++;
         }
       }
+      
+      console.log(`Überprüfung abgeschlossen: ${allAttachments.length} gesamt, ${available} verfügbar, ${missing} fehlend, ${details.length} Änderungen`);
       
       return {
         total: allAttachments.length,
@@ -884,7 +910,7 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error(`Fehler bei der Überprüfung aller Anhänge: ${error}`);
-      throw error;
+      throw new Error(`Fehler bei der Überprüfung: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

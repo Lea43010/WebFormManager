@@ -113,14 +113,23 @@ export default function AttachmentPage() {
   // Alle Anhänge überprüfen (nur für Administratoren)
   const verifyAttachmentsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/attachments/verify-all");
-      return await response.json();
+      try {
+        const response = await apiRequest("POST", "/api/attachments/verify-all");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Fehler bei der Überprüfung');
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Fehler bei der Überprüfung der Anhänge:', error);
+        throw error;
+      }
     },
     onMutate: () => {
       setVerifyInProgress(true);
       setVerifyResults(null);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: VerifyResults) => {
       setVerifyResults(data);
       toast({
         title: "Überprüfung abgeschlossen",
@@ -129,9 +138,10 @@ export default function AttachmentPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/attachments"] });
     },
     onError: (error: Error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Fehler bei der Überprüfung",
-        description: error.message,
+        description: error.message || 'Unbekannter Fehler aufgetreten',
         variant: "destructive",
       });
     },
@@ -276,10 +286,10 @@ export default function AttachmentPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`px-2 py-1 h-8 text-xs ${attachment.fileMissing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={attachment.fileMissing}
+                      className={`px-2 py-1 h-8 text-xs ${attachment.fileMissing === true ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={attachment.fileMissing === true}
                       onClick={() => {
-                        if (attachment.fileMissing) {
+                        if (attachment.fileMissing === true) {
                           toast({
                             title: "Datei nicht verfügbar",
                             description: "Diese Datei ist nicht mehr auf dem Server verfügbar.",
