@@ -30,13 +30,16 @@ export default function ErrorPage({
 }: ErrorPageProps) {
   const { navigate, goBack, goHome, refresh } = useNavigation();
   const { toast } = useToast();
+  // Zufällige Error-ID außerhalb von useState generieren
+  const randomErrorId = React.useMemo(() => 
+    Math.random().toString(36).substring(2, 12).toUpperCase(), []
+  );
+  
   const [errorDetails, setErrorDetails] = React.useState<{
     errorId: string;
     fullErrorText?: string;
   }>({
-    errorId: providedErrorId || React.useMemo(() => 
-      Math.random().toString(36).substring(2, 12).toUpperCase(), []
-    )
+    errorId: providedErrorId || randomErrorId
   });
 
   // Wenn ein Error-Objekt übergeben wurde, logge es mit dem ErrorHandler
@@ -103,39 +106,7 @@ export default function ErrorPage({
     }
   };
 
-  const handleCopyErrorDetails = () => {
-    // Fehlerdaten zum Kopieren vorbereiten
-    const errorText = [
-      `Fehler-ID: ${errorDetails.errorId}`,
-      `Statuscode: ${statusCode}`,
-      `Titel: ${title || getErrorInfo().title}`,
-      `Nachricht: ${message || getErrorInfo().message}`,
-      error ? `Error: ${error.name} - ${error.message}` : '',
-      `URL: ${window.location.href}`,
-      `Zeitpunkt: ${new Date().toISOString()}`,
-      devMessage ? `\nEntwickler-Info:\n${devMessage}` : ''
-    ].filter(Boolean).join('\n');
-
-    // In die Zwischenablage kopieren
-    navigator.clipboard.writeText(errorText).then(
-      () => {
-        toast({
-          title: "In Zwischenablage kopiert",
-          description: "Die Fehlerdetails wurden in die Zwischenablage kopiert.",
-        });
-      },
-      (err) => {
-        console.error('Fehler beim Kopieren in die Zwischenablage:', err);
-        toast({
-          title: "Kopieren fehlgeschlagen",
-          description: "Die Fehlerdetails konnten nicht in die Zwischenablage kopiert werden.",
-          variant: "destructive"
-        });
-      }
-    );
-  };
-
-  // Anpassen der Fehlermeldung basierend auf dem Statuscode oder der Kategorie
+  // Hilfsfunktion für getErrorInfo, um außerhalb von handleCopyErrorDetails verwendet zu werden
   const getErrorInfo = () => {
     // Wenn explizite Titel/Nachricht angegeben wurden, diese verwenden
     if (title && message) {
@@ -207,6 +178,38 @@ export default function ErrorPage({
           icon: <AlertCircle className="h-12 w-12 text-red-600" />
         };
     }
+  };
+
+  const handleCopyErrorDetails = () => {
+    // Fehlerdaten zum Kopieren vorbereiten
+    const errorText = [
+      `Fehler-ID: ${errorDetails.errorId}`,
+      `Statuscode: ${statusCode}`,
+      `Titel: ${title || getErrorInfo().title}`,
+      `Nachricht: ${message || getErrorInfo().message}`,
+      error ? `Error: ${error.name} - ${error.message}` : '',
+      `URL: ${window.location.href}`,
+      `Zeitpunkt: ${new Date().toISOString()}`,
+      devMessage ? `\nEntwickler-Info:\n${devMessage}` : ''
+    ].filter(Boolean).join('\n');
+
+    // In die Zwischenablage kopieren
+    navigator.clipboard.writeText(errorText).then(
+      () => {
+        toast({
+          title: "In Zwischenablage kopiert",
+          description: "Die Fehlerdetails wurden in die Zwischenablage kopiert.",
+        });
+      },
+      (err) => {
+        console.error('Fehler beim Kopieren in die Zwischenablage:', err);
+        toast({
+          title: "Kopieren fehlgeschlagen",
+          description: "Die Fehlerdetails konnten nicht in die Zwischenablage kopiert werden.",
+          variant: "destructive"
+        });
+      }
+    );
   };
 
   const errorInfo = getErrorInfo();

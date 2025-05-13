@@ -20,6 +20,7 @@ import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
 import { setupImageRoutes } from "./routes/image-routes"; // Bildoptimierungs-Routes
+// Import von Upload-Funktionen erfolgt bereits in Zeile 70
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
@@ -1565,6 +1566,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(error);
     }
   });
+  
+  // Allgemeiner Anhang-Upload-Endpunkt (ohne Projektbindung)
+  app.post(
+    "/api/attachments",
+    ...optimizedUpload.single("file"),
+    handleUploadErrors,
+    cleanupOnError,
+    async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Nicht authentifiziert" });
+        }
+        
+        if (!req.file) {
+          return res.status(400).json({ message: "Keine Datei hochgeladen." });
+        }
+        
+        console.log("Allgemeiner Anhang-Upload: Datei erhalten", req.file.originalname);
+        
+        // Prüfen, ob optimierte Anhangsdaten vorhanden sind
+        let attachmentData: any;
+        
+        // Für Bilder: optimierte Daten aus dem Request verwenden
+        if ((req as any).attachmentData && (req as any).attachmentData.file) {
+          attachmentData = (req as any).attachmentData.file;
+          console.log('Verwende optimierte Bildanhangsdaten:', attachmentData.isOptimized ? 'Optimiert' : 'Nicht optimiert');
+        } else {
+          // Für andere Dateitypen: Standardanhangsdaten erstellen
+          attachmentData = {
+            projectId: req.body.projectId ? parseInt(req.body.projectId) : null,
+            fileName: req.file.originalname,
+            originalName: req.file.originalname,
+            fileType: getFileType(req.file.mimetype),
+            filePath: req.file.path,
+            fileSize: req.file.size,
+            fileCategory: req.body.fileCategory || "Andere",
+            description: req.body.description || null,
+            isOptimized: false,
+            originalSize: req.file.size,
+            optimizedSize: null,
+            optimizationSavings: null,
+            originalFormat: null,
+            webpPath: null
+          };
+        }
+        
+        console.log("Erstelle Anhang mit Daten:", JSON.stringify(attachmentData));
+        
+        const attachment = await storage.createAttachment(attachmentData);
+        res.status(201).json(attachment);
+      } catch (error) {
+        console.error("Error uploading attachment:", error);
+        
+        // Bei einem Fehler die Datei löschen, falls sie existiert
+        if (req.file) {
+          await fs.remove(req.file.path).catch(() => {});
+          
+          // Auch optimierte Dateien löschen falls vorhanden
+          if ((req as any).optimizedFiles && (req as any).optimizedFiles.length > 0) {
+            for (const optimizedFile of (req as any).optimizedFiles) {
+              if (optimizedFile.optimization && optimizedFile.optimization.optimizedPath) {
+                await fs.remove(optimizedFile.optimization.optimizedPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.webpPath) {
+                await fs.remove(optimizedFile.optimization.webpPath).catch(() => {});
+              }
+              if (optimizedFile.optimization && optimizedFile.optimization.thumbnailPath) {
+                await fs.remove(optimizedFile.optimization.thumbnailPath).catch(() => {});
+              }
+            }
+          }
+        }
+        
+        next(error);
+      }
+    }
+  );
   
   app.post(
     "/api/projects/:projectId/attachments",

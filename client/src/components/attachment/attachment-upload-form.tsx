@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Definieren des Schemas für das Upload-Formular
 const uploadSchema = z.object({
-  projectId: z.string().min(1, "Bitte wählen Sie ein Projekt aus"),
+  projectId: z.string().optional(), // Projektauswahl ist optional
   // Kein File-Feld, da wir das separat behandeln
 });
 
@@ -68,7 +68,7 @@ export default function AttachmentUploadForm({
       console.log('Formular-Daten:', Object.fromEntries(data.entries()));
       
       try {
-        const response = await fetch("/api/attachments/upload", {
+        const response = await fetch("/api/attachments", {
           method: "POST",
           body: data,
           credentials: "include"
@@ -190,7 +190,11 @@ export default function AttachmentUploadForm({
       // FormData erstellen und Felder hinzufügen
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
-      formData.append("projectId", values.projectId);
+      
+      // Nur projectId hinzufügen, wenn ein Wert vorhanden ist
+      if (values.projectId) {
+        formData.append("projectId", values.projectId);
+      }
       
       // Zusätzliche Daten für einfachere Fehlersuche
       formData.append("timestamp", new Date().toISOString());
@@ -246,7 +250,7 @@ export default function AttachmentUploadForm({
                   name="projectId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Projekt</FormLabel>
+                      <FormLabel>Projekt (optional)</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -254,10 +258,11 @@ export default function AttachmentUploadForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Projekt auswählen" />
+                            <SelectValue placeholder="Projekt auswählen (optional)" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="">Kein Projekt (allgemeiner Anhang)</SelectItem>
                           {projects?.map((project) => (
                             <SelectItem key={project.id} value={project.id.toString()}>
                               {project.projectName || `Projekt ${project.id}`}
@@ -398,8 +403,9 @@ export default function AttachmentUploadForm({
                   )}
                 />
                 
+                {/* Kamera-Upload mit optionaler Projekt-ID */}
                 <CameraUpload 
-                  projectId={form.watch("projectId") ? parseInt(form.watch("projectId")) : null} 
+                  projectId={form.getValues("projectId") && form.getValues("projectId").length > 0 ? parseInt(form.getValues("projectId")) : null} 
                   onUploadSuccess={handleCameraUploadSuccess}
                 />
               </div>

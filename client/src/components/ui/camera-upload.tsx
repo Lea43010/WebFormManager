@@ -167,7 +167,7 @@ export function CameraUpload({ projectId, onUploadSuccess, onUploadError }: Came
       }
 
       // Datei hochladen
-      const response = await fetch('/api/attachments/upload', {
+      const response = await fetch('/api/attachments', {
         method: 'POST',
         body: formData,
         credentials: 'include'
