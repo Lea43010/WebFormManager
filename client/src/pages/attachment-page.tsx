@@ -349,6 +349,51 @@ export default function AttachmentPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Verification Results Dialog */}
+      {verifyResults && (
+        <Dialog open={!!verifyResults} onOpenChange={(open) => !open && setVerifyResults(null)}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Überprüfungsergebnisse</DialogTitle>
+              <DialogDescription>
+                Es wurden {verifyResults.total} Anhänge überprüft.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="flex justify-between mb-4">
+                <div className="text-green-600 font-medium">
+                  <CheckCircle className="inline-block mr-2 h-5 w-5" />
+                  {verifyResults.available} verfügbar
+                </div>
+                <div className="text-red-600 font-medium">
+                  <AlertTriangle className="inline-block mr-2 h-5 w-5" />
+                  {verifyResults.missing} fehlend
+                </div>
+              </div>
+              
+              {verifyResults.details.length > 0 && (
+                <>
+                  <p className="text-sm font-medium mb-2">Änderungen:</p>
+                  <div className="max-h-[200px] overflow-y-auto border rounded p-2">
+                    {verifyResults.details.map((detail, index) => (
+                      <div key={index} className={`text-sm py-1 px-2 ${index % 2 === 0 ? 'bg-gray-50' : ''}`}>
+                        <span className={detail.status === 'wiederhergestellt' ? 'text-green-600' : 'text-red-600'}>
+                          {detail.status === 'wiederhergestellt' ? '✓' : '✗'}
+                        </span>{' '}
+                        {detail.fileName} - {detail.status}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setVerifyResults(null)}>Schließen</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
