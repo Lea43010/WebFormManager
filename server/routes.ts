@@ -22,6 +22,8 @@ import { registerEmailRoutes } from "./routes/email-routes";
 import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
+import directDownloadRouter from "./routes/direct-download"; // Direkte Download-Route ohne Token
+import attachmentDebugRoutes from "./routes/attachment-debug-routes"; // Debug-Routen für Anhänge
 import { setupImageRoutes } from "./routes/image-routes"; // Bildoptimierungs-Routes
 // Import von Upload-Funktionen erfolgt bereits in Zeile 70
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
@@ -4441,6 +4443,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup subscription routes
   app.use('/api/subscription', subscriptionRouter);
+  
+  // Direkte Download-Route ohne Token-Anforderung
+  app.use('/api/direct-download', directDownloadRouter);
 
   const httpServer = createHttpServer(app);
   return httpServer;
