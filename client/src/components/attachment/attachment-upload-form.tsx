@@ -191,8 +191,8 @@ export default function AttachmentUploadForm({
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
       
-      // Nur projectId hinzufügen, wenn ein Wert vorhanden ist
-      if (values.projectId) {
+      // Nur projectId hinzufügen, wenn ein gültiger Wert vorhanden ist (nicht "none")
+      if (values.projectId && values.projectId !== "none") {
         formData.append("projectId", values.projectId);
       }
       
@@ -262,7 +262,7 @@ export default function AttachmentUploadForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Kein Projekt (allgemeiner Anhang)</SelectItem>
+                          <SelectItem value="none">Kein Projekt (allgemeiner Anhang)</SelectItem>
                           {projects?.map((project) => (
                             <SelectItem key={project.id} value={project.id.toString()}>
                               {project.projectName || `Projekt ${project.id}`}
@@ -379,7 +379,7 @@ export default function AttachmentUploadForm({
                   name="projectId"
                   render={({ field }) => (
                     <FormItem className="mb-6">
-                      <FormLabel>Projekt</FormLabel>
+                      <FormLabel>Projekt (optional)</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
@@ -391,6 +391,7 @@ export default function AttachmentUploadForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="none">Kein Projekt (allgemeiner Anhang)</SelectItem>
                           {projects?.map((project) => (
                             <SelectItem key={project.id} value={project.id.toString()}>
                               {project.projectName || `Projekt ${project.id}`}
@@ -405,7 +406,9 @@ export default function AttachmentUploadForm({
                 
                 {/* Kamera-Upload mit optionaler Projekt-ID */}
                 <CameraUpload 
-                  projectId={form.getValues("projectId") && form.getValues("projectId").length > 0 ? parseInt(form.getValues("projectId")) : null} 
+                  projectId={form.getValues("projectId") && form.getValues("projectId").length > 0 && form.getValues("projectId") !== "none" 
+                    ? parseInt(form.getValues("projectId")) 
+                    : null} 
                   onUploadSuccess={handleCameraUploadSuccess}
                 />
               </div>
