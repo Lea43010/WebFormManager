@@ -132,6 +132,11 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
         return res.status(404).json({ message: "Anhang nicht gefunden" });
       }
       
+      // Prüfen, ob der Anhang einem Projekt zugeordnet ist
+      if (attachment.projectId === null) {
+        return res.status(400).json({ message: "Anhang ist keinem Projekt zugeordnet" });
+      }
+      
       // Verwende die verbesserte Dateisuche aus file-utils
       console.log(`Suche nach Datei für Anhang mit ID ${id}, Original-Pfad: ${attachment.filePath}, WebP-Pfad: ${attachment.webpPath || "nicht vorhanden"}`);
       
