@@ -59,15 +59,23 @@ export default function ErrorPage({
 
   // Verwende vereinfachte Navigation dank des useNavigation-Hooks
   const handleGoBack = () => {
-    goHome(); // Zur Startseite navigieren
+    // Da wir im Fehlerkontext sind, direkt window.location verwenden statt SPA-Navigation
+    window.location.href = '/';
   };
 
   const handleRefresh = () => {
-    refresh(); // Seite neu laden
+    // Seite direkt neu laden statt SPA-Navigation
+    window.location.reload();
   };
 
   const handlePrevious = () => {
-    goBack(); // Zurück im Browser-Verlauf
+    // Direkt die window.history-API verwenden statt SPA-Navigation
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback zur Startseite, wenn kein Browser-Verlauf vorhanden ist
+      window.location.href = '/';
+    }
   };
 
   const handleRetry = () => {
@@ -76,9 +84,18 @@ export default function ErrorPage({
         title: "Erneuter Versuch",
         description: "Die Komponente wird neu geladen...",
       });
-      onRetry();
+      
+      try {
+        // Versuche den Callback auszuführen
+        onRetry();
+      } catch (error) {
+        console.error('Fehler beim Ausführen des Retry-Callbacks:', error);
+        // Bei Fehlern Fallback auf Seite neu laden
+        setTimeout(() => window.location.reload(), 1000);
+      }
     } else {
-      handleRefresh();
+      // Direktes Neuladen der Seite ohne Callback
+      window.location.reload();
     }
   };
 
