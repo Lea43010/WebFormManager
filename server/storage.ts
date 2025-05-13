@@ -278,7 +278,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
+    // Datentypen sicherstellen (z.B. für Datumswerte)
+    const userData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(insertUser)) {
+      if (value instanceof Date) {
+        userData[key] = value.toISOString();
+      } else {
+        userData[key] = value;
+      }
+    }
+    
+    // Array mit einem Element für das Insert-Statement erstellen
+    const userDataArray = [userData];
+    
+    const result = await db.insert(users).values(userDataArray).returning();
     const [user] = result;
     return user as User;
   }
@@ -996,7 +1011,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const result = await db.insert(surfaceAnalyses).values(analysisData).returning();
+    // Array mit einem Element für das Insert-Statement erstellen
+    const analysisDataArray = [analysisData];
+    
+    const result = await db.insert(surfaceAnalyses).values(analysisDataArray).returning();
     const [createdAnalysis] = result;
     return createdAnalysis as SurfaceAnalysis;
   }
@@ -1227,20 +1245,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createConstructionDiary(diary: InsertConstructionDiary): Promise<ConstructionDiary> {
-    const [createdDiary] = await db
+    // Datentypen sicherstellen (z.B. für numerische Felder)
+    const diaryData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(diary)) {
+      // Behandle numerische Felder spezifisch
+      if (['workHours'].includes(key) && typeof value === 'number') {
+        diaryData[key] = value.toString(); // Konvertiere Zahlen in Strings
+      } else if (value instanceof Date) {
+        diaryData[key] = value.toISOString();
+      } else {
+        diaryData[key] = value;
+      }
+    }
+    
+    // Array mit einem Element für das Insert-Statement erstellen
+    const diaryDataArray = [diaryData];
+    
+    const result = await db
       .insert(constructionDiaries)
-      .values(diary)
+      .values(diaryDataArray)
       .returning();
-    return createdDiary;
+    
+    const [createdDiary] = result;
+    return createdDiary as ConstructionDiary;
   }
 
   async updateConstructionDiary(id: number, diary: Partial<InsertConstructionDiary>): Promise<ConstructionDiary | undefined> {
-    const [updatedDiary] = await db
+    // Datentypen sicherstellen (z.B. für numerische Felder)
+    const diaryData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(diary)) {
+      // Behandle numerische Felder spezifisch
+      if (['workHours'].includes(key) && typeof value === 'number') {
+        diaryData[key] = value.toString(); // Konvertiere Zahlen in Strings
+      } else if (value instanceof Date) {
+        diaryData[key] = value.toISOString();
+      } else {
+        diaryData[key] = value;
+      }
+    }
+    
+    const result = await db
       .update(constructionDiaries)
-      .set(diary)
+      .set(diaryData)
       .where(eq(constructionDiaries.id, id))
       .returning();
-    return updatedDiary;
+    
+    const [updatedDiary] = result;
+    return updatedDiary as ConstructionDiary | undefined;
   }
 
   async deleteConstructionDiary(id: number): Promise<void> {
