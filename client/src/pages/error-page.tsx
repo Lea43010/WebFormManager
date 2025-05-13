@@ -60,7 +60,7 @@ export default function ErrorPage({
   // Verwende vereinfachte Navigation dank des useNavigation-Hooks
   const handleGoBack = () => {
     // Da wir im Fehlerkontext sind, direkt window.location verwenden statt SPA-Navigation
-    window.location.href = '/';
+    window.location.href = '/dashboard';
   };
 
   const handleRefresh = () => {
@@ -268,7 +268,7 @@ export default function ErrorPage({
             className="flex items-center justify-center gap-2" 
           >
             <Home className="h-4 w-4" />
-            Zur Startseite
+            Zum Dashboard
           </Button>
         </div>
 
