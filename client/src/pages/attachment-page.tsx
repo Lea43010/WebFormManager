@@ -72,31 +72,51 @@ export default function AttachmentPage() {
     }
   };
   
-  // Token-basierter Download mit Fehlerbehandlung
+  // Optimierter Download mit direkter Methode und Fallback
   const handleDownload = async (attachment: Attachment) => {
     try {
-      // Token anfordern (für den Download-Endpunkt, nicht für die Anzeige)
-      const response = await fetch(`/api/attachments/${attachment.id}/token`);
-      
-      if (!response.ok) {
-        throw new Error("Fehler beim Anfordern des Download-Tokens");
-      }
-      
-      const data = await response.json();
-      
-      // Erzeugt einen temporären Link zum Herunterladen
+      // Direkte Download-Methode ohne Token verwenden
       const link = document.createElement('a');
-      link.href = `/api/attachments/${attachment.id}/download?token=${data.token}`;
+      link.href = `/api/direct-download/${attachment.id}`;
       link.setAttribute('download', attachment.fileName || 'download');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (error) {
-      toast({
-        title: "Download-Fehler",
-        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Download",
-        variant: "destructive",
-      });
+      
+      console.log(`Direkter Download versucht für Anhang ${attachment.id}`);
+      
+    } catch (directError) {
+      console.error("Direkter Download fehlgeschlagen:", directError);
+      
+      // Fallback zur Token-basierten Methode
+      try {
+        // Token anfordern
+        const response = await fetch(`/api/attachments/${attachment.id}/token`);
+        
+        if (!response.ok) {
+          throw new Error("Fehler beim Anfordern des Download-Tokens");
+        }
+        
+        const data = await response.json();
+        
+        // Erzeugt einen temporären Link zum Herunterladen
+        const link = document.createElement('a');
+        link.href = `/api/attachments/${attachment.id}/download?token=${data.token}`;
+        link.setAttribute('download', attachment.fileName || 'download');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log(`Fallback-Download mit Token für Anhang ${attachment.id}`);
+        
+      } catch (fallbackError) {
+        console.error("Auch Fallback-Download fehlgeschlagen:", fallbackError);
+        toast({
+          title: "Download-Fehler",
+          description: "Der Download konnte nicht durchgeführt werden. Bitte versuchen Sie es später erneut.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -187,19 +207,30 @@ export default function AttachmentPage() {
               return (
                 <>
                   {isAdmin && (
-                    <Button 
-                      variant="outline" 
-                      onClick={() => verifyAttachmentsMutation.mutate()} 
-                      disabled={verifyInProgress}
-                      className="text-xs sm:text-sm flex-1 sm:flex-none h-10"
-                    >
-                      {verifyInProgress ? (
-                        <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                      )}
-                      Alle überprüfen
-                    </Button>
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => verifyAttachmentsMutation.mutate()} 
+                        disabled={verifyInProgress}
+                        className="text-xs sm:text-sm flex-1 sm:flex-none h-10"
+                      >
+                        {verifyInProgress ? (
+                          <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        )}
+                        Alle überprüfen
+                      </Button>
+                      
+                      <Button 
+                        variant="outline"
+                        onClick={() => window.open('/api/debug/attachments/scan', '_blank')}
+                        className="text-xs sm:text-sm flex-1 sm:flex-none h-10 ml-2"
+                      >
+                        <AlertTriangle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        Dateisystem scannen
+                      </Button>
+                    </>
                   )}
                   <Button 
                     onClick={() => setUploadDialogOpen(true)}
