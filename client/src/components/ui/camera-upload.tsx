@@ -162,7 +162,8 @@ export function CameraUpload({ projectId, onUploadSuccess, onUploadError }: Came
       // FormData für den Upload vorbereiten
       const formData = new FormData();
       formData.append('file', file);
-      if (projectId) {
+      // Nur gültige Projekt-IDs anhängen (projektId kann null oder eine Zahl sein)
+      if (projectId !== null && projectId !== undefined) {
         formData.append('projectId', projectId.toString());
       }
 

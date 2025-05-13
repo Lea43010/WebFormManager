@@ -407,9 +407,13 @@ export default function AttachmentUploadForm({
                 {/* Kamera-Upload mit optionaler Projekt-ID */}
                 <CameraUpload 
                   projectId={(() => {
-                    const projectIdValue = form.getValues("projectId");
-                    if (projectIdValue && projectIdValue !== "none" && /^\d+$/.test(projectIdValue)) {
-                      return parseInt(projectIdValue, 10);
+                    try {
+                      const projectIdValue = form.getValues("projectId") || "none";
+                      if (projectIdValue !== "none" && /^\d+$/.test(projectIdValue)) {
+                        return parseInt(projectIdValue, 10);
+                      }
+                    } catch (error) {
+                      console.error("Fehler bei der Verarbeitung der Projekt-ID:", error);
                     }
                     return null;
                   })()} 
