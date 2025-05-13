@@ -790,6 +790,25 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+  
+  async resetAttachmentFileMissing(id: number): Promise<Attachment | undefined> {
+    try {
+      // Setze den "fehlend"-Status zurück, wenn die Datei wiedergefunden wurde
+      const [updatedAttachment] = await db
+        .update(attachments)
+        .set({ 
+          fileMissing: false,
+          description: sql`REPLACE("description", ' | ⚠️ Datei nicht mehr verfügbar', '')`
+        })
+        .where(eq(attachments.id, id))
+        .returning();
+        
+      return updatedAttachment;
+    } catch (error) {
+      console.error(`Fehler beim Zurücksetzen des fehlenden Status des Anhangs: ${error}`);
+      return undefined;
+    }
+  }
 
   // Surface Analysis operations
   async getSurfaceAnalyses(projectId: number): Promise<SurfaceAnalysis[]> {
