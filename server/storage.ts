@@ -616,21 +616,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    // Sicherstellen, dass numerische Felder korrekt übergeben werden
-    const projectData = { ...project };
-    const [createdProject] = await db.insert(projects).values(projectData).returning() as Project[];
-    return createdProject;
+    // Datentypen sicherstellen (z.B. für numerische Felder)
+    const projectData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(project)) {
+      // Behandle numerische Felder spezifisch
+      if (['projectWidth', 'projectLength', 'projectHeight', 'projectText'].includes(key) && typeof value === 'number') {
+        projectData[key] = value;
+      } else if (value instanceof Date) {
+        projectData[key] = value.toISOString();
+      } else {
+        projectData[key] = value;
+      }
+    }
+    
+    const result = await db.insert(projects).values(projectData).returning();
+    const [createdProject] = result;
+    return createdProject as Project;
   }
 
   async updateProject(id: number, project: Partial<InsertProject>): Promise<Project | undefined> {
-    // Sicherstellen, dass numerische Felder korrekt übergeben werden
-    const projectData = { ...project };
-    const [updatedProject] = await db
+    // Datentypen sicherstellen (z.B. für numerische Felder)
+    const projectData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(project)) {
+      // Behandle numerische Felder spezifisch
+      if (['projectWidth', 'projectLength', 'projectHeight', 'projectText'].includes(key) && typeof value === 'number') {
+        projectData[key] = value;
+      } else if (value instanceof Date) {
+        projectData[key] = value.toISOString();
+      } else {
+        projectData[key] = value;
+      }
+    }
+    
+    const result = await db
       .update(projects)
       .set(projectData)
       .where(eq(projects.id, id))
-      .returning() as Project[];
-    return updatedProject;
+      .returning();
+    
+    const [updatedProject] = result;
+    return updatedProject as Project | undefined;
   }
 
   async deleteProject(id: number): Promise<void> {
@@ -952,8 +981,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSurfaceAnalysis(analysis: InsertSurfaceAnalysis): Promise<SurfaceAnalysis> {
-    const [createdAnalysis] = await db.insert(surfaceAnalyses).values(analysis).returning();
-    return createdAnalysis;
+    // Datentypen sicherstellen (z.B. für numerische Felder)
+    const analysisData: Record<string, any> = {};
+    
+    // Manuelles Mapping für sichere Typkonvertierung
+    for (const [key, value] of Object.entries(analysis)) {
+      // Behandle numerische Felder spezifisch
+      if (['latitude', 'longitude', 'confidence'].includes(key) && typeof value === 'number') {
+        analysisData[key] = value;
+      } else if (value instanceof Date) {
+        analysisData[key] = value.toISOString();
+      } else {
+        analysisData[key] = value;
+      }
+    }
+    
+    const result = await db.insert(surfaceAnalyses).values(analysisData).returning();
+    const [createdAnalysis] = result;
+    return createdAnalysis as SurfaceAnalysis;
   }
 
   async deleteSurfaceAnalysis(id: number): Promise<void> {
