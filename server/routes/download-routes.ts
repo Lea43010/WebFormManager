@@ -140,6 +140,11 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
       // Verwende die verbesserte Dateisuche aus file-utils
       console.log(`Suche nach Datei für Anhang mit ID ${id}, Original-Pfad: ${attachment.filePath}, WebP-Pfad: ${attachment.webpPath || "nicht vorhanden"}`);
       
+      // Extrahiere Dateinamen für verbesserte Fehlerausgaben
+      const filenameOriginal = path.basename(attachment.filePath);
+      
+      // Verbesserte Pfadsuche mit Debugging-Informationen
+      console.log(`Starte erweiterte Dateisuche für Anhang ${id} mit Dateiname: ${filenameOriginal}`);
       const foundFilePath = await findFile(attachment.filePath, attachment.webpPath);
       
       if (!foundFilePath) {

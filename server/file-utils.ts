@@ -18,11 +18,33 @@ const ALTERNATIVE_PATH_PATTERNS = [
   // Alternative 2: "public" Verzeichnis (für Produktions-Deployments)
   (filename: string) => path.join("public", "uploads", filename),
   
-  // Alternative 3: Aufsteigen im Verzeichnisbaum
+  // Alternative 3: Uploads direkt im Root-Verzeichnis
+  (filename: string) => path.join("/", "uploads", filename),
+  
+  // Alternative 4: Aufsteigen im Verzeichnisbaum
   (filename: string) => path.join("..", "uploads", filename),
   
-  // Alternative 4: Vollständiger Pfad ohne Verzeichnisstruktur
+  // Alternative 5: Nur der Dateiname ohne Pfad
   (filename: string) => filename,
+  
+  // Alternative 6: Datei im thumbnail oder optimized Unterverzeichnis
+  (filename: string) => path.join("uploads", "thumbnails", filename),
+  (filename: string) => path.join("uploads", "optimized", filename),
+  
+  // Alternative 7: Berücksichtige Namenskonventionen für optimierte Dateien
+  (filename: string) => {
+    // Versuche mit suffix "-optimized" falls es sich um eine normale Datei handelt
+    const baseName = path.basename(filename, path.extname(filename));
+    const ext = path.extname(filename);
+    return path.join("uploads", `${baseName}-optimized${ext}`);
+  },
+  
+  // Alternative 8: Berücksichtige WebP-Konvertierungen
+  (filename: string) => {
+    // Versuche mit Änderung der Dateiendung zu .webp
+    const baseName = path.basename(filename, path.extname(filename));
+    return path.join("uploads", `${baseName}.webp`);
+  },
 ];
 
 /**
@@ -58,6 +80,14 @@ export async function findFile(originalPath: string, webpPath?: string | null): 
   
   // 3. Alternative Pfade für Originaldatei prüfen
   const filename = path.basename(originalPath);
+  
+  // Extrahiere verschiedene Teile des Dateinamens für erweiterte Suche
+  const basenameWithExt = path.basename(originalPath);
+  const basenameWithoutExt = path.basename(originalPath, path.extname(originalPath));
+  const ext = path.extname(originalPath);
+  
+  console.log(`Suche nach Datei mit Name: ${basenameWithExt}, Basis: ${basenameWithoutExt}, Endung: ${ext}`);
+  
   for (const patternFn of ALTERNATIVE_PATH_PATTERNS) {
     const alternativePath = patternFn(filename);
     try {
@@ -69,6 +99,27 @@ export async function findFile(originalPath: string, webpPath?: string | null): 
     } catch (error) {
       console.error(`Fehler beim Prüfen des alternativen Pfads ${alternativePath}: ${error}`);
     }
+  }
+  
+  // 3.1 Versuche Dateien direkt im uploads-Verzeichnis zu finden
+  try {
+    const uploadsDir = path.join(process.cwd(), "uploads");
+    if (await fs.pathExists(uploadsDir)) {
+      const files = await fs.readdir(uploadsDir);
+      console.log(`Durchsuche ${files.length} Dateien im uploads-Verzeichnis...`);
+      
+      // Suche nach Dateien, die den Basisnamen enthalten
+      for (const file of files) {
+        if (file.includes(basenameWithoutExt) || 
+            (basenameWithoutExt.length > 8 && file.includes(basenameWithoutExt.substring(0, 8)))) {
+          const matchedPath = path.join(uploadsDir, file);
+          console.log(`Ähnliche Datei gefunden: ${matchedPath}`);
+          return matchedPath;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Fehler bei der direkten Suche im uploads-Verzeichnis: ${error}`);
   }
   
   // 4. Wenn WebP-Pfad vorhanden, auch alternative Pfade für WebP-Datei prüfen
