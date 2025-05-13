@@ -25,7 +25,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Definieren des Schemas für das Upload-Formular
 const uploadSchema = z.object({
-  projectId: z.string().optional(), // Projektauswahl ist optional
+  projectId: z.string({
+    required_error: "Ein Projekt muss ausgewählt werden"
+  }), // Projektauswahl ist nun Pflicht
   // Kein File-Feld, da wir das separat behandeln
 });
 

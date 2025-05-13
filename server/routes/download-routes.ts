@@ -151,9 +151,27 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
       
       // Wenn die Datei in /home/runner/workspace/... gespeichert ist, versuche einen relativen Pfad
       let modifiedPath = attachment.filePath;
+      
+      // 1. Pfad-Korrektur: /home/runner/workspace/ zu ./
       if (attachment.filePath.startsWith('/home/runner/workspace/')) {
         modifiedPath = attachment.filePath.replace('/home/runner/workspace/', './');
         console.log(`Pfad angepasst von absolutem zu relativem Pfad: ${modifiedPath}`);
+      }
+      
+      // 2. Direkte Extraktion des Dateinamens, falls der Pfad zu komplex ist
+      const extractedFileName = path.basename(attachment.filePath);
+      const simpleUploadsPath = path.join('./uploads', extractedFileName);
+      console.log(`Einfacher alternatives Pfad generiert: ${simpleUploadsPath}`);
+      
+      // Überprüfen Sie direkt, ob die Datei unter dem einfachen Pfad existiert
+      try {
+        const simplePathExists = await fs.pathExists(simpleUploadsPath);
+        if (simplePathExists) {
+          console.log(`Datei direkt im uploads-Verzeichnis gefunden: ${simpleUploadsPath}`);
+          return res.sendFile(path.resolve(simpleUploadsPath));
+        }
+      } catch (error) {
+        console.error(`Fehler beim Prüfen des einfachen Pfads:`, error);
       }
       
       // Verbesserte Pfadsuche mit Debugging-Informationen
