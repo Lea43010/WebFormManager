@@ -1100,7 +1100,10 @@ export class DatabaseStorage implements IStorage {
 
   async createBedarfKapa(data: InsertBedarfKapa): Promise<BedarfKapa> {
     console.log('Creating new BedarfKapa with data:', data);
-    const [createdData] = await db.insert(bedarfKapa).values(data).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const dataArray = this.prepareDataForInsert(data);
+    
+    const [createdData] = await db.insert(bedarfKapa).values(dataArray).returning();
     console.log('Created BedarfKapa:', createdData);
     return createdData;
   }
@@ -1124,16 +1127,22 @@ export class DatabaseStorage implements IStorage {
 
   async createMilestone(milestone: InsertMilestone): Promise<Milestone> {
     console.log('Creating new Milestone with data:', milestone);
-    const [createdMilestone] = await db.insert(milestones).values(milestone).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const milestoneDataArray = this.prepareDataForInsert(milestone);
+    
+    const [createdMilestone] = await db.insert(milestones).values(milestoneDataArray).returning();
     console.log('Created Milestone:', createdMilestone);
     return createdMilestone;
   }
 
   async updateMilestone(id: number, milestone: Partial<InsertMilestone>): Promise<Milestone | undefined> {
     console.log(`Updating Milestone with ID: ${id}`, milestone);
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [milestoneData] = this.prepareDataForInsert(milestone);
+    
     const [updatedMilestone] = await db
       .update(milestones)
-      .set(milestone)
+      .set(milestoneData)
       .where(eq(milestones.id, id))
       .returning();
     console.log('Updated Milestone:', updatedMilestone);
@@ -1164,16 +1173,22 @@ export class DatabaseStorage implements IStorage {
 
   async createMilestoneDetail(detail: InsertMilestoneDetail): Promise<MilestoneDetail> {
     console.log('Creating new MilestoneDetail with data:', detail);
-    const [createdDetail] = await db.insert(milestoneDetails).values(detail).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const detailDataArray = this.prepareDataForInsert(detail);
+    
+    const [createdDetail] = await db.insert(milestoneDetails).values(detailDataArray).returning();
     console.log('Created MilestoneDetail:', createdDetail);
     return createdDetail;
   }
 
   async updateMilestoneDetail(id: number, detail: Partial<InsertMilestoneDetail>): Promise<MilestoneDetail | undefined> {
     console.log(`Updating MilestoneDetail with ID: ${id}`, detail);
+    // Verwende die generische Methode zur Typkonvertierung und extrahiere das Objekt aus dem Array
+    const [detailData] = this.prepareDataForInsert(detail);
+    
     const [updatedDetail] = await db
       .update(milestoneDetails)
-      .set(detail)
+      .set(detailData)
       .where(eq(milestoneDetails.id, id))
       .returning();
     console.log('Updated MilestoneDetail:', updatedDetail);
@@ -1198,13 +1213,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createLoginLog(log: InsertLoginLog): Promise<LoginLog> {
-    const [createdLog] = await db.insert(loginLogs).values(log).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const logDataArray = this.prepareDataForInsert(log);
+    
+    const [createdLog] = await db.insert(loginLogs).values(logDataArray).returning();
     return createdLog;
   }
 
   // Verification Codes operations
   async createVerificationCode(code: InsertVerificationCode): Promise<VerificationCode> {
-    const [createdCode] = await db.insert(verificationCodes).values(code).returning();
+    // Verwende die generische Methode zur Typkonvertierung
+    const codeDataArray = this.prepareDataForInsert(code);
+    
+    const [createdCode] = await db.insert(verificationCodes).values(codeDataArray).returning();
     return createdCode;
   }
 
