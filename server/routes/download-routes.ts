@@ -137,11 +137,47 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
         return res.status(400).json({ message: "Anhang ist keinem Projekt zugeordnet" });
       }
       
-      // Verwende die verbesserte Dateisuche aus file-utils
-      console.log(`Suche nach Datei für Anhang mit ID ${id}, Original-Pfad: ${attachment.filePath}, WebP-Pfad: ${attachment.webpPath || "nicht vorhanden"}`);
+      // DIREKTER DOWNLOAD-ANSATZ
+      console.log(`🔍 DIREKTER DOWNLOAD-VERSUCH FÜR ANHANG ID: ${id}`);
       
       // Extrahiere Dateinamen für verbesserte Fehlerausgaben
       const filenameOriginal = path.basename(attachment.filePath);
+      
+      // Versuche die Datei direkt im uploads-Verzeichnis zu finden
+      try {
+        const uploadsDir = './uploads';
+        if (await fs.pathExists(uploadsDir)) {
+          const files = await fs.readdir(uploadsDir);
+          console.log(`📁 ${files.length} Dateien im uploads-Verzeichnis gefunden`);
+          
+          // Versuche verschiedene Matching-Strategien für Dateinamen
+          const matchingFiles = files.filter(file => 
+            file.includes(filenameOriginal) || 
+            filenameOriginal.includes(file) ||
+            // Auch nach Teilen des Dateinamens suchen (z.B. ohne Timestamp)
+            (filenameOriginal.split('-').pop() && file.includes(filenameOriginal.split('-').pop() || '')) ||
+            // Auch nach dem ursprünglichen Dateinamen suchen
+            (attachment.originalName && file.includes(attachment.originalName))
+          );
+          
+          if (matchingFiles.length > 0) {
+            console.log(`✅ Passende Datei(en) gefunden: ${matchingFiles.join(', ')}`);
+            const filePath = path.join(uploadsDir, matchingFiles[0]);
+            console.log(`📤 Sende Datei: ${filePath}`);
+            return res.sendFile(path.resolve(filePath));
+          } else {
+            console.log(`❌ Keine passende Datei gefunden für: ${filenameOriginal}`);
+          }
+        } else {
+          console.log('❌ uploads-Verzeichnis existiert nicht');
+        }
+      } catch (error) {
+        console.error('❌ Fehler beim direkten Download-Versuch:', error);
+      }
+      
+      // Verwende die verbesserte Dateisuche aus file-utils wenn der direkte Ansatz fehlgeschlagen ist
+      console.log(`Fallback: Suche nach Datei für Anhang mit ID ${id}, Original-Pfad: ${attachment.filePath}, WebP-Pfad: ${attachment.webpPath || "nicht vorhanden"}`);
+      
       
       // Prüfe, ob die Datei in der Datenbank existiert, aber physikalisch fehlt
       // In diesem Fall können wir eine alternative Datei aus dem uploads Verzeichnis bereitstellen
