@@ -112,19 +112,66 @@ export default function AttachmentUploadForm({
   // Datei-Auswahl-Handler
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      
-      // Bildvorschau nur für Bilder
-      if (file.type.startsWith("image/")) {
+    
+    if (!file) {
+      console.log('Keine Datei ausgewählt');
+      return;
+    }
+    
+    console.log('Datei ausgewählt:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: new Date(file.lastModified).toISOString()
+    });
+    
+    // Prüfe, ob die Datei zu groß ist (25MB)
+    if (file.size > 25 * 1024 * 1024) {
+      toast({
+        title: "Datei zu groß",
+        description: "Die maximale Dateigröße beträgt 25MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Prüfe, ob der Dateityp unterstützt wird
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 
+      'application/pdf',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    
+    if (!allowedTypes.includes(file.type) && !file.name.endsWith('.pdf')) {
+      console.warn('Unbekannter Dateityp, aber Verarbeitung wird fortgesetzt:', file.type);
+    }
+    
+    setSelectedFile(file);
+    
+    // Vorschau für Bilder
+    if (file.type.startsWith('image/')) {
+      try {
         const reader = new FileReader();
         reader.onload = (e) => {
           setFilePreview(e.target?.result as string);
         };
+        reader.onerror = (e) => {
+          console.error('Fehler beim Lesen der Datei:', e);
+          setFilePreview(null);
+        };
         reader.readAsDataURL(file);
-      } else {
+      } catch (error) {
+        console.error('Fehler beim Erstellen der Vorschau:', error);
         setFilePreview(null);
       }
+    } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      // Für PDFs verwende ein PDF-Icon
+      setFilePreview('/static/pdf-icon.png');
+    } else {
+      // Für andere Dateitypen verwende ein generisches Dokument-Icon
+      setFilePreview('/static/document-icon.png');
     }
   };
 
@@ -139,11 +186,37 @@ export default function AttachmentUploadForm({
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("projectId", values.projectId);
-    
-    uploadMutation.mutate(formData);
+    try {
+      // FormData erstellen und Felder hinzufügen
+      const formData = new FormData();
+      formData.append("file", selectedFile, selectedFile.name);
+      formData.append("projectId", values.projectId);
+      
+      // Zusätzliche Daten für einfachere Fehlersuche
+      formData.append("timestamp", new Date().toISOString());
+      formData.append("fileName", selectedFile.name);
+      formData.append("fileType", selectedFile.type);
+      formData.append("fileSize", selectedFile.size.toString());
+      
+      console.log('Ausgewählte Datei:', selectedFile);
+      console.log('Erstellte FormData:', {
+        projectId: values.projectId,
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        fileSize: selectedFile.size,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Datei hochladen
+      uploadMutation.mutate(formData);
+    } catch (error) {
+      console.error('Fehler beim Vorbereiten des Uploads:', error);
+      toast({
+        title: "Fehler beim Vorbereiten des Uploads",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Vorbereiten des Uploads",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handler für erfolgreichen Kamera-Upload
@@ -199,12 +272,39 @@ export default function AttachmentUploadForm({
 
                 <div className="space-y-4">
                   <FormLabel>Datei</FormLabel>
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center">
+                  <div 
+                    className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.currentTarget.classList.add("border-blue-500");
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.currentTarget.classList.remove("border-blue-500");
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.currentTarget.classList.remove("border-blue-500");
+                      const droppedFile = e.dataTransfer?.files?.[0];
+                      if (droppedFile) {
+                        const event = {
+                          target: {
+                            files: e.dataTransfer.files
+                          }
+                        } as React.ChangeEvent<HTMLInputElement>;
+                        handleFileChange(event);
+                      }
+                    }}
+                  >
                     <Input
                       type="file"
                       onChange={handleFileChange}
                       className="hidden"
                       id="file-upload"
+                      accept=".pdf,.jpg,.jpeg,.png,.gif,.xlsx,.xls,.doc,.docx,.txt"
                     />
                     {filePreview ? (
                       <div className="w-full flex flex-col items-center">
@@ -213,7 +313,10 @@ export default function AttachmentUploadForm({
                           alt="Vorschau" 
                           className="max-h-48 max-w-full object-contain mb-4"
                         />
-                        <p className="text-sm">{selectedFile?.name}</p>
+                        <p className="text-sm font-medium">{selectedFile?.name}</p>
+                        <p className="text-xs text-gray-500 mb-2">
+                          {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB - ${selectedFile.type || 'Unbekannter Typ'}` : ''}
+                        </p>
                         <Button
                           type="button"
                           variant="outline"
@@ -230,16 +333,19 @@ export default function AttachmentUploadForm({
                     ) : (
                       <div className="text-center">
                         <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <div className="mt-4 flex justify-center">
+                        <div className="mt-4 flex justify-center flex-col items-center">
                           <label
                             htmlFor="file-upload"
-                            className="cursor-pointer bg-[#6a961f] text-white px-4 py-2 rounded-md hover:bg-[#5a8418] transition"
+                            className="cursor-pointer bg-[#6a961f] text-white px-4 py-2 rounded-md hover:bg-[#5a8418] transition mb-2"
                           >
                             Datei auswählen
                           </label>
+                          <p className="text-sm text-gray-500">
+                            oder per Drag & Drop hierher ziehen
+                          </p>
                         </div>
-                        <p className="mt-2 text-xs text-gray-500">
-                          PDF, Bilder, Excel-Dateien oder andere Dokumenttypen
+                        <p className="mt-4 text-xs text-gray-500">
+                          Unterstützte Formate: PDF, Bilder, Excel-Dateien, Word-Dokumente
                         </p>
                       </div>
                     )}

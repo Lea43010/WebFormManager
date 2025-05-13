@@ -1929,6 +1929,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), "public/static/image-placeholder.png"));
   });
   
+  // Statische Dateien für PDF- und Dokument-Icons
+  app.get("/static/pdf-icon.png", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public/static/pdf-icon.png"));
+  });
+  
+  app.get("/static/document-icon.png", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public/static/document-icon.png"));
+  });
+  
+  // Test-Seite für Datei-Upload (nur im Entwicklungsmodus)
+  app.get("/test-upload", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "public/test-upload.html"));
+  });
+  
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
   app.post(
     "/api/attachments/upload",

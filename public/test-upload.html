@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload-Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    select, input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #76a730;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #648e29;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Datei-Upload Test</h1>
+  <p>Dieser einfache Formular-Test hilft bei der Fehlersuche für den Upload-Prozess.</p>
+  
+  <form id="uploadForm">
+    <div class="form-group">
+      <label for="projectId">Projekt-ID:</label>
+      <select id="projectId" name="projectId" required>
+        <option value="">Projekt auswählen...</option>
+        <!-- Projekte werden dynamisch geladen -->
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="fileUpload">Datei:</label>
+      <input type="file" id="fileUpload" name="file" required>
+    </div>
+    
+    <button type="submit">Hochladen</button>
+  </form>
+  
+  <div id="result" class="result">
+    <h3>Ergebnis:</h3>
+    <pre id="resultContent"></pre>
+  </div>
+
+  <script>
+    // Projekte laden
+    fetch('/api/projects')
+      .then(response => response.json())
+      .then(projects => {
+        const select = document.getElementById('projectId');
+        projects.forEach(project => {
+          const option = document.createElement('option');
+          option.value = project.id;
+          option.textContent = project.projectName || `Projekt ${project.id}`;
+          select.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Fehler beim Laden der Projekte:', error);
+        document.body.innerHTML += `<p class="error">Fehler beim Laden der Projekte: ${error.message}</p>`;
+      });
+
+    // Upload-Formular senden
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData();
+      const projectId = document.getElementById('projectId').value;
+      const fileInput = document.getElementById('fileUpload');
+      const file = fileInput.files[0];
+      
+      if (!projectId) {
+        alert('Bitte wählen Sie ein Projekt aus');
+        return;
+      }
+      
+      if (!file) {
+        alert('Bitte wählen Sie eine Datei aus');
+        return;
+      }
+      
+      formData.append('file', file);
+      formData.append('projectId', projectId);
+      
+      // Debug-Ausgabe
+      console.log('Sende Formular mit:');
+      console.log('- Projekt-ID:', projectId);
+      console.log('- Datei:', file.name, file.type, `${(file.size / 1024).toFixed(2)} KB`);
+      
+      fetch('/api/attachments/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+      .then(response => {
+        const resultElem = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        resultElem.style.display = 'block';
+        
+        if (!response.ok) {
+          return response.text().then(text => {
+            resultElem.classList.add('error');
+            resultContent.textContent = `Fehler (${response.status}): ${text}`;
+            throw new Error(`Fehler ${response.status}: ${text}`);
+          });
+        }
+        
+        return response.json();
+      })
+      .then(data => {
+        const resultElem = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        resultElem.classList.remove('error');
+        resultElem.classList.add('success');
+        resultContent.textContent = `Erfolg!\n\n${JSON.stringify(data, null, 2)}`;
+        
+        // Formular zurücksetzen
+        document.getElementById('uploadForm').reset();
+      })
+      .catch(error => {
+        console.error('Upload-Fehler:', error);
+        const resultElem = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        
+        resultElem.classList.add('error');
+        resultElem.classList.remove('success');
+        resultContent.textContent = `Fehler: ${error.message}`;
+      });
+    });
+  </script>
+</body>
+</html>
