@@ -219,15 +219,32 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {attachments.map((attachment) => (
-            <Card key={attachment.id} className="overflow-hidden hover:shadow-md transition-shadow">
+            <Card 
+              key={attachment.id} 
+              className={`overflow-hidden hover:shadow-md transition-shadow ${attachment.fileMissing ? 'border-amber-400 bg-amber-50' : ''}`}
+            >
               <CardContent className="p-4">
                 <div className="flex items-start space-x-4">
                   <div className="pt-1">
-                    {getFileIcon(attachment.fileName)}
+                    {attachment.fileMissing ? (
+                      <div className="relative">
+                        {getFileIcon(attachment.fileName)}
+                        <div className="absolute -top-1 -right-1 bg-amber-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                          <span className="text-[10px]">!</span>
+                        </div>
+                      </div>
+                    ) : (
+                      getFileIcon(attachment.fileName)
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {attachment.fileName}
+                      {attachment.fileMissing && (
+                        <span className="ml-1 text-xs text-amber-600 font-normal">
+                          (Datei nicht verfügbar)
+                        </span>
+                      )}
                     </p>
                     {attachment.description && (
                       <p className="text-sm text-muted-foreground truncate">
@@ -242,8 +259,20 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      disabled={attachment.fileMissing} // Deaktivieren bei fehlender Datei
+                      title={attachment.fileMissing ? "Datei nicht mehr verfügbar" : "Datei herunterladen"}
                       onClick={async () => {
                         try {
+                          // Prüfen, ob die Datei fehlt
+                          if (attachment.fileMissing) {
+                            toast({
+                              title: "Datei nicht verfügbar",
+                              description: "Diese Datei ist nicht mehr auf dem Server verfügbar.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
                           // Token anfordern (für den Download-Endpunkt)
                           const response = await fetch(`/api/attachments/${attachment.id}/token`);
                           
@@ -275,7 +304,7 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                         }
                       }}
                     >
-                      <Download className="h-4 w-4 text-green-600" />
+                      <Download className={`h-4 w-4 ${attachment.fileMissing ? 'text-gray-400' : 'text-green-600'}`} />
                     </Button>
                     <Button
                       variant="ghost"

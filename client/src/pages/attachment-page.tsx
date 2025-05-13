@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -149,19 +150,43 @@ export default function AttachmentPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {attachments?.map((attachment) => (
-              <Card key={attachment.id} className="overflow-hidden">
-                <CardHeader className="p-4 bg-gray-50">
-                  <CardTitle className="text-sm font-medium truncate">{attachment.fileName}</CardTitle>
+              <Card 
+                key={attachment.id} 
+                className={`overflow-hidden ${attachment.fileMissing ? 'border-amber-400' : ''}`}
+              >
+                <CardHeader className={`p-4 ${attachment.fileMissing ? 'bg-amber-50' : 'bg-gray-50'}`}>
+                  <CardTitle className="text-sm font-medium truncate">
+                    {attachment.fileName}
+                    {attachment.fileMissing && (
+                      <span className="ml-1 text-xs text-amber-600 font-normal">
+                        (nicht verfügbar)
+                      </span>
+                    )}
+                  </CardTitle>
                   <CardDescription className="text-xs">
                     {attachment.projectId ? `Projekt ${attachment.projectId}` : "Kein Projekt"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 flex items-center justify-center">
                   <div className="text-center">
-                    {getFileIcon(attachment.fileType)}
+                    {attachment.fileMissing ? (
+                      <div className="relative inline-block">
+                        {getFileIcon(attachment.fileType)}
+                        <div className="absolute -top-1 -right-1 bg-amber-500 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                          <span className="text-[10px]">!</span>
+                        </div>
+                      </div>
+                    ) : (
+                      getFileIcon(attachment.fileType)
+                    )}
                     <p className="mt-2 text-sm text-gray-500">
                       {(attachment.fileSize / 1024).toFixed(2)} KB
                     </p>
+                    {attachment.fileMissing && (
+                      <Badge variant="outline" className="mt-2 text-[10px] border-amber-500 text-amber-700">
+                        Datei fehlt
+                      </Badge>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 bg-gray-50 flex justify-between">
@@ -179,8 +204,19 @@ export default function AttachmentPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="px-2 py-1 h-8 text-xs"
-                      onClick={() => handleDownload(attachment)}
+                      className={`px-2 py-1 h-8 text-xs ${attachment.fileMissing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={attachment.fileMissing}
+                      onClick={() => {
+                        if (attachment.fileMissing) {
+                          toast({
+                            title: "Datei nicht verfügbar",
+                            description: "Diese Datei ist nicht mehr auf dem Server verfügbar.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        handleDownload(attachment);
+                      }}
                     >
                       <Download className="w-3 h-3 mr-1" />
                       Download
