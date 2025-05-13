@@ -29,24 +29,19 @@ export function applyOptimizationToAttachment(
       originalSize: optimizationResult.originalSize,
       // Größe nach der Optimierung
       optimizedSize: optimizationResult.optimizedSize,
-      // Eingesparte Bytes in Prozent (als Zahl)
-      optimizationSavings: Math.round(optimizationResult.savings * 100) / 100,
+      // Eingesparte Bytes in Prozent (als ganze Zahl)
+      optimizationSavings: Math.round(optimizationResult.savings),
       // Ursprüngliches Format
       originalFormat: originalExt,
       // Pfad zur WebP-Version (wenn generiert)
       webpPath: optimizationResult.webpPath,
       // Flag, ob das Bild optimiert wurde
       isOptimized: true,
-      // Optionale Felder, die null sein können (um Typensicherheit zu gewährleisten)
-      thumbnailPath: optimizationResult.thumbnailPath || null,
-      blurHash: optimizationResult.blurHash || null,
-      originalWidth: optimizationResult.originalWidth || null,
-      originalHeight: optimizationResult.originalHeight || null,
-      width: optimizationResult.width || null,
-      height: optimizationResult.height || null
+      // Diese Felder gehören nicht zum Schema und werden nur im Frontend verwendet
+      // aber wir speichern sie nicht in der Datenbank
     };
 
-    logger.debug(`Anhang mit Optimierungsinformationen angereichert: ${optimizationResult.savings.toFixed(2)}% Einsparung`);
+    logger.debug(`Anhang mit Optimierungsinformationen angereichert: ${Math.round(optimizationResult.savings)}% Einsparung`);
     logger.debug(`Erweitertes Attachment:`, JSON.stringify(enhancedAttachment, null, 2));
     
     return enhancedAttachment;
