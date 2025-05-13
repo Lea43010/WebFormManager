@@ -4443,10 +4443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup subscription routes
   app.use('/api/subscription', subscriptionRouter);
   
-  // Direkte Debug-Routen für Admin-Tools mit benutzerfreundlicher Fehlerbehandlung
+  // Verbesserte Debug-Routen für Dateianhänge mit benutzerfreundlicher Fehlerbehandlung
+  import * as attachmentDebugRoutes from './routes/attachment-debug-routes';
   app.use('/api/debug/attachments', (req, res, next) => {
     try {
-      attachmentDebugRoutes(req, res, next);
+      attachmentDebugRoutes.router(req, res, next);
     } catch (error) {
       console.error("Fehler in den Debug-Routen:", error);
       res.status(500).json({

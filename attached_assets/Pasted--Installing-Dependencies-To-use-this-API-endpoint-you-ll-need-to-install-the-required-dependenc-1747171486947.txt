@@ -1,0 +1,75 @@
+# Installing Dependencies
+
+To use this API endpoint, you'll need to install the required dependencies:
+
+```bash
+npm install express multer cors
+```
+
+# File Structure
+
+Your project should have this structure:
+
+```
+your-project/
+├── server.js (or index.js)
+├── api/
+│   └── debug/
+│       └── attachments.js
+├── uploads/      # Created automatically
+└── public/       # For static files
+```
+
+# Testing the API
+
+You can test the API using tools like curl, Postman, or a simple HTML form:
+
+## Using curl
+
+```bash
+# Test GET endpoint
+curl -X GET https://your-replit-url/api/debug/attachments/scan
+
+# Test POST endpoint
+curl -X POST -F "attachment=@/path/to/your/file.jpg" https://your-replit-url/api/debug/attachments/scan
+```
+
+## Using a simple HTML form
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attachment Upload Test</title>
+</head>
+<body>
+  <h1>Upload Attachment for Scanning</h1>
+  <form action="/api/debug/attachments/scan" method="post" enctype="multipart/form-data">
+    <input type="file" name="attachment">
+    <button type="submit">Upload and Scan</button>
+  </form>
+</body>
+</html>
+```
+
+Save this as `public/upload.html` and access it via your Replit URL.
+
+# Implementation Details
+
+1. **`attachments.js`** - Contains the API routes for attachment scanning:
+   - `GET /api/debug/attachments/scan` - Returns information about the scan service
+   - `POST /api/debug/attachments/scan` - Uploads and "scans" a file
+
+2. **`server.js`** - Sets up the Express server and mounts the API routes
+
+3. The implementation uses **multer** for handling multipart/form-data and file uploads
+
+4. For security, the upload is limited to images and PDFs up to 5MB
+
+# Troubleshooting
+
+- Make sure all dependencies are installed
+- Check that the file paths and routes match exactly
+- Ensure your Replit has proper permissions to create directories and files
+- If using a database, ensure it's properly configured
+- Check the Replit logs for detailed error messages
