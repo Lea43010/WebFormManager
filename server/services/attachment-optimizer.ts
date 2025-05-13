@@ -29,8 +29,8 @@ export function applyOptimizationToAttachment(
       originalSize: optimizationResult.originalSize,
       // Größe nach der Optimierung
       optimizedSize: optimizationResult.optimizedSize,
-      // Eingesparte Bytes in Prozent (als ganze Zahl)
-      optimizationSavings: Math.round(optimizationResult.savings),
+      // Eingesparte Bytes in Prozent (als ganze Zahl, min. 0%)
+      optimizationSavings: Math.max(0, Math.round(optimizationResult.savings)),
       // Ursprüngliches Format
       originalFormat: originalExt,
       // Pfad zur WebP-Version (wenn generiert)
