@@ -154,13 +154,41 @@ export default function AttachmentPage() {
       <div className="container p-4">
         <div className="flex flex-wrap justify-between items-center mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2 w-full sm:w-auto mb-2 sm:mb-0">
-            <Button 
-              onClick={() => setUploadDialogOpen(true)}
-              className="bg-[#6a961f] hover:bg-[#5a8418] text-white flex-1 sm:flex-none h-10 text-xs sm:text-sm"
-            >
-              <Upload className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Datei hochladen
-            </Button>
+            {/* Benutzer mit Administrator-Rolle identifizieren */}
+            {(() => {
+              const { data: currentUser } = useQuery({
+                queryKey: ["/api/user"],
+              });
+              
+              const isAdmin = currentUser?.role === 'administrator';
+              
+              return (
+                <>
+                  {isAdmin && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => verifyAttachmentsMutation.mutate()} 
+                      disabled={verifyInProgress}
+                      className="text-xs sm:text-sm flex-1 sm:flex-none h-10"
+                    >
+                      {verifyInProgress ? (
+                        <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      )}
+                      Alle überprüfen
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => setUploadDialogOpen(true)}
+                    className="bg-[#6a961f] hover:bg-[#5a8418] text-white flex-1 sm:flex-none h-10 text-xs sm:text-sm"
+                  >
+                    <Upload className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    Datei hochladen
+                  </Button>
+                </>
+              );
+            })()}
           </div>
         </div>
 
