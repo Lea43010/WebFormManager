@@ -1755,9 +1755,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Anhang nicht gefunden" });
       }
       
-      // Prüfen, ob die Datei existiert
-      if (!await fs.pathExists(attachment.filePath)) {
-        return res.status(404).json({ message: "Datei nicht gefunden" });
+      // Korrekten Dateipfad bestimmen - originalen UND alternativen Pfad prüfen
+      let filePath = attachment.filePath;
+      const fileExists = await fs.pathExists(filePath);
+      
+      if (!fileExists) {
+        // Alternative Pfade versuchen
+        console.log(`Datei nicht an originalem Pfad gefunden: ${filePath}`);
+        
+        // Variante 1: Relativer Pfad im aktuellen Arbeitsverzeichnis
+        const fileName = path.basename(filePath);
+        const alternativePath1 = path.join(process.cwd(), "uploads", fileName);
+        
+        // Variante 2: Relativer Pfad falls der komplette Runner-Pfad in der Datenbank gespeichert ist
+        const alternativePath2 = path.join("uploads", fileName);
+        
+        console.log(`Versuche alternative Pfade: ${alternativePath1} oder ${alternativePath2}`);
+        
+        if (await fs.pathExists(alternativePath1)) {
+          console.log(`Datei gefunden unter: ${alternativePath1}`);
+          filePath = alternativePath1;
+        } else if (await fs.pathExists(alternativePath2)) {
+          console.log(`Datei gefunden unter: ${alternativePath2}`);
+          filePath = alternativePath2;
+        } else {
+          console.error(`Datei konnte unter keinem Pfad gefunden werden.`);
+          return res.status(404).json({ message: "Datei nicht gefunden" });
+        }
       }
       
       // Nach erfolgreicher Validierung das Token invalidieren
@@ -1765,7 +1789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const fileName = encodeURIComponent(attachment.fileName);
       res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-      res.sendFile(path.resolve(attachment.filePath));
+      res.sendFile(path.resolve(filePath));
     } catch (error) {
       console.error("Error downloading attachment:", error);
       next(error);
@@ -1837,13 +1861,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Keine Berechtigung, um diesen Anhang anzusehen" });
       }
       
-      // Prüfen, ob die Datei existiert
-      if (!await fs.pathExists(attachment.filePath)) {
-        return res.status(404).json({ message: "Datei nicht gefunden" });
+      // Korrekten Dateipfad bestimmen - originalen UND alternativen Pfad prüfen
+      let filePath = attachment.filePath;
+      const fileExists = await fs.pathExists(filePath);
+      
+      if (!fileExists) {
+        // Alternative Pfade versuchen
+        console.log(`Datei nicht an originalem Pfad gefunden: ${filePath}`);
+        
+        // Variante 1: Relativer Pfad im aktuellen Arbeitsverzeichnis
+        const fileName = path.basename(filePath);
+        const alternativePath1 = path.join(process.cwd(), "uploads", fileName);
+        
+        // Variante 2: Relativer Pfad falls der komplette Runner-Pfad in der Datenbank gespeichert ist
+        const alternativePath2 = path.join("uploads", fileName);
+        
+        console.log(`Versuche alternative Pfade: ${alternativePath1} oder ${alternativePath2}`);
+        
+        if (await fs.pathExists(alternativePath1)) {
+          console.log(`Datei gefunden unter: ${alternativePath1}`);
+          filePath = alternativePath1;
+        } else if (await fs.pathExists(alternativePath2)) {
+          console.log(`Datei gefunden unter: ${alternativePath2}`);
+          filePath = alternativePath2;
+        } else {
+          console.error(`Datei konnte unter keinem Pfad gefunden werden.`);
+          return res.status(404).json({ message: "Datei nicht gefunden" });
+        }
       }
       
       // Datei als Base64 kodieren und zurückgeben
-      const imageBuffer = await fs.readFile(attachment.filePath);
+      const imageBuffer = await fs.readFile(filePath);
       const base64Image = imageBuffer.toString('base64');
       
       // MIME-Typ ermitteln
