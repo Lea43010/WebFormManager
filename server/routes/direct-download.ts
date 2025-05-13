@@ -4,7 +4,7 @@
  * und sucht Dateien direkt im uploads-Verzeichnis
  */
 import express, { Request, Response } from 'express';
-import * as fs from 'fs-extra';
+import fs from 'fs';
 import * as path from 'path';
 import { storage } from '../storage';
 
@@ -26,7 +26,6 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
     
     console.log(`🔍 Direkter Download für Anhang ID ${id} angefordert`);
-    console.log(`📋 Anhangsdaten: ${JSON.stringify(attachment, null, 2)}`);
     
     // Extrahiere den Dateinamen vom Original-Pfad und dem Original-Namen
     const filenameFromPath = path.basename(attachment.filePath || '');
@@ -34,15 +33,6 @@ router.get('/:id', async (req: Request, res: Response) => {
     const fileName = attachment.fileName;
     
     console.log(`📁 Suche nach Datei: ${filenameFromPath} oder ${fileName} oder ${originalName}`);
-    
-    // Prüfe verschiedene Verzeichnisse
-    const directoriesToCheck = [
-      './uploads',
-      './public/uploads',
-      '/home/runner/workspace/uploads',
-      path.dirname(attachment.filePath || ''),
-      '.'
-    ];
     
     let fileFound = false;
     let foundFilePath = '';
@@ -53,6 +43,15 @@ router.get('/:id', async (req: Request, res: Response) => {
       foundFilePath = attachment.filePath;
       fileFound = true;
     } else {
+      // Prüfe verschiedene Verzeichnisse
+      const directoriesToCheck = [
+        './uploads',
+        './public/uploads',
+        '/home/runner/workspace/uploads',
+        path.dirname(attachment.filePath || ''),
+        '.'
+      ];
+      
       // Überprüfe jedes Verzeichnis
       for (const dir of directoriesToCheck) {
         try {
@@ -63,42 +62,43 @@ router.get('/:id', async (req: Request, res: Response) => {
             // Liste alle Dateien im Verzeichnis auf
             const files = fs.readdirSync(dir);
             console.log(`📂 ${files.length} Dateien gefunden in ${dir}`);
-          
-          // Versuche, eine passende Datei zu finden mit erweiterten Kriterien
-          const matchingFiles = files.filter((file: string) => {
-            // Exakter Pfad-Match
-            if (file === filenameFromPath) {
-              console.log(`✅ Exakter Pfad-Match gefunden: ${file}`);
-              return true;
-            }
             
-            // Dateiname-Match
-            if (fileName && (file === fileName || file.includes(fileName) || fileName.includes(file))) {
-              console.log(`✅ Dateiname-Match gefunden: ${file}`);
-              return true;
-            }
+            // Versuche, eine passende Datei zu finden mit erweiterten Kriterien
+            const matchingFiles = files.filter((file: string) => {
+              // Exakter Pfad-Match
+              if (file === filenameFromPath) {
+                console.log(`✅ Exakter Pfad-Match gefunden: ${file}`);
+                return true;
+              }
+              
+              // Dateiname-Match
+              if (fileName && (file === fileName || file.includes(fileName) || fileName.includes(file))) {
+                console.log(`✅ Dateiname-Match gefunden: ${file}`);
+                return true;
+              }
+              
+              // Fallback auf Teil-Matchings
+              if (file.includes(filenameFromPath) || 
+                  filenameFromPath.includes(file) ||
+                  (originalName && file.includes(originalName)) ||
+                  (originalName && originalName.includes(file))) {
+                console.log(`✅ Teil-Match gefunden: ${file}`);
+                return true;
+              }
+              
+              return false;
+            });
             
-            // Fallback auf Teil-Matchings
-            if (file.includes(filenameFromPath) || 
-                filenameFromPath.includes(file) ||
-                (originalName && file.includes(originalName)) ||
-                (originalName && originalName.includes(file))) {
-              console.log(`✅ Teil-Match gefunden: ${file}`);
-              return true;
+            if (matchingFiles.length > 0) {
+              console.log(`✅ Passende Dateien gefunden: ${matchingFiles.join(', ')}`);
+              foundFilePath = path.join(dir, matchingFiles[0]);
+              fileFound = true;
+              break;
             }
-            
-            return false;
-          });
-          
-          if (matchingFiles.length > 0) {
-            console.log(`✅ Passende Dateien gefunden: ${matchingFiles.join(', ')}`);
-            foundFilePath = path.join(dir, matchingFiles[0]);
-            fileFound = true;
-            break;
           }
+        } catch (error) {
+          console.error(`Fehler beim Durchsuchen von ${dir}:`, error);
         }
-      } catch (error) {
-        console.error(`Fehler beim Durchsuchen von ${dir}:`, error);
       }
     }
     
@@ -107,15 +107,16 @@ router.get('/:id', async (req: Request, res: Response) => {
       
       try {
         // Prüfe ob die Datei existiert und lesbar ist
-        await fs.access(foundFilePath, fs.constants.R_OK);
+        if (!fs.existsSync(foundFilePath)) {
+          throw new Error('Datei existiert nicht');
+        }
         
         // Sende die gefundene Datei zum Client
-        return res.sendFile(path.resolve(foundFilePath), {
+        res.sendFile(path.resolve(foundFilePath), {
           headers: {
             'Content-Disposition': `attachment; filename="${encodeURIComponent(originalName || fileName || filenameFromPath)}"`,
             'Content-Type': getContentType(foundFilePath)
           },
-          // Zusätzlicher Error-Handler für sendFile
           dotfiles: 'allow'
         }, (err) => {
           if (err) {
@@ -123,7 +124,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             res.status(500).json({ 
               message: "Die Datei konnte nicht gesendet werden",
               userFriendly: true,
-              technicalDetails: String(err)
+              details: String(err)
             });
           }
         });
@@ -144,7 +145,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ 
         message: "Die angeforderte Datei konnte nicht gefunden werden. Der Administrator wurde benachrichtigt.",
         userFriendly: true,
-        technicalDetails: {
+        details: {
           filename: filenameFromPath,
           fileName,
           originalName,
@@ -156,7 +157,8 @@ router.get('/:id', async (req: Request, res: Response) => {
     console.error('Fehler beim Direkten Download:', error);
     return res.status(500).json({ 
       message: "Interner Serverfehler beim Direkten Download", 
-      error: String(error)
+      error: String(error),
+      userFriendly: true
     });
   }
 });
