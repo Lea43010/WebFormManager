@@ -1929,52 +1929,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), "public/static/image-placeholder.png"));
   });
   
-  // Statische Dateien und Test-HTML-Dateien bereitstellen
+  // Statische Dateien für öffentliche Assets
   app.use('/static', express.static(path.join(process.cwd(), 'public/static')));
   
-  // Direkter Zugriff auf die test-upload.html-Datei
-  app.use('/assets', express.static(path.join(process.cwd(), 'public')));
+  // Statische Dateien für uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
   
-  // Test-Seite für Datei-Upload (nur im Entwicklungsmodus)
-  app.get("/test-upload", (req, res) => {
-    try {
-      console.log('Test-Upload-Seite angefordert');
-      res.redirect('/assets/test-upload.html');
-    } catch (error) {
-      console.error('Fehler beim Umleiten zur Test-Upload-Seite:', error);
-      res.status(500).send('Fehler beim Laden der Test-Seite: ' + error.message);
-    }
-  });
+  // Alle HTML-Dateien im public-Verzeichnis zugänglich machen
+  app.use(express.static(path.join(process.cwd(), 'public'), {
+    extensions: ['html'],
+    index: false
+  }));
   
-  // Debug-Endpunkt, um Dateipfade zu überprüfen
-  app.get("/debug-paths", (req, res) => {
-    try {
-      // ES Modules kompatible Importe
-      import('fs').then(fsModule => {
-        const fs = fsModule.default;
-        
-        const paths = {
-          cwd: process.cwd(),
-          publicPath: path.join(process.cwd(), 'public'),
-          staticPath: path.join(process.cwd(), 'public/static'),
-          testUploadPath: path.join(process.cwd(), 'public/test-upload.html'),
-          publicExists: fs.existsSync(path.join(process.cwd(), 'public')),
-          staticExists: fs.existsSync(path.join(process.cwd(), 'public/static')),
-          testUploadExists: fs.existsSync(path.join(process.cwd(), 'public/test-upload.html')),
-          publicContents: fs.existsSync(path.join(process.cwd(), 'public')) 
-            ? fs.readdirSync(path.join(process.cwd(), 'public')) 
-            : 'Directory not found'
-        };
-        
-        res.json(paths);
-      }).catch(error => {
-        console.error('Fehler beim Importieren des FS Moduls:', error);
-        res.status(500).json({ error: 'Modulimport-Fehler: ' + error.message });
-      });
-    } catch (error) {
-      console.error('Fehler beim Prüfen der Pfade:', error);
-      res.status(500).json({ error: 'Allgemeiner Fehler: ' + error.message });
-    }
+  // Expliziter Zugriff auf test-upload.html
+  app.get('/test-upload', (req, res) => {
+    console.log('Test-Upload-Seite angefordert');
+    // Direktes Senden der Datei ohne Umleitung
+    const filePath = path.join(process.cwd(), 'public/test-upload.html');
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Fehler beim Senden der Test-Upload-Seite:', err);
+        res.status(500).send(`
+          <html><body>
+            <h1>Fehler beim Laden der Test-Seite</h1>
+            <p>${err.message}</p>
+            <p>Pfad: ${filePath}</p>
+            <p><a href="/">Zurück zur Startseite</a></p>
+          </body></html>
+        `);
+      }
+    });
   });
   
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
