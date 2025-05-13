@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer as createHttpServer, type Server } from "http";
 import { createServer as createHttpsServer } from "https";
 import express from "express";
-import attachmentDebugRoutes from "./routes/attachment-debug-routes";
 import path from "path";
 import fs from "fs-extra";
 import { findFile, ensureUploadDirectories } from "./file-utils";
@@ -23,7 +22,7 @@ import { setupActivityLogRoutes } from "./routes/activity-log-routes";
 import { setupLoginLogsRoutes } from "./routes/login-logs-routes";
 import { setupDebugRoutes } from "./debug-routes"; // Neue Debug-Routes
 import directDownloadRouter from "./routes/direct-download"; // Direkte Download-Route ohne Token
-import attachmentDebugRoutes from "./routes/attachment-debug-routes"; // Debug-Routen für Anhänge
+import { default as attachmentDebugRoutes } from "./routes/attachment-debug-routes"; // Debug-Routen für Anhänge
 import { setupImageRoutes } from "./routes/image-routes"; // Bildoptimierungs-Routes
 // Import von Upload-Funktionen erfolgt bereits in Zeile 70
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API

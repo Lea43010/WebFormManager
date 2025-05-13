@@ -48,15 +48,15 @@ router.get('/:id', async (req: Request, res: Response) => {
     for (const dir of directoriesToCheck) {
       try {
         // Überprüfe, ob das Verzeichnis existiert
-        if (await fs.pathExists(dir)) {
+        if (fs.existsSync(dir)) {
           console.log(`📁 Überprüfe Verzeichnis: ${dir}`);
           
           // Liste alle Dateien im Verzeichnis auf
-          const files = await fs.readdir(dir);
+          const files = fs.readdirSync(dir);
           console.log(`📂 ${files.length} Dateien gefunden in ${dir}`);
           
           // Versuche, eine passende Datei zu finden
-          const matchingFiles = files.filter(file => 
+          const matchingFiles = files.filter((file: string) => 
             file.includes(filenameFromPath) || 
             filenameFromPath.includes(file) ||
             (originalName && file.includes(originalName)) ||
