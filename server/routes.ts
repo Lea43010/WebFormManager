@@ -1929,18 +1929,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), "public/static/image-placeholder.png"));
   });
   
-  // Statische Dateien für PDF- und Dokument-Icons
-  app.get("/static/pdf-icon.png", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public/static/pdf-icon.png"));
-  });
+  // Statische Dateien und Test-HTML-Dateien bereitstellen
+  app.use('/static', express.static(path.join(process.cwd(), 'public/static')));
   
-  app.get("/static/document-icon.png", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public/static/document-icon.png"));
-  });
+  // Direkter Zugriff auf die test-upload.html-Datei
+  app.use('/assets', express.static(path.join(process.cwd(), 'public')));
   
   // Test-Seite für Datei-Upload (nur im Entwicklungsmodus)
   app.get("/test-upload", (req, res) => {
-    res.sendFile(path.join(process.cwd(), "public/test-upload.html"));
+    try {
+      console.log('Test-Upload-Seite angefordert');
+      res.redirect('/assets/test-upload.html');
+    } catch (error) {
+      console.error('Fehler beim Umleiten zur Test-Upload-Seite:', error);
+      res.status(500).send('Fehler beim Laden der Test-Seite: ' + error.message);
+    }
+  });
+  
+  // Debug-Endpunkt, um Dateipfade zu überprüfen
+  app.get("/debug-paths", (req, res) => {
+    try {
+      // ES Modules kompatible Importe
+      import('fs').then(fsModule => {
+        const fs = fsModule.default;
+        
+        const paths = {
+          cwd: process.cwd(),
+          publicPath: path.join(process.cwd(), 'public'),
+          staticPath: path.join(process.cwd(), 'public/static'),
+          testUploadPath: path.join(process.cwd(), 'public/test-upload.html'),
+          publicExists: fs.existsSync(path.join(process.cwd(), 'public')),
+          staticExists: fs.existsSync(path.join(process.cwd(), 'public/static')),
+          testUploadExists: fs.existsSync(path.join(process.cwd(), 'public/test-upload.html')),
+          publicContents: fs.existsSync(path.join(process.cwd(), 'public')) 
+            ? fs.readdirSync(path.join(process.cwd(), 'public')) 
+            : 'Directory not found'
+        };
+        
+        res.json(paths);
+      }).catch(error => {
+        console.error('Fehler beim Importieren des FS Moduls:', error);
+        res.status(500).json({ error: 'Modulimport-Fehler: ' + error.message });
+      });
+    } catch (error) {
+      console.error('Fehler beim Prüfen der Pfade:', error);
+      res.status(500).json({ error: 'Allgemeiner Fehler: ' + error.message });
+    }
   });
   
   // Allgemeine Upload-Route für Anhänge (inkl. Kamera-Upload)
