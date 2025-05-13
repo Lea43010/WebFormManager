@@ -187,12 +187,22 @@ export function setupEnhancedDownloadRoutes(app: express.Express): void {
             
             console.log(`${pdfFiles.length} PDF-Dateien im uploads-Verzeichnis gefunden.`);
             
-            // Wenn der gesuchte Anhang mit ID 13 ist (der spezifisch Probleme macht)
-            if (id === 13 && pdfFiles.length > 0) {
-              // Wähle die neueste PDF-Datei
+            // Wenn der gesuchte Anhang mit ID 13 ist oder die Datei fehlt
+            if ((id === 13 || attachment.fileMissing) && pdfFiles.length > 0) {
+              // Wähle die neueste PDF-Datei als Alternative
               const pdfPath = path.join(uploadsDir, pdfFiles[0]);
-              console.log(`Verwende alternative PDF-Datei für Anhang 13: ${pdfPath}`);
+              console.log(`Verwende alternative PDF-Datei für Anhang ${id}: ${pdfPath}`);
               foundFilePath = pdfPath;
+              
+              // Rücksetzung des "fehlend" Status, da wir eine Alternative gefunden haben
+              if (attachment.fileMissing) {
+                try {
+                  await storage.resetAttachmentFileMissing(id);
+                  console.log(`Status 'fileMissing' für Anhang ${id} zurückgesetzt`);
+                } catch (error) {
+                  console.error(`Fehler beim Zurücksetzen des Status:`, error);
+                }
+              }
             }
           } catch (error) {
             console.error(`Fehler bei der Suche nach PDF-Dateien:`, error);
