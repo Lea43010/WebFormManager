@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
@@ -22,30 +22,22 @@ interface AttachmentImageProps {
  * @param placeholderColor - Farbe des Platzhalters während des Ladens
  * @param lazyLoad - Ob das Bild lazy geladen werden soll
  */
-export const AttachmentImage: React.FC<AttachmentImageProps> = ({
+const AttachmentImage = ({
   attachmentId,
   alt,
   className,
   placeholderColor = '#f3f4f6',
   lazyLoad = false,
-}) => {
-  const [error, setError] = useState<boolean>(false);
-
-  // Bild vom Server laden
-  const { data: imageData, isLoading, isError } = useQuery<string>({
+}: AttachmentImageProps) => {
+  // Bild vom Server laden - keine bedingten Hooks mehr verwenden
+  const { data, isLoading, isError } = useQuery({
     queryKey: [`/api/attachments/${attachmentId}/preview`],
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 Minuten
-    enabled: !!attachmentId
+    // Keine bedingten enable-Flags mehr
   });
 
-  // Bei einem Fehler während des Ladens den Error-State setzen
-  useEffect(() => {
-    if (isError) {
-      setError(true);
-    }
-  }, [isError]);
-
+  // Lade-Status anzeigen
   if (isLoading) {
     return (
       <div 
@@ -60,7 +52,8 @@ export const AttachmentImage: React.FC<AttachmentImageProps> = ({
     );
   }
 
-  if (error || !imageData) {
+  // Fehlerfall
+  if (isError || !data) {
     return (
       <div 
         className={cn(
@@ -74,8 +67,8 @@ export const AttachmentImage: React.FC<AttachmentImageProps> = ({
     );
   }
 
-  // Prüfen, ob die Daten bereits das data:-Präfix haben
-  const imageStr = imageData as string;
+  // Erfolgsfall - Bild darstellen
+  const imageStr = data as string;
   const src = typeof imageStr === 'string' && imageStr.startsWith('data:') 
     ? imageStr 
     : `data:image/jpeg;base64,${imageStr}`;
@@ -84,7 +77,7 @@ export const AttachmentImage: React.FC<AttachmentImageProps> = ({
     <img
       src={src}
       alt={alt}
-      className={cn('', className)}
+      className={className || ''}
       loading={lazyLoad ? 'lazy' : 'eager'}
     />
   );
