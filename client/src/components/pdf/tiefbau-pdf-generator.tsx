@@ -221,10 +221,19 @@ const TiefbauPDFGenerator = ({
         
         // Position der Karte anpassen, basierend darauf, ob Projektdetails vorhanden sind
         const mapTitleY = projectData ? 70 : 35;
-        const mapY = projectData ? 75 : 40;
+        const mapY = projectData ? 85 : 50; // Mehr Abstand nach unten für Untertitel
         
-        pdf.setFontSize(14);
-        pdf.text('Streckenübersicht', 14, mapTitleY);
+        // 🗺️ Überschrift für die Karte im gleichen Stil wie andere Überschriften
+        pdf.setFontSize(15);
+        pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+        pdf.setFont("helvetica", "bold");
+        pdf.text('🗺️ Streckenübersicht', 14, mapTitleY);
+        
+        // Kurzer Untertitel für die Karte
+        pdf.setFontSize(11);
+        pdf.setTextColor(80);
+        pdf.setFont("helvetica", "normal");
+        pdf.text('Visuelle Darstellung der Tiefbau-Strecke', 14, mapTitleY + 6);
         
         // Verbesserte Bildqualität durch höhere JPEG-Qualität (1.0)
         const imgData = mapCanvas.toDataURL('image/jpeg', 1.0);
@@ -269,12 +278,12 @@ const TiefbauPDFGenerator = ({
         const lineHeight = 10;
         const startTextY = 50; // Mehr Abstand nach dem Untertitel
         
-        // Box für die Streckendetails
-        pdf.setFillColor(245, 245, 245);
-        pdf.setDrawColor(100, 100, 100);
+        // Box für die Streckendetails mit ansprechendem Design
+        pdf.setFillColor(248, 248, 248); // Etwas hellerer Hintergrund
+        pdf.setDrawColor(180, 180, 200); // Subtiler blauer Rahmen
         pdf.setLineWidth(0.5);
-        const boxHeight = 60;
-        pdf.roundedRect(14, startTextY - 10, 260, boxHeight, 3, 3, 'FD');
+        const boxHeight = 65; // Etwas mehr Platz
+        pdf.roundedRect(14, startTextY - 10, 260, boxHeight, 5, 5, 'FD'); // Stärker gerundete Ecken
         
         // Daten als übersichtliche Zeilen mit Beschriftungen
         pdf.setFontSize(14);
