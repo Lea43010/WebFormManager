@@ -202,51 +202,64 @@ const TiefbauPDFGenerator = ({
         
         pdf.addImage(imgData, 'JPEG', 14, mapY, imgWidth, imgHeight);
         
-        // --- Streckeninformationen als separate Auflistung statt komplexer Tabelle ---
-        // Mehr Abstand nach der Karte
-        const routeYPos = mapY + imgHeight + 25;
+        // --- Streckeninformationen auf eine eigene Seite (Seite 2) verschieben ---
+        // Neue Seite für die Streckeninformationen hinzufügen
+        pdf.addPage();
         
-        // Überschrift
-        pdf.setFontSize(16);
+        // Kopfzeile für Seite 2
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
+        pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
+        pdf.text(`Seite 2 von 2`, 250, 10);
+        
+        // Überschrift der Streckeninformationen
+        pdf.setFontSize(20);
         pdf.setTextColor(0);
-        pdf.text('Streckeninformationen', 14, routeYPos);
+        pdf.text('Streckeninformationen', 14, 25);
         
-        // Einfache Textzeilen mit Styling statt komplexer Tabelle
-        const lineHeight = 8;
-        const startTextY = routeYPos + 15;
+        // Horizontale Linie unter der Überschrift
+        pdf.setDrawColor(180, 180, 180);
+        pdf.setLineWidth(0.5);
+        pdf.line(14, 28, 280, 28);
         
-        // Gesamten Bereich mit leichtem Hintergrund und Rahmen für bessere Lesbarkeit
-        const boxHeight = lineHeight * 6;
+        // Einfache Textzeilen mit Styling
+        const lineHeight = 10;
+        const startTextY = 40;
+        
+        // Box für die Streckendetails
         pdf.setFillColor(245, 245, 245);
         pdf.setDrawColor(100, 100, 100);
         pdf.setLineWidth(0.5);
-        // Box zuerst zeichnen
-        pdf.rect(12, routeYPos + 5, 184, boxHeight, 'FD');
+        const boxHeight = 60;
+        pdf.roundedRect(14, startTextY - 10, 260, boxHeight, 3, 3, 'FD');
         
-        // Dann Text über die Box zeichnen
-        pdf.setTextColor(0);
-        pdf.setFontSize(12);
+        // Daten als übersichtliche Zeilen mit Beschriftungen
+        pdf.setFontSize(14);
         
-        // Start-Informationen
+        // Start-Information
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Start:', 14, startTextY);
+        pdf.text('Start:', 20, startTextY);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(routeData.start || 'Nicht definiert', 40, startTextY);
+        const startText = routeData.start || 'Nicht definiert';
+        pdf.text(startText, 80, startTextY);
         
-        // Ziel-Informationen
+        // Ziel-Information
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Ziel:', 14, startTextY + lineHeight * 2);
+        pdf.text('Ziel:', 20, startTextY + lineHeight * 2);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(routeData.end || 'Nicht definiert', 40, startTextY + lineHeight * 2);
+        const zielText = routeData.end || 'Nicht definiert';
+        pdf.text(zielText, 80, startTextY + lineHeight * 2);
         
-        // Distanz-Informationen
+        // Distanz-Information
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Distanz:', 14, startTextY + lineHeight * 4);
+        pdf.text('Distanz:', 20, startTextY + lineHeight * 4);
         pdf.setFont('helvetica', 'normal');
-        pdf.text(routeData.distance ? `${routeData.distance.toFixed(2)} km` : 'Nicht berechnet', 40, startTextY + lineHeight * 4);
+        const distanzText = routeData.distance ? `${routeData.distance.toFixed(2)} km` : 'Nicht berechnet';
+        pdf.text(distanzText, 80, startTextY + lineHeight * 4);
         
-        // Variable für die Berechnung der Gesamthöhe des Streckeninfos-Abschnitts
-        const tableHeight = boxHeight + 20;
+        // Variable für die Berechnung der Gesamthöhe des Streckeninfos-Abschnitts - nicht mehr verwendet
+        const tableHeight = boxHeight;
         
         // Streckendaten wurden eingefügt
         
@@ -257,28 +270,29 @@ const TiefbauPDFGenerator = ({
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
           // Keine separate Seite mehr, da Bodenanalyse, Maschinenempfehlungen und QR-Code entfernt wurden
           
-          // Berechne die Position nach dem Streckeninformationen-Abschnitt
-          // Wir benutzen die boxHeight-Variable plus Abstand
-          const totalStreckenhöhe = routeYPos + boxHeight + 20; // Gesamthöhe des Streckenbereichs plus Abstand
+          // Streckeninformationen sind jetzt auf Seite 2
+          // Bemerkungen kommen auf eine neue Seite (Seite 3)
+          pdf.addPage();
           
-          // Prüfe, ob genug Platz für Bemerkungen auf der Seite ist
-          const availableSpace = pageHeight - totalStreckenhöhe; // Verfügbarer Platz nach Streckeninfos
-          const minSpaceNeeded = 80; // Mindestens 80px für Bemerkungen-Überschrift und evtl. kurzen Text
-          
-          // Entscheide, ob eine neue Seite erforderlich ist
-          let newPage = false;
-          if (availableSpace < minSpaceNeeded) {
-            pdf.addPage();
-            newPage = true;
-          }
+          // Kopfzeile für Bemerkungen-Seite
+          pdf.setFontSize(10);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
+          pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
+          pdf.text(`Seite 3 von 3`, 250, 10);
           
           // Überschrift für den Bemerkungs-Abschnitt
-          pdf.setFontSize(16);
+          pdf.setFontSize(20);
           pdf.setTextColor(0);
           
-          // Position der Überschrift anpassen
-          const remarksStartY = newPage ? 20 : totalStreckenhöhe; // Bei neuer Seite oben beginnen
+          // Position der Überschrift 
+          const remarksStartY = 25; // Feste Position oben auf der neuen Seite
+          
+          // Überschrift und horizontale Linie darunter
           pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
+          pdf.setDrawColor(180, 180, 180);
+          pdf.setLineWidth(0.5);
+          pdf.line(14, remarksStartY + 3, 280, remarksStartY + 3);
           
           let yPos = remarksStartY + 10;
           
