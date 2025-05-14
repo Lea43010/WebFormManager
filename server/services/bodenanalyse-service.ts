@@ -88,27 +88,40 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
     
     // WMS-GetFeatureInfo-Parameter erstellen
     // Wir nutzen GetFeatureInfo statt WFS-GetFeature, da dies besser für Punktabfragen geeignet ist
+    // DEBUG: WMS-Parameter
     const params = {
       SERVICE: 'WMS',
-      VERSION: '1.3.0',
+      VERSION: '1.1.1',
       REQUEST: 'GetFeatureInfo',
       LAYERS: 'BOART1000',
       QUERY_LAYERS: 'BOART1000',
-      CRS: 'EPSG:25832',
+      STYLES: '',
+      SRS: 'EPSG:25832',
       BBOX: `${x-1000},${y-1000},${x+1000},${y+1000}`,
       WIDTH: 101,
       HEIGHT: 101,
-      I: 50,
-      J: 50,
+      X: 50,
+      Y: 50,
+      FORMAT: 'image/png',
       INFO_FORMAT: 'application/json',
       FEATURE_COUNT: 1
     };
 
     // HTTP-Anfrage an BGR-WMS senden
+    logger.debug(`BGR WMS Anfrage URL: ${bgrWmsUrl} mit Parametern: ${JSON.stringify(params)}`);
     const response = await axios.get(bgrWmsUrl, { params });
     
-    // Antwort ist bereits im JSON-Format
+    // Antwort analysieren
     const result = response.data;
+    
+    try {
+      const resultStr = typeof result === 'object' ? 
+        JSON.stringify(result).substring(0, 500) : 
+        String(result).substring(0, 500);
+      logger.debug(`BGR WMS Antwort: ${resultStr}...`);
+    } catch (err) {
+      logger.debug(`BGR WMS Antwort konnte nicht serialisiert werden: ${typeof result}`);
+    }
     
     // Daten extrahieren und aufbereiten - angepasst für WMS GetFeatureInfo
     const soilData = extractSoilDataFromWMS(result);
