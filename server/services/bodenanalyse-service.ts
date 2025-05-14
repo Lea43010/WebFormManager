@@ -1,14 +1,14 @@
 /**
- * Bodenanalyse-Service für BGR-WFS-Abfragen
+ * Bodenanalyse-Service für BGR-WMS-Abfragen
  * 
  * Dieses Modul stellt Funktionen für die Abfrage von Bodenart-Informationen
  * von der Bundesanstalt für Geowissenschaften und Rohstoffe (BGR) bereit.
- * Es nutzt den WFS-Dienst der BGR, um Bodenart-Informationen für bestimmte
- * Koordinaten zu erhalten.
+ * Es nutzt den WMS-GetFeatureInfo-Dienst der BGR, um Bodenart-Informationen 
+ * für bestimmte Koordinaten zu erhalten.
  */
 
 import axios from 'axios';
-import { parseStringPromise } from 'xml2js';
+// parseStringPromise wird nicht mehr benötigt, da wir jetzt JSON statt XML verwenden
 import proj4 from 'proj4';
 import logger from '../logger';
 
@@ -78,6 +78,46 @@ function extractSoilData(featureData: any): any {
 }
 
 /**
+ * Extrahiert relevante Bodenartinformationen aus der JSON-Antwort des BGR WMS GetFeatureInfo
+ * @param wmsData JSON-Daten aus der WMS-GetFeatureInfo-Antwort
+ * @returns Aufbereitete Bodenartdaten
+ */
+function extractSoilDataFromWMS(wmsData: any): any {
+  try {
+    // Prüfen, ob Features vorhanden sind
+    if (!wmsData || !wmsData.features || wmsData.features.length === 0) {
+      return { 
+        error: true,
+        message: 'Keine Bodendaten gefunden'
+      };
+    }
+    
+    // Erstes Feature extrahieren
+    const feature = wmsData.features[0];
+    const properties = feature.properties || {};
+    
+    // Bodenartinformationen extrahieren
+    // Die Feldnamen können je nach WMS-Service variieren
+    // Wir verwenden allgemeine Namen, die Werte sind möglicherweise andere
+    return {
+      bodenart: properties.BOART || properties.boart || properties.Bodenart || 'Unbekannt',
+      bodentyp: properties.BOTYP || properties.botyp || properties.Bodentyp || 'Unbekannt',
+      bodenregion: properties.REGION || properties.region || properties.Bodenregion || 'Unbekannt',
+      nutzung: properties.NUTZUNG || properties.nutzung || properties.Nutzung || 'Unbekannt',
+      // Weitere Eigenschaften können hinzugefügt werden, wenn sie im Service verfügbar sind
+      zusatzInfos: properties // Wir geben alle Eigenschaften zurück, damit wir später sehen können, was verfügbar ist
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler beim Extrahieren der WMS-Bodendaten: ${errorMessage}`);
+    return { 
+      error: true,
+      message: 'Fehler beim Extrahieren der WMS-Bodendaten'
+    };
+  }
+}
+
+/**
  * Führt eine WFS-Abfrage zur BGR für eine bestimmte Koordinate durch
  * @param lat Breitengrad (WGS84)
  * @param lng Längengrad (WGS84)
@@ -88,34 +128,35 @@ export async function queryBGRWfs(lat: number, lng: number): Promise<any> {
     // WGS84 -> ETRS89/UTM32N Transformation
     const [x, y] = transformCoordinates(lat, lng);
     
-    // BGR WFS-URL
-    const bgrWfsUrl = 'https://services.bgr.de/wfs/boden/natboflgru/1.0.0/wfs';
+    // BGR WFS-URL - aktualisierte URL für den BGR-Dienst
+    const bgrWfsUrl = 'https://services.bgr.de/wms/boden/boart1000/?';
     
     // WFS-Abfrage-Parameter erstellen
+    // Wir nutzen GetFeatureInfo statt GetFeature, da dies besser für Punktabfragen geeignet ist
     const params = {
-      service: 'WFS',
-      version: '1.1.0',
-      request: 'GetFeature',
-      typeName: 'bss:natboflgru',
-      srsName: 'EPSG:25832',
-      filter: `<Filter xmlns="http://www.opengis.net/ogc">
-                <Intersects>
-                  <PropertyName>geom</PropertyName>
-                  <gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:25832">
-                    <gml:coordinates>${x},${y}</gml:coordinates>
-                  </gml:Point>
-                </Intersects>
-              </Filter>`
+      SERVICE: 'WMS',
+      VERSION: '1.3.0',
+      REQUEST: 'GetFeatureInfo',
+      LAYERS: 'BOART1000',
+      QUERY_LAYERS: 'BOART1000',
+      CRS: 'EPSG:25832',
+      BBOX: `${x-1000},${y-1000},${x+1000},${y+1000}`,
+      WIDTH: 101,
+      HEIGHT: 101,
+      I: 50,
+      J: 50,
+      INFO_FORMAT: 'application/json',
+      FEATURE_COUNT: 1
     };
 
-    // HTTP-Anfrage an BGR-WFS senden
+    // HTTP-Anfrage an BGR-WMS senden
     const response = await axios.get(bgrWfsUrl, { params });
     
-    // XML-Antwort in JSON umwandeln
-    const result = await parseStringPromise(response.data);
+    // Antwort ist bereits im JSON-Format
+    const result = response.data;
     
-    // Daten extrahieren und aufbereiten
-    const soilData = extractSoilData(result);
+    // Daten extrahieren und aufbereiten - angepasst für WMS GetFeatureInfo
+    const soilData = extractSoilDataFromWMS(result);
     
     return {
       coordinates: {
