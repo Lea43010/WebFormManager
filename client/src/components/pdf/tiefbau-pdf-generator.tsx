@@ -67,14 +67,8 @@ const TiefbauPDFGenerator = ({
       // Berechne die Gesamtzahl der Seiten (1 für Hauptseite, 1 für Streckeninformationen, optional 1 für Bemerkungen)
       const totalPages = (remarks || (remarksPhotos && remarksPhotos.length > 0)) ? 3 : 2;
       
-      // Hilfsfunktion für die konsistente Kopfzeile auf allen Seiten
-      const addPageHeader = (pageNumber: number) => {
-        pdf.setFontSize(10);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
-        pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
-        pdf.text(`Seite ${pageNumber} von ${totalPages}`, 250, 10);
-      };
+      // Alle Kopfzeilen sind jetzt separat implementiert 
+      // im gleichen Stil für jede Seite.
       
       // Screenshot der Karte machen
       const mapElement = document.getElementById(mapContainerId);
@@ -93,8 +87,20 @@ const TiefbauPDFGenerator = ({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Kopfzeile für Seite 1 hinzufügen
-      addPageHeader(1);
+      // 🎨 Kopfzeile für Seite 1
+      pdf.setFontSize(9);
+      pdf.setTextColor(150); // dezentes Grau
+      pdf.setFont("helvetica", "italic");
+      pdf.text('Bau - Structura | Automatisch generierter Bericht', 14, 10);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10, { align: 'right' });
+      pdf.text(`Seite 1 von ${totalPages}`, 285, 10, { align: 'right' }); // Falls A4 (Breite 297 mm)
+
+      // 🔷 Trennlinie unter der Kopfzeile
+      pdf.setDrawColor(200);
+      pdf.setLineWidth(0.5);
+      pdf.line(14, 12, 285, 12); // horizontale Linie quer über die Seite
       
       // Titel des Berichts
       pdf.setFontSize(20);
@@ -217,22 +223,37 @@ const TiefbauPDFGenerator = ({
         // Neue Seite für die Streckeninformationen hinzufügen
         pdf.addPage();
         
-        // Kopfzeile für Seite 2 hinzufügen
-        addPageHeader(2);
-        
-        // Überschrift der Streckeninformationen
-        pdf.setFontSize(20);
-        pdf.setTextColor(0);
-        pdf.text('Streckeninformationen', 14, 25);
-        
-        // Horizontale Linie unter der Überschrift
-        pdf.setDrawColor(180, 180, 180);
+        // 🎨 Kopfzeile für Seite 2
+        pdf.setFontSize(9);
+        pdf.setTextColor(150); // dezentes Grau
+        pdf.setFont("helvetica", "italic");
+        pdf.text('Bau - Structura | Automatisch generierter Bericht', 14, 10);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10, { align: 'right' });
+        const gesamt = (remarks || (remarksPhotos && remarksPhotos.length > 0)) ? 3 : 2;
+        pdf.text(`Seite 2 von ${gesamt}`, 285, 10, { align: 'right' }); // Falls A4 (Breite 297 mm)
+
+        // 🔷 Trennlinie unter der Kopfzeile
+        pdf.setDrawColor(200);
         pdf.setLineWidth(0.5);
-        pdf.line(14, 28, 280, 28);
+        pdf.line(14, 12, 285, 12); // horizontale Linie quer über die Seite
+
+        // 🧭 Überschrift „Streckeninformationen"
+        pdf.setFontSize(18);
+        pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+        pdf.setFont("helvetica", "bold");
+        pdf.text('🛣️ Streckeninformationen', 14, 30);
+
+        // 📌 Untertitel oder kurze Infozeile
+        pdf.setFontSize(11);
+        pdf.setTextColor(80);
+        pdf.setFont("helvetica", "normal");
+        pdf.text('Details zur geplanten Tiefbaustrecke zwischen Start- und Zieladresse', 14, 36);
         
         // Einfache Textzeilen mit Styling
         const lineHeight = 10;
-        const startTextY = 40;
+        const startTextY = 50; // Mehr Abstand nach dem Untertitel
         
         // Box für die Streckendetails
         pdf.setFillColor(245, 245, 245);
@@ -281,8 +302,20 @@ const TiefbauPDFGenerator = ({
           // Bemerkungen kommen auf eine neue Seite (Seite 3)
           pdf.addPage();
           
-          // Kopfzeile für Bemerkungen-Seite (Seite 3)
-          addPageHeader(3);
+          // 🎨 Kopfzeile für Seite 3 (Bemerkungen)
+          pdf.setFontSize(9);
+          pdf.setTextColor(150); // dezentes Grau
+          pdf.setFont("helvetica", "italic");
+          pdf.text('Bau - Structura | Automatisch generierter Bericht', 14, 10);
+
+          pdf.setFont("helvetica", "normal");
+          pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10, { align: 'right' });
+          pdf.text(`Seite 3 von 3`, 285, 10, { align: 'right' }); // Falls A4 (Breite 297 mm)
+
+          // 🔷 Trennlinie unter der Kopfzeile
+          pdf.setDrawColor(200);
+          pdf.setLineWidth(0.5);
+          pdf.line(14, 12, 285, 12); // horizontale Linie quer über die Seite
           
           // Überschrift für den Bemerkungs-Abschnitt
           pdf.setFontSize(20);
@@ -291,11 +324,17 @@ const TiefbauPDFGenerator = ({
           // Position der Überschrift 
           const remarksStartY = 25; // Feste Position oben auf der neuen Seite
           
-          // Überschrift und horizontale Linie darunter
-          pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
-          pdf.setDrawColor(180, 180, 180);
-          pdf.setLineWidth(0.5);
-          pdf.line(14, remarksStartY + 3, 280, remarksStartY + 3);
+          // 🧭 Überschrift der Bemerkungen im gleichen Stil wie Seite 2
+          pdf.setFontSize(18);
+          pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+          pdf.setFont("helvetica", "bold");
+          pdf.text('📝 Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
+          
+          // 📌 Untertitel oder kurze Infozeile
+          pdf.setFontSize(11);
+          pdf.setTextColor(80);
+          pdf.setFont("helvetica", "normal");
+          pdf.text('Ergänzende Hinweise und Anmerkungen zur geplanten Baumaßnahme', 14, remarksStartY + 6);
           
           let yPos = remarksStartY + 10;
           
