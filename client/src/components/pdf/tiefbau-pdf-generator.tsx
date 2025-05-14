@@ -4,7 +4,7 @@ import { FileDown, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import QRCode from 'qrcode';
+// QRCode Import entfernt, da nicht mehr benötigt
 
 interface TiefbauPDFGeneratorProps {
   projectName: string | null;
@@ -202,65 +202,77 @@ const TiefbauPDFGenerator = ({
         
         pdf.addImage(imgData, 'JPEG', 14, mapY, imgWidth, imgHeight);
         
-        // --- Streckeninformationen als Tabelle ---
-        const routeYPos = mapY + imgHeight + 15; // Mehr Abstand nach der Karte
+        // --- Streckeninformationen als Tabelle mit verbessertem Layout ---
+        // Mehr Abstand nach der Karte für bessere Übersichtlichkeit
+        const routeYPos = mapY + imgHeight + 20;
         pdf.setFontSize(14);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
-        // Tabelle mit Streckeninformationen verbessert
-        const tableStartY = routeYPos + 8;
-        const rowHeight = 12; // Größere Zeilenhöhe für bessere Lesbarkeit
+        // Feste Abstände und größere Zeilenhöhe für bessere Lesbarkeit
+        const tableStartY = routeYPos + 10;
+        const rowHeight = 15; // Deutlich höhere Zeilen
         
-        // Überschriftenzeile mit dunklerer Hintergrundfarbe für besseren Kontrast
-        pdf.setFillColor(180, 180, 180);
-        pdf.setDrawColor(100, 100, 100);
-        pdf.rect(14, tableStartY, 180, rowHeight, 'FD'); // Breitere und höhere Tabelle mit Rand
+        // Stärker strukturierte Tabelle mit klaren Linien
+        // Tabellenkopf mit dunklerem Hintergrund für besseren Kontrast
+        pdf.setFillColor(150, 150, 150);
+        pdf.setDrawColor(50, 50, 50);
+        pdf.setLineWidth(0.7);
+        pdf.rect(14, tableStartY, 180, rowHeight, 'FD');
         
+        // Tabellenkopf-Text
         pdf.setTextColor(0);
-        pdf.setFontSize(10);
-        pdf.text("Eigenschaft", 20, tableStartY + 8);
-        pdf.text("Wert", 80, tableStartY + 8);
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text("Eigenschaft", 20, tableStartY + 10);
+        pdf.text("Wert", 80, tableStartY + 10);
         
-        // Zeilen für Routeninformationen
+        // Tabellendaten
         const dataStartY = tableStartY + rowHeight;
+        pdf.setFont('helvetica', 'normal');
         
-        // Hilfsfunktion zum Einfügen der Zeilen mit verbesserter Formatierung
+        // Hilfsfunktion zum strukturierten Einfügen der Datenzeilen
         const addRow = (index: number, label: string, value: string) => {
           const y = dataStartY + (index * rowHeight);
           
           // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
           if (index % 2 === 0) {
-            pdf.setFillColor(240, 240, 240);
+            pdf.setFillColor(230, 230, 230);
           } else {
-            pdf.setFillColor(255, 255, 255);
+            pdf.setFillColor(245, 245, 245);
           }
           
           // Jede Zeile mit Hintergrund und Rahmen zeichnen
           pdf.rect(14, y, 180, rowHeight, 'FD');
           
+          // Zeilentrenner für bessere Übersicht
+          pdf.setDrawColor(150, 150, 150);
+          pdf.setLineWidth(0.3);
+          pdf.line(14, y, 194, y);
+          
           // Text in die Zelle einfügen
           pdf.setTextColor(0);
-          pdf.text(label, 20, y + 8);
+          pdf.text(label, 20, y + 10);
           
-          // Werte mit möglichem Umbruch
+          // Werte mit Fallback für leere Daten
           const valueText = value ? value : "Nicht verfügbar";
-          pdf.text(valueText, 80, y + 8);
+          pdf.text(valueText, 80, y + 10);
         };
         
-        // Daten für die Tabelle einfügen (mit Fallback für nicht definierte Werte)
+        // Daten für die Tabelle einfügen
         addRow(0, "Start", routeData.start || "Nicht definiert");
         addRow(1, "Ziel", routeData.end || "Nicht definiert");
         addRow(2, "Distanz", routeData.distance ? `${routeData.distance.toFixed(2)} km` : "Nicht berechnet");
         
-        // Äußerer Rahmen für besseres Aussehen
-        pdf.setDrawColor(100, 100, 100);
-        pdf.setLineWidth(0.5);
-        pdf.rect(14, tableStartY, 180, rowHeight + (3 * rowHeight), 'D');
+        // Stärkerer Rahmen um die gesamte Tabelle
+        pdf.setDrawColor(50, 50, 50);
+        pdf.setLineWidth(0.7);
+        const tableHeight = rowHeight + (3 * rowHeight);
+        pdf.rect(14, tableStartY, 180, tableHeight, 'D');
         
         // Streckendaten wurden eingefügt
         
-        // Die Bodenanalyse und Maschinenempfehlungen-Abschnitte wurden entfernt
-        // Stattdessen gehen wir direkt zu Bemerkungen oder QR-Code über
+        // Die Bodenanalyse, Maschinenempfehlungen und QR-Code Abschnitte wurden entfernt
+        // Stattdessen gehen wir direkt zu den Bemerkungen über
         
         // --- Bemerkungen zum Tiefbau-Projekt ---
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
@@ -378,57 +390,7 @@ const TiefbauPDFGenerator = ({
           }
         }
         
-        // --- QR-Code für schnellen Projektzugriff generieren ---
-        try {
-          // Generiere eine URL für den Projektzugriff (mit projektspezifischen Daten)
-          const projectUrlBase = window.location.origin + '/tiefbau-map';
-          const projectParams = new URLSearchParams();
-          
-          if (projectData?.id) {
-            projectParams.append('projectId', projectData.id.toString());
-          }
-          
-          if (routeData) {
-            projectParams.append('start', routeData.start);
-            projectParams.append('end', routeData.end);
-          }
-          
-          const projectUrl = `${projectUrlBase}?${projectParams.toString()}`;
-          
-          // QR-Code als DataURL generieren
-          const qrCodeDataUrl = await QRCode.toDataURL(projectUrl, {
-            width: 100,
-            margin: 1,
-            color: {
-              dark: '#000000',
-              light: '#ffffff'
-            }
-          });
-          
-          // QR-Code auf der letzten Seite hinzufügen
-          pdf.addPage();
-          pdf.setFontSize(16);
-          pdf.setTextColor(0, 0, 0);
-          pdf.text('Projektinformationen teilen', 14, 20);
-          
-          pdf.setFontSize(10);
-          pdf.setTextColor(80, 80, 80);
-          pdf.text('Scannen Sie den untenstehenden QR-Code, um direkt auf die Projektdaten zuzugreifen.', 14, 30);
-          pdf.text('Oder verwenden Sie diesen Link:', 14, 40);
-          
-          pdf.setTextColor(0, 0, 200);
-          pdf.text(projectUrl, 14, 45);
-          
-          // QR-Code platzieren
-          pdf.addImage(qrCodeDataUrl, 'PNG', 70, 60, 70, 70);
-          
-          pdf.setFontSize(9);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text('Hinweis: Für den Zugriff auf Projektdaten sind entsprechende Berechtigungen erforderlich.', 40, 140);
-        } catch (qrError) {
-          console.error('Fehler beim Generieren des QR-Codes:', qrError);
-          // Fehler beim QR-Code-Generieren darf den Rest des PDF-Prozesses nicht abbrechen
-        }
+        // QR-Code-Abschnitt entfernt, wie vom Benutzer gewünscht
         
         // --- Fußzeile auf jeder Seite ---
         // Sichere Methode, um die Anzahl der Seiten zu erhalten
