@@ -276,8 +276,18 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                           // Verbesserte direkte Download-Methode mit neuer API
                           console.log(`Starte Download für Anhang ID: ${attachment.id}`);
                           
-                          // Wir verwenden jetzt unseren neuen verbesserten Download-Endpunkt
-                          const downloadUrl = `/api/download/${attachment.id}`;
+                          // Wir überprüfen, ob der Anhang Teil des neuen Dokumentenspeichersystems ist
+                          let downloadUrl = "";
+                          
+                          if (attachment.fileStorage === 'document-storage') {
+                            // Verwenden des neuen Dokumentenspeicher-Endpunkts
+                            downloadUrl = `/api/documents/${attachment.id}`;
+                            console.log(`Verwende neuen Dokumentenspeicher-Endpunkt: ${downloadUrl}`);
+                          } else {
+                            // Fallback auf den bisherigen verbesserten Download-Endpunkt
+                            downloadUrl = `/api/download/${attachment.id}`;
+                            console.log(`Verwende bisherigen Download-Endpunkt: ${downloadUrl}`);
+                          }
                           
                           // Direktes Öffnen in neuem Fenster für robustere Kompatibilität
                           window.open(downloadUrl, '_blank');

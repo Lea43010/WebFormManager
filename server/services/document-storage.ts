@@ -64,17 +64,28 @@ export class DocumentStorage {
       // Metadaten in der Datenbank speichern
       const fileType = this.determineFileType(file.originalname);
       
+      // Konvertieren in einen gültigen fileType
+      const validFileType = fileType as 'pdf' | 'excel' | 'image' | 'other';
+      
       const attachmentData = {
         projectId: metadata.projectId,
         fileName: path.basename(file.originalname),
         originalName: file.originalname,
-        fileType,
+        fileType: validFileType,
         fileCategory: metadata.category || 'Andere',
         filePath,
         fileSize: file.buffer.length,
         description: metadata.description,
         fileStorage: 'document-storage', // Marker für den neuen Speicherort
-        isPublic: metadata.isPublic || false
+        isPublic: metadata.isPublic || false,
+        // Leere Werte für die Bildoptimierung
+        originalSize: null,
+        optimizedSize: null,
+        optimizationSavings: null,
+        isOptimized: false,
+        originalFormat: null,
+        webpPath: null,
+        fileMissing: false
       };
       
       // Anhang in der Datenbank erstellen
@@ -285,19 +296,15 @@ export class DocumentStorage {
   /**
    * Bestimmt den Dateityp basierend auf der Dateiendung
    */
-  private determineFileType(filename: string): string {
+  private determineFileType(filename: string): 'pdf' | 'excel' | 'image' | 'other' {
     const extension = path.extname(filename).toLowerCase();
     
     if (['.pdf'].includes(extension)) {
       return 'pdf';
     } else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(extension)) {
       return 'image';
-    } else if (['.doc', '.docx', '.txt', '.rtf'].includes(extension)) {
-      return 'document';
     } else if (['.xls', '.xlsx', '.csv'].includes(extension)) {
       return 'excel';
-    } else if (['.mp4', '.avi', '.mov', '.wmv'].includes(extension)) {
-      return 'video';
     } else {
       return 'other';
     }

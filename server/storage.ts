@@ -921,6 +921,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async markAttachmentAsMissing(id: number): Promise<void> {
+    try {
+      // Markiert den Anhang als fehlend (Alias-Methode für markAttachmentFileMissing)
+      await this.markAttachmentFileMissing(id);
+    } catch (error) {
+      console.error(`Fehler beim Markieren des Anhangs als fehlend: ${error}`);
+    }
+  }
+
   async resetAttachmentFileMissing(id: number): Promise<Attachment | undefined> {
     try {
       // Setze den "fehlend"-Status zurück, wenn die Datei wiedergefunden wurde

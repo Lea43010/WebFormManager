@@ -128,6 +128,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login-Protokoll-Routen einrichten
   setupLoginLogsRoutes(app);
   
+  // Dokumentenspeicher-Routen einrichten
+  app.use('/api/documents', documentRoutes);
+  
   // Datenqualitäts-API-Routen einrichten
   app.use('/api', dataQualityApiRouter);
   
