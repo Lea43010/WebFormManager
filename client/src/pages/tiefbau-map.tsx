@@ -892,7 +892,23 @@ const TiefbauMap: React.FC = () => {
                   {routeCoordinates.length > 0 && (
                     <TiefbauPDFGenerator
                       projectName={selectedProject ? 
-                        projects.find(p => p.id === selectedProject)?.projectName 
+                        projects.find(p => p.id === selectedProject)?.project_name 
+                        : null}
+                      projectData={selectedProject ? 
+                        (() => {
+                          const project = projects.find(p => p.id === selectedProject);
+                          return project ? {
+                            id: project.id,
+                            kunde: project.customer,
+                            ansprechpartner: project.contact_person,
+                            adresse: project.address,
+                            telefon: project.phone,
+                            email: project.email,
+                            startdatum: project.start_date ? new Date(project.start_date).toLocaleDateString('de-DE') : undefined,
+                            enddatum: project.end_date ? new Date(project.end_date).toLocaleDateString('de-DE') : undefined,
+                            status: project.status
+                          } : null;
+                        })() 
                         : null}
                       routeData={{
                         start: startAddress,

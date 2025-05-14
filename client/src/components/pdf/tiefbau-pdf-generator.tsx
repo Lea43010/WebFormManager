@@ -187,17 +187,22 @@ const TiefbauPDFGenerator = ({
           }
         });
         
-        pdf.setFontSize(14);
-        pdf.text('Streckenübersicht', 14, 35);
+        // Position der Karte anpassen, basierend darauf, ob Projektdetails vorhanden sind
+        const mapTitleY = projectData ? 70 : 35;
+        const mapY = projectData ? 75 : 40;
         
-        const imgData = mapCanvas.toDataURL('image/jpeg', 0.9);
-        const imgWidth = 120;
+        pdf.setFontSize(14);
+        pdf.text('Streckenübersicht', 14, mapTitleY);
+        
+        // Verbesserte Bildqualität durch höhere JPEG-Qualität (1.0)
+        const imgData = mapCanvas.toDataURL('image/jpeg', 1.0);
+        const imgWidth = 140; // Etwas breiter für bessere Lesbarkeit
         const imgHeight = (mapCanvas.height * imgWidth) / mapCanvas.width;
         
-        pdf.addImage(imgData, 'JPEG', 14, 40, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 14, mapY, imgWidth, imgHeight);
         
         // --- Streckeninformationen als Tabelle ---
-        const routeYPos = 40 + imgHeight + 10;
+        const routeYPos = mapY + imgHeight + 10;
         pdf.setFontSize(14);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
@@ -293,55 +298,87 @@ const TiefbauPDFGenerator = ({
         }
         
         // --- Maschinenempfehlungen ---
-        const maschinenYPos = 80; // Fester Y-Wert für Maschinenempfehlungen
+        // Berechne dynamische Position basierend auf vorherigen Elementen
+        let maschinenYPos = 80; // Standard Y-Position
+        
+        if (bodenartData) {
+          // Wenn Bodenanalyse vorhanden ist, positioniere nach der Bodenanalyse
+          // bodenYPos ist innerhalb des Bodenanalyse-Blocks definiert, hier für Maschinen
+          // berechnen wir die Position basierend auf der Bodenanalyse
+          maschinenYPos = 25 + 55; // bodenYPos (25) + Abstand für 4 Zeilen + Überschrift
+        }
+        
+        // Seite prüfen und ggf. neue Seite hinzufügen, wenn nicht genug Platz
+        const neededHeight = maschinenData && maschinenData.length > 0 ? 
+                           20 + (maschinenData.length * 12) : 20;
+        
+        if (maschinenYPos + neededHeight > pageHeight - 20) {
+          pdf.addPage();
+          maschinenYPos = 20; // Zurücksetzen der Y-Position auf Seitenanfang
+        }
+        
         pdf.setFontSize(14);
         pdf.text('Empfohlene Maschinen', 14, maschinenYPos);
         
         let maschinenEndY = maschinenYPos + 5; // Standardwert, wenn keine Maschinen vorhanden
         
         if (maschinenData && maschinenData.length > 0) {
-          // Überschriftenzeile mit grauem Hintergrund
+          // Maschinen in besser lesbarer Tabelle mit mehr Platz darstellen
           const tableY = maschinenYPos + 5;
-          pdf.setFillColor(200, 200, 200);
-          pdf.rect(14, tableY, 160, 8, 'F');
+          
+          // Überschriftenzeile mit farbigem Hintergrund
+          pdf.setFillColor(220, 220, 220); // Hellerer Hintergrund für bessere Lesbarkeit
+          pdf.rect(14, tableY, 180, 10, 'F'); // Breitere Tabelle
           pdf.setTextColor(0);
           pdf.setFontSize(10);
           
-          // Spaltenüberschriften
-          pdf.text("Name", 17, tableY + 5);
-          pdf.text("Typ", 57, tableY + 5);
-          pdf.text("Leistung", 97, tableY + 5);
-          pdf.text("Kosten/Stunde", 137, tableY + 5);
+          // Spaltenüberschriften mit besserer Verteilung
+          pdf.text("Name", 17, tableY + 6);
+          pdf.text("Typ", 77, tableY + 6); // Breitere Spalte für Name
+          pdf.text("Leistung", 117, tableY + 6);
+          pdf.text("Kosten/Stunde", 157, tableY + 6);
           
           // Zeilen mit Maschinenempfehlungen
-          const maschinenRowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
+          const maschinenRowHeight = 12; // Mehr Platz zwischen Zeilen
           
           maschinenData.forEach((maschine, index) => {
-            const y = tableY + 8 + (index * maschinenRowHeight);
+            const y = tableY + 10 + (index * maschinenRowHeight);
             
-            // Abwechselnde Zeilenhintergründe
+            // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
             if (index % 2 === 0) {
               pdf.setFillColor(245, 245, 245);
-              pdf.rect(14, y, 160, maschinenRowHeight, 'F');
+              pdf.rect(14, y, 180, maschinenRowHeight, 'F');
             }
             
-            // Daten einfügen
-            pdf.text(maschine.name, 17, y + 5);
-            pdf.text(maschine.typ, 57, y + 5);
-            pdf.text(maschine.leistung, 97, y + 5);
-            pdf.text(`${maschine.kostenProStunde.toFixed(2)} €`, 137, y + 5);
+            // Kürzere Strings mit Wortumbruch für bessere Darstellung
+            const nameParts = maschine.name.length > 25 ? 
+                            [maschine.name.substring(0, 25), maschine.name.substring(25)] : 
+                            [maschine.name];
+            
+            // Daten einfügen mit besserer Formatierung
+            pdf.text(nameParts[0], 17, y + 5);
+            if (nameParts.length > 1) {
+              pdf.text(nameParts[1], 17, y + 9);
+            }
+            
+            pdf.text(maschine.typ, 77, y + 5);
+            pdf.text(maschine.leistung, 117, y + 5);
+            
+            // Kosten mit Euro-Symbol und 2 Nachkommastellen
+            const kostenText = `${maschine.kostenProStunde.toFixed(2)} €`;
+            pdf.text(kostenText, 157, y + 5);
           });
           
           // Rahmen um die Tabelle zeichnen
-          pdf.setDrawColor(0);
-          pdf.rect(14, tableY, 160, 8 + (maschinenData.length * maschinenRowHeight), 'D');
+          pdf.setDrawColor(100, 100, 100); // Dunklerer Rahmen für bessere Sichtbarkeit
+          pdf.rect(14, tableY, 180, 10 + (maschinenData.length * maschinenRowHeight), 'D');
           
           // Endpunkt der Maschinen-Tabelle für die Position des Höhenprofils
-          maschinenEndY = tableY + 8 + (maschinenData.length * maschinenRowHeight) + 20;
+          maschinenEndY = tableY + 10 + (maschinenData.length * maschinenRowHeight) + 20;
         } else {
           pdf.setFontSize(10);
-          pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 5);
-          maschinenEndY = maschinenYPos + 15;
+          pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 10);
+          maschinenEndY = maschinenYPos + 20;
         }
         
         // --- Bemerkungen zum Tiefbau-Projekt ---
