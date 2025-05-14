@@ -8,9 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, FileUp } from 'lucide-react';
+import { Loader2, Upload, FileUp, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { Link } from 'wouter';
 import Papa from 'papaparse'; // Abhängigkeit für CSV-Verarbeitung
+import TiefbauNavigation from '@/components/TiefbauNavigation';
 
 interface SoilAnalysisResult {
   bodenartCode: string;
@@ -51,7 +53,7 @@ const BodenAnalyse: React.FC = () => {
   const [activeTab, setActiveTab] = useState('einzelanalyse');
   
   // Abfrage der Farbzuordnung für die Legende
-  const { data: colorMapping } = useQuery({
+  const { data: colorMappingData } = useQuery<{colorMapping: Record<string, string>}>({
     queryKey: ['/api/soil-analysis/color-mapping'],
   });
   
@@ -157,6 +159,7 @@ const BodenAnalyse: React.FC = () => {
   
   return (
     <div className="container mx-auto py-6">
+      <TiefbauNavigation />
       <h1 className="text-3xl font-bold mb-6">Bodenanalyse</h1>
       
       <Tabs defaultValue="einzelanalyse" onValueChange={setActiveTab} value={activeTab}>
@@ -348,7 +351,7 @@ const BodenAnalyse: React.FC = () => {
       </Tabs>
       
       {/* Legende für Bodenarten */}
-      {colorMapping && (
+      {colorMappingData && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>Legende: Bodenklassifikationen</CardTitle>
@@ -358,11 +361,11 @@ const BodenAnalyse: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {Object.entries(colorMapping.colorMapping).map(([key, color]) => (
+              {Object.entries(colorMappingData.colorMapping).map(([key, color]) => (
                 <div key={key} className="flex items-center">
                   <div 
                     className="w-4 h-4 mr-2 rounded-full flex-shrink-0" 
-                    style={{ backgroundColor: color as string }}
+                    style={{ backgroundColor: color }}
                   />
                   <span className="text-sm">{key}</span>
                 </div>

@@ -41,7 +41,7 @@ import TiefbauMap from "@/pages/tiefbau-map";
 // Direkter Import als JSX.Element-Komponente
 import TiefbauMapSearchable from "@/pages/tiefbau-map-searchable";
 import type { ComponentType } from "react";
-import BodenAnalyse from "@/pages/BodenAnalyse";
+import BodenAnalyse from "@/pages/bodenanalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import KostenKalkulationPage from "@/pages/kostenkalkulation";
 // DenkmalAtlasPage entfernt - Funktionalität in TiefbauMap integriert

@@ -38,10 +38,9 @@ const TiefbauNavigation = () => {
     },
     {
       title: 'Bodenanalyse',
-      href: '#',
+      href: '/bodenanalyse',
       icon: Database,
-      description: 'Analyse von Bodenarten und Eigenschaften',
-      comingSoon: true
+      description: 'Analyse von Bodenarten und Eigenschaften'
     }
   ];
 
