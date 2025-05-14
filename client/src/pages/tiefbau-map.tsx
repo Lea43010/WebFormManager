@@ -1028,6 +1028,16 @@ const TiefbauMap: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Verstecktes Input-Element für Foto-Upload */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handlePhotoUpload}
+            accept="image/*"
+            multiple
+            className="hidden"
+          />
         </TabsContent>
         {/* DenkmalAtlas Bayern Tab - Ersetzt durch direkten Weiterleitungs-Button */}
 

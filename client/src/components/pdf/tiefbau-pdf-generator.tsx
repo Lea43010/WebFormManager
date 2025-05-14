@@ -26,6 +26,8 @@ interface TiefbauPDFGeneratorProps {
     kostenProStunde: number;
   }> | null;
   mapContainerId: string;
+  remarks?: string; // Neu: Bemerkungen zum Tiefbau-Projekt
+  remarksPhotos?: Array<{ preview: string }>; // Neu: Fotos zu den Bemerkungen
 }
 
 const TiefbauPDFGenerator = ({
@@ -33,7 +35,9 @@ const TiefbauPDFGenerator = ({
   routeData,
   bodenartData,
   maschinenData,
-  mapContainerId
+  mapContainerId,
+  remarks,
+  remarksPhotos
 }: TiefbauPDFGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
