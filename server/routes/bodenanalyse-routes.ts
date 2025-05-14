@@ -2,8 +2,8 @@
  * Bodenanalyse-API-Routen
  * 
  * Diese Datei stellt API-Endpunkte für die Bodenanalyse-Funktionalität bereit.
- * Die Bodenanalyse basiert auf BGR-WFS-Anfragen und unterstützt sowohl Einzelpunkt-
- * als auch Batch-Abfragen von Bodenarten.
+ * Die Bodenanalyse basiert auf BGR-WMS-GetFeatureInfo-Anfragen und unterstützt
+ * sowohl Einzelpunkt- als auch Batch-Abfragen von Bodenarten.
  */
 
 import express from 'express';
@@ -54,8 +54,8 @@ router.get('/point', async (req, res) => {
       });
     }
 
-    // BGR-WFS-Abfrage ausführen
-    const result = await queryBGRWfs(latitude, longitude);
+    // BGR-WMS-Abfrage ausführen
+    const result = await queryBGRWms(latitude, longitude);
     
     return res.json({
       success: true,
@@ -104,7 +104,7 @@ router.post('/batch', async (req, res) => {
     }
     
     // Batch-Abfrage für alle Punkte ausführen
-    const results = await queryBGRWfsPoints(validPoints);
+    const results = await queryBGRWmsPoints(validPoints);
     
     return res.json({
       success: true,
@@ -176,7 +176,7 @@ router.post('/upload', upload.single('csv'), async (req, res) => {
     }
     
     // Batch-Abfrage für alle Punkte ausführen
-    const results = await queryBGRWfsPoints(points);
+    const results = await queryBGRWmsPoints(points);
     
     return res.json({
       success: true,
