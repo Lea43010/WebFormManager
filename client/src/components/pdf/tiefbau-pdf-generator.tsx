@@ -7,6 +7,17 @@ import jsPDF from 'jspdf';
 
 interface TiefbauPDFGeneratorProps {
   projectName: string | null;
+  projectData?: {
+    id?: number;
+    kunde?: string;
+    ansprechpartner?: string;
+    adresse?: string;
+    telefon?: string;
+    email?: string;
+    startdatum?: string;
+    enddatum?: string;
+    status?: string;
+  } | null;
   routeData: {
     start: string;
     end: string;
@@ -26,12 +37,13 @@ interface TiefbauPDFGeneratorProps {
     kostenProStunde: number;
   }> | null;
   mapContainerId: string;
-  remarks?: string; // Neu: Bemerkungen zum Tiefbau-Projekt
-  remarksPhotos?: Array<{ preview: string }>; // Neu: Fotos zu den Bemerkungen
+  remarks?: string; // Bemerkungen zum Tiefbau-Projekt
+  remarksPhotos?: Array<{ preview: string }>; // Fotos zu den Bemerkungen
 }
 
 const TiefbauPDFGenerator = ({
   projectName,
+  projectData,
   routeData,
   bodenartData,
   maschinenData,
@@ -78,17 +90,101 @@ const TiefbauPDFGenerator = ({
       const dateText = `Erstellt am: ${new Date().toLocaleDateString('de-DE')}`;
       pdf.text(dateText, 14, 27);
       
+      // Projekt-Details hinzufügen, wenn verfügbar
+      if (projectData) {
+        const startY = 34;
+        const lineHeight = 5;
+        
+        pdf.setFontSize(14);
+        pdf.text('Projektdetails', 14, startY);
+        
+        pdf.setFontSize(10);
+        pdf.setDrawColor(0);
+        pdf.setFillColor(240, 240, 240);
+        
+        // Box für Projekt-Details
+        pdf.setFillColor(245, 245, 245);
+        pdf.rect(14, startY + 2, 170, 30, 'F');
+        
+        let currentY = startY + 8;
+        
+        // Linke Spalte
+        if (projectData.id) {
+          pdf.text(`Projekt-Nr.: ${projectData.id}`, 17, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.kunde) {
+          pdf.text(`Kunde: ${projectData.kunde}`, 17, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.ansprechpartner) {
+          pdf.text(`Ansprechpartner: ${projectData.ansprechpartner}`, 17, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.adresse) {
+          pdf.text(`Adresse: ${projectData.adresse}`, 17, currentY);
+        }
+        
+        // Rechte Spalte
+        currentY = startY + 8;
+        
+        if (projectData.telefon) {
+          pdf.text(`Telefon: ${projectData.telefon}`, 90, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.email) {
+          pdf.text(`E-Mail: ${projectData.email}`, 90, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.startdatum) {
+          pdf.text(`Startdatum: ${projectData.startdatum}`, 90, currentY);
+        }
+        currentY += lineHeight;
+        
+        if (projectData.enddatum) {
+          pdf.text(`Enddatum: ${projectData.enddatum}`, 90, currentY);
+        }
+        
+        // Status in eigener Zeile unten rechts, wenn vorhanden
+        if (projectData.status) {
+          pdf.setFillColor(220, 220, 220);
+          pdf.rect(160, startY + 26, 24, 6, 'F');
+          pdf.text(`Status: ${projectData.status}`, 162, startY + 30);
+        }
+      }
+      
       // --- Karte in PDF einfügen ---
       try {
-        // Optimierte html2canvas Einstellungen für bessere Qualität
+        // Verbesserte Qualitätseinstellungen für die Karte
         const mapCanvas = await html2canvas(mapElement, {
           useCORS: true,
           allowTaint: true,
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          scale: window.devicePixelRatio || 2, // Höhere Skalierung für bessere Qualität
-          backgroundColor: null
+          scale: Math.max(window.devicePixelRatio || 1, 2.5), // Erhöhte Skalierung für bessere Qualität
+          backgroundColor: null,
+          removeContainer: false,
+          imageTimeout: 15000, // Längeres Timeout für komplexe Karten
+          onclone: (documentClone) => {
+            // Optimiere die Kartendarstellung im Clone
+            const clonedMap = documentClone.getElementById(mapContainerId);
+            if (clonedMap) {
+              // Erhöhe die Sichtbarkeit aller wichtigen Elemente
+              const mapElements = clonedMap.querySelectorAll('.map-marker, .map-label, .map-route');
+              mapElements.forEach(el => {
+                if (el instanceof HTMLElement) {
+                  el.style.opacity = '1';
+                  el.style.visibility = 'visible';
+                }
+              });
+            }
+          }
         });
         
         pdf.setFontSize(14);
