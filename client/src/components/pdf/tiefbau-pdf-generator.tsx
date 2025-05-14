@@ -249,147 +249,30 @@ const TiefbauPDFGenerator = ({
         
         // Streckendaten wurden eingefügt
         
-        // --- Bodenanalyse auf neuer Seite ---
-        pdf.addPage();
-        pdf.setFontSize(14);
-        pdf.text('Bodenanalyse', 14, 20);
-        
-        if (bodenartData) {
-          // Manuelle Tabelle für Bodenanalyse
-          const bodenYPos = 25;
-          
-          // Überschriftenzeile mit grauem Hintergrund
-          pdf.setFillColor(200, 200, 200);
-          pdf.rect(14, bodenYPos, 170, 10, 'F'); // Breitere und höhere Tabelle
-          pdf.setTextColor(0);
-          pdf.setFontSize(10);
-          pdf.text("Eigenschaft", 17, bodenYPos + 6);
-          pdf.text("Wert", 60, bodenYPos + 6);
-          
-          // Zeilen mit Bodenanalyse
-          const bodenStartY = bodenYPos + 10;
-          const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
-          
-          // Funktion zum Zeichnen einer Zeile für Bodenanalyse
-          const addBodenRow = (index: number, label: string, value: string) => {
-            const y = bodenStartY + (index * rowHeight);
-            
-            // Abwechselnde Zeilenhintergründe
-            if (index % 2 === 0) {
-              pdf.setFillColor(245, 245, 245);
-              pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
-            }
-            
-            pdf.text(label, 17, y + 5);
-            pdf.text(value, 60, y + 5);
-          };
-          
-          // Daten einfügen
-          addBodenRow(0, "Bodenart", bodenartData.name);
-          addBodenRow(1, "Beschreibung", bodenartData.beschreibung);
-          addBodenRow(2, "Kosten pro m²", `${bodenartData.kostenProM2.toFixed(2)} €`);
-          addBodenRow(3, "Geschätzte Gesamtkosten", `${bodenartData.gesamtkosten.toFixed(2)} €`);
-          
-          // Rahmen um die Tabelle zeichnen
-          pdf.setDrawColor(0);
-          pdf.rect(14, bodenYPos, 170, 10 + (4 * rowHeight), 'D');
-        } else {
-          pdf.setFontSize(10);
-          pdf.text('Keine Bodenanalyse verfügbar.', 14, 25);
-        }
-        
-        // --- Maschinenempfehlungen ---
-        // Berechne dynamische Position basierend auf vorherigen Elementen
-        let maschinenYPos = 80; // Standard Y-Position
-        
-        if (bodenartData) {
-          // Wenn Bodenanalyse vorhanden ist, positioniere nach der Bodenanalyse
-          // bodenYPos ist innerhalb des Bodenanalyse-Blocks definiert, hier für Maschinen
-          // berechnen wir die Position basierend auf der Bodenanalyse
-          maschinenYPos = 25 + 55; // bodenYPos (25) + Abstand für 4 Zeilen + Überschrift
-        }
-        
-        // Seite prüfen und ggf. neue Seite hinzufügen, wenn nicht genug Platz
-        const neededHeight = maschinenData && maschinenData.length > 0 ? 
-                           20 + (maschinenData.length * 12) : 20;
-        
-        if (maschinenYPos + neededHeight > pageHeight - 20) {
-          pdf.addPage();
-          maschinenYPos = 20; // Zurücksetzen der Y-Position auf Seitenanfang
-        }
-        
-        pdf.setFontSize(14);
-        pdf.text('Empfohlene Maschinen', 14, maschinenYPos);
-        
-        let maschinenEndY = maschinenYPos + 5; // Standardwert, wenn keine Maschinen vorhanden
-        
-        if (maschinenData && maschinenData.length > 0) {
-          // Maschinen in besser lesbarer Tabelle mit mehr Platz darstellen
-          const tableY = maschinenYPos + 5;
-          
-          // Überschriftenzeile mit farbigem Hintergrund
-          pdf.setFillColor(220, 220, 220); // Hellerer Hintergrund für bessere Lesbarkeit
-          pdf.rect(14, tableY, 180, 10, 'F'); // Breitere Tabelle
-          pdf.setTextColor(0);
-          pdf.setFontSize(10);
-          
-          // Spaltenüberschriften mit besserer Verteilung
-          pdf.text("Name", 17, tableY + 6);
-          pdf.text("Typ", 77, tableY + 6); // Breitere Spalte für Name
-          pdf.text("Leistung", 117, tableY + 6);
-          pdf.text("Kosten/Stunde", 157, tableY + 6);
-          
-          // Zeilen mit Maschinenempfehlungen
-          const maschinenRowHeight = 12; // Mehr Platz zwischen Zeilen
-          
-          maschinenData.forEach((maschine, index) => {
-            const y = tableY + 10 + (index * maschinenRowHeight);
-            
-            // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
-            if (index % 2 === 0) {
-              pdf.setFillColor(245, 245, 245);
-              pdf.rect(14, y, 180, maschinenRowHeight, 'F');
-            }
-            
-            // Kürzere Strings mit Wortumbruch für bessere Darstellung
-            const nameParts = maschine.name.length > 25 ? 
-                            [maschine.name.substring(0, 25), maschine.name.substring(25)] : 
-                            [maschine.name];
-            
-            // Daten einfügen mit besserer Formatierung
-            pdf.text(nameParts[0], 17, y + 5);
-            if (nameParts.length > 1) {
-              pdf.text(nameParts[1], 17, y + 9);
-            }
-            
-            pdf.text(maschine.typ, 77, y + 5);
-            pdf.text(maschine.leistung, 117, y + 5);
-            
-            // Kosten mit Euro-Symbol und 2 Nachkommastellen
-            const kostenText = `${maschine.kostenProStunde.toFixed(2)} €`;
-            pdf.text(kostenText, 157, y + 5);
-          });
-          
-          // Rahmen um die Tabelle zeichnen
-          pdf.setDrawColor(100, 100, 100); // Dunklerer Rahmen für bessere Sichtbarkeit
-          pdf.rect(14, tableY, 180, 10 + (maschinenData.length * maschinenRowHeight), 'D');
-          
-          // Endpunkt der Maschinen-Tabelle für die Position des Höhenprofils
-          maschinenEndY = tableY + 10 + (maschinenData.length * maschinenRowHeight) + 20;
-        } else {
-          pdf.setFontSize(10);
-          pdf.text('Keine Maschinenempfehlungen verfügbar.', 14, maschinenYPos + 10);
-          maschinenEndY = maschinenYPos + 20;
-        }
+        // Die Bodenanalyse und Maschinenempfehlungen-Abschnitte wurden entfernt
+        // Stattdessen gehen wir direkt zu Bemerkungen oder QR-Code über
         
         // --- Bemerkungen zum Tiefbau-Projekt ---
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
-          // Neue Seite für Bemerkungen und Fotos
-          pdf.addPage();
-          pdf.setFontSize(14);
-          pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, 20);
+          // Keine separate Seite mehr, da Bodenanalyse und Maschinenempfehlungen entfernt wurden
+          // Berechne den verfügbaren Platz auf der aktuellen Seite
+          const availableSpace = pageHeight - (routeYPos + 60);
+          const neededSpace = 80; // Geschätzter Platzbedarf für Überschrift und mindestens ein paar Zeilen Text
           
-          let yPos = 30;
+          // Entscheide, ob eine neue Seite erforderlich ist
+          let newPage = false;
+          if (availableSpace < neededSpace) {
+            pdf.addPage();
+            newPage = true;
+          }
+          
+          pdf.setFontSize(14);
+          
+          // Position der Überschrift basierend auf vorheriger Inhalte und Seitenumbruch anpassen
+          const remarksStartY = newPage ? 20 : routeYPos + 60; // Bei neuer Seite oben beginnen, sonst nach Routeninformationen
+          pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
+          
+          let yPos = remarksStartY + 10;
           
           // Textliche Bemerkungen hinzufügen, wenn vorhanden
           if (remarks && remarks.trim()) {
