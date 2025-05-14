@@ -288,26 +288,42 @@ const TiefbauPDFGenerator = ({
         // Daten als übersichtliche Zeilen mit Beschriftungen
         pdf.setFontSize(14);
         
-        // Start-Information
+        // Start-Information mit Icon
+        pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Start:', 20, startTextY);
+        pdf.text('🚩 Start:', 20, startTextY);
+        pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
         const startText = routeData.start || 'Nicht definiert';
         pdf.text(startText, 80, startTextY);
         
-        // Ziel-Information
+        // Ziel-Information mit Icon
+        pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Ziel:', 20, startTextY + lineHeight * 2);
+        pdf.text('🏁 Ziel:', 20, startTextY + lineHeight * 2);
+        pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
         const zielText = routeData.end || 'Nicht definiert';
         pdf.text(zielText, 80, startTextY + lineHeight * 2);
         
-        // Distanz-Information
+        // Distanz-Information mit Icon
+        pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('Distanz:', 20, startTextY + lineHeight * 4);
+        pdf.text('📏 Distanz:', 20, startTextY + lineHeight * 4);
+        pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
-        const distanzText = routeData.distance ? `${routeData.distance.toFixed(2)} km` : 'Nicht berechnet';
-        pdf.text(distanzText, 80, startTextY + lineHeight * 4);
+        
+        // Distanz mit einer Dezimalstelle und "km" in leicht anderer Farbe
+        if (routeData.distance) {
+            const distanceValue = `${routeData.distance.toFixed(1)} `;
+            pdf.text(distanceValue, 80, startTextY + lineHeight * 4);
+            
+            // "km" in separater Farbe
+            pdf.setTextColor(100, 100, 100); // Grau für die Einheit
+            pdf.text("km", 80 + pdf.getTextWidth(distanceValue), startTextY + lineHeight * 4);
+        } else {
+            pdf.text("Nicht berechnet", 80, startTextY + lineHeight * 4);
+        }
         
         // Variable für die Berechnung der Gesamthöhe des Streckeninfos-Abschnitts - nicht mehr verwendet
         const tableHeight = boxHeight;
@@ -389,10 +405,17 @@ const TiefbauPDFGenerator = ({
           
           // Fotos hinzufügen, wenn vorhanden
           if (remarksPhotos && remarksPhotos.length > 0) {
-            // Überschrift für Fotos
-            pdf.setFontSize(12);
-            pdf.setTextColor(0);
-            pdf.text(`Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
+            // 📸 Überschrift für Fotos im gleichen Stil wie andere Überschriften
+            pdf.setFontSize(15);
+            pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+            pdf.setFont("helvetica", "bold");
+            pdf.text(`📸 Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
+            
+            // Kurzer Untertitel für die Fotos
+            pdf.setFontSize(11);
+            pdf.setTextColor(80);
+            pdf.setFont("helvetica", "normal");
+            pdf.text('Bildliche Dokumentation des Bauvorhabens', 14, yPos + 6);
             yPos += 10;
             
             // Verbesserte Bildlayout-Einstellungen
@@ -407,10 +430,30 @@ const TiefbauPDFGenerator = ({
               // Bei mehr als 2 Bildern pro Seite, füge eine neue Seite hinzu
               if (i > 0 && i % 2 === 0) {
                 pdf.addPage();
-                yPos = 20;
-                pdf.setFontSize(12);
-                pdf.text(`Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
-                yPos += 10;
+                
+                // Kopfzeile für die Fortsetzungsseite
+                pdf.setFontSize(9);
+                pdf.setTextColor(150); // dezentes Grau
+                pdf.setFont("helvetica", "italic");
+                pdf.text('Bau - Structura | Automatisch generierter Bericht', 14, 10);
+                
+                pdf.setFont("helvetica", "normal");
+                pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10, { align: 'right' });
+                const currentPageNum = 4 + Math.floor(i / 2);
+                pdf.text(`Seite ${currentPageNum} von ${3 + Math.ceil(remarksPhotos.length / 2)}`, 285, 10, { align: 'right' });
+                
+                // Trennlinie unter der Kopfzeile
+                pdf.setDrawColor(200);
+                pdf.setLineWidth(0.5);
+                pdf.line(14, 12, 285, 12);
+                
+                // Fortgesetzte Fotos-Überschrift
+                yPos = 25;
+                pdf.setFontSize(15);
+                pdf.setTextColor(0, 51, 102);
+                pdf.setFont("helvetica", "bold");
+                pdf.text(`📸 Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
+                yPos += 15;
               }
               
               // Berechne Position für dieses Bild
