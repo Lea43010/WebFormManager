@@ -155,12 +155,26 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
       // Bei fehlgeschlagener WMS-Anfrage zum Fallback wechseln
       logger.warn(`BGR-WMS-Anfrage fehlgeschlagen, verwende Bodenregionen-Fallback: ${wmsError instanceof Error ? wmsError.message : String(wmsError)}`);
       
-      // Fallback-Methode: Approximierte Bodenart basierend auf geografischer Lage
-      // Dies ist eine vereinfachte Approximation, bis die WMS-Verbindung repariert ist
-      return getFallbackSoilData(lat, lng);
+      // Fallback-Methode: Wir liefern einen strukturierten Hinweis an den Client
+      const fallbackData = {
+        coordinates: {
+          lat,
+          lng,
+          utm32: { x, y }
+        },
+        success: true,
+        data: {
+          bodenart: "BGR-WMS-Dienst derzeit nicht verfügbar",
+          bodentyp: "Nicht verfügbar",
+          hinweis: "Der externe Dienst der Bundesanstalt für Geowissenschaften und Rohstoffe (BGR) ist aktuell nicht erreichbar. Bitte versuchen Sie es später erneut."
+        }
+      };
+      
+      logger.info(`Fallback-Bodenartdaten für ${lat}, ${lng} geliefert`);
+      return fallbackData;
     }
     
-    // Dieser Code wird nie erreicht, da jede Verzweigung einen eigenen Return-Wert hat
+    // Dieser Code sollte nie erreicht werden - alles wird in den try/catch-Blöcken behandelt
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`BGR-WMS-Abfragefehler: ${errorMessage}`);

@@ -211,13 +211,15 @@ const BodenAnalyse: React.FC = () => {
 
     const data = result.data as { 
       bodenart: string;
-      hauptbodentyp: string;
-      leitbodentyp: string;
-      bodenregion: string;
-      nutzung: string;
-      bodeneinheit: string;
-      bodengesellschaft: string;
-      substratsystematik: string;
+      hauptbodentyp?: string;
+      leitbodentyp?: string;
+      bodenregion?: string;
+      nutzung?: string;
+      bodeneinheit?: string;
+      bodengesellschaft?: string;
+      substratsystematik?: string;
+      bodentyp?: string;
+      hinweis?: string;
     };
 
     // Farbzuordnung für Bodenarten
@@ -265,21 +267,39 @@ const BodenAnalyse: React.FC = () => {
             <div className={`inline-block px-2 py-1 rounded ${getBodenartColor(data.bodenart)}`}>
               {data.bodenart || 'Unbekannt'}
             </div>
+            {data.hinweis && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                <p><strong>Hinweis:</strong> {data.hinweis}</p>
+              </div>
+            )}
           </div>
         </div>
         
         <div>
           <h3 className="text-sm font-medium text-gray-500">Hauptbodentyp</h3>
-          <p>{data.hauptbodentyp || 'Nicht verfügbar'}</p>
+          <p>{data.hauptbodentyp || data.bodentyp || 'Nicht verfügbar'}</p>
           
-          <h3 className="text-sm font-medium text-gray-500 mt-2">Leitbodentyp</h3>
-          <p>{data.leitbodentyp || 'Nicht verfügbar'}</p>
+          {/* Nur anzeigen, wenn Daten vorhanden sind */}
+          {data.leitbodentyp && (
+            <>
+              <h3 className="text-sm font-medium text-gray-500 mt-2">Leitbodentyp</h3>
+              <p>{data.leitbodentyp}</p>
+            </>
+          )}
           
-          <h3 className="text-sm font-medium text-gray-500 mt-2">Bodenregion</h3>
-          <p>{data.bodenregion || 'Nicht verfügbar'}</p>
+          {data.bodenregion && (
+            <>
+              <h3 className="text-sm font-medium text-gray-500 mt-2">Bodenregion</h3>
+              <p>{data.bodenregion}</p>
+            </>
+          )}
           
-          <h3 className="text-sm font-medium text-gray-500 mt-2">Nutzung</h3>
-          <p>{data.nutzung || 'Nicht verfügbar'}</p>
+          {data.nutzung && (
+            <>
+              <h3 className="text-sm font-medium text-gray-500 mt-2">Nutzung</h3>
+              <p>{data.nutzung}</p>
+            </>
+          )}
         </div>
       </div>
     );
