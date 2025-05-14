@@ -102,29 +102,43 @@ const TiefbauPDFGenerator = ({
       pdf.setLineWidth(0.5);
       pdf.line(14, 12, 285, 12); // horizontale Linie quer über die Seite
       
-      // Titel des Berichts
-      pdf.setFontSize(20);
-      pdf.setTextColor(0, 0, 0);
-      const titleText = `Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
-      pdf.text(titleText, 14, 20);
+      // 🏗️ Titel des Berichts mit besserem Styling
+      pdf.setFontSize(22);
+      pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+      pdf.setFont("helvetica", "bold");
+      const titleText = `🏗️ Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
+      pdf.text(titleText, 14, 25);
+      
+      // 📌 Untertitel
+      pdf.setFontSize(11);
+      pdf.setTextColor(80);
+      pdf.setFont("helvetica", "normal");
+      pdf.text('Übersicht und Dokumentation der geplanten Tiefbaumaßnahme', 14, 32);
       
       // Projekt-Details hinzufügen, wenn verfügbar
       if (projectData) {
-        const startY = 34;
-        const lineHeight = 5;
+        const startY = 40; // Mehr Abstand nach dem Untertitel
+        const lineHeight = 6; // Etwas mehr Zeilenabstand für bessere Lesbarkeit
         
-        pdf.setFontSize(14);
-        pdf.text('Projektdetails', 14, startY);
+        // 📋 Überschrift "Projektdetails" im gleichen Stil wie die anderen Überschriften
+        pdf.setFontSize(15);
+        pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
+        pdf.setFont("helvetica", "bold");
+        pdf.text('📋 Projektdetails', 14, startY);
         
+        // Weniger Abstand zwischen Überschrift und Box
+        const contentStartY = startY + 6;
+        
+        // Ansprechendere Box für Projekt-Details
         pdf.setFontSize(10);
-        pdf.setDrawColor(0);
-        pdf.setFillColor(240, 240, 240);
+        pdf.setDrawColor(200, 200, 200); // Hellgrauer Rahmen
+        pdf.setFillColor(248, 248, 248); // Hellerer Hintergrund
         
-        // Box für Projekt-Details
-        pdf.setFillColor(245, 245, 245);
-        pdf.rect(14, startY + 2, 170, 30, 'F');
+        // Box mit abgerundeten Ecken
+        pdf.roundedRect(14, contentStartY, 170, 36, 3, 3, 'FD');
         
-        let currentY = startY + 8;
+        // Position für den Text innerhalb der Box
+        let currentY = contentStartY + 8; // Abstand vom oberen Rand der Box
         
         // Linke Spalte
         if (projectData.id) {
@@ -336,7 +350,7 @@ const TiefbauPDFGenerator = ({
           pdf.setFont("helvetica", "normal");
           pdf.text('Ergänzende Hinweise und Anmerkungen zur geplanten Baumaßnahme', 14, remarksStartY + 6);
           
-          let yPos = remarksStartY + 10;
+          let yPos = remarksStartY + 15; // Mehr Abstand nach dem Untertitel
           
           // Textliche Bemerkungen hinzufügen, wenn vorhanden
           if (remarks && remarks.trim()) {
