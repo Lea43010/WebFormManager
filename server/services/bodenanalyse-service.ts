@@ -83,11 +83,11 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
     // WGS84 -> ETRS89/UTM32N Transformation
     const [x, y] = transformCoordinates(lat, lng);
     
-    // BGR WFS-URL - aktualisierte URL für den BGR-Dienst
-    const bgrWfsUrl = 'https://services.bgr.de/wms/boden/boart1000/?';
+    // BGR WMS-URL - aktualisierte URL für den BGR-Dienst
+    const bgrWmsUrl = 'https://services.bgr.de/wms/boden/boart1000/?';
     
-    // WFS-Abfrage-Parameter erstellen
-    // Wir nutzen GetFeatureInfo statt GetFeature, da dies besser für Punktabfragen geeignet ist
+    // WMS-GetFeatureInfo-Parameter erstellen
+    // Wir nutzen GetFeatureInfo statt WFS-GetFeature, da dies besser für Punktabfragen geeignet ist
     const params = {
       SERVICE: 'WMS',
       VERSION: '1.3.0',
@@ -105,7 +105,7 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
     };
 
     // HTTP-Anfrage an BGR-WMS senden
-    const response = await axios.get(bgrWfsUrl, { params });
+    const response = await axios.get(bgrWmsUrl, { params });
     
     // Antwort ist bereits im JSON-Format
     const result = response.data;
@@ -124,12 +124,12 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`BGR-WFS-Abfragefehler: ${errorMessage}`);
+    logger.error(`BGR-WMS-Abfragefehler: ${errorMessage}`);
     return {
       coordinates: { lat, lng },
       success: false,
       error: errorMessage,
-      message: 'Fehler bei der BGR-WFS-Abfrage'
+      message: 'Fehler bei der BGR-WMS-Abfrage'
     };
   }
 }
@@ -159,7 +159,7 @@ export async function queryBGRWmsPoints(points: Array<{lat: number, lng: number}
     return results;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`BGR-WFS-Batch-Abfragefehler: ${errorMessage}`);
+    logger.error(`BGR-WMS-Batch-Abfragefehler: ${errorMessage}`);
     throw new Error(`Fehler bei der Batch-Verarbeitung: ${errorMessage}`);
   }
 }
