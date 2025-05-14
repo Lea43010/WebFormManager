@@ -888,6 +888,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // Neuer Methode zum Aktualisieren des Speicherpfads eines Anhangs
+  async updateAttachmentPath(id: number, data: {
+    filePath: string,
+    fileStorage?: string,
+    isPublic?: boolean,
+    fileMissing?: boolean
+  }): Promise<Attachment | undefined> {
+    try {
+      const updateData: any = { filePath: data.filePath };
+      
+      // Nur nicht-undefined Felder hinzufügen
+      if (data.fileStorage !== undefined) updateData.fileStorage = data.fileStorage;
+      if (data.isPublic !== undefined) updateData.isPublic = data.isPublic;
+      if (data.fileMissing !== undefined) updateData.fileMissing = data.fileMissing;
+      
+      const [updatedAttachment] = await db
+        .update(attachments)
+        .set(updateData)
+        .where(eq(attachments.id, id))
+        .returning();
+        
+      return updatedAttachment;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Dateipfads: ${error}`);
+      return undefined;
+    }
+  }
+  
   async resetAttachmentFileMissing(id: number): Promise<Attachment | undefined> {
     try {
       // Setze den "fehlend"-Status zurück, wenn die Datei wiedergefunden wurde
