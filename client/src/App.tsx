@@ -41,7 +41,7 @@ import TiefbauMap from "@/pages/tiefbau-map";
 // Direkter Import als JSX.Element-Komponente
 import TiefbauMapSearchable from "@/pages/tiefbau-map-searchable";
 import type { ComponentType } from "react";
-import BodenAnalyse from "@/pages/bodenanalyse";
+import BodenAnalyse from "@/pages/BodenAnalyse";
 import MaschinenAuswahl from "@/pages/MaschinenAuswahl";
 import KostenKalkulationPage from "@/pages/kostenkalkulation";
 // DenkmalAtlasPage entfernt - Funktionalität in TiefbauMap integriert
@@ -108,7 +108,7 @@ function Router() {
       <ProtectedRoute path="/construction-diary-debug" component={ConstructionDiaryDebugPage} />
       <ProtectedRoute path="/tiefbau-map" component={() => <TiefbauMap />} />
       <ProtectedRoute path="/tiefbau-map-searchable" component={TiefbauMapSearchable} />
-      <ProtectedRoute path="/bodenanalyse" component={() => <BodenAnalyse />} />
+      <ProtectedRoute path="/bodenanalyse" component={BodenAnalyse} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
       {/* DenkmalAtlas direkt auf externe URL weiterleiten */}
