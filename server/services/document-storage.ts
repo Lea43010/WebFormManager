@@ -65,13 +65,19 @@ export class DocumentStorage {
       // Metadaten in der Datenbank speichern
       const fileType = this.determineFileType(file.originalname);
       
-      // Konvertieren in einen gültigen fileType
-      const validFileType = fileType as 'pdf' | 'excel' | 'image' | 'other';
+      // Typdefinitionen für beide Enums (für bessere Lesbarkeit und zukünftige Verwendung)
+      type FileType = typeof fileTypes.enumValues[number]; // 'pdf' | 'excel' | 'image' | 'other'
+      type FileCategory = typeof fileCategoryEnum.enumValues[number]; // 'Verträge' | 'Rechnungen' | etc.
       
-      // Kategorie validieren
-      const validCategory = (metadata.category && 
-        ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere'].includes(metadata.category)) 
-        ? metadata.category as 'Verträge' | 'Rechnungen' | 'Pläne' | 'Protokolle' | 'Genehmigungen' | 'Fotos' | 'Analysen' | 'Andere'
+      // Konvertieren in einen gültigen fileType
+      const validFileType: FileType = fileType as FileType;
+      
+      // Kategorie validieren und einen gültigen Wert aus dem pgEnum sicherstellen
+      const allowedCategories: FileCategory[] = ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere'];
+      
+      const validCategory: FileCategory = metadata.category && 
+        allowedCategories.includes(metadata.category as FileCategory)
+        ? metadata.category as FileCategory
         : 'Andere';
       
       const attachmentData = {
@@ -302,18 +308,20 @@ export class DocumentStorage {
   
   /**
    * Bestimmt den Dateityp basierend auf der Dateiendung
+   * Gibt einen der definierten Dateitypen aus dem pgEnum zurück
    */
-  private determineFileType(filename: string): 'pdf' | 'excel' | 'image' | 'other' {
+  private determineFileType(filename: string) {
     const extension = path.extname(filename).toLowerCase();
     
+    // Diese Werte entsprechen den in fileTypes-pgEnum definierten Werten
     if (['.pdf'].includes(extension)) {
-      return 'pdf';
+      return 'pdf' as const;
     } else if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(extension)) {
-      return 'image';
+      return 'image' as const;
     } else if (['.xls', '.xlsx', '.csv'].includes(extension)) {
-      return 'excel';
+      return 'excel' as const;
     } else {
-      return 'other';
+      return 'other' as const;
     }
   }
   
