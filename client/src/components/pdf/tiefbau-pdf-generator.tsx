@@ -291,7 +291,7 @@ const TiefbauPDFGenerator = ({
         // Start-Information mit Icon
         pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('🚩 Start:', 20, startTextY);
+        pdf.text('Start:', 20, startTextY);
         pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
         const startText = routeData.start || 'Nicht definiert';
@@ -300,7 +300,7 @@ const TiefbauPDFGenerator = ({
         // Ziel-Information mit Icon
         pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('🏁 Ziel:', 20, startTextY + lineHeight * 2);
+        pdf.text('Ziel:', 20, startTextY + lineHeight * 2);
         pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
         const zielText = routeData.end || 'Nicht definiert';
@@ -309,7 +309,7 @@ const TiefbauPDFGenerator = ({
         // Distanz-Information mit Icon
         pdf.setTextColor(0, 75, 125); // Dunkleres Blau für Labels
         pdf.setFont('helvetica', 'bold');
-        pdf.text('📏 Distanz:', 20, startTextY + lineHeight * 4);
+        pdf.text('Distanz:', 20, startTextY + lineHeight * 4);
         pdf.setTextColor(30, 30, 30); // Fast schwarz für bessere Lesbarkeit
         pdf.setFont('helvetica', 'normal');
         
@@ -540,7 +540,7 @@ const TiefbauPDFGenerator = ({
                 pdf.setTextColor(180, 60, 60);
                 pdf.setFontSize(11);
                 pdf.setFont("helvetica", "bold");
-                pdf.text('⚠️ Bild konnte nicht geladen werden', x + 10, currentY + (imgHeight/2));
+                pdf.text('Bild konnte nicht geladen werden', x + 10, currentY + (imgHeight/2));
                 
                 // Technische Info klein darunter
                 pdf.setFontSize(8);
