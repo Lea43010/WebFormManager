@@ -1,0 +1,330 @@
+# Bodenanalyse-Modul für bestehende Replit-App
+
+"""
+Bodenanalyse-Modul zum Einbinden in eine bestehende Replit-App.
+Dieses Modul ermöglicht die Abfrage und Klassifizierung von Bodenarten basierend auf den Daten des BGR.
+"""
+
+import streamlit as st
+import requests
+import pandas as pd
+import folium
+from streamlit_folium import folium_static
+from owslib.wfs import WebFeatureService
+import json
+from pyproj import Transformer
+
+class BodenanalyseModul:
+    """Klasse für BGR Bodenanalyse-Funktionalitäten"""
+    
+    def __init__(self):
+        """Initialisierung der Bodenanalyse-Komponente"""
+        # BGR WFS-URL und Layer
+        self.bgr_wfs_url = "https://services.bgr.de/wfs/boden/boart1000ob/?"
+        self.bgr_layer = "boart1000ob"
+        
+        # Bodenarten-Klassifikation definieren
+        self.bodenarten_klassifikation = {
+            "Reinsande (ss)": ["Ss", "fSms", "mSfs", "mSgs", "gSms"],
+            "Lehmsande (ls)": ["Sl2", "Sl3", "Sl4"],
+            "Schluffsande (us)": ["Su2", "Su3", "Su4"],
+            "Sandlehme (sl)": ["Slu", "St2", "St3"],
+            "Normallehme (ll)": ["Ls2", "Ls3", "Ls4", "Lt2"],
+            "Tonlehme (tl)": ["Lts", "Lt3", "Tu3"],
+            "Lehmschluffe (lu)": ["Lu", "Uls"],
+            "Tonschluffe (tu)": ["Tu2", "Tu4", "Ut2", "Ut3"],
+            "Schlufftone (ut)": ["Ut4", "Tu4", "Uu"],
+            "Moore (mo)": ["HH", "Hn", "Hh"],
+            "Watt": ["Watt"],
+            "Siedlung": ["Siedlung", "Bebauung", "Urban"],
+            "Abbauflächen": ["Abbaufläche", "Tagebau", "Bergbau"],
+            "Gewässer": ["Gewässer", "See", "Fluss"]
+        }
+        
+        # Farbzuordnung für Visualisierung
+        self.color_mapping = {
+            "Reinsande (ss)": "beige",
+            "Lehmsande (ls)": "lightgreen",
+            "Schluffsande (us)": "green",
+            "Sandlehme (sl)": "darkgreen",
+            "Normallehme (ll)": "brown",
+            "Tonlehme (tl)": "darkbrown",
+            "Lehmschluffe (lu)": "orange",
+            "Tonschluffe (tu)": "darkorange",
+            "Schlufftone (ut)": "red",
+            "Moore (mo)": "black",
+            "Watt": "lightblue",
+            "Siedlung": "gray",
+            "Abbauflächen": "purple",
+            "Gewässer": "blue",
+            "Unbekannt": "white"
+        }
+    
+    def klassifiziere_bodenart(self, bgr_code):
+        """Klassifiziert einen BGR-Bodenart-Code entsprechend der definierten Kategorien"""
+        for klasse, codes in self.bodenarten_klassifikation.items():
+            for code in codes:
+                if code.lower() in bgr_code.lower():
+                    return klasse
+        return "Unbekannt"
+    
+    def get_bodenart_by_coords(self, lon, lat):
+        """Abfrage der Bodenart an den gegebenen Koordinaten via BGR WFS"""
+        try:
+            # WFS-Client erstellen
+            wfs = WebFeatureService(url=self.bgr_wfs_url, version='2.0.0')
+            
+            # Koordinaten-Transformer (WGS84 zu ETRS89/UTM)
+            transformer = Transformer.from_crs("EPSG:4326", "EPSG:25832", always_xy=True)
+            x, y = transformer.transform(lon, lat)
+            
+            # Erstelle ein Rechteck um den Punkt für die Abfrage
+            buffer = 100  # Puffer in Metern
+            bbox = (x - buffer, y - buffer, x + buffer, y + buffer)
+            
+            # WFS-Anfrage
+            response = wfs.getfeature(
+                typename=self.bgr_layer,
+                bbox=bbox,
+                outputFormat='application/json'
+            )
+            
+            # Ergebnis verarbeiten
+            features = json.loads(response.read().decode('utf-8'))
+            
+            if features['features']:
+                # Bodenart aus dem ersten Feature extrahieren
+                bodenart_code = features['features'][0]['properties']['BOART']
+                bodenart_beschreibung = features['features'][0]['properties'].get('BOART_BEZ', 'Keine Beschreibung')
+                klasse = self.klassifiziere_bodenart(bodenart_code)
+                
+                return {
+                    'bodenart_code': bodenart_code,
+                    'bodenart_beschreibung': bodenart_beschreibung,
+                    'klassifikation': klasse
+                }
+            else:
+                return {
+                    'bodenart_code': 'Keine Daten gefunden',
+                    'bodenart_beschreibung': 'Keine Daten für diese Koordinaten verfügbar',
+                    'klassifikation': 'Unbekannt'
+                }
+        except Exception as e:
+            st.error(f"Fehler bei der WFS-Abfrage: {str(e)}")
+            return {
+                'bodenart_code': 'Fehler',
+                'bodenart_beschreibung': f'Fehler bei der Abfrage: {str(e)}',
+                'klassifikation': 'Fehler'
+            }
+    
+    def process_batch_coordinates(self, coords_df, max_points=100):
+        """Verarbeitet mehrere Koordinaten als Batch"""
+        results = []
+        
+        # Begrenze auf die angegebene Anzahl an Punkten, um Timeout zu vermeiden
+        max_points = min(max_points, len(coords_df))
+        data_sample = coords_df.iloc[:max_points]
+        
+        for _, row in data_sample.iterrows():
+            lon = row['longitude']
+            lat = row['latitude']
+            result = self.get_bodenart_by_coords(lon, lat)
+            results.append({
+                'longitude': lon,
+                'latitude': lat,
+                'bodenart_code': result['bodenart_code'],
+                'beschreibung': result['bodenart_beschreibung'],
+                'klassifikation': result['klassifikation']
+            })
+        
+        return pd.DataFrame(results)
+    
+    def create_result_map(self, results_df):
+        """Erstellt eine Folium-Karte mit den Analyseergebnissen"""
+        if results_df.empty:
+            return None
+        
+        # Mittelpunkt berechnen
+        center_lat = results_df['latitude'].mean()
+        center_lon = results_df['longitude'].mean()
+        
+        result_map = folium.Map(location=[center_lat, center_lon], zoom_start=10)
+        
+        for _, row in results_df.iterrows():
+            color = self.color_mapping.get(row['klassifikation'], "gray")
+            
+            folium.CircleMarker(
+                location=[row['latitude'], row['longitude']],
+                radius=5,
+                color=color,
+                fill=True,
+                fill_opacity=0.7,
+                tooltip=f"{row['bodenart_code']} - {row['klassifikation']}"
+            ).add_to(result_map)
+        
+        # Legende hinzufügen
+        legend_html = """
+        <div style="position: fixed; bottom: 50px; left: 50px; z-index: 1000; background-color: white; padding: 10px; border: 1px solid grey; border-radius: 5px;">
+        <h4>Legende</h4>
+        """
+        
+        for klasse, color in self.color_mapping.items():
+            legend_html += f'<div><span style="background-color:{color}; width:15px; height:15px; display:inline-block; margin-right:5px;"></span>{klasse}</div>'
+        
+        legend_html += "</div>"
+        
+        result_map.get_root().html.add_child(folium.Element(legend_html))
+        
+        return result_map
+    
+    def show_klassifikation_info(self):
+        """Zeigt Informationen zur Klassifikation an"""
+        st.write("""
+        Die folgende Tabelle zeigt die Zuordnung der BGR-Bodencodes zu den Klassifikationsklassen:
+        """)
+        
+        # Erstelle DataFrame für die Klassifikation
+        klassen_list = []
+        for klasse, codes in self.bodenarten_klassifikation.items():
+            for code in codes:
+                klassen_list.append({
+                    "Klassifikation": klasse,
+                    "BGR-Code": code
+                })
+        
+        klassen_df = pd.DataFrame(klassen_list)
+        st.dataframe(klassen_df)
+        
+        # Farbkodierung anzeigen
+        st.write("Farbkodierung für die Karten:")
+        
+        for klasse, color in self.color_mapping.items():
+            st.markdown(f"<div style='display: flex; align-items: center; margin-bottom: 5px;'><div style='background-color: {color}; width: 20px; height: 20px; margin-right: 10px;'></div>{klasse}</div>", unsafe_allow_html=True)
+
+    def render_standort_analyse(self):
+        """Rendert die Standortanalyse-UI-Komponente"""
+        st.header("Bodenart an einem Standort bestimmen")
+        
+        # Eingabefelder für Koordinaten
+        col1, col2 = st.columns(2)
+        with col1:
+            lon = st.number_input("Längengrad (Dezimalgrad)", value=10.0, format="%.6f", min_value=5.0, max_value=16.0)
+        with col2:
+            lat = st.number_input("Breitengrad (Dezimalgrad)", value=51.0, format="%.6f", min_value=47.0, max_value=56.0)
+        
+        # Karte anzeigen
+        m = folium.Map(location=[lat, lon], zoom_start=10)
+        folium.Marker([lat, lon], tooltip="Ausgewählter Standort").add_to(m)
+        
+        # Callback für Klicks auf die Karte
+        folium.LatLngPopup().add_to(m)
+        
+        folium_static(m)
+        
+        if st.button("Bodenart abfragen"):
+            with st.spinner("Daten werden abgefragt..."):
+                result = self.get_bodenart_by_coords(lon, lat)
+                
+                st.success("Bodenanalyse abgeschlossen!")
+                st.write(f"**Bodenart (BGR-Code):** {result['bodenart_code']}")
+                st.write(f"**Beschreibung:** {result['bodenart_beschreibung']}")
+                st.write(f"**Klassifikation:** {result['klassifikation']}")
+                
+                # Ergebniskarte mit farbiger Markierung
+                result_map = folium.Map(location=[lat, lon], zoom_start=14)
+                
+                color = self.color_mapping.get(result['klassifikation'], "gray")
+                
+                folium.CircleMarker(
+                    location=[lat, lon],
+                    radius=20,
+                    color=color,
+                    fill=True,
+                    fill_opacity=0.7,
+                    tooltip=f"{result['bodenart_code']} - {result['klassifikation']}"
+                ).add_to(result_map)
+                
+                folium_static(result_map)
+    
+    def render_batch_analyse(self):
+        """Rendert die Batch-Analyse-UI-Komponente"""
+        st.header("Batch-Verarbeitung von Koordinaten")
+        
+        # Upload von CSV-Datei
+        st.write("Laden Sie eine CSV-Datei mit Koordinaten hoch (Format: longitude,latitude)")
+        uploaded_file = st.file_uploader("CSV-Datei mit Koordinaten", type="csv")
+        
+        if uploaded_file is not None:
+            try:
+                data = pd.read_csv(uploaded_file)
+                
+                if 'longitude' not in data.columns or 'latitude' not in data.columns:
+                    st.error("Die CSV-Datei muss die Spalten 'longitude' und 'latitude' enthalten.")
+                else:
+                    st.write("Vorschau der hochgeladenen Daten:")
+                    st.dataframe(data.head())
+                    
+                    max_points = st.slider("Maximale Anzahl zu verarbeitender Punkte", min_value=1, max_value=100, value=10)
+                    
+                    if st.button("Batch-Verarbeitung starten"):
+                        with st.spinner("Verarbeite alle Koordinaten..."):
+                            # Fortschrittsbalken
+                            progress_bar = st.progress(0)
+                            
+                            # Batch-Verarbeitung durchführen
+                            results_df = self.process_batch_coordinates(data, max_points)
+                            
+                            progress_bar.progress(1.0)
+                            
+                            st.success(f"Batch-Verarbeitung abgeschlossen! {len(results_df)} Punkte analysiert.")
+                            st.dataframe(results_df)
+                            
+                            # Downloadlink für Ergebnisse
+                            csv = results_df.to_csv(index=False)
+                            st.download_button(
+                                label="Ergebnisse als CSV herunterladen",
+                                data=csv,
+                                file_name="bodenanalyse_ergebnisse.csv",
+                                mime="text/csv"
+                            )
+                            
+                            # Karte mit allen Punkten
+                            if not results_df.empty:
+                                st.write("Karte mit allen analysierten Punkten:")
+                                result_map = self.create_result_map(results_df)
+                                folium_static(result_map)
+            
+            except Exception as e:
+                st.error(f"Fehler beim Verarbeiten der CSV-Datei: {str(e)}")
+    
+    def render_bodenanalyse_ui(self):
+        """Hauptmethode zur Darstellung der gesamten Bodenanalyse-UI"""
+        st.title("BGR Bodenanalyse")
+        
+        st.write("""
+        Diese Komponente ermöglicht die Analyse von Bodenarten basierend auf den Daten des BGR 
+        (Bundesanstalt für Geowissenschaften und Rohstoffe).
+        """)
+        
+        # Tabs für verschiedene Funktionen
+        tab1, tab2, tab3 = st.tabs(["Standortanalyse", "Batch-Verarbeitung", "Klassifikationsübersicht"])
+        
+        with tab1:
+            self.render_standort_analyse()
+            
+        with tab2:
+            self.render_batch_analyse()
+            
+        with tab3:
+            self.show_klassifikation_info()
+
+
+# Beispiel für die Integration in die bestehende App
+if __name__ == "__main__":
+    st.set_page_config(page_title="Bodenanalyse-Modul Beispiel", layout="wide")
+    
+    # Instanz der Bodenanalyse-Klasse erstellen
+    bodenanalyse = BodenanalyseModul()
+    
+    # UI rendern
+    bodenanalyse.render_bodenanalyse_ui()

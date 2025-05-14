@@ -49,6 +49,7 @@ import { dataQualityChecker } from "./data-quality-checker";
 import { requireManagerOrAbove } from "./middleware/role-check"; // Rollenprüfung für Manager und Administratoren
 import { checkSubscriptionStatus, verifySubscriptionStatus } from "./middleware/auth"; // Abonnementstatus-Prüfung
 import { z } from "zod";
+import soilAnalysisRoutes from "./routes/soil-analysis-routes"; // Bodenanalyse-Modul
 
 // Import für den verbesserten Download-Debugger
 import { setupDownloadDebugger } from "./direct-download-debugger"; // Neuer Download-Debugger
