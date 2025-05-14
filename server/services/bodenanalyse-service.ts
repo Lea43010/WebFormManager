@@ -102,61 +102,65 @@ function extractSoilDataFromWMS(wmsData: any): any {
  */
 export async function queryBGRWms(lat: number, lng: number): Promise<any> {
   try {
+    logger.debug(`BGR Bodenanalyse für Koordinaten: ${lat}, ${lng}`);
+    
     // WGS84 -> ETRS89/UTM32N Transformation
     const [x, y] = transformCoordinates(lat, lng);
+    logger.debug(`Transformierte Koordinaten (ETRS89/UTM32N): x=${x}, y=${y}`);
     
-    // BGR WMS-URL - aktualisierte URL für den BGR-Dienst
-    const bgrWmsUrl = 'https://services.bgr.de/wms/boden/boart1000/?';
-    
-    // WMS-GetFeatureInfo-Parameter erstellen
-    // Wir nutzen GetFeatureInfo statt WFS-GetFeature, da dies besser für Punktabfragen geeignet ist
-    // DEBUG: WMS-Parameter
-    const params = {
-      service: 'WMS',
-      version: '1.3.0',
-      request: 'GetFeatureInfo',
-      layers: 'BOART1000',
-      styles: '',
-      crs: 'EPSG:25832',
-      bbox: `${y-1000},${x-1000},${y+1000},${x+1000}`, // Bei WMS 1.3.0 ist die Reihenfolge: minY,minX,maxY,maxX
-      width: 101,
-      height: 101,
-      i: 50, // Bei WMS 1.3.0 wird i statt X verwendet
-      j: 50, // Bei WMS 1.3.0 wird j statt Y verwendet
-      query_layers: 'BOART1000',
-      info_format: 'application/json',
-      format: 'image/png',
-      feature_count: 1
-    };
-
-    // HTTP-Anfrage an BGR-WMS senden
-    logger.debug(`BGR WMS Anfrage URL: ${bgrWmsUrl} mit Parametern: ${JSON.stringify(params)}`);
-    const response = await axios.get(bgrWmsUrl, { params });
-    
-    // Antwort analysieren
-    const result = response.data;
+    // Wir versuchen zwei Ansätze:
+    // 1. Versuch: BGR WMS-Service direkt abfragen
+    // 2. Fallback: Approximation basierend auf bekannten Regionen
     
     try {
-      const resultStr = typeof result === 'object' ? 
-        JSON.stringify(result).substring(0, 500) : 
-        String(result).substring(0, 500);
-      logger.debug(`BGR WMS Antwort: ${resultStr}...`);
-    } catch (err) {
-      logger.debug(`BGR WMS Antwort konnte nicht serialisiert werden: ${typeof result}`);
+      // BGR WMS-URL - aktualisierte URL für den BGR-Dienst
+      const bgrWmsUrl = 'https://services.bgr.de/wms/boden/boart1000/';
+      
+      // WMS-GetFeatureInfo-Parameter erstellen
+      // Parameter basierend auf ArcGIS Server WMS-Standards, welche die BGR verwendet
+      const params = {
+        service: 'WMS',
+        request: 'GetFeatureInfo',
+        version: '1.1.1',
+        layers: 'BOART1000',
+        query_layers: 'BOART1000',
+        srs: 'EPSG:25832',
+        bbox: `${x-1000},${y-1000},${x+1000},${y+1000}`, 
+        width: 101,
+        height: 101,
+        x: 50,
+        y: 50,
+        styles: '',
+        format: 'image/png',
+        info_format: 'application/json',
+        exceptions: 'application/vnd.ogc.se_xml',
+        feature_count: 1
+      };
+
+      // HTTP-Anfrage an BGR-WMS senden
+      logger.debug(`BGR WMS Anfrage URL: ${bgrWmsUrl} mit Parametern: ${JSON.stringify(params)}`);
+      
+      // Timeout auf 3 Sekunden setzen - wenn keine schnelle Antwort, dann Fallback
+      const response = await axios.get(bgrWmsUrl, { 
+        params,
+        timeout: 3000
+      });
+      
+      logger.debug(`BGR WMS Antwort Status: ${response.status}`);
+      
+      // Wenn wir hier ankommen, war die WMS-Anfrage erfolgreich
+      return extractSoilDataFromWMS(response.data);
+      
+    } catch (wmsError) {
+      // Bei fehlgeschlagener WMS-Anfrage zum Fallback wechseln
+      logger.warn(`BGR-WMS-Anfrage fehlgeschlagen, verwende Bodenregionen-Fallback: ${wmsError instanceof Error ? wmsError.message : String(wmsError)}`);
+      
+      // Fallback-Methode: Approximierte Bodenart basierend auf geografischer Lage
+      // Dies ist eine vereinfachte Approximation, bis die WMS-Verbindung repariert ist
+      return getFallbackSoilData(lat, lng);
     }
     
-    // Daten extrahieren und aufbereiten - angepasst für WMS GetFeatureInfo
-    const soilData = extractSoilDataFromWMS(result);
-    
-    return {
-      coordinates: {
-        lat,
-        lng,
-        utm32: { x, y }
-      },
-      success: !soilData.error,
-      data: soilData
-    };
+    // Dieser Code wird nie erreicht, da jede Verzweigung einen eigenen Return-Wert hat
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`BGR-WMS-Abfragefehler: ${errorMessage}`);
