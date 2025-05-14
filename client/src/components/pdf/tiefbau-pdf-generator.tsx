@@ -203,49 +203,59 @@ const TiefbauPDFGenerator = ({
         pdf.addImage(imgData, 'JPEG', 14, mapY, imgWidth, imgHeight);
         
         // --- Streckeninformationen als Tabelle ---
-        const routeYPos = mapY + imgHeight + 10;
+        const routeYPos = mapY + imgHeight + 15; // Mehr Abstand nach der Karte
         pdf.setFontSize(14);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
-        // Streckeninformationen als einfache Textausgabe mit Rahmen
-        pdf.setFontSize(10);
-        pdf.setDrawColor(0);
-        pdf.setFillColor(240, 240, 240);
+        // Tabelle mit Streckeninformationen verbessert
+        const tableStartY = routeYPos + 8;
+        const rowHeight = 12; // Größere Zeilenhöhe für bessere Lesbarkeit
         
-        // Überschriftenzeile mit grauem Hintergrund
-        pdf.setFillColor(200, 200, 200);
-        pdf.rect(14, routeYPos + 5, 170, 10, 'F'); // Breitere und höhere Tabelle
+        // Überschriftenzeile mit dunklerer Hintergrundfarbe für besseren Kontrast
+        pdf.setFillColor(180, 180, 180);
+        pdf.setDrawColor(100, 100, 100);
+        pdf.rect(14, tableStartY, 180, rowHeight, 'FD'); // Breitere und höhere Tabelle mit Rand
+        
         pdf.setTextColor(0);
         pdf.setFontSize(10);
-        pdf.text("Eigenschaft", 17, routeYPos + 11);
-        pdf.text("Wert", 60, routeYPos + 11);
+        pdf.text("Eigenschaft", 20, tableStartY + 8);
+        pdf.text("Wert", 80, tableStartY + 8);
         
-        // Zeilen mit Routeninformationen
-        const startY = routeYPos + 13;
-        const rowHeight = 10; // Erhöhte Zeilenhöhe für mehr Platz
+        // Zeilen für Routeninformationen
+        const dataStartY = tableStartY + rowHeight;
         
-        // Funktion zum Zeichnen einer Zeile
+        // Hilfsfunktion zum Einfügen der Zeilen mit verbesserter Formatierung
         const addRow = (index: number, label: string, value: string) => {
-          const y = startY + (index * rowHeight);
+          const y = dataStartY + (index * rowHeight);
           
           // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
           if (index % 2 === 0) {
-            pdf.setFillColor(245, 245, 245);
-            pdf.rect(14, y, 170, rowHeight, 'F'); // Breitere Zeilen
+            pdf.setFillColor(240, 240, 240);
+          } else {
+            pdf.setFillColor(255, 255, 255);
           }
           
-          pdf.text(label, 17, y + 5);
-          pdf.text(value, 60, y + 5);
+          // Jede Zeile mit Hintergrund und Rahmen zeichnen
+          pdf.rect(14, y, 180, rowHeight, 'FD');
+          
+          // Text in die Zelle einfügen
+          pdf.setTextColor(0);
+          pdf.text(label, 20, y + 8);
+          
+          // Werte mit möglichem Umbruch
+          const valueText = value ? value : "Nicht verfügbar";
+          pdf.text(valueText, 80, y + 8);
         };
         
-        // Daten einfügen
-        addRow(0, "Start", routeData.start);
-        addRow(1, "Ziel", routeData.end);
-        addRow(2, "Distanz", `${routeData.distance.toFixed(2)} km`);
+        // Daten für die Tabelle einfügen (mit Fallback für nicht definierte Werte)
+        addRow(0, "Start", routeData.start || "Nicht definiert");
+        addRow(1, "Ziel", routeData.end || "Nicht definiert");
+        addRow(2, "Distanz", routeData.distance ? `${routeData.distance.toFixed(2)} km` : "Nicht berechnet");
         
-        // Rahmen um die Tabelle zeichnen
-        pdf.setDrawColor(0);
-        pdf.rect(14, routeYPos + 5, 170, 8 + (3 * rowHeight), 'D');
+        // Äußerer Rahmen für besseres Aussehen
+        pdf.setDrawColor(100, 100, 100);
+        pdf.setLineWidth(0.5);
+        pdf.rect(14, tableStartY, 180, rowHeight + (3 * rowHeight), 'D');
         
         // Streckendaten wurden eingefügt
         
@@ -255,13 +265,17 @@ const TiefbauPDFGenerator = ({
         // --- Bemerkungen zum Tiefbau-Projekt ---
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
           // Keine separate Seite mehr, da Bodenanalyse und Maschinenempfehlungen entfernt wurden
-          // Berechne den verfügbaren Platz auf der aktuellen Seite
-          const availableSpace = pageHeight - (routeYPos + 60);
-          const neededSpace = 80; // Geschätzter Platzbedarf für Überschrift und mindestens ein paar Zeilen Text
+          // Berechne Position nach der Strecken-Tabelle (die bereits gezeichnet wurde)
+          // Tabellenhöhe = Kopfzeile (12px) + 3 Zeilen mit Daten (je 12px) + Abstand (30px)
+          const routeTableHeight = 12 + (3 * 12); // 48px Gesamthöhe der Tabelle
+          
+          // Prüfe, ob genug Platz für Bemerkungen auf der Seite ist
+          const availableSpace = pageHeight - (routeYPos + routeTableHeight + 30); // Platz nach der Tabelle
+          const minSpaceNeeded = 100; // Mindestens 100px für Bemerkungen und evtl. Bilder
           
           // Entscheide, ob eine neue Seite erforderlich ist
           let newPage = false;
-          if (availableSpace < neededSpace) {
+          if (availableSpace < minSpaceNeeded) {
             pdf.addPage();
             newPage = true;
           }
@@ -269,7 +283,7 @@ const TiefbauPDFGenerator = ({
           pdf.setFontSize(14);
           
           // Position der Überschrift basierend auf vorheriger Inhalte und Seitenumbruch anpassen
-          const remarksStartY = newPage ? 20 : routeYPos + 60; // Bei neuer Seite oben beginnen, sonst nach Routeninformationen
+          const remarksStartY = newPage ? 20 : routeYPos + routeTableHeight + 30; // Bei neuer Seite oben beginnen, sonst nach Routeninformationen mit Abstand
           pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
           
           let yPos = remarksStartY + 10;
@@ -278,73 +292,87 @@ const TiefbauPDFGenerator = ({
           if (remarks && remarks.trim()) {
             pdf.setFontSize(10);
             
-            // Beschreibung
+            // Beschreibung mit verbesserter Formatierung
             const remarkLines = pdf.splitTextToSize(remarks, 180); // Text umbrechen, damit er auf die Seite passt
-            pdf.setDrawColor(0);
-            pdf.setFillColor(245, 245, 245);
-            pdf.rect(14, yPos, 180, 10 + (remarkLines.length * 5), 'F');
-            pdf.setTextColor(0);
-            pdf.text(remarkLines, 17, yPos + 7);
             
-            yPos += 15 + (remarkLines.length * 5);
+            // Hintergrund für bessere Lesbarkeit
+            pdf.setDrawColor(100, 100, 100);
+            pdf.setFillColor(245, 245, 245);
+            const remarkBoxHeight = 10 + (remarkLines.length * 5);
+            pdf.rect(14, yPos, 180, remarkBoxHeight, 'FD');
+            
+            // Text mit etwas mehr Abstand zum Rand für bessere Lesbarkeit
+            pdf.setTextColor(0);
+            pdf.text(remarkLines, 17, yPos + 8);
+            
+            // Mehr Abstand nach dem Textblock
+            yPos += remarkBoxHeight + 10;
           }
           
           // Fotos hinzufügen, wenn vorhanden
           if (remarksPhotos && remarksPhotos.length > 0) {
+            // Überschrift für Fotos
             pdf.setFontSize(12);
+            pdf.setTextColor(0);
             pdf.text(`Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
             yPos += 10;
             
-            // Berechne maximal mögliche Bildbreite für die Anordnung
-            const maxImgWidth = 85; // Etwas größere Bilder für bessere Qualität
+            // Verbesserte Bildlayout-Einstellungen
+            const maxImgWidth = 85; // Breite für Bilder
             const margin = 14; // Seitenrand
             const gap = 10; // Abstand zwischen Bildern
-            const imagesPerRow = 2; // Bilder pro Zeile
-            const imgHeight = 65; // Feste Bildhöhe für konsistente Darstellung
+            const imagesPerRow = 2; // 2 Bilder pro Zeile
+            const imgHeight = 65; // Feste Bildhöhe
             
             // Verarbeite jedes Foto
             for (let i = 0; i < remarksPhotos.length; i++) {
-              // Berechnung der Zeilen- und Spaltenposition
-              const rowIndex = Math.floor(i / imagesPerRow) % 2; // Max 2 Zeilen pro Seite
-              const colIndex = i % imagesPerRow;
-              
-              const x = margin + (colIndex * (maxImgWidth + gap));
-              const y = yPos + (rowIndex * (imgHeight + 10)); // Mehr Abstand zwischen Reihen
-              
-              try {
-                // Beim Hinzufügen des Bildes müssen wir die Base64-Daten extrahieren
-                const img = remarksPhotos[i].preview;
-                // Entferne den MIME-Typ und das Base64-Präfix, wenn vorhanden
-                const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img;
-                
-                // Füge das Bild zum PDF hinzu
-                pdf.addImage(base64Data, 'JPEG', x, y, maxImgWidth, imgHeight);
-                
-                // Einen Rahmen um das Bild zeichnen
-                pdf.setDrawColor(100, 100, 100);
-                pdf.rect(x, y, maxImgWidth, imgHeight, 'D');
-                
-                // Optionaler Bildindex am unteren Rand
-                pdf.setFontSize(8);
-                pdf.setTextColor(100, 100, 100);
-                pdf.text(`Foto ${i + 1}`, x + 2, y + imgHeight + 5);
-              } catch (error) {
-                // Wenn das Bild nicht geladen werden kann, setze einen Platzhaltertext
-                pdf.setFillColor(240, 240, 240);
-                pdf.rect(x, y, maxImgWidth, imgHeight, 'F');
-                pdf.setTextColor(100, 100, 100);
-                pdf.setFontSize(10);
-                pdf.text('Bild konnte nicht geladen werden', x + 10, y + 30);
-                console.error('Fehler beim Laden des Bildes:', error);
-              }
-              
-              // Füge eine neue Seite hinzu, wenn wir eine volle Seite haben (4 Bilder) und noch mehr kommen
-              if ((i + 1) % 4 === 0 && i < remarksPhotos.length - 1) {
+              // Bei mehr als 2 Bildern pro Seite, füge eine neue Seite hinzu
+              if (i > 0 && i % 2 === 0) {
                 pdf.addPage();
                 yPos = 20;
                 pdf.setFontSize(12);
                 pdf.text(`Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
                 yPos += 10;
+              }
+              
+              // Berechne Position für dieses Bild
+              const colIndex = i % imagesPerRow;
+              const x = margin + (colIndex * (maxImgWidth + gap));
+              const currentY = yPos + (colIndex === 0 ? 0 : 0); // Beide Bilder auf gleicher Höhe
+              
+              try {
+                // Extrahiere Base64-Daten
+                const img = remarksPhotos[i].preview;
+                const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img;
+                
+                // Füge das Bild mit hoher Qualität zum PDF hinzu
+                pdf.addImage(base64Data, 'JPEG', x, currentY, maxImgWidth, imgHeight);
+                
+                // Deutlich sichtbarer Rahmen um das Bild
+                pdf.setDrawColor(80, 80, 80);
+                pdf.setLineWidth(0.7);
+                pdf.rect(x, currentY, maxImgWidth, imgHeight, 'D');
+                
+                // Bildnummer als Beschriftung
+                pdf.setFillColor(240, 240, 240);
+                pdf.rect(x, currentY + imgHeight, maxImgWidth, 8, 'F');
+                pdf.setFontSize(8);
+                pdf.setTextColor(0);
+                pdf.text(`Foto ${i + 1}`, x + 2, currentY + imgHeight + 6);
+                
+              } catch (error) {
+                // Fehler-Fallback mit deutlicher Markierung
+                pdf.setFillColor(240, 240, 240);
+                pdf.rect(x, currentY, maxImgWidth, imgHeight, 'F');
+                pdf.setTextColor(200, 0, 0); // Rot für Fehler
+                pdf.setFontSize(10);
+                pdf.text('Bild konnte nicht geladen werden', x + 10, currentY + 30);
+                console.error('Fehler beim Laden des Bildes:', error);
+              }
+              
+              // Nur die Y-Position erhöhen, wenn wir eine komplette Reihe haben oder beim letzten Bild
+              if (colIndex === imagesPerRow - 1 || i === remarksPhotos.length - 1) {
+                yPos += imgHeight + 15; // Erhöhe den Y-Wert für die nächste Zeile
               }
             }
           }
