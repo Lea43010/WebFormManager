@@ -278,8 +278,9 @@ const TiefbauPDFGenerator = ({
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
           // Keine separate Seite mehr, da Bodenanalyse und Maschinenempfehlungen entfernt wurden
           // Berechne Position nach der Strecken-Tabelle (die bereits gezeichnet wurde)
-          // Tabellenhöhe = Kopfzeile (12px) + 3 Zeilen mit Daten (je 12px) + Abstand (30px)
-          const routeTableHeight = 12 + (3 * 12); // 48px Gesamthöhe der Tabelle
+          // Tabellenhöhe = Kopfzeile (15px) + 3 Zeilen mit Daten (je 15px) + Abstand (30px)
+          // Diese Werte entsprechen der rowHeight-Variable in der Tabellendarstellung
+          const routeTableHeight = tableHeight + 10; // Gesamthöhe der Tabelle plus Abstand
           
           // Prüfe, ob genug Platz für Bemerkungen auf der Seite ist
           const availableSpace = pageHeight - (routeYPos + routeTableHeight + 30); // Platz nach der Tabelle
