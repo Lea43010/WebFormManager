@@ -8,7 +8,11 @@ import {
   Map,
   Shovel,
   FileDown,
-  ExternalLink
+  ExternalLink,
+  Camera, 
+  Mic,
+  MicOff,
+  Paperclip
 } from 'lucide-react';
 import TiefbauPDFGenerator from '@/components/pdf/tiefbau-pdf-generator';
 import { Button } from "@/components/ui/button";
@@ -19,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 // Vereinfachter DOM-basierter Google Maps-Komponente
 import BasicGoogleMap from '@/components/maps/basic-google-map';
@@ -89,6 +94,19 @@ const TiefbauMap: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   
+  // States für Bemerkungsfeld mit Sprach- und Fotofunktion
+  const [remarks, setRemarks] = useState<string>('');
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [recordedText, setRecordedText] = useState<string>('');
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
+  
+  // Referenz für Dateiauswahl
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Referenz für die Spracherkennung
+  const recognitionRef = useRef<any>(null);
+  
   // Loading-State wurde bereits oben definiert
   // const [loading, setLoading] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
@@ -158,6 +176,217 @@ const TiefbauMap: React.FC = () => {
       }
     }
   }, [selectedProject, projects, toast]);
+  
+  // Initialisierung der Spracherkennung
+  useEffect(() => {
+    // Überprüfen, ob die Web Speech API verfügbar ist
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      
+      // Konfiguration
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'de-DE';
+      
+      // Event-Handler
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            setRecordedText(prev => prev + transcript + ' ');
+            setRemarks(prev => prev + transcript + ' ');
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Spracherkennungsfehler:", event.error);
+        setIsRecording(false);
+        toast({
+          title: "Spracherkennungsfehler",
+          description: `Fehler bei der Spracherkennung: ${event.error}`,
+          variant: "destructive"
+        });
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+    
+    return () => {
+      // Aufräumen
+      if (recognitionRef.current) {
+        if (isRecording) {
+          try {
+            recognitionRef.current.stop();
+          } catch (error) {
+            console.error('Fehler beim Stoppen der Spracherkennung:', error);
+          }
+        }
+      }
+    };
+  }, [isRecording, toast]);
+  
+  // Funktion zum Starten der Spracherkennung
+  const startSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+        toast({
+          title: "Spracherkennung aktiv",
+          description: "Bitte sprechen Sie jetzt...",
+        });
+      } catch (error) {
+        console.error('Fehler beim Starten der Spracherkennung:', error);
+        toast({
+          title: "Fehler",
+          description: "Die Spracherkennung konnte nicht gestartet werden",
+          variant: "destructive"
+        });
+      }
+    } else {
+      toast({
+        title: "Nicht unterstützt",
+        description: "Spracherkennung wird in diesem Browser nicht unterstützt",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Funktion zum Stoppen der Spracherkennung
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current && isRecording) {
+      try {
+        recognitionRef.current.stop();
+        setIsRecording(false);
+        toast({
+          title: "Spracherkennung beendet",
+          description: "Der Text wurde in das Bemerkungsfeld übernommen",
+        });
+      } catch (error) {
+        console.error('Fehler beim Stoppen der Spracherkennung:', error);
+      }
+    }
+  };
+  
+  // Funktion zum Hochladen eines Fotos
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      Array.from(event.target.files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const preview = e.target?.result as string;
+            setPhotos(prev => [...prev, { file, preview }]);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  };
+  
+  // Funktion zum Entfernen eines Fotos
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Funktion zum Speichern der Bemerkungen mit Fotos
+  const saveRemarks = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "Projekt erforderlich",
+        description: "Bitte wählen Sie ein Projekt aus, bevor Sie Bemerkungen speichern.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!remarks.trim() && photos.length === 0) {
+      toast({
+        title: "Keine Daten",
+        description: "Bitte geben Sie Bemerkungen ein oder fügen Sie Fotos hinzu.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setUploading(true);
+    
+    try {
+      // Fotos in der Dokumentenverwaltung speichern
+      const uploadedPhotos = [];
+      
+      for (const photo of photos) {
+        const formData = new FormData();
+        formData.append('file', photo.file);
+        formData.append('projectId', selectedProject.toString());
+        formData.append('fileType', 'IMAGE');
+        formData.append('fileCategory', 'TIEFBAU');
+        formData.append('description', `Foto zur Tiefbau-Bemerkung: ${remarks.substring(0, 50)}${remarks.length > 50 ? '...' : ''}`);
+        
+        const response = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          uploadedPhotos.push(data);
+        } else {
+          throw new Error(`Fehler beim Hochladen des Fotos: ${response.statusText}`);
+        }
+      }
+      
+      // Bemerkungen mit Referenzen zu den Fotos speichern
+      const remarkData = {
+        projectId: selectedProject,
+        text: remarks,
+        photoIds: uploadedPhotos.map(photo => photo.id),
+        coordinates: routeCoordinates.length > 0 ? {
+          lat: routeCoordinates[0].lat,
+          lng: routeCoordinates[0].lng
+        } : null
+      };
+      
+      // Bemerkungen speichern - API-Endpunkt muss noch implementiert werden
+      const response = await fetch('/api/tiefbau/remarks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(remarkData),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Gespeichert",
+          description: "Bemerkungen und Fotos wurden erfolgreich gespeichert.",
+        });
+        
+        // Zurücksetzen der Formulardaten
+        setRemarks('');
+        setRecordedText('');
+        setPhotos([]);
+      } else {
+        throw new Error(`Fehler beim Speichern der Bemerkungen: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Fehler beim Speichern:", error);
+      toast({
+        title: "Fehler",
+        description: error instanceof Error ? error.message : "Ein unbekannter Fehler ist aufgetreten",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
   
   // Lade Bodenarten beim ersten Laden
   useEffect(() => {
@@ -522,6 +751,15 @@ const TiefbauMap: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
+      {/* Verstecktes Input-Element für Fotouploads */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        accept="image/*"
+        multiple
+        onChange={handlePhotoUpload}
+        className="hidden"
+      />
       <div className="flex flex-col md:flex-row md:items-center mb-6">
         <div className="flex items-center mb-4 md:mb-0 md:mr-6">
           <Button variant="ghost" size="sm" asChild className="mr-2">
@@ -533,47 +771,51 @@ const TiefbauMap: React.FC = () => {
           <h1 className="text-2xl font-bold">Tiefbau-Streckenplanung</h1>
         </div>
         
-        {/* Projekt-Auswahl */}
+        {/* Projekt-Auswahl als Pflichtfeld */}
         <div className="flex-grow md:max-w-xs">
-          <Select 
-            value={selectedProject?.toString() || "0"} 
-            onValueChange={(value) => {
-              const projectId = parseInt(value);
-              setSelectedProject(projectId === 0 ? null : projectId);
-            }}
-            disabled={isLoadingProjects}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Projekt auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingProjects ? (
-                <div className="p-2 text-center">Projekte werden geladen...</div>
-              ) : (
-                <>
-                  <SelectItem value="0">Keine Auswahl</SelectItem>
-                  {projects.map((project) => {
-                    // Debug-Ausgabe für jedes Projekt
-                    console.log('Projekt-Details:', project.id, 
-                                'Name:', project.projectName,
-                                'Cluster:', project.projectCluster,
-                                'Art:', project.projectArt);
-                    
-                    // Expliziter Name für die Anzeige konstruieren
-                    const displayName = project.projectName 
-                      ? `${project.projectName} (${project.projectArt || 'Projekt'})`
-                      : `Projekt ${project.id}`;
-                    
-                    return (
-                      <SelectItem key={project.id} value={project.id.toString()}>
-                        {displayName}
-                      </SelectItem>
-                    );
-                  })}
-                </>
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-1">
+              <Label htmlFor="project-select" className="text-sm font-medium">
+                Projekt auswählen <span className="text-red-500">*</span>
+              </Label>
+              {!selectedProject && (
+                <span className="text-red-500 text-xs">Pflichtfeld</span>
               )}
-            </SelectContent>
-          </Select>
+            </div>
+            <Select 
+              value={selectedProject?.toString() || "0"} 
+              onValueChange={(value) => {
+                const projectId = parseInt(value);
+                setSelectedProject(projectId === 0 ? null : projectId);
+              }}
+              disabled={isLoadingProjects}
+            >
+              <SelectTrigger id="project-select" className={!selectedProject ? "border-red-300 focus:ring-red-500" : ""}>
+                <SelectValue placeholder="Projekt auswählen" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingProjects ? (
+                  <div className="p-2 text-center">Projekte werden geladen...</div>
+                ) : (
+                  <>
+                    <SelectItem value="0" disabled>Bitte auswählen</SelectItem>
+                    {projects.map((project) => {
+                      // Expliziter Name für die Anzeige konstruieren
+                      const displayName = project.projectName 
+                        ? `${project.projectName} (${project.projectArt || 'Projekt'})`
+                        : `Projekt ${project.id}`;
+                      
+                      return (
+                        <SelectItem key={project.id} value={project.id.toString()}>
+                          {displayName}
+                        </SelectItem>
+                      );
+                    })}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       
@@ -678,6 +920,112 @@ const TiefbauMap: React.FC = () => {
               </div>
               
 
+            </CardContent>
+          </Card>
+          
+          {/* Neue Bemerkungsfeld-Karte mit Sprach- und Fotofunktion */}
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Paperclip className="h-5 w-5 mr-2" />
+                Bemerkungen zum Tiefbau-Projekt
+              </CardTitle>
+              <CardDescription>
+                Erfassen Sie Bemerkungen, Fotos und Sprachnotizen zu diesem Tiefbau-Projekt
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Textfeld für Bemerkungen */}
+                <div className="space-y-2">
+                  <Label htmlFor="remarks" className="text-sm font-medium">
+                    Beschreibung oder Anmerkungen
+                  </Label>
+                  <Textarea
+                    id="remarks"
+                    placeholder="Geben Sie hier Ihre Bemerkungen zum Tiefbau-Projekt ein..."
+                    className="min-h-[120px] resize-y"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                  />
+                </div>
+                
+                {/* Aktionsbuttons für Sprach- und Fotofunktion */}
+                <div className="flex flex-wrap gap-2">
+                  {/* Spracherkennungsbutton */}
+                  {isRecording ? (
+                    <Button 
+                      variant="destructive" 
+                      onClick={stopSpeechRecognition}
+                      className="flex items-center"
+                    >
+                      <MicOff className="h-4 w-4 mr-2" />
+                      Spracherkennung beenden
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={startSpeechRecognition}
+                      className="flex items-center"
+                    >
+                      <Mic className="h-4 w-4 mr-2" />
+                      Spracheingabe starten
+                    </Button>
+                  )}
+                  
+                  {/* Fotoupload-Button */}
+                  <Button 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Fotos hinzufügen
+                  </Button>
+                  
+                  {/* Speichern-Button */}
+                  <Button
+                    onClick={saveRemarks}
+                    disabled={uploading || (!remarks.trim() && photos.length === 0) || !selectedProject}
+                    className="ml-auto"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {uploading ? 'Wird gespeichert...' : 'Bemerkungen speichern'}
+                  </Button>
+                </div>
+                
+                {/* Anzeige hochgeladener Fotos */}
+                {photos.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Hochgeladene Fotos ({photos.length})</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {photos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={photo.preview} 
+                            alt={`Foto ${index + 1}`} 
+                            className="h-24 w-full object-cover rounded-md border border-border"
+                          />
+                          <button 
+                            onClick={() => removePhoto(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Foto entfernen"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Abhängigkeit vom Projekt-Auswahlfeld anzeigen, wenn kein Projekt ausgewählt ist */}
+                {!selectedProject && (
+                  <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+                    <strong>Hinweis:</strong> Sie müssen ein Projekt auswählen, bevor Sie Bemerkungen speichern können.
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
