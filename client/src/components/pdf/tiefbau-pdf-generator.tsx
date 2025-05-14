@@ -202,72 +202,51 @@ const TiefbauPDFGenerator = ({
         
         pdf.addImage(imgData, 'JPEG', 14, mapY, imgWidth, imgHeight);
         
-        // --- Streckeninformationen als Tabelle mit verbessertem Layout ---
-        // Mehr Abstand nach der Karte für bessere Übersichtlichkeit
-        const routeYPos = mapY + imgHeight + 20;
-        pdf.setFontSize(14);
+        // --- Streckeninformationen als separate Auflistung statt komplexer Tabelle ---
+        // Mehr Abstand nach der Karte
+        const routeYPos = mapY + imgHeight + 25;
+        
+        // Überschrift
+        pdf.setFontSize(16);
+        pdf.setTextColor(0);
         pdf.text('Streckeninformationen', 14, routeYPos);
         
-        // Feste Abstände und größere Zeilenhöhe für bessere Lesbarkeit
-        const tableStartY = routeYPos + 10;
-        const rowHeight = 15; // Deutlich höhere Zeilen
+        // Einfache Textzeilen mit Styling statt komplexer Tabelle
+        const lineHeight = 8;
+        const startTextY = routeYPos + 15;
         
-        // Stärker strukturierte Tabelle mit klaren Linien
-        // Tabellenkopf mit dunklerem Hintergrund für besseren Kontrast
-        pdf.setFillColor(150, 150, 150);
-        pdf.setDrawColor(50, 50, 50);
-        pdf.setLineWidth(0.7);
-        pdf.rect(14, tableStartY, 180, rowHeight, 'FD');
+        // Gesamten Bereich mit leichtem Hintergrund und Rahmen für bessere Lesbarkeit
+        const boxHeight = lineHeight * 6;
+        pdf.setFillColor(245, 245, 245);
+        pdf.setDrawColor(100, 100, 100);
+        pdf.setLineWidth(0.5);
+        // Box zuerst zeichnen
+        pdf.rect(12, routeYPos + 5, 184, boxHeight, 'FD');
         
-        // Tabellenkopf-Text
+        // Dann Text über die Box zeichnen
         pdf.setTextColor(0);
-        pdf.setFontSize(11);
+        pdf.setFontSize(12);
+        
+        // Start-Informationen
         pdf.setFont('helvetica', 'bold');
-        pdf.text("Eigenschaft", 20, tableStartY + 10);
-        pdf.text("Wert", 80, tableStartY + 10);
-        
-        // Tabellendaten
-        const dataStartY = tableStartY + rowHeight;
+        pdf.text('Start:', 14, startTextY);
         pdf.setFont('helvetica', 'normal');
+        pdf.text(routeData.start || 'Nicht definiert', 40, startTextY);
         
-        // Hilfsfunktion zum strukturierten Einfügen der Datenzeilen
-        const addRow = (index: number, label: string, value: string) => {
-          const y = dataStartY + (index * rowHeight);
-          
-          // Abwechselnde Zeilenhintergründe für bessere Lesbarkeit
-          if (index % 2 === 0) {
-            pdf.setFillColor(230, 230, 230);
-          } else {
-            pdf.setFillColor(245, 245, 245);
-          }
-          
-          // Jede Zeile mit Hintergrund und Rahmen zeichnen
-          pdf.rect(14, y, 180, rowHeight, 'FD');
-          
-          // Zeilentrenner für bessere Übersicht
-          pdf.setDrawColor(150, 150, 150);
-          pdf.setLineWidth(0.3);
-          pdf.line(14, y, 194, y);
-          
-          // Text in die Zelle einfügen
-          pdf.setTextColor(0);
-          pdf.text(label, 20, y + 10);
-          
-          // Werte mit Fallback für leere Daten
-          const valueText = value ? value : "Nicht verfügbar";
-          pdf.text(valueText, 80, y + 10);
-        };
+        // Ziel-Informationen
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Ziel:', 14, startTextY + lineHeight * 2);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(routeData.end || 'Nicht definiert', 40, startTextY + lineHeight * 2);
         
-        // Daten für die Tabelle einfügen
-        addRow(0, "Start", routeData.start || "Nicht definiert");
-        addRow(1, "Ziel", routeData.end || "Nicht definiert");
-        addRow(2, "Distanz", routeData.distance ? `${routeData.distance.toFixed(2)} km` : "Nicht berechnet");
+        // Distanz-Informationen
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Distanz:', 14, startTextY + lineHeight * 4);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(routeData.distance ? `${routeData.distance.toFixed(2)} km` : 'Nicht berechnet', 40, startTextY + lineHeight * 4);
         
-        // Stärkerer Rahmen um die gesamte Tabelle
-        pdf.setDrawColor(50, 50, 50);
-        pdf.setLineWidth(0.7);
-        const tableHeight = rowHeight + (3 * rowHeight);
-        pdf.rect(14, tableStartY, 180, tableHeight, 'D');
+        // Variable für die Berechnung der Gesamthöhe des Streckeninfos-Abschnitts
+        const tableHeight = boxHeight + 20;
         
         // Streckendaten wurden eingefügt
         
@@ -276,15 +255,15 @@ const TiefbauPDFGenerator = ({
         
         // --- Bemerkungen zum Tiefbau-Projekt ---
         if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
-          // Keine separate Seite mehr, da Bodenanalyse und Maschinenempfehlungen entfernt wurden
-          // Berechne Position nach der Strecken-Tabelle (die bereits gezeichnet wurde)
-          // Tabellenhöhe = Kopfzeile (15px) + 3 Zeilen mit Daten (je 15px) + Abstand (30px)
-          // Diese Werte entsprechen der rowHeight-Variable in der Tabellendarstellung
-          const routeTableHeight = tableHeight + 10; // Gesamthöhe der Tabelle plus Abstand
+          // Keine separate Seite mehr, da Bodenanalyse, Maschinenempfehlungen und QR-Code entfernt wurden
+          
+          // Berechne die Position nach dem Streckeninformationen-Abschnitt
+          // Wir benutzen die boxHeight-Variable plus Abstand
+          const totalStreckenhöhe = routeYPos + boxHeight + 20; // Gesamthöhe des Streckenbereichs plus Abstand
           
           // Prüfe, ob genug Platz für Bemerkungen auf der Seite ist
-          const availableSpace = pageHeight - (routeYPos + routeTableHeight + 30); // Platz nach der Tabelle
-          const minSpaceNeeded = 100; // Mindestens 100px für Bemerkungen und evtl. Bilder
+          const availableSpace = pageHeight - totalStreckenhöhe; // Verfügbarer Platz nach Streckeninfos
+          const minSpaceNeeded = 80; // Mindestens 80px für Bemerkungen-Überschrift und evtl. kurzen Text
           
           // Entscheide, ob eine neue Seite erforderlich ist
           let newPage = false;
@@ -293,33 +272,40 @@ const TiefbauPDFGenerator = ({
             newPage = true;
           }
           
-          pdf.setFontSize(14);
+          // Überschrift für den Bemerkungs-Abschnitt
+          pdf.setFontSize(16);
+          pdf.setTextColor(0);
           
-          // Position der Überschrift basierend auf vorheriger Inhalte und Seitenumbruch anpassen
-          const remarksStartY = newPage ? 20 : routeYPos + routeTableHeight + 30; // Bei neuer Seite oben beginnen, sonst nach Routeninformationen mit Abstand
+          // Position der Überschrift anpassen
+          const remarksStartY = newPage ? 20 : totalStreckenhöhe; // Bei neuer Seite oben beginnen
           pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
           
           let yPos = remarksStartY + 10;
           
           // Textliche Bemerkungen hinzufügen, wenn vorhanden
           if (remarks && remarks.trim()) {
-            pdf.setFontSize(10);
+            // Größere Schrift und mehr Abstand für bessere Lesbarkeit
+            pdf.setFontSize(11);
             
-            // Beschreibung mit verbesserter Formatierung
-            const remarkLines = pdf.splitTextToSize(remarks, 180); // Text umbrechen, damit er auf die Seite passt
+            // Text mit Umbruch vorbereiten, damit er auf die Seite passt
+            const remarkLines = pdf.splitTextToSize(remarks, 180);
             
-            // Hintergrund für bessere Lesbarkeit
-            pdf.setDrawColor(100, 100, 100);
-            pdf.setFillColor(245, 245, 245);
-            const remarkBoxHeight = 10 + (remarkLines.length * 5);
-            pdf.rect(14, yPos, 180, remarkBoxHeight, 'FD');
+            // Berechne Höhe des Textfeldes basierend auf Zeilenanzahl (plus Padding)
+            const lineSpacing = 6; // Raum pro Zeile
+            const remarkBoxHeight = 16 + (remarkLines.length * lineSpacing);
             
-            // Text mit etwas mehr Abstand zum Rand für bessere Lesbarkeit
+            // Hintergrund-Box mit Rahmen für bessere Lesbarkeit
+            pdf.setDrawColor(120, 120, 120);
+            pdf.setFillColor(250, 250, 250);
+            pdf.setLineWidth(0.3);
+            pdf.roundedRect(14, yPos, 180, remarkBoxHeight, 3, 3, 'FD'); // Abgerundete Ecken
+            
+            // Text mit Abstand zum Rand platzieren
             pdf.setTextColor(0);
-            pdf.text(remarkLines, 17, yPos + 8);
+            pdf.text(remarkLines, 18, yPos + 10);
             
-            // Mehr Abstand nach dem Textblock
-            yPos += remarkBoxHeight + 10;
+            // Position für nachfolgende Elemente aktualisieren
+            yPos += remarkBoxHeight + 15;
           }
           
           // Fotos hinzufügen, wenn vorhanden
