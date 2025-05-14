@@ -124,7 +124,7 @@ const TiefbauPDFGenerator = ({
         pdf.setFontSize(15);
         pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
         pdf.setFont("helvetica", "bold");
-        pdf.text('📋 Projektdetails', 14, startY);
+        pdf.text('Projektdetails', 14, startY);
         
         // Weniger Abstand zwischen Überschrift und Box
         const contentStartY = startY + 6;
@@ -227,7 +227,7 @@ const TiefbauPDFGenerator = ({
         pdf.setFontSize(15);
         pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
         pdf.setFont("helvetica", "bold");
-        pdf.text('🗺️ Streckenübersicht', 14, mapTitleY);
+        pdf.text('Streckenübersicht', 14, mapTitleY);
         
         // Kurzer Untertitel für die Karte
         pdf.setFontSize(11);
@@ -266,7 +266,7 @@ const TiefbauPDFGenerator = ({
         pdf.setFontSize(18);
         pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
         pdf.setFont("helvetica", "bold");
-        pdf.text('🛣️ Streckeninformationen', 14, 30);
+        pdf.text('Streckeninformationen', 14, 30);
 
         // 📌 Untertitel oder kurze Infozeile
         pdf.setFontSize(11);
@@ -367,7 +367,7 @@ const TiefbauPDFGenerator = ({
           pdf.setFontSize(18);
           pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
           pdf.setFont("helvetica", "bold");
-          pdf.text('📝 Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
+          pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, remarksStartY);
           
           // 📌 Untertitel oder kurze Infozeile
           pdf.setFontSize(11);
@@ -409,7 +409,7 @@ const TiefbauPDFGenerator = ({
             pdf.setFontSize(15);
             pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
             pdf.setFont("helvetica", "bold");
-            pdf.text(`📸 Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
+            pdf.text(`Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
             
             // Kurzer Untertitel für die Fotos mit Anzahl
             pdf.setFontSize(11);
@@ -455,7 +455,7 @@ const TiefbauPDFGenerator = ({
                 pdf.setFontSize(15);
                 pdf.setTextColor(0, 51, 102);
                 pdf.setFont("helvetica", "bold");
-                pdf.text(`📸 Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
+                pdf.text(`Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
                 
                 // Untertitel mit Seiteninfo für die Fortsetzung
                 pdf.setFontSize(11);
