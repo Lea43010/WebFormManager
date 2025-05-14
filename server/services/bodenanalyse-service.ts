@@ -67,8 +67,9 @@ function extractSoilData(featureData: any): any {
       bodengesellschaft,
       substratsystematik,
     };
-  } catch (error) {
-    logger.error(`Fehler beim Extrahieren der Bodendaten: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler beim Extrahieren der Bodendaten: ${errorMessage}`);
     return { 
       error: true,
       message: 'Fehler beim Extrahieren der Bodendaten'
@@ -125,12 +126,13 @@ export async function queryBGRWfs(lat: number, lng: number): Promise<any> {
       success: !soilData.error,
       data: soilData
     };
-  } catch (error) {
-    logger.error(`BGR-WFS-Abfragefehler: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`BGR-WFS-Abfragefehler: ${errorMessage}`);
     return {
       coordinates: { lat, lng },
       success: false,
-      error: error.message,
+      error: errorMessage,
       message: 'Fehler bei der BGR-WFS-Abfrage'
     };
   }
@@ -159,8 +161,9 @@ export async function queryBGRWfsPoints(points: Array<{lat: number, lng: number}
     }
     
     return results;
-  } catch (error) {
-    logger.error(`BGR-WFS-Batch-Abfragefehler: ${error.message}`);
-    throw new Error(`Fehler bei der Batch-Verarbeitung: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`BGR-WFS-Batch-Abfragefehler: ${errorMessage}`);
+    throw new Error(`Fehler bei der Batch-Verarbeitung: ${errorMessage}`);
   }
 }
