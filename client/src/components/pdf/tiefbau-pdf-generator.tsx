@@ -248,7 +248,75 @@ const TiefbauPDFGenerator = ({
           maschinenEndY = maschinenYPos + 15;
         }
         
-        // Höhenprofil-Funktion wurde entfernt
+        // --- Bemerkungen zum Tiefbau-Projekt ---
+        if (remarks || (remarksPhotos && remarksPhotos.length > 0)) {
+          // Neue Seite für Bemerkungen und Fotos
+          pdf.addPage();
+          pdf.setFontSize(14);
+          pdf.text('Bemerkungen zum Tiefbau-Projekt', 14, 20);
+          
+          let yPos = 30;
+          
+          // Textliche Bemerkungen hinzufügen, wenn vorhanden
+          if (remarks && remarks.trim()) {
+            pdf.setFontSize(10);
+            
+            // Beschreibung
+            const remarkLines = pdf.splitTextToSize(remarks, 180); // Text umbrechen, damit er auf die Seite passt
+            pdf.setDrawColor(0);
+            pdf.setFillColor(245, 245, 245);
+            pdf.rect(14, yPos, 180, 10 + (remarkLines.length * 5), 'F');
+            pdf.setTextColor(0);
+            pdf.text(remarkLines, 17, yPos + 7);
+            
+            yPos += 15 + (remarkLines.length * 5);
+          }
+          
+          // Fotos hinzufügen, wenn vorhanden
+          if (remarksPhotos && remarksPhotos.length > 0) {
+            pdf.setFontSize(12);
+            pdf.text(`Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
+            yPos += 10;
+            
+            // Berechne maximal mögliche Bildbreite für die Anordnung
+            const maxImgWidth = 80; // Maximale Bildbreite
+            const margin = 14; // Seitenrand
+            const gap = 10; // Abstand zwischen Bildern
+            const imagesPerRow = 2; // Bilder pro Zeile
+            
+            // Verarbeite jedes Foto
+            for (let i = 0; i < remarksPhotos.length; i++) {
+              const rowIndex = Math.floor(i / imagesPerRow);
+              const colIndex = i % imagesPerRow;
+              
+              const x = margin + (colIndex * (maxImgWidth + gap));
+              const y = yPos + (rowIndex * 70); // 70px Höhe pro Bildreihe
+              
+              try {
+                // Beim Hinzufügen des Bildes müssen wir die Base64-Daten extrahieren
+                const img = remarksPhotos[i].preview;
+                // Entferne den MIME-Typ und das Base64-Präfix, wenn vorhanden
+                const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img;
+                
+                pdf.addImage(base64Data, 'JPEG', x, y, maxImgWidth, 60);
+              } catch (error) {
+                // Wenn das Bild nicht geladen werden kann, setze einen Platzhaltertext
+                pdf.setFontSize(8);
+                pdf.text('Bild konnte nicht geladen werden', x, y + 30);
+                console.error('Fehler beim Laden des Bildes:', error);
+              }
+              
+              // Füge eine neue Seite hinzu, wenn wir mehr als 4 Bilder haben und gerade 4 gerendert haben
+              if ((i + 1) % 4 === 0 && i < remarksPhotos.length - 1) {
+                pdf.addPage();
+                yPos = 20;
+                pdf.setFontSize(12);
+                pdf.text(`Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
+                yPos += 10;
+              }
+            }
+          }
+        }
         
         // --- Fußzeile auf jeder Seite ---
         // Sichere Methode, um die Anzahl der Seiten zu erhalten

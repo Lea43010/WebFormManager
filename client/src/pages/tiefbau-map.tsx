@@ -914,6 +914,8 @@ const TiefbauMap: React.FC = () => {
                           kostenProStunde: m.kosten_pro_stunde
                         })) : null}
                       mapContainerId={mapContainerId}
+                      remarks={remarks}
+                      remarksPhotos={photos}
                     />
                   )}
                 </div>
