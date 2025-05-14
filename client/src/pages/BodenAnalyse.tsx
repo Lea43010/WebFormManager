@@ -510,8 +510,8 @@ const BodenAnalyse: React.FC = () => {
                               {result.coordinates.lat.toFixed(4)}, {result.coordinates.lng.toFixed(4)}
                             </TableCell>
                             <TableCell>
-                              {result.success && 'error' in result.data ? 
-                                '-' : (result.data as any).bodenart || 'Unbekannt'}
+                              {result.success && !('error' in result.data) && result.data && typeof result.data === 'object' ? 
+                                ((result.data as any).bodenart || 'Unbekannt') : '-'}
                             </TableCell>
                             <TableCell>
                               {result.success ? (

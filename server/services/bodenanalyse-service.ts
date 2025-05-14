@@ -39,28 +39,50 @@ function transformCoordinates(lat: number, lng: number): [number, number] {
  */
 function extractSoilDataFromWMS(wmsData: any): any {
   try {
-    // Prüfen, ob Features vorhanden sind
-    if (!wmsData || !wmsData.features || wmsData.features.length === 0) {
-      return { 
-        error: true,
-        message: 'Keine Bodendaten gefunden'
+    // Verbesserte Logging zur Fehlersuche
+    logger.debug(`WMS-Datenstruktur: ${typeof wmsData}`);
+    
+    // Verschiedene WMS-Formate überprüfen
+    
+    // Format 1: Standard-GetFeatureInfo mit features
+    if (wmsData && wmsData.features && Array.isArray(wmsData.features) && wmsData.features.length > 0) {
+      const feature = wmsData.features[0];
+      const properties = feature.properties || {};
+      
+      return {
+        bodenart: properties.BOART || properties.boart || properties.Bodenart || 'Unbekannt',
+        bodentyp: properties.BOTYP || properties.botyp || properties.Bodentyp || 'Unbekannt',
+        bodenregion: properties.REGION || properties.region || properties.Bodenregion || 'Unbekannt',
+        nutzung: properties.NUTZUNG || properties.nutzung || properties.Nutzung || 'Unbekannt',
+        zusatzInfos: properties
       };
     }
     
-    // Erstes Feature extrahieren
-    const feature = wmsData.features[0];
-    const properties = feature.properties || {};
+    // Format 2: Direktes Eigenschaften-Objekt
+    if (wmsData && typeof wmsData === 'object' && !Array.isArray(wmsData)) {
+      // Suche nach Bodenart-Schlüsseln im Antwortobjekt
+      const keys = Object.keys(wmsData);
+      for (const key of keys) {
+        if (key.toLowerCase().includes('boden') || key.toLowerCase().includes('boart')) {
+          logger.debug(`Gefundener Bodenart-Schlüssel: ${key}`);
+          return {
+            bodenart: wmsData[key] || 'Unbekannt',
+            zusatzInfos: wmsData
+          };
+        }
+      }
+      
+      // Wenn kein spezifischer Schlüssel gefunden wurde, geben wir das gesamte Objekt zurück
+      return {
+        bodenart: 'Siehe zusätzliche Informationen',
+        zusatzInfos: wmsData
+      };
+    }
     
-    // Bodenartinformationen extrahieren
-    // Die Feldnamen können je nach WMS-Service variieren
-    // Wir verwenden allgemeine Namen, die Werte sind möglicherweise andere
-    return {
-      bodenart: properties.BOART || properties.boart || properties.Bodenart || 'Unbekannt',
-      bodentyp: properties.BOTYP || properties.botyp || properties.Bodentyp || 'Unbekannt',
-      bodenregion: properties.REGION || properties.region || properties.Bodenregion || 'Unbekannt',
-      nutzung: properties.NUTZUNG || properties.nutzung || properties.Nutzung || 'Unbekannt',
-      // Weitere Eigenschaften können hinzugefügt werden, wenn sie im Service verfügbar sind
-      zusatzInfos: properties // Wir geben alle Eigenschaften zurück, damit wir später sehen können, was verfügbar ist
+    // Keine erkannten Daten gefunden
+    return { 
+      error: true,
+      message: 'Keine erkennbaren Bodendaten gefunden'
     };
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -90,21 +112,21 @@ export async function queryBGRWms(lat: number, lng: number): Promise<any> {
     // Wir nutzen GetFeatureInfo statt WFS-GetFeature, da dies besser für Punktabfragen geeignet ist
     // DEBUG: WMS-Parameter
     const params = {
-      SERVICE: 'WMS',
-      VERSION: '1.1.1',
-      REQUEST: 'GetFeatureInfo',
-      LAYERS: 'BOART1000',
-      QUERY_LAYERS: 'BOART1000',
-      STYLES: '',
-      SRS: 'EPSG:25832',
-      BBOX: `${x-1000},${y-1000},${x+1000},${y+1000}`,
-      WIDTH: 101,
-      HEIGHT: 101,
-      X: 50,
-      Y: 50,
-      FORMAT: 'image/png',
-      INFO_FORMAT: 'application/json',
-      FEATURE_COUNT: 1
+      service: 'WMS',
+      version: '1.3.0',
+      request: 'GetFeatureInfo',
+      layers: 'BOART1000',
+      styles: '',
+      crs: 'EPSG:25832',
+      bbox: `${y-1000},${x-1000},${y+1000},${x+1000}`, // Bei WMS 1.3.0 ist die Reihenfolge: minY,minX,maxY,maxX
+      width: 101,
+      height: 101,
+      i: 50, // Bei WMS 1.3.0 wird i statt X verwendet
+      j: 50, // Bei WMS 1.3.0 wird j statt Y verwendet
+      query_layers: 'BOART1000',
+      info_format: 'application/json',
+      format: 'image/png',
+      feature_count: 1
     };
 
     // HTTP-Anfrage an BGR-WMS senden
