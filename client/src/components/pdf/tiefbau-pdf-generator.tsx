@@ -106,7 +106,7 @@ const TiefbauPDFGenerator = ({
       pdf.setFontSize(22);
       pdf.setTextColor(0, 51, 102); // dunkles Blau für technische Wirkung
       pdf.setFont("helvetica", "bold");
-      const titleText = `🏗️ Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
+      const titleText = `Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
       pdf.text(titleText, 14, 25);
       
       // 📌 Untertitel
