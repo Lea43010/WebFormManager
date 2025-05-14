@@ -1,149 +1,191 @@
 /**
- * Bodenanalyse API-Routen
+ * Bodenanalyse-API-Routen
+ * 
+ * Diese Datei stellt API-Endpunkte für die Bodenanalyse-Funktionalität bereit.
+ * Die Bodenanalyse basiert auf BGR-WFS-Anfragen und unterstützt sowohl Einzelpunkt-
+ * als auch Batch-Abfragen von Bodenarten.
  */
+
 import express from 'express';
-import bodenanalyseService from '../services/bodenanalyse-service';
-import rateLimit from 'express-rate-limit';
+import multer from 'multer';
+import { queryBGRWfs, queryBGRWfsPoints } from '../services/bodenanalyse-service';
+import logger from '../logger';
+import { isAuthenticated as validateToken } from '../middleware/auth';
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'csv-parse/sync';
+
+// Konfiguration für temporäre Datei-Uploads
+const upload = multer({
+  dest: 'uploads/temp/', 
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB maximale Dateigröße
+});
 
 const router = express.Router();
 
-// Rate-Limiting für BGR-API-Anfragen
-const soilAnalysisLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minuten
-  max: 100, // 100 Anfragen pro IP innerhalb des Zeitfensters
-  message: {
-    status: 429,
-    message: 'Zu viele Anfragen, bitte versuchen Sie es später erneut.'
-  }
-});
+// Authentifizierung für alle Routen erzwingen
+router.use(validateToken);
 
 /**
- * GET /api/soil-analysis/classifications
- * Liefert alle verfügbaren Bodenklassifikationen
+ * @route GET /api/soil-analysis/point
+ * @description Einzelpunkt-Bodenanalyse basierend auf Koordinaten
+ * @param {float} lat - Breitengrad (WGS84)
+ * @param {float} lng - Längengrad (WGS84)
+ * @returns {object} Bodenanalyse-Ergebnisse
  */
-router.get('/classifications', (req, res) => {
+router.get('/point', async (req, res) => {
   try {
-    const classifications = Object.keys(bodenanalyseService.getColorMapping().colorMapping);
-    res.json({ classifications });
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Klassifikationen:', error);
-    res.status(500).json({ 
-      message: 'Fehler beim Abrufen der Klassifikationen',
-      error: error instanceof Error ? error.message : 'Unbekannter Fehler'
-    });
-  }
-});
-
-/**
- * GET /api/soil-analysis/color-mapping
- * Gibt die Farbzuordnung für Bodenklassifikationen zurück
- */
-router.get('/color-mapping', (req, res) => {
-  try {
-    const colorMapping = bodenanalyseService.getColorMapping();
-    res.json(colorMapping);
-  } catch (error) {
-    console.error('Fehler beim Abrufen der Farbzuordnung:', error);
-    res.status(500).json({ 
-      message: 'Fehler beim Abrufen der Farbzuordnung',
-      error: error instanceof Error ? error.message : 'Unbekannter Fehler'
-    });
-  }
-});
-
-/**
- * GET /api/soil-analysis
- * Analysiert eine einzelne Koordinate
- * Query-Parameter:
- * - lon: Längengrad (erforderlich)
- * - lat: Breitengrad (erforderlich)
- */
-router.get('/', soilAnalysisLimiter, async (req, res) => {
-  try {
-    const { lon, lat } = req.query;
+    const { lat, lng } = req.query;
     
-    // Validiere Koordinaten
-    if (!lon || !lat) {
-      return res.status(400).json({ message: 'Längen- und Breitengrad sind erforderlich' });
+    if (!lat || !lng) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude und Longitude müssen angegeben werden"
+      });
     }
-    
-    const longitude = parseFloat(lon as string);
+
     const latitude = parseFloat(lat as string);
+    const longitude = parseFloat(lng as string);
     
-    if (isNaN(longitude) || isNaN(latitude)) {
-      return res.status(400).json({ message: 'Koordinaten müssen numerisch sein' });
-    }
-    
-    // Validiere Längen- und Breitengrade für Deutschland (ungefähre Grenzen)
-    if (longitude < 5.0 || longitude > 16.0 || latitude < 47.0 || latitude > 56.0) {
-      return res.status(400).json({ 
-        message: 'Koordinaten außerhalb des gültigen Bereichs für Deutschland' 
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude und Longitude müssen gültige Zahlen sein"
       });
     }
+
+    // BGR-WFS-Abfrage ausführen
+    const result = await queryBGRWfs(latitude, longitude);
     
-    const result = await bodenanalyseService.getSoilTypeByCoordinates(longitude, latitude);
-    res.json(result);
-  } catch (error) {
-    console.error('Fehler bei der Bodenanalyse:', error);
-    res.status(500).json({ 
-      message: 'Fehler bei der Bodenanalyse',
-      error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    logger.error(`Fehler bei Bodenanalyse-Punktabfrage: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Fehler bei der Bodenanalyse",
+      error: error.message
     });
   }
 });
 
 /**
- * POST /api/soil-analysis/batch
- * Analysiert mehrere Koordinaten als Batch
- * Body-Format:
- * {
- *   coordinates: [{ lon: number, lat: number }, ...],
- *   maxPoints?: number
- * }
+ * @route POST /api/soil-analysis/batch
+ * @description Batch-Bodenanalyse basierend auf einer Liste von Koordinaten
+ * @body {array} points - Array von Koordinaten-Objekten mit lat und lng
+ * @returns {object} Bodenanalyse-Ergebnisse für alle Punkte
  */
-router.post('/batch', soilAnalysisLimiter, async (req, res) => {
+router.post('/batch', async (req, res) => {
   try {
-    const { coordinates, maxPoints } = req.body;
+    const { points } = req.body;
     
-    // Validiere Eingaben
-    if (!coordinates || !Array.isArray(coordinates) || coordinates.length === 0) {
-      return res.status(400).json({ message: 'Koordinaten-Array ist erforderlich' });
-    }
-    
-    // Validiere jede Koordinate
-    const invalidCoords = coordinates.filter(coord => {
-      if (!coord || typeof coord !== 'object') return true;
-      if (coord.lon === undefined || coord.lat === undefined) return true;
-      
-      const lon = parseFloat(coord.lon as any);
-      const lat = parseFloat(coord.lat as any);
-      
-      if (isNaN(lon) || isNaN(lat)) return true;
-      
-      // Validiere für Deutschland
-      if (lon < 5.0 || lon > 16.0 || lat < 47.0 || lat > 56.0) return true;
-      
-      return false;
-    });
-    
-    if (invalidCoords.length > 0) {
-      return res.status(400).json({ 
-        message: `${invalidCoords.length} ungültige Koordinaten gefunden` 
+    if (!points || !Array.isArray(points)) {
+      return res.status(400).json({
+        success: false,
+        message: "Ein gültiges Array von Punkten muss übermittelt werden"
       });
     }
     
-    // Verarbeite Batch mit optionaler Begrenzung
-    const result = await bodenanalyseService.processBatchCoordinates(
-      coordinates,
-      maxPoints || 100 // Standard: maximal 100 Punkte
+    // Validierung der Eingabedaten
+    const validPoints = points.filter(point => 
+      point && typeof point === 'object' && 
+      'lat' in point && 'lng' in point &&
+      !isNaN(parseFloat(point.lat)) && !isNaN(parseFloat(point.lng))
     );
     
-    res.json(result);
+    if (validPoints.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Keine gültigen Koordinaten gefunden"
+      });
+    }
+    
+    // Batch-Abfrage für alle Punkte ausführen
+    const results = await queryBGRWfsPoints(validPoints);
+    
+    return res.json({
+      success: true,
+      data: results
+    });
   } catch (error) {
-    console.error('Fehler bei der Batch-Verarbeitung:', error);
-    res.status(500).json({ 
-      message: 'Fehler bei der Batch-Verarbeitung',
-      error: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    logger.error(`Fehler bei Bodenanalyse-Batch-Abfrage: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Fehler bei der Batch-Bodenanalyse",
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route POST /api/soil-analysis/upload
+ * @description CSV-Upload mit Koordinaten für Batch-Bodenanalyse
+ * @param {file} csv - CSV-Datei mit Koordinaten (lat,lng Format)
+ * @returns {object} Bodenanalyse-Ergebnisse für alle Punkte in der CSV
+ */
+router.post('/upload', upload.single('csv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Keine CSV-Datei hochgeladen"
+      });
+    }
+    
+    // CSV-Datei lesen
+    const fileContent = fs.readFileSync(req.file.path, 'utf8');
+    
+    // CSV parsen
+    const records = parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
+    });
+    
+    // Temporäre Datei löschen
+    fs.unlinkSync(req.file.path);
+    
+    if (!records || records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Keine gültigen Datensätze in der CSV-Datei gefunden"
+      });
+    }
+    
+    // Punkte aus CSV extrahieren
+    const points = records.map(record => {
+      // Verschiedene Spaltenbenennungen unterstützen
+      const lat = record.lat || record.latitude || record.breitengrad;
+      const lng = record.lng || record.lon || record.longitude || record.laengengrad;
+      
+      return {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng)
+      };
+    }).filter(point => !isNaN(point.lat) && !isNaN(point.lng));
+    
+    if (points.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Keine gültigen Koordinaten in der CSV-Datei gefunden"
+      });
+    }
+    
+    // Batch-Abfrage für alle Punkte ausführen
+    const results = await queryBGRWfsPoints(points);
+    
+    return res.json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    logger.error(`Fehler bei Bodenanalyse-CSV-Upload: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Fehler bei der Verarbeitung der CSV-Datei",
+      error: error.message
     });
   }
 });

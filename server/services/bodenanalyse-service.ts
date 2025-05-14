@@ -1,194 +1,166 @@
 /**
- * Bodenanalyse-Service für die Abfrage von Bodenarten vom BGR WFS
+ * Bodenanalyse-Service für BGR-WFS-Abfragen
+ * 
+ * Dieses Modul stellt Funktionen für die Abfrage von Bodenart-Informationen
+ * von der Bundesanstalt für Geowissenschaften und Rohstoffe (BGR) bereit.
+ * Es nutzt den WFS-Dienst der BGR, um Bodenart-Informationen für bestimmte
+ * Koordinaten zu erhalten.
  */
+
 import axios from 'axios';
-import { parseString } from 'xml2js';
+import { parseStringPromise } from 'xml2js';
 import proj4 from 'proj4';
+import logger from '../logger';
 
-// Register ETRS89/UTM (EPSG:25832) projection for Germany
+// Definitionen der Koordinatensysteme
+// ETRS89 / UTM zone 32N (EPSG:25832) - von BGR verwendet
+// WGS84 (EPSG:4326) - Standard GPS-Koordinatensystem
 proj4.defs('EPSG:25832', '+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs');
+proj4.defs('EPSG:4326', '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs');
 
-// Klassifikation der Bodenarten
-export const SOIL_CLASSIFICATION: Record<string, string[]> = {
-  "Reinsande (ss)": ["Ss", "fSms", "mSfs", "mSgs", "gSms"],
-  "Lehmsande (ls)": ["Sl2", "Sl3", "Sl4"],
-  "Schluffsande (us)": ["Su2", "Su3", "Su4"],
-  "Sandlehme (sl)": ["Slu", "St2", "St3"],
-  "Normallehme (ll)": ["Ls2", "Ls3", "Ls4", "Lt2"],
-  "Tonlehme (tl)": ["Lts", "Lt3", "Tu3"],
-  "Lehmschluffe (lu)": ["Lu", "Uls"],
-  "Tonschluffe (tu)": ["Tu2", "Tu4", "Ut2", "Ut3"],
-  "Schlufftone (ut)": ["Ut4", "Tu4", "Uu"],
-  "Moore (mo)": ["HH", "Hn", "Hh"],
-  "Watt": ["Watt"],
-  "Siedlung": ["Siedlung", "Bebauung", "Urban"],
-  "Abbauflächen": ["Abbaufläche", "Tagebau", "Bergbau"],
-  "Gewässer": ["Gewässer", "See", "Fluss"]
-};
-
-// Farbzuordnung für die Visualisierung
-export const COLOR_MAPPING: Record<string, string> = {
-  "Reinsande (ss)": "#F5DEB3", // beige
-  "Lehmsande (ls)": "#90EE90", // lightgreen
-  "Schluffsande (us)": "#008000", // green
-  "Sandlehme (sl)": "#006400", // darkgreen
-  "Normallehme (ll)": "#A52A2A", // brown
-  "Tonlehme (tl)": "#5C4033", // darkbrown
-  "Lehmschluffe (lu)": "#FFA500", // orange
-  "Tonschluffe (tu)": "#FF8C00", // darkorange
-  "Schlufftone (ut)": "#FF0000", // red
-  "Moore (mo)": "#000000", // black
-  "Watt": "#ADD8E6", // lightblue
-  "Siedlung": "#808080", // gray
-  "Abbauflächen": "#800080", // purple
-  "Gewässer": "#0000FF", // blue
-  "Unbekannt": "#FFFFFF", // white
-};
-
-export interface SoilAnalysisResult {
-  bodenartCode: string;
-  bodenartDescription: string;
-  classification: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  color: string;
+/**
+ * Wandelt WGS84-Koordinaten (lat/lng) in ETRS89/UTM32N-Koordinaten um
+ * @param lat Breitengrad (WGS84)
+ * @param lng Längengrad (WGS84)
+ * @returns {[number, number]} [x, y] Koordinaten in ETRS89/UTM32N
+ */
+function transformCoordinates(lat: number, lng: number): [number, number] {
+  // proj4 erwartet [lng, lat] als Eingabe
+  const [x, y] = proj4('EPSG:4326', 'EPSG:25832', [lng, lat]);
+  return [x, y];
 }
 
-export interface BatchAnalysisResult {
-  results: SoilAnalysisResult[];
-  count: number;
-}
-
-class BodenAnalyseService {
-  private bgrWfsUrl = "https://services.bgr.de/wfs/boden/boart1000ob/?";
-  private bgrLayer = "boart1000ob";
-
-  /**
-   * Klassifiziert eine Bodenart entsprechend der BGR-Codes
-   * @param bgrCode BGR-Bodenart-Code
-   * @returns Klassifikation der Bodenart
-   */
-  public classifySoilType(bgrCode: string): string {
-    for (const [klasse, codes] of Object.entries(SOIL_CLASSIFICATION)) {
-      for (const code of codes) {
-        if (bgrCode && bgrCode.includes(code)) {
-          return klasse;
-        }
-      }
-    }
-    return "Unbekannt";
-  }
-
-  /**
-   * Gibt die Farbzuordnung für Bodenklassifikationen zurück
-   */
-  public getColorMapping(): { colorMapping: Record<string, string> } {
-    return { colorMapping: COLOR_MAPPING };
-  }
-
-  /**
-   * Transformiert Koordinaten von WGS84 zu ETRS89/UTM
-   * @param lon Längengrad (WGS84)
-   * @param lat Breitengrad (WGS84)
-   * @returns Transformierte Koordinaten [x, y] in ETRS89/UTM
-   */
-  private transformCoordinates(lon: number, lat: number): [number, number] {
-    return proj4('EPSG:4326', 'EPSG:25832', [lon, lat]);
-  }
-
-  /**
-   * Erstellt eine WFS-Anfrage an den BGR-Server
-   * @param lon Längengrad
-   * @param lat Breitengrad
-   * @returns Promise mit der Antwort des BGR-Servers
-   */
-  public async getSoilTypeByCoordinates(lon: number, lat: number): Promise<SoilAnalysisResult> {
-    try {
-      // Erstelle URL-Parameter für WFS-Anfrage
-      const params = new URLSearchParams({
-        service: 'WFS',
-        version: '2.0.0',
-        request: 'GetFeature',
-        typeName: this.bgrLayer,
-        outputFormat: 'application/json',
-        srsName: 'EPSG:25832',
-        bbox: `${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01},EPSG:4326`
-      });
-      
-      const response = await axios.get(`${this.bgrWfsUrl}${params.toString()}`);
-      
-      if (response.data.features && response.data.features.length > 0) {
-        const feature = response.data.features[0];
-        const bodenartCode = feature.properties.BOART || 'Unbekannt';
-        const bodenartDescription = feature.properties.BOART_BEZ || 'Keine Beschreibung';
-        const classification = this.classifySoilType(bodenartCode);
-        const color = COLOR_MAPPING[classification] || COLOR_MAPPING['Unbekannt'];
-        
-        return {
-          bodenartCode,
-          bodenartDescription,
-          classification,
-          coordinates: {
-            lat: lat,
-            lng: lon
-          },
-          color
-        };
-      } else {
-        return {
-          bodenartCode: 'Keine Daten',
-          bodenartDescription: 'Keine Daten für diese Koordinaten verfügbar',
-          classification: 'Unbekannt',
-          coordinates: {
-            lat: lat,
-            lng: lon
-          },
-          color: COLOR_MAPPING['Unbekannt']
-        };
-      }
-    } catch (error) {
-      console.error('Fehler bei der WFS-Abfrage:', error);
-      return {
-        bodenartCode: 'Fehler',
-        bodenartDescription: `Fehler bei der Abfrage: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
-        classification: 'Fehler',
-        coordinates: {
-          lat: lat,
-          lng: lon
-        },
-        color: COLOR_MAPPING['Unbekannt']
+/**
+ * Extrahiert relevante Bodenartinformationen aus der XML-Antwort des BGR WFS
+ * @param featureData GML-Feature-Daten aus der WFS-Antwort
+ * @returns Aufbereitete Bodenartdaten
+ */
+function extractSoilData(featureData: any): any {
+  try {
+    // Haupt-Feature finden
+    const mainFeature = featureData?.['wfs:FeatureCollection']?.['gml:featureMember']?.[0]?.['bss:natboflgru'];
+    
+    if (!mainFeature) {
+      return { 
+        error: true,
+        message: 'Keine Bodendaten gefunden'
       };
     }
-  }
+    
+    // Extrahieren der Bodenartinformationen
+    const bodenart = mainFeature['bss:nam05']?.[0] || 'Unbekannt';
+    const leitbodentyp = mainFeature['bss:nam21']?.[0] || 'Unbekannt';
+    const hauptbodentyp = mainFeature['bss:nam25']?.[0] || 'Unbekannt';
+    const bodenregion = mainFeature['bss:nam50']?.[0] || 'Unbekannt';
+    const nutzung = mainFeature['bss:nam61']?.[0] || 'Unbekannt';
+    const bodeneinheit = mainFeature['bss:nambse']?.[0] || 'Unbekannt';
+    const bodengesellschaft = mainFeature['bss:namgsl']?.[0] || 'Unbekannt';
+    const substratsystematik = mainFeature['bss:namsub']?.[0] || 'Unbekannt';
 
-  /**
-   * Verarbeitet mehrere Koordinaten als Batch
-   * @param coordinates Array von Koordinaten [lon, lat]
-   * @param maxPoints Maximale Anzahl zu verarbeitender Punkte
-   * @returns Promise mit den Batch-Analyseergebnissen
-   */
-  public async processBatchCoordinates(
-    coordinates: Array<{ lon: number, lat: number }>,
-    maxPoints: number = 100
-  ): Promise<BatchAnalysisResult> {
-    // Begrenze die Anzahl der zu verarbeitenden Punkte
-    const limitedCoordinates = coordinates.slice(0, maxPoints);
-    
-    const results: SoilAnalysisResult[] = [];
-    
-    // Verarbeite Koordinaten sequentiell, um die BGR-API nicht zu überlasten
-    for (const coord of limitedCoordinates) {
-      const result = await this.getSoilTypeByCoordinates(coord.lon, coord.lat);
-      results.push(result);
-    }
-    
     return {
-      results,
-      count: results.length
+      bodenart,
+      leitbodentyp,
+      hauptbodentyp,
+      bodenregion,
+      nutzung,
+      bodeneinheit,
+      bodengesellschaft,
+      substratsystematik,
+    };
+  } catch (error) {
+    logger.error(`Fehler beim Extrahieren der Bodendaten: ${error.message}`);
+    return { 
+      error: true,
+      message: 'Fehler beim Extrahieren der Bodendaten'
     };
   }
 }
 
-export default new BodenAnalyseService();
+/**
+ * Führt eine WFS-Abfrage zur BGR für eine bestimmte Koordinate durch
+ * @param lat Breitengrad (WGS84)
+ * @param lng Längengrad (WGS84)
+ * @returns Bodenartdaten für die angegebene Position
+ */
+export async function queryBGRWfs(lat: number, lng: number): Promise<any> {
+  try {
+    // WGS84 -> ETRS89/UTM32N Transformation
+    const [x, y] = transformCoordinates(lat, lng);
+    
+    // BGR WFS-URL
+    const bgrWfsUrl = 'https://services.bgr.de/wfs/boden/natboflgru/1.0.0/wfs';
+    
+    // WFS-Abfrage-Parameter erstellen
+    const params = {
+      service: 'WFS',
+      version: '1.1.0',
+      request: 'GetFeature',
+      typeName: 'bss:natboflgru',
+      srsName: 'EPSG:25832',
+      filter: `<Filter xmlns="http://www.opengis.net/ogc">
+                <Intersects>
+                  <PropertyName>geom</PropertyName>
+                  <gml:Point xmlns:gml="http://www.opengis.net/gml" srsName="EPSG:25832">
+                    <gml:coordinates>${x},${y}</gml:coordinates>
+                  </gml:Point>
+                </Intersects>
+              </Filter>`
+    };
+
+    // HTTP-Anfrage an BGR-WFS senden
+    const response = await axios.get(bgrWfsUrl, { params });
+    
+    // XML-Antwort in JSON umwandeln
+    const result = await parseStringPromise(response.data);
+    
+    // Daten extrahieren und aufbereiten
+    const soilData = extractSoilData(result);
+    
+    return {
+      coordinates: {
+        lat,
+        lng,
+        utm32: { x, y }
+      },
+      success: !soilData.error,
+      data: soilData
+    };
+  } catch (error) {
+    logger.error(`BGR-WFS-Abfragefehler: ${error.message}`);
+    return {
+      coordinates: { lat, lng },
+      success: false,
+      error: error.message,
+      message: 'Fehler bei der BGR-WFS-Abfrage'
+    };
+  }
+}
+
+/**
+ * Batch-Abfrage für mehrere Koordinaten
+ * @param points Array von Koordinaten-Objekten mit lat/lng
+ * @returns Array von Bodenart-Ergebnissen
+ */
+export async function queryBGRWfsPoints(points: Array<{lat: number, lng: number}>): Promise<any[]> {
+  try {
+    // Begrenzen der Parallelität, um Server nicht zu überlasten
+    const batchSize = 5; 
+    const results = [];
+    
+    // Punkte in Batches verarbeiten
+    for (let i = 0; i < points.length; i += batchSize) {
+      const batch = points.slice(i, i + batchSize);
+      
+      // Parallele Abfragen für den aktuellen Batch
+      const batchPromises = batch.map(point => queryBGRWfs(point.lat, point.lng));
+      const batchResults = await Promise.all(batchPromises);
+      
+      results.push(...batchResults);
+    }
+    
+    return results;
+  } catch (error) {
+    logger.error(`BGR-WFS-Batch-Abfragefehler: ${error.message}`);
+    throw new Error(`Fehler bei der Batch-Verarbeitung: ${error.message}`);
+  }
+}
