@@ -28,6 +28,7 @@ import { setupImageRoutes } from "./routes/image-routes"; // Bildoptimierungs-Ro
 import dataQualityApiRouter from "./data-quality-api"; // Datenqualitäts-API
 import { registerRoadDamageRoutes } from "./road-damage-api"; // Straßenschaden-API
 import { setupSpeechToTextRoute } from "./services/speech-to-text"; // Speech-to-Text-Service
+import documentRoutes from "./routes/document-routes"; // Neues Dokumentenspeichersystem
 import { registerBackupApiRoutes } from "./routes/backup-routes"; // Neue Backup-API
 import documentSyncRouter from "./routes/document-sync-routes"; // Dokumenten-Synchronisation
 import searchRouter from "./routes/search-routes"; // Universelle Suche
