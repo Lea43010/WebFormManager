@@ -176,6 +176,9 @@ export const attachments = pgTable("tblattachment", {
   isOptimized: boolean("is_optimized").default(false),
   // Status der Datei
   fileMissing: boolean("file_missing").default(false),
+  // Neue Felder für den verbesserten Dokumentenspeicher
+  fileStorage: varchar("file_storage", { length: 50 }),
+  isPublic: boolean("is_public").default(false),
 });
 
 // Bedarfs- und Kapazitätsplanung table
