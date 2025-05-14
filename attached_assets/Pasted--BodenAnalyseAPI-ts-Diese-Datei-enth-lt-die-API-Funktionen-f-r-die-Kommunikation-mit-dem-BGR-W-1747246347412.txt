@@ -1,0 +1,200 @@
+// BodenAnalyseAPI.ts
+// Diese Datei enthält die API-Funktionen für die Kommunikation mit dem BGR WFS-Service
+
+import axios from 'axios';
+import { parseString } from 'xml2js';
+
+// Typdefinitionen
+export interface BodenartResult {
+  bodenartCode: string;
+  bodenartBeschreibung: string;
+  klassifikation: string;
+}
+
+export interface Koordinate {
+  longitude: number;
+  latitude: number;
+}
+
+export interface BatchResult extends Koordinate, BodenartResult {}
+
+// Klassifikation der Bodenarten
+const BODENARTEN_KLASSIFIKATION: Record<string, string[]> = {
+  "Reinsande (ss)": ["Ss", "fSms", "mSfs", "mSgs", "gSms"],
+  "Lehmsande (ls)": ["Sl2", "Sl3", "Sl4"],
+  "Schluffsande (us)": ["Su2", "Su3", "Su4"],
+  "Sandlehme (sl)": ["Slu", "St2", "St3"],
+  "Normallehme (ll)": ["Ls2", "Ls3", "Ls4", "Lt2"],
+  "Tonlehme (tl)": ["Lts", "Lt3", "Tu3"],
+  "Lehmschluffe (lu)": ["Lu", "Uls"],
+  "Tonschluffe (tu)": ["Tu2", "Tu4", "Ut2", "Ut3"],
+  "Schlufftone (ut)": ["Ut4", "Tu4", "Uu"],
+  "Moore (mo)": ["HH", "Hn", "Hh"],
+  "Watt": ["Watt"],
+  "Siedlung": ["Siedlung", "Bebauung", "Urban"],
+  "Abbauflächen": ["Abbaufläche", "Tagebau", "Bergbau"],
+  "Gewässer": ["Gewässer", "See", "Fluss"]
+};
+
+// Farbzuordnung für die Visualisierung
+export const COLOR_MAPPING: Record<string, string> = {
+  "Reinsande (ss)": "#F5DEB3", // beige
+  "Lehmsande (ls)": "#90EE90", // lightgreen
+  "Schluffsande (us)": "#008000", // green
+  "Sandlehme (sl)": "#006400", // darkgreen
+  "Normallehme (ll)": "#A52A2A", // brown
+  "Tonlehme (tl)": "#5C4033", // darkbrown
+  "Lehmschluffe (lu)": "#FFA500", // orange
+  "Tonschluffe (tu)": "#FF8C00", // darkorange
+  "Schlufftone (ut)": "#FF0000", // red
+  "Moore (mo)": "#000000", // black
+  "Watt": "#ADD8E6", // lightblue
+  "Siedlung": "#808080", // gray
+  "Abbauflächen": "#800080", // purple
+  "Gewässer": "#0000FF", // blue
+  "Unbekannt": "#FFFFFF", // white
+};
+
+// BGR WFS-URL und Layer
+const BGR_WFS_URL = "https://services.bgr.de/wfs/boden/boart1000ob/?";
+const BGR_LAYER = "boart1000ob";
+
+// Service-Klasse für BGR-Bodenanalyse
+export class BodenAnalyseService {
+  
+  // Koordinatentransformation von WGS84 (EPSG:4326) zu ETRS89/UTM (EPSG:25832)
+  private transformCoordinates(lon: number, lat: number): { x: number, y: number } {
+    // Diese Funktion ist eine vereinfachte Transformation
+    // In einer echten Anwendung würde man proj4js oder eine ähnliche Bibliothek verwenden
+    
+    // Umrechnungsfaktoren (vereinfacht)
+    const x = lon * 111320 * Math.cos(lat * Math.PI / 180);
+    const y = lat * 110540;
+    
+    return { x, y };
+  }
+  
+  // Klassifiziert einen BGR-Bodenart-Code entsprechend der definierten Kategorien
+  private klassifiziereBodenart(bgrCode: string): string {
+    for (const [klasse, codes] of Object.entries(BODENARTEN_KLASSIFIKATION)) {
+      for (const code of codes) {
+        if (bgrCode.toLowerCase().includes(code.toLowerCase())) {
+          return klasse;
+        }
+      }
+    }
+    return "Unbekannt";
+  }
+  
+  // Erstellt den WFS-Request für eine Koordinate
+  private buildWfsRequest(lon: number, lat: number): string {
+    const coords = this.transformCoordinates(lon, lat);
+    
+    // Buffer um den Punkt (in Metern)
+    const buffer = 100;
+    
+    // Bounding Box um den Punkt
+    const bbox = `${coords.x - buffer},${coords.y - buffer},${coords.x + buffer},${coords.y + buffer}`;
+    
+    // WFS-Request erstellen
+    const wfsRequest = `
+      <wfs:GetFeature service="WFS" version="2.0.0"
+        xmlns:wfs="http://www.opengis.net/wfs/2.0"
+        xmlns:fes="http://www.opengis.net/fes/2.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd"
+        outputFormat="application/json">
+        <wfs:Query typeNames="${BGR_LAYER}">
+          <fes:Filter>
+            <fes:BBOX>
+              <fes:ValueReference>geometry</fes:ValueReference>
+              <gml:Envelope xmlns:gml="http://www.opengis.net/gml/3.2" srsName="EPSG:25832">
+                <gml:lowerCorner>${coords.x - buffer} ${coords.y - buffer}</gml:lowerCorner>
+                <gml:upperCorner>${coords.x + buffer} ${coords.y + buffer}</gml:upperCorner>
+              </gml:Envelope>
+            </fes:BBOX>
+          </fes:Filter>
+        </wfs:Query>
+      </wfs:GetFeature>
+    `;
+    
+    return wfsRequest;
+  }
+  
+  // Hauptfunktion: Abfrage der Bodenart an einer Koordinate
+  public async getBodenartByCoords(lon: number, lat: number): Promise<BodenartResult> {
+    try {
+      // Alternative Implementierung mit URL-Parametern statt XML
+      const params = new URLSearchParams({
+        service: 'WFS',
+        version: '2.0.0',
+        request: 'GetFeature',
+        typeName: BGR_LAYER,
+        outputFormat: 'application/json',
+        srsName: 'EPSG:25832',
+        bbox: `${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01},EPSG:4326`
+      });
+      
+      const response = await axios.get(`${BGR_WFS_URL}${params.toString()}`);
+      
+      if (response.data.features && response.data.features.length > 0) {
+        const feature = response.data.features[0];
+        const bodenartCode = feature.properties.BOART || 'Unbekannt';
+        const bodenartBeschreibung = feature.properties.BOART_BEZ || 'Keine Beschreibung';
+        const klassifikation = this.klassifiziereBodenart(bodenartCode);
+        
+        return {
+          bodenartCode,
+          bodenartBeschreibung,
+          klassifikation
+        };
+      } else {
+        return {
+          bodenartCode: 'Keine Daten',
+          bodenartBeschreibung: 'Keine Daten für diese Koordinaten verfügbar',
+          klassifikation: 'Unbekannt'
+        };
+      }
+    } catch (error) {
+      console.error('Fehler bei der WFS-Abfrage:', error);
+      return {
+        bodenartCode: 'Fehler',
+        bodenartBeschreibung: `Fehler bei der Abfrage: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+        klassifikation: 'Fehler'
+      };
+    }
+  }
+  
+  // Batch-Verarbeitung mehrerer Koordinaten
+  public async batchProcess(coordinates: Koordinate[]): Promise<BatchResult[]> {
+    const results: BatchResult[] = [];
+    
+    // Verarbeite die Koordinaten sequentiell, um die API nicht zu überlasten
+    for (const coord of coordinates) {
+      const result = await this.getBodenartByCoords(coord.longitude, coord.latitude);
+      results.push({
+        ...coord,
+        ...result
+      });
+    }
+    
+    return results;
+  }
+  
+  // Gibt alle Klassifikationen zurück
+  public getKlassifikationen(): string[] {
+    return Object.keys(BODENARTEN_KLASSIFIKATION);
+  }
+  
+  // Gibt die BGR-Codes für eine bestimmte Klassifikation zurück
+  public getCodesForKlassifikation(klassifikation: string): string[] {
+    return BODENARTEN_KLASSIFIKATION[klassifikation] || [];
+  }
+  
+  // Gibt alle Klassifikations-Zuordnungen zurück
+  public getAllKlassifikationen(): Record<string, string[]> {
+    return BODENARTEN_KLASSIFIKATION;
+  }
+}
+
+export default new BodenAnalyseService();

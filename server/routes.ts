@@ -34,6 +34,7 @@ import documentSyncRouter from "./routes/document-sync-routes"; // Dokumenten-Sy
 import searchRouter from "./routes/search-routes"; // Universelle Suche
 import queryAnalyticsRouter from "./routes/query-analytics-routes"; // SQL-Query-Analytics
 import subscriptionRouter from "./routes/subscription-routes"; // Abonnement-Verwaltung
+import bodenanalyseRoutes from "./routes/bodenanalyse-routes"; // Bodenanalyse-API
 import { logActivity, ActionType, getIpAddress } from "./activity-logger";
 import { trialEmailService } from "./trial-email-service";
 import logger from "./logger";
