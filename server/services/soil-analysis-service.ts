@@ -77,6 +77,13 @@ class SoilAnalysisService {
     }
     return "Unbekannt";
   }
+  
+  /**
+   * Gibt die Farbzuordnung für Bodenklassifikationen zurück
+   */
+  public getColorMapping() {
+    return COLOR_MAPPING;
+  }
 
   /**
    * Transformiert Koordinaten von WGS84 zu ETRS89/UTM
@@ -134,12 +141,16 @@ class SoilAnalysisService {
         const bodenartDescription = props.BOART_BEZ || 'Keine Beschreibung verfügbar';
         const classification = this.classifySoilType(bodenartCode);
         
+        // Typensicherer Zugriff auf COLOR_MAPPING
+        const colorMap = this.getColorMapping();
+        const color = colorMap[classification as keyof typeof COLOR_MAPPING] || colorMap.Unbekannt;
+        
         return {
           bodenartCode,
           bodenartDescription,
           classification,
           coordinates: { lat, lng: lon },
-          color: COLOR_MAPPING[classification] || COLOR_MAPPING.Unbekannt
+          color
         };
       } else {
         return {
@@ -147,17 +158,19 @@ class SoilAnalysisService {
           bodenartDescription: 'Keine Bodenartdaten für diese Koordinaten verfügbar',
           classification: 'Unbekannt',
           coordinates: { lat, lng: lon },
-          color: COLOR_MAPPING.Unbekannt
+          color: this.getColorMapping().Unbekannt
         };
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Fehler bei der BGR-WFS-Abfrage:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      
       return {
         bodenartCode: 'Fehler',
-        bodenartDescription: `Fehler bei der Abfrage: ${error.message || 'Unbekannter Fehler'}`,
+        bodenartDescription: `Fehler bei der Abfrage: ${errorMessage}`,
         classification: 'Fehler',
         coordinates: { lat, lng: lon },
-        color: COLOR_MAPPING.Unbekannt
+        color: this.getColorMapping().Unbekannt
       };
     }
   }

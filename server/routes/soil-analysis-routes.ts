@@ -20,7 +20,7 @@ router.get('/classifications', (req, res) => {
  * Gibt die Farbzuordnung für Bodenklassifikationen zurück
  */
 router.get('/color-mapping', (req, res) => {
-  res.json({ colorMapping: soilAnalysisService.COLOR_MAPPING });
+  res.json({ colorMapping: soilAnalysisService.getColorMapping() });
 });
 
 /**
@@ -56,11 +56,13 @@ router.get('/', async (req, res) => {
   try {
     const result = await soilAnalysisService.getSoilTypeByCoordinates(longitude, latitude);
     res.json(result);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Fehler bei der Bodenanalyse:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Ein Fehler ist bei der Bodenanalyse aufgetreten';
+    
     res.status(500).json({ 
       error: 'Analysefehler', 
-      message: error.message || 'Ein Fehler ist bei der Bodenanalyse aufgetreten' 
+      message: errorMessage 
     });
   }
 });
@@ -105,11 +107,13 @@ router.post('/batch', async (req, res) => {
   try {
     const results = await soilAnalysisService.processBatchCoordinates(coordinates, maxPoints);
     res.json(results);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Fehler bei der Batch-Bodenanalyse:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Ein Fehler ist bei der Batch-Bodenanalyse aufgetreten';
+    
     res.status(500).json({ 
       error: 'Analysefehler', 
-      message: error.message || 'Ein Fehler ist bei der Batch-Bodenanalyse aufgetreten' 
+      message: errorMessage 
     });
   }
 });

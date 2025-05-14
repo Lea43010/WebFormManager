@@ -156,6 +156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Maschinen-API-Routen einrichten
   app.use(maschinenRouter);
   
+  // Bodenanalyse-API-Routen einrichten
+  app.use('/api/soil-analysis', soilAnalysisRoutes);
+  
   // Tiefbau-Routen - PDF wird jetzt clientseitig generiert
   
   // Admin-API-Routen (wieder aktiviert mit optimierten SQL-Abfragen)
