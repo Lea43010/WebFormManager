@@ -273,28 +273,19 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                             return;
                           }
                           
-                          // Token anfordern (für den Download-Endpunkt)
-                          const response = await fetch(`/api/attachments/${attachment.id}/token`);
+                          // Verbesserte direkte Download-Methode mit neuer API
+                          console.log(`Starte Download für Anhang ID: ${attachment.id}`);
                           
-                          if (!response.ok) {
-                            throw new Error("Fehler beim Anfordern des Download-Tokens");
-                          }
+                          // Wir verwenden jetzt unseren neuen verbesserten Download-Endpunkt
+                          const downloadUrl = `/api/download/${attachment.id}`;
                           
-                          const data = await response.json();
+                          // Direktes Öffnen in neuem Fenster für robustere Kompatibilität
+                          window.open(downloadUrl, '_blank');
                           
-                          // Zuverlässigere Download-Methode verwenden (temporärer Link-Element)
-                          const link = document.createElement('a');
-                          link.href = `/api/attachments/${attachment.id}/download?token=${data.token}`;
-                          link.setAttribute('download', attachment.fileName || 'download');
-                          link.setAttribute('target', '_blank'); // Öffnet in neuem Tab
-                          document.body.appendChild(link);
-                          link.click();
-                          
-                          // Kurze Verzögerung vor dem Entfernen, um sicherzustellen, dass der Browser Zeit hat, 
-                          // den Download zu starten
-                          setTimeout(() => {
-                            document.body.removeChild(link);
-                          }, 100);
+                          toast({
+                            title: "Download gestartet",
+                            description: "Der Download wurde in einem neuen Tab gestartet",
+                          });
                         } catch (error) {
                           toast({
                             title: "Download-Fehler",

@@ -16,7 +16,6 @@ import { userCache } from "./user-cache";
 import { storage } from "./storage";
 
 // Hauptfunktion zum Starten des Servers
-// Hauptfunktion zum Starten des Servers
 (async function startServer() {
   const app = express();
   app.use(express.json());
@@ -61,6 +60,7 @@ import { storage } from "./storage";
     serveStatic(app);
   }
 
+  // Für Replit Autoscale, PORT Umgebungsvariable mit Fallback für lokale Entwicklung
   const PORT = process.env.PORT || 5000;
 
   // Funktionen für den Serverstart
@@ -74,11 +74,12 @@ import { storage } from "./storage";
     }
   }
 
-  // Server starten
+  // Server starten - WICHTIG: Keinen spezifischen Host binden, nur PORT verwenden
   server.listen(PORT)
     .on('listening', () => {
       const environment = config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)';
       logger.info(`Server gestartet auf Port ${PORT}${environment}`);
+      log(`serving on port ${PORT}`);
       
       // Verzögerte Initialisierungen
       setTimeout(initializeDelayedTasks, 5000);
@@ -86,27 +87,5 @@ import { storage } from "./storage";
     .on('error', (err: any) => {
       logger.error('Fehler beim Starten des Servers:', err);
       process.exit(1);
-    });
-          .on('listening', () => {
-            serverStarted = true;
-            logger.info(`Server gestartet auf Fallback-Port ${FALLBACK_PORT}${config.isDevelopment ? ' (Entwicklungsumgebung)' : ' (Produktionsumgebung)'}`);
-            log(`serving on fallback port ${FALLBACK_PORT}`);
-            
-            // Verzögerte Initialisierungen auf Fallback-Port
-            setTimeout(() => {
-              initializeDelayedTasks();
-            }, 5000);
-          })
-          .on('error', (fallbackErr: any) => {
-            // Auch der Fallback-Port ist nicht verfügbar
-            logger.error(`Auch Fallback-Port ${FALLBACK_PORT} ist nicht verfügbar. Server kann nicht gestartet werden.`);
-            console.error(`[express] KRITISCHER FEHLER: Auch Fallback-Port ${FALLBACK_PORT} ist nicht verfügbar! Server kann nicht gestartet werden.`);
-            process.exit(1);
-          });
-      } else {
-        // Anderer Fehler beim Starten des Servers
-        logger.error('Fehler beim Starten des Servers:', err);
-        process.exit(1); // Beende den Prozess mit Fehlercode
-      }
     });
 })();
