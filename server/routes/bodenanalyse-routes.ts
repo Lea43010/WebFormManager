@@ -61,12 +61,13 @@ router.get('/point', async (req, res) => {
       success: true,
       data: result
     });
-  } catch (error: any) {
-    logger.error(`Fehler bei Bodenanalyse-Punktabfrage: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler bei Bodenanalyse-Punktabfrage: ${errorMessage}`);
     return res.status(500).json({
       success: false,
       message: "Fehler bei der Bodenanalyse",
-      error: error.message
+      error: errorMessage
     });
   }
 });
@@ -109,12 +110,13 @@ router.post('/batch', async (req, res) => {
       success: true,
       data: results
     });
-  } catch (error) {
-    logger.error(`Fehler bei Bodenanalyse-Batch-Abfrage: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler bei Bodenanalyse-Batch-Abfrage: ${errorMessage}`);
     return res.status(500).json({
       success: false,
       message: "Fehler bei der Batch-Bodenanalyse",
-      error: error.message
+      error: errorMessage
     });
   }
 });
@@ -155,7 +157,7 @@ router.post('/upload', upload.single('csv'), async (req, res) => {
     }
     
     // Punkte aus CSV extrahieren
-    const points = records.map(record => {
+    const points = records.map((record: Record<string, string>) => {
       // Verschiedene Spaltenbenennungen unterstützen
       const lat = record.lat || record.latitude || record.breitengrad;
       const lng = record.lng || record.lon || record.longitude || record.laengengrad;
@@ -164,7 +166,7 @@ router.post('/upload', upload.single('csv'), async (req, res) => {
         lat: parseFloat(lat),
         lng: parseFloat(lng)
       };
-    }).filter(point => !isNaN(point.lat) && !isNaN(point.lng));
+    }).filter((point: { lat: number, lng: number }) => !isNaN(point.lat) && !isNaN(point.lng));
     
     if (points.length === 0) {
       return res.status(400).json({
@@ -180,12 +182,13 @@ router.post('/upload', upload.single('csv'), async (req, res) => {
       success: true,
       data: results
     });
-  } catch (error) {
-    logger.error(`Fehler bei Bodenanalyse-CSV-Upload: ${error.message}`);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Fehler bei Bodenanalyse-CSV-Upload: ${errorMessage}`);
     return res.status(500).json({
       success: false,
       message: "Fehler bei der Verarbeitung der CSV-Datei",
-      error: error.message
+      error: errorMessage
     });
   }
 });

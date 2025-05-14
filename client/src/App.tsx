@@ -109,6 +109,8 @@ function Router() {
       <ProtectedRoute path="/tiefbau-map" component={() => <TiefbauMap />} />
       <ProtectedRoute path="/tiefbau-map-searchable" component={TiefbauMapSearchable} />
       <ProtectedRoute path="/bodenanalyse" component={BodenAnalyse} />
+      <ProtectedRoute path="/boden-analyse" component={BodenAnalyse} />
+      <ProtectedRoute path="/bodenanalyse-test" component={() => import("@/pages/bodenanalyse-test").then(mod => mod.default)} />
       <ProtectedRoute path="/maschinen-auswahl" component={() => <MaschinenAuswahl />} />
       <ProtectedRoute path="/kostenkalkulation" component={KostenKalkulationPage} />
       {/* DenkmalAtlas direkt auf externe URL weiterleiten */}

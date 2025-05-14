@@ -37,10 +37,10 @@ const TiefbauNavigation = () => {
       description: 'Projektkosten kalkulieren'
     },
     {
-      title: 'Bodenanalyse',
+      title: 'BGR Bodenanalyse',
       href: '/bodenanalyse',
       icon: Database,
-      description: 'Analyse von Bodenarten und Eigenschaften'
+      description: 'Analyse von Bodenarten basierend auf BGR-Daten'
     }
   ];
 
