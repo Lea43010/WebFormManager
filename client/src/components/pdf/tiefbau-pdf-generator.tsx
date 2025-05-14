@@ -411,11 +411,14 @@ const TiefbauPDFGenerator = ({
             pdf.setFont("helvetica", "bold");
             pdf.text(`📸 Fotos zum Tiefbau-Projekt (${remarksPhotos.length})`, 14, yPos);
             
-            // Kurzer Untertitel für die Fotos
+            // Kurzer Untertitel für die Fotos mit Anzahl
             pdf.setFontSize(11);
             pdf.setTextColor(80);
             pdf.setFont("helvetica", "normal");
-            pdf.text('Bildliche Dokumentation des Bauvorhabens', 14, yPos + 6);
+            const photoCountText = remarksPhotos.length === 1 
+              ? 'Ein Foto zur Dokumentation des Bauvorhabens' 
+              : `${remarksPhotos.length} Fotos zur Dokumentation des Bauvorhabens`;
+            pdf.text(photoCountText, 14, yPos + 6);
             yPos += 10;
             
             // Verbesserte Bildlayout-Einstellungen
@@ -453,6 +456,15 @@ const TiefbauPDFGenerator = ({
                 pdf.setTextColor(0, 51, 102);
                 pdf.setFont("helvetica", "bold");
                 pdf.text(`📸 Fotos zum Tiefbau-Projekt (Fortsetzung)`, 14, yPos);
+                
+                // Untertitel mit Seiteninfo für die Fortsetzung
+                pdf.setFontSize(11);
+                pdf.setTextColor(80);
+                pdf.setFont("helvetica", "normal");
+                const currentPage = Math.floor(i / 2) + 1;
+                const totalPages = Math.ceil(remarksPhotos.length / 2);
+                pdf.text(`Fortsetzung der Fotodokumentation (Seite ${currentPage}/${totalPages})`, 14, yPos + 6);
+                
                 yPos += 15;
               }
               
@@ -466,34 +478,85 @@ const TiefbauPDFGenerator = ({
                 const img = remarksPhotos[i].preview;
                 const base64Data = img.includes('base64,') ? img.split('base64,')[1] : img;
                 
+                // Rahmen und Hintergrund für jedes Bild
+                pdf.setFillColor(252, 252, 252);
+                pdf.setDrawColor(180, 180, 200); // Subtiler blauer Rahmen
+                pdf.setLineWidth(0.7);
+                
+                // Etwas größer als das Bild für Rahmen mit Abstand
+                const frameMargin = 4;
+                const captionHeight = 12;
+                pdf.roundedRect(
+                  x - frameMargin, 
+                  currentY - frameMargin, 
+                  maxImgWidth + (frameMargin * 2), 
+                  imgHeight + (frameMargin * 2) + captionHeight,
+                  3, 3, 'FD'
+                );
+                
                 // Füge das Bild mit hoher Qualität zum PDF hinzu
                 pdf.addImage(base64Data, 'JPEG', x, currentY, maxImgWidth, imgHeight);
                 
-                // Deutlich sichtbarer Rahmen um das Bild
-                pdf.setDrawColor(80, 80, 80);
-                pdf.setLineWidth(0.7);
-                pdf.rect(x, currentY, maxImgWidth, imgHeight, 'D');
+                // Trennlinie zwischen Bild und Bildunterschrift
+                pdf.setDrawColor(200, 200, 220);
+                pdf.setLineWidth(0.3);
+                pdf.line(
+                  x - frameMargin + 2, 
+                  currentY + imgHeight + 2, 
+                  x + maxImgWidth + frameMargin - 2, 
+                  currentY + imgHeight + 2
+                );
                 
-                // Bildnummer als Beschriftung
-                pdf.setFillColor(240, 240, 240);
-                pdf.rect(x, currentY + imgHeight, maxImgWidth, 8, 'F');
-                pdf.setFontSize(8);
-                pdf.setTextColor(0);
-                pdf.text(`Foto ${i + 1}`, x + 2, currentY + imgHeight + 6);
+                // Bildnummer als stilvolle Beschriftung
+                pdf.setFontSize(9);
+                pdf.setTextColor(80, 80, 100);
+                pdf.setFont("helvetica", "bold");
+                pdf.text(`Foto ${i + 1}`, x + 2, currentY + imgHeight + 10);
                 
               } catch (error) {
-                // Fehler-Fallback mit deutlicher Markierung
-                pdf.setFillColor(240, 240, 240);
-                pdf.rect(x, currentY, maxImgWidth, imgHeight, 'F');
-                pdf.setTextColor(200, 0, 0); // Rot für Fehler
-                pdf.setFontSize(10);
-                pdf.text('Bild konnte nicht geladen werden', x + 10, currentY + 30);
+                // Ansprechender Fehler-Fallback
+                const frameMargin = 4;
+                const captionHeight = 12;
+                
+                // Umgebender Rahmen mit abgerundeten Ecken
+                pdf.setFillColor(248, 245, 245);
+                pdf.setDrawColor(220, 180, 180);
+                pdf.setLineWidth(0.7);
+                pdf.roundedRect(
+                  x - frameMargin, 
+                  currentY - frameMargin, 
+                  maxImgWidth + (frameMargin * 2), 
+                  imgHeight + (frameMargin * 2) + captionHeight,
+                  3, 3, 'FD'
+                );
+                
+                // Diagonale Linien als Hinweis auf fehlendes Bild
+                pdf.setDrawColor(220, 180, 180);
+                pdf.setLineWidth(0.5);
+                pdf.line(x, currentY, x + maxImgWidth, currentY + imgHeight);
+                pdf.line(x + maxImgWidth, currentY, x, currentY + imgHeight);
+                
+                // Fehlermeldung mit Icon
+                pdf.setTextColor(180, 60, 60);
+                pdf.setFontSize(11);
+                pdf.setFont("helvetica", "bold");
+                pdf.text('⚠️ Bild konnte nicht geladen werden', x + 10, currentY + (imgHeight/2));
+                
+                // Technische Info klein darunter
+                pdf.setFontSize(8);
+                pdf.setFont("helvetica", "normal");
+                pdf.text('Möglicher Grund: Dateigröße oder Bildformat nicht kompatibel', x + 10, currentY + (imgHeight/2) + 8);
+                
                 console.error('Fehler beim Laden des Bildes:', error);
               }
               
               // Nur die Y-Position erhöhen, wenn wir eine komplette Reihe haben oder beim letzten Bild
               if (colIndex === imagesPerRow - 1 || i === remarksPhotos.length - 1) {
-                yPos += imgHeight + 15; // Erhöhe den Y-Wert für die nächste Zeile
+                // Mehr Abstand zwischen Bildreihen für bessere Lesbarkeit
+                const frameMargin = 4;
+                const captionHeight = 12;
+                const rowSpacing = 20; // Zusätzlicher Abstand zwischen den Zeilen
+                yPos += imgHeight + (frameMargin * 2) + captionHeight + rowSpacing;
               }
             }
           }
