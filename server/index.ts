@@ -61,7 +61,7 @@ import { storage } from "./storage";
   }
 
   // Für Replit Autoscale, PORT Umgebungsvariable mit Fallback für lokale Entwicklung
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 3000;
 
   // Funktionen für den Serverstart
   function initializeDelayedTasks() {

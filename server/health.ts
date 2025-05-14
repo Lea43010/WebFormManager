@@ -215,6 +215,11 @@ export function setupHealthRoutes(app: Express) {
     res.status(httpStatus).json(healthResponse);
   });
   
+  // Root endpoint für Autoscale Health Checks
+  app.get("/", (req: Request, res: Response) => {
+    res.status(200).send("OK");
+  });
+
   // Einfache Ping-Route für grundlegende Verfügbarkeitsprüfungen mit höherem Rate-Limit
   app.get("/ping", rateLimit(60, 60 * 1000), (req: Request, res: Response) => {
     const environment = config.isDevelopment ? ' (Dev)' : '';
