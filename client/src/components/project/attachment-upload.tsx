@@ -259,7 +259,7 @@ export default function AttachmentUpload({ projectId }: AttachmentUploadProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      disabled={attachment.fileMissing} // Deaktivieren bei fehlender Datei
+                      disabled={!!attachment.fileMissing} // Deaktivieren bei fehlender Datei
                       title={attachment.fileMissing ? "Datei nicht mehr verfügbar" : "Datei herunterladen"}
                       onClick={async () => {
                         try {

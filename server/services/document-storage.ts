@@ -10,6 +10,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { logger } from '../logger';
 import { storage } from '../storage';
+import { fileTypes, fileCategoryEnum } from '@shared/schema';
 
 // Konfiguration 
 const STORAGE_DIR = './document-storage';
@@ -67,12 +68,18 @@ export class DocumentStorage {
       // Konvertieren in einen gültigen fileType
       const validFileType = fileType as 'pdf' | 'excel' | 'image' | 'other';
       
+      // Kategorie validieren
+      const validCategory = (metadata.category && 
+        ['Verträge', 'Rechnungen', 'Pläne', 'Protokolle', 'Genehmigungen', 'Fotos', 'Analysen', 'Andere'].includes(metadata.category)) 
+        ? metadata.category as 'Verträge' | 'Rechnungen' | 'Pläne' | 'Protokolle' | 'Genehmigungen' | 'Fotos' | 'Analysen' | 'Andere'
+        : 'Andere';
+      
       const attachmentData = {
         projectId: metadata.projectId,
         fileName: path.basename(file.originalname),
         originalName: file.originalname,
         fileType: validFileType,
-        fileCategory: metadata.category || 'Andere',
+        fileCategory: validCategory,
         filePath,
         fileSize: file.buffer.length,
         description: metadata.description,
