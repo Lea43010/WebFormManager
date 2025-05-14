@@ -64,6 +64,18 @@ const TiefbauPDFGenerator = ({
         throw new Error('Keine Routendaten vorhanden. Bitte erstellen Sie eine Route.');
       }
       
+      // Berechne die Gesamtzahl der Seiten (1 für Hauptseite, 1 für Streckeninformationen, optional 1 für Bemerkungen)
+      const totalPages = (remarks || (remarksPhotos && remarksPhotos.length > 0)) ? 3 : 2;
+      
+      // Hilfsfunktion für die konsistente Kopfzeile auf allen Seiten
+      const addPageHeader = (pageNumber: number) => {
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
+        pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
+        pdf.text(`Seite ${pageNumber} von ${totalPages}`, 250, 10);
+      };
+      
       // Screenshot der Karte machen
       const mapElement = document.getElementById(mapContainerId);
       if (!mapElement) {
@@ -81,15 +93,14 @@ const TiefbauPDFGenerator = ({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Titel und Datum
+      // Kopfzeile für Seite 1 hinzufügen
+      addPageHeader(1);
+      
+      // Titel des Berichts
       pdf.setFontSize(20);
       pdf.setTextColor(0, 0, 0);
       const titleText = `Tiefbau-Streckenbericht: ${projectName || 'Tiefbau-Projekt'}`;
       pdf.text(titleText, 14, 20);
-      
-      pdf.setFontSize(10);
-      const dateText = `Erstellt am: ${new Date().toLocaleDateString('de-DE')}`;
-      pdf.text(dateText, 14, 27);
       
       // Projekt-Details hinzufügen, wenn verfügbar
       if (projectData) {
@@ -206,12 +217,8 @@ const TiefbauPDFGenerator = ({
         // Neue Seite für die Streckeninformationen hinzufügen
         pdf.addPage();
         
-        // Kopfzeile für Seite 2
-        pdf.setFontSize(10);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
-        pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
-        pdf.text(`Seite 2 von 2`, 250, 10);
+        // Kopfzeile für Seite 2 hinzufügen
+        addPageHeader(2);
         
         // Überschrift der Streckeninformationen
         pdf.setFontSize(20);
@@ -274,12 +281,8 @@ const TiefbauPDFGenerator = ({
           // Bemerkungen kommen auf eine neue Seite (Seite 3)
           pdf.addPage();
           
-          // Kopfzeile für Bemerkungen-Seite
-          pdf.setFontSize(10);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(`Bau - Structura | Automatisch generierter Bericht`, 14, 10);
-          pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 170, 10);
-          pdf.text(`Seite 3 von 3`, 250, 10);
+          // Kopfzeile für Bemerkungen-Seite (Seite 3)
+          addPageHeader(3);
           
           // Überschrift für den Bemerkungs-Abschnitt
           pdf.setFontSize(20);
