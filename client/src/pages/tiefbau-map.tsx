@@ -855,7 +855,7 @@ const TiefbauMap: React.FC = () => {
               {/* Spezifischer Platzhalter für die Map, der von der Komponente gefunden werden kann */}
               <div className="tiefbau-map-placeholder">
                 {/* Container mit der id, die in der Map-Komponente erwartet wird */}
-                <div id="tiefbau-map-container" style={{ width: '100%', height: '500px' }}></div>
+                <div id="tiefbau-map-container" style={{ width: '100%', height: '700px' }}></div>
               </div>
               <BasicGoogleMap
                 onRouteChange={handleRouteChange}
