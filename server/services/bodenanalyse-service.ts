@@ -8,7 +8,6 @@
  */
 
 import axios from 'axios';
-// parseStringPromise wird nicht mehr benötigt, da wir jetzt JSON statt XML verwenden
 import proj4 from 'proj4';
 import logger from '../logger';
 
@@ -30,52 +29,8 @@ function transformCoordinates(lat: number, lng: number): [number, number] {
   return [x, y];
 }
 
-/**
- * Extrahiert relevante Bodenartinformationen aus der XML-Antwort des BGR WFS
- * @param featureData GML-Feature-Daten aus der WFS-Antwort
- * @returns Aufbereitete Bodenartdaten
- */
-function extractSoilData(featureData: any): any {
-  try {
-    // Haupt-Feature finden
-    const mainFeature = featureData?.['wfs:FeatureCollection']?.['gml:featureMember']?.[0]?.['bss:natboflgru'];
-    
-    if (!mainFeature) {
-      return { 
-        error: true,
-        message: 'Keine Bodendaten gefunden'
-      };
-    }
-    
-    // Extrahieren der Bodenartinformationen
-    const bodenart = mainFeature['bss:nam05']?.[0] || 'Unbekannt';
-    const leitbodentyp = mainFeature['bss:nam21']?.[0] || 'Unbekannt';
-    const hauptbodentyp = mainFeature['bss:nam25']?.[0] || 'Unbekannt';
-    const bodenregion = mainFeature['bss:nam50']?.[0] || 'Unbekannt';
-    const nutzung = mainFeature['bss:nam61']?.[0] || 'Unbekannt';
-    const bodeneinheit = mainFeature['bss:nambse']?.[0] || 'Unbekannt';
-    const bodengesellschaft = mainFeature['bss:namgsl']?.[0] || 'Unbekannt';
-    const substratsystematik = mainFeature['bss:namsub']?.[0] || 'Unbekannt';
-
-    return {
-      bodenart,
-      leitbodentyp,
-      hauptbodentyp,
-      bodenregion,
-      nutzung,
-      bodeneinheit,
-      bodengesellschaft,
-      substratsystematik,
-    };
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Fehler beim Extrahieren der Bodendaten: ${errorMessage}`);
-    return { 
-      error: true,
-      message: 'Fehler beim Extrahieren der Bodendaten'
-    };
-  }
-}
+// Die alte extractSoilData-Funktion für XML-Responses wurde entfernt,
+// da wir jetzt extractSoilDataFromWMS für JSON-Responses verwenden
 
 /**
  * Extrahiert relevante Bodenartinformationen aus der JSON-Antwort des BGR WMS GetFeatureInfo
@@ -118,12 +73,12 @@ function extractSoilDataFromWMS(wmsData: any): any {
 }
 
 /**
- * Führt eine WFS-Abfrage zur BGR für eine bestimmte Koordinate durch
+ * Führt eine WMS-GetFeatureInfo-Abfrage zur BGR für eine bestimmte Koordinate durch
  * @param lat Breitengrad (WGS84)
  * @param lng Längengrad (WGS84)
  * @returns Bodenartdaten für die angegebene Position
  */
-export async function queryBGRWfs(lat: number, lng: number): Promise<any> {
+export async function queryBGRWms(lat: number, lng: number): Promise<any> {
   try {
     // WGS84 -> ETRS89/UTM32N Transformation
     const [x, y] = transformCoordinates(lat, lng);
@@ -180,14 +135,14 @@ export async function queryBGRWfs(lat: number, lng: number): Promise<any> {
 }
 
 /**
- * Batch-Abfrage für mehrere Koordinaten
+ * Batch-Abfrage für mehrere Koordinaten über WMS-GetFeatureInfo
  * @param points Array von Koordinaten-Objekten mit lat/lng
  * @returns Array von Bodenart-Ergebnissen
  */
-export async function queryBGRWfsPoints(points: Array<{lat: number, lng: number}>): Promise<any[]> {
+export async function queryBGRWmsPoints(points: Array<{lat: number, lng: number}>): Promise<any[]> {
   try {
     // Begrenzen der Parallelität, um Server nicht zu überlasten
-    const batchSize = 5; 
+    const batchSize = 3; // Reduziert für WMS-Anfragen
     const results = [];
     
     // Punkte in Batches verarbeiten
@@ -195,7 +150,7 @@ export async function queryBGRWfsPoints(points: Array<{lat: number, lng: number}
       const batch = points.slice(i, i + batchSize);
       
       // Parallele Abfragen für den aktuellen Batch
-      const batchPromises = batch.map(point => queryBGRWfs(point.lat, point.lng));
+      const batchPromises = batch.map(point => queryBGRWms(point.lat, point.lng));
       const batchResults = await Promise.all(batchPromises);
       
       results.push(...batchResults);

@@ -8,7 +8,7 @@
 
 import express from 'express';
 import multer from 'multer';
-import { queryBGRWfs, queryBGRWfsPoints } from '../services/bodenanalyse-service';
+import { queryBGRWms, queryBGRWmsPoints } from '../services/bodenanalyse-service';
 import logger from '../logger';
 import { isAuthenticated as validateToken } from '../middleware/auth';
 import fs from 'fs';
